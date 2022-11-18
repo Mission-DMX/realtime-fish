@@ -1,0 +1,3 @@
+[submodule "submodules/rmrf"]
+	path = submodules/rmrf
+	url = https://git.chaotikum.org/ReadMailReallyFast/code.git
