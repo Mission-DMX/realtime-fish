@@ -5,8 +5,10 @@ DEPFLAGS = -MT $@ -MMD -MP -MF $(patsubst ${OBJDIR}/%.o,${DEPDIR}/%.d,$@)
 ifeq "${OS}" "Linux"
 CFLAGS += -flto
 CXXFLAGS += -flto
-LFLAGS += -flto
+LFLAGS += -flto -lnl
 endif
+
+LFLAGS += -lev -lprotobuf
 
 ifeq "${BUILD_MODE}" "Release"
 # TODO add march for target arch once decision has been made
@@ -53,7 +55,7 @@ rwildcard = $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subs
 SOURCES := $(call rwildcard,${SRCDIR},*.cpp *.c)
 RMRFNET_SOURCES := $(call rwildcard,${LIBSRCDIR}/rmrf-net/,*.cpp *.c)
 RMRFNET_SRCOBJS := ${LIBSRCDIR}/rmrf-net
-RMRFNET_OBJDIR := ${OBJDIR}/rmrfnet
+RMRFNET_OBJDIR := ${OBJDIR}/rmrf-net
 
 SRCOBJS := $(patsubst ${SRCDIR}/%.c,${OBJDIR}/%.o,$(patsubst ${SRCDIR}/%.cpp,${OBJDIR}/%.o,${SOURCES}))
 RMRFNET_SRCOBJS := $(patsubst ${LIBSRCDIR}/rmrf-net/%.c,${OBJDIR}/rmrf-net/%.o,$(patsubst ${LIBSRCDIR}/rmrf-net/%.cpp,${OBJDIR}/rmrf-net/%.o,${RMRFNET_SOURCES}))
@@ -62,7 +64,15 @@ RMRFNET_SRCOBJS := $(patsubst ${LIBSRCDIR}/rmrf-net/%.c,${OBJDIR}/rmrf-net/%.o,$
 .PHONY: all clean install lintian style translation
 
 ${RMRFNET_OBJDIR}/%.o: ${RMRFNET_SRCOBJS}/%.cpp Makefile
-	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${DEPFLAGS} ${LFLAGS} -o $@ -c $< && touch $@
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${DEPFLAGS} -o $@ -c $< && touch $@
 
-${OBJDIR}/rmrfnet.so: ${RMRFNET_OBJDIR}/%.o Makefile
-	# TODO
+${OBJDIR}/librmrfnet.a: ${RMRFNET_SRCOBJS}
+	${MKDIR} ${@D} && ${CXX} -o $@ $^ && touch $@
+
+${OBJDIR}/%.o: ${SRCDIR}/%.cpp Makefile
+	${MKDIR} ${@D} && ${CXX} ${CXXFLAGS} ${DEPFLAGS} -o $@ -c $< && touch $@
+
+${BINDIR}/fish: ${SRCOBJS} ${OBJDIR}/librmrfnet.a
+	${MKDIR} ${@D} && ${CXX} -o $@ ${LFLAGS} $^ && touch $@
+
+all: ${BINDIR}/fish
