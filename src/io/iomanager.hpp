@@ -3,8 +3,7 @@
 #include <memory>
 #include <thread>
 
-#include <ev++.h>
-#include <spdlog-inl.h>
+#include <lib/evpp.hpp>
 
 namespace dmxfish::io {
 
@@ -16,8 +15,8 @@ namespace dmxfish::io {
 		public:
 			IOManager(bool is_default_manager = false);
 			~IOManager();
-			void start{};
+			void start();
 		private:
 			void run();
-	}
+	};
 }

@@ -1,4 +1,4 @@
-CFLAGS += -march=native -masm=intel -pipe -fsanitize=address,signed-integer-overflow,undefined -pedantic -Wall -Wextra -Werror -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option
+CFLAGS += -march=native -masm=intel -pipe -fsanitize=address,signed-integer-overflow,undefined -pedantic -Wall -Wextra -Werror -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib
 CXXFLAGS += ${CFLAGS} -std=c++11 -std=c++17 -std=c++2a -Wuseless-cast -Weffc++ -I/usr/local/include -Wno-non-virtual-dtor
 DEPFLAGS = -MT $@ -MMD -MP -MF $(patsubst ${OBJDIR}/%.o,${DEPDIR}/%.d,$@) -pthread
 
@@ -24,6 +24,8 @@ PKG_TOOL = pkg-config
 
 CFLAGS_RMRF_NET += `${PKG_TOOL} --cflags libnl-3.0`
 CXXFLAGS_RMRF_NET += `${PKG_TOOL} --cflags libnl-3.0`
+
+DEPFLAGS += `${PKG_TOOL} --cflags spdlog`
 
 CC ?= gcc
 CXX ?= g++
@@ -53,8 +55,9 @@ MODIR ?= po/bin
 rwildcard = $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
 
 SOURCES := $(call rwildcard,${SRCDIR},*.cpp *.c)
-RMRFNET_SOURCES := $(call rwildcard,${LIBSRCDIR}/rmrf-net/,*.cpp *.c)
-RMRFNET_SRCOBJS := ${LIBSRCDIR}/rmrf-net
+RMRFNET_SRCDIR := ${LIBSRCDIR}/rmrf-net
+RMRFNET_SOURCES := $(call rwildcard,${RMRFNET_SRCDIR}/,*.cpp *.c)
+#RMRFNET_SRCOBJS := ${LIBSRCDIR}/rmrf-net
 RMRFNET_OBJDIR := ${OBJDIR}/rmrf-net
 
 SRCOBJS := $(patsubst ${SRCDIR}/%.c,${OBJDIR}/%.o,$(patsubst ${SRCDIR}/%.cpp,${OBJDIR}/%.o,${SOURCES}))
@@ -63,16 +66,25 @@ RMRFNET_SRCOBJS := $(patsubst ${LIBSRCDIR}/rmrf-net/%.c,${OBJDIR}/rmrf-net/%.o,$
 .PRECIOUS: ${DEPDIR}/%.d ${OBJDIR}/**/%.o ${POTOBJS} ${POOBJS}
 .PHONY: all clean install lintian style translation
 
-${RMRFNET_OBJDIR}/%.o: ${RMRFNET_SRCOBJS}/%.cpp Makefile
-	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${DEPFLAGS} -o $@ -c $< && touch $@
+all: ${BINDIR}/fish
+	echo Done
+
+${RMRFNET_OBJDIR}/%.o: ${RMRFNET_SRCDIR}/%.cpp Makefile
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${RMRFNET_OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${CXXFLAGS_RMRF_NET} ${DEPFLAGS} -o $@ -c $< && touch $@
 
 ${OBJDIR}/librmrfnet.a: ${RMRFNET_SRCOBJS}
 	${MKDIR} ${@D} && ${CXX} -o $@ $^ && touch $@
 
 ${OBJDIR}/%.o: ${SRCDIR}/%.cpp Makefile
-	${MKDIR} ${@D} && ${CXX} ${CXXFLAGS} ${DEPFLAGS} -o $@ -c $< && touch $@
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${DEPFLAGS} -o $@ -c $< && touch $@
 
 ${BINDIR}/fish: ${SRCOBJS} ${OBJDIR}/librmrfnet.a
 	${MKDIR} ${@D} && ${CXX} -o $@ ${LFLAGS} $^ && touch $@
 
-all: ${BINDIR}/fish
+clean:
+	rm -rf ${BINDIR}
+	rm -rf ${OBJDIR}
+	rm -rf ${DEPDIR}
+	rm -rf ${MODIR}
+
+
