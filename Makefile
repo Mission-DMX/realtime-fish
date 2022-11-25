@@ -6,6 +6,8 @@ ifeq "${OS}" "Linux"
 CFLAGS += -flto
 CXXFLAGS += -flto
 LFLAGS += -flto -lnl
+else
+CXXFLAGS += -Wno-undef
 endif
 
 LFLAGS += -lev -lprotobuf
@@ -62,6 +64,7 @@ RMRFNET_OBJDIR := ${OBJDIR}/rmrf-net
 
 SRCOBJS := $(patsubst ${SRCDIR}/%.c,${OBJDIR}/%.o,$(patsubst ${SRCDIR}/%.cpp,${OBJDIR}/%.o,${SOURCES}))
 RMRFNET_SRCOBJS := $(patsubst ${LIBSRCDIR}/rmrf-net/%.c,${OBJDIR}/rmrf-net/%.o,$(patsubst ${LIBSRCDIR}/rmrf-net/%.cpp,${OBJDIR}/rmrf-net/%.o,${RMRFNET_SOURCES}))
+DEPFLAGS_RMRF := ${DEPFLAGS} -Isubmodules/rmrf/src -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
 
 .PRECIOUS: ${DEPDIR}/%.d ${OBJDIR}/**/%.o ${POTOBJS} ${POOBJS}
 .PHONY: all clean install lintian style translation
@@ -70,7 +73,7 @@ all: ${BINDIR}/fish
 	echo Done
 
 ${RMRFNET_OBJDIR}/%.o: ${RMRFNET_SRCDIR}/%.cpp Makefile
-	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${RMRFNET_OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${CXXFLAGS_RMRF_NET} ${DEPFLAGS} -o $@ -c $< && touch $@
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${RMRFNET_OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${CXXFLAGS_RMRF_NET} ${DEPFLAGS_RMRF} -o $@ -c $< && touch $@
 
 ${OBJDIR}/librmrfnet.a: ${RMRFNET_SRCOBJS}
 	${MKDIR} ${@D} && ${CXX} -o $@ $^ && touch $@
