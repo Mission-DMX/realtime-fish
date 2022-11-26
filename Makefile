@@ -7,7 +7,7 @@ CFLAGS += -flto
 CXXFLAGS += -flto
 LFLAGS += -flto -lnl
 else
-CXXFLAGS += -Wno-undef
+CXXFLAGS += -Wno-undef -Wno-error
 endif
 
 LFLAGS += -lev -lprotobuf
