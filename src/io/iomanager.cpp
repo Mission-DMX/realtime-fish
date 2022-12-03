@@ -8,7 +8,7 @@ void IOManager::run() {
 	this->loop->run(0);
 }
 
-IOManager::IOManager(bool is_default_manager) : running(true), iothread(nullptr) {
+IOManager::IOManager(bool is_default_manager) : running(true), iothread(nullptr), loop(nullptr) {
 	if (is_default_manager) {
 		this->loop = std::make_shared<::ev::default_loop>();
 	} else {
