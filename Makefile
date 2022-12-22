@@ -1,11 +1,15 @@
-CFLAGS += -march=native -masm=intel -pipe -fsanitize=address,signed-integer-overflow,undefined -pedantic -Wall -Wextra -Werror -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib
+OS = $(shell uname -s)
+
+# CFLAGS += -march=native -masm=intel -pipe -fsanitize=address,signed-integer-overflow,undefined -pedantic -Wall -Wextra -Werror -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib
+CFLAGS += -march=native -masm=intel -pipe -pedantic -Wall -Wextra -Werror -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib
 CXXFLAGS += ${CFLAGS} -std=c++11 -std=c++17 -std=c++2a -Wuseless-cast -Weffc++ -I/usr/local/include -Wno-non-virtual-dtor
 DEPFLAGS = -MT $@ -MMD -MP -MF $(patsubst ${OBJDIR}/%.o,${DEPDIR}/%.d,$@) -pthread
 
 ifeq "${OS}" "Linux"
 CFLAGS += -flto
 CXXFLAGS += -flto
-LFLAGS += -flto -lnl
+# LFLAGS += -flto -lnl
+LFLAGS += -flto
 else
 CXXFLAGS += -Wno-undef
 endif
@@ -28,6 +32,8 @@ CFLAGS_RMRF_NET += `${PKG_TOOL} --cflags libnl-3.0`
 CXXFLAGS_RMRF_NET += `${PKG_TOOL} --cflags libnl-3.0`
 
 DEPFLAGS += `${PKG_TOOL} --cflags spdlog`
+# LFLAGS += `${PKG_TOOL} --libs libevent`
+LFLAGS += `${PKG_TOOL} --libs spdlog`
 
 CC ?= gcc
 CXX ?= g++
@@ -64,7 +70,7 @@ RMRFNET_OBJDIR := ${OBJDIR}/rmrf-net
 
 SRCOBJS := $(patsubst ${SRCDIR}/%.c,${OBJDIR}/%.o,$(patsubst ${SRCDIR}/%.cpp,${OBJDIR}/%.o,${SOURCES}))
 RMRFNET_SRCOBJS := $(patsubst ${LIBSRCDIR}/rmrf-net/%.c,${OBJDIR}/rmrf-net/%.o,$(patsubst ${LIBSRCDIR}/rmrf-net/%.cpp,${OBJDIR}/rmrf-net/%.o,${RMRFNET_SOURCES}))
-DEPFLAGS_RMRF := ${DEPFLAGS} -Isubmodules/rmrf/src -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
+DEPFLAGS_RMRF = ${DEPFLAGS} -Isubmodules/rmrf/src -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
 
 .PRECIOUS: ${DEPDIR}/%.d ${OBJDIR}/**/%.o ${POTOBJS} ${POOBJS}
 .PHONY: all clean install lintian style translation
@@ -73,21 +79,19 @@ all: ${BINDIR}/fish
 	echo Done
 
 ${RMRFNET_OBJDIR}/%.o: ${RMRFNET_SRCDIR}/%.cpp Makefile
-	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${RMRFNET_OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${CXXFLAGS_RMRF_NET} ${DEPFLAGS_RMRF} -o $@ -c $< && touch $@
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${DEPFLAGS_RMRF} ${CXXFLAGS_RMRF_NET} -o $@ -c $< && touch $@
 
 ${OBJDIR}/librmrfnet.a: ${RMRFNET_SRCOBJS}
-	${MKDIR} ${@D} && ${CXX} -o $@ $^ && touch $@
+	${MKDIR} ${@D} && ar rsv $@ $^ && touch $@
 
 ${OBJDIR}/%.o: ${SRCDIR}/%.cpp Makefile
 	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${DEPFLAGS} -o $@ -c $< && touch $@
 
 ${BINDIR}/fish: ${SRCOBJS} ${OBJDIR}/librmrfnet.a
-	${MKDIR} ${@D} && ${CXX} -o $@ ${LFLAGS} $^ && touch $@
+	${MKDIR} ${@D} && ${CXX} -o $@ $^ ${LFLAGS} && touch $@
 
 clean:
 	rm -rf ${BINDIR}
 	rm -rf ${OBJDIR}
 	rm -rf ${DEPDIR}
 	rm -rf ${MODIR}
-
-

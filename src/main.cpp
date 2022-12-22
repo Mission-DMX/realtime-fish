@@ -10,7 +10,7 @@ int main(int argc, char* argv[], char* env[]) {
 	MARK_UNUSED(argv);
 	MARK_UNUSED(env);
 
-	spdlog::set_level(spdlog::level::debug);
+	// spdlog::set_level(spdlog::level::debug);
 	auto io_manager = std::make_shared<dmxfish::io::IOManager>(true);
 	io_manager->start();
 }
