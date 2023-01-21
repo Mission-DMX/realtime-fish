@@ -30,7 +30,7 @@ int main(int argc, char* argv[], char* env[]) {
 
 	// auto client = std::make_shared<rmrf::net::tcp_client>(8085, AF_INET6);
 
-	// auto curr_state_u = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
+	auto curr_state_u = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
 
 	start_time = time(NULL);
 	while (run_time_state->running && time(NULL) < start_time+10) {
