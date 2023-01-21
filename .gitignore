@@ -33,3 +33,6 @@
 
 # IDE stuff
 *.kdev4
+
+bin/
+lib/
