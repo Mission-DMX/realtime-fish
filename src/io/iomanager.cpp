@@ -16,7 +16,11 @@ void client_cb(std::shared_ptr<rmrf::net::tcp_client> client){
 		::spdlog::debug("Client Here");
 }
 
-IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) : running(true), iothread(nullptr), run_time_state(run_time_state_), loop(nullptr) {
+void full_message_cb(std::string str, const std::string& s, bool msg_full){
+		::spdlog::debug("Got full message: {:s}, {:s}, {:b}", str, s, msg_full);
+}
+
+IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) : running(true), iothread(nullptr), run_time_state(run_time_state_), loop(nullptr), msg_buffer(std::make_shared<message_buffer>(full_message_cb)) {
 	if (is_default_manager) {
 		this->loop = std::make_shared<::ev::default_loop>();
 	} else {
@@ -34,6 +38,10 @@ void IOManager::start() {
 		// auto server = std::make_shared<rmrf::net::tcp_server_socket>(interface_addr, client_cb);
 	auto server = std::make_shared<rmrf::net::tcp_server_socket>(8085, client_cb);
 
+}
+
+void IOManager::writeData(std::string str){
+	this->msg_buffer->conn_data_in_cb(str);
 }
 
 IOManager::~IOManager() {

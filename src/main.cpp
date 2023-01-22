@@ -29,9 +29,18 @@ int main(int argc, char* argv[], char* env[]) {
 
 
 	time_t start_time = time(NULL);
-	while (run_time_state->running && time(NULL) < start_time+4) {
+	while (run_time_state->running && time(NULL) < start_time+2) {
 
 	}
+
+		io_manager->writeData("1134");
+		io_manager->writeData("2131");
+		io_manager->writeData("7134");
+		io_manager->writeData("1234");
+		io_manager->writeData("7234");
+
+
+
 
 	// auto client = std::make_shared<rmrf::net::tcp_client>(8085, AF_INET6);
 
@@ -42,7 +51,7 @@ int main(int argc, char* argv[], char* env[]) {
 	// RM_STOP = 2,
 	curr_state_u->set_new_state(value);
 
-	::spdlog::debug("A: b:{:b}  s:{:s}", curr_state_u->IsInitialized(), curr_state_u->DebugString());
+	// ::spdlog::debug("A: b:{:b}  s:{:s}", curr_state_u->IsInitialized(), curr_state_u->DebugString());
 
 	// std::ostream stream;
 
