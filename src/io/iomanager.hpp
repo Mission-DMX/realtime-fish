@@ -24,9 +24,9 @@ namespace dmxfish::io {
 			~IOManager();
 			void start();
 			void writeData(std::string str);
-			// static void full_message_cb(std::string str, const std::string& s, bool msg_full);
-			// static void client_cb(std::shared_ptr<rmrf::net::tcp_client> client);
 		private:
 			void run();
+			void full_message_cb(std::string& str, const std::string& s, bool msg_full);
+			void client_cb(std::shared_ptr<rmrf::net::tcp_client> client);
 	};
 }

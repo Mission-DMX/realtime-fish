@@ -16,7 +16,7 @@ enum msg_t {
 class message_buffer {
 public:
 
-	typedef std::function<void(std::string, const std::string&, bool)> found_message_cb_t;
+	typedef std::function<void(std::string&, const std::string&, bool)> found_message_cb_t;
 private:
 	found_message_cb_t found_message_cb;
 	std::string::size_type max;

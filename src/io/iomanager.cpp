@@ -5,6 +5,8 @@
 
 #include "net/sock_address_factory.hpp"
 #include <netdb.h>
+#include <functional>
+#include <functional>
 
 namespace dmxfish::io {
 
@@ -12,15 +14,15 @@ void IOManager::run() {
 	this->loop->run(0);
 }
 
-void client_cb(std::shared_ptr<rmrf::net::tcp_client> client){
+void IOManager::client_cb(std::shared_ptr<rmrf::net::tcp_client> client){
 		::spdlog::debug("Client Here");
 }
 
-void full_message_cb(std::string str, const std::string& s, bool msg_full){
+void IOManager::full_message_cb(std::string& str, const std::string& s, bool msg_full){
 		::spdlog::debug("Got full message: {:s}, {:s}, {:b}", str, s, msg_full);
 }
 
-IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) : running(true), iothread(nullptr), run_time_state(run_time_state_), loop(nullptr), msg_buffer(std::make_shared<message_buffer>(full_message_cb)) {
+IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) : running(true), iothread(nullptr), run_time_state(run_time_state_), loop(nullptr), msg_buffer(std::make_shared<message_buffer>(std::bind(&dmxfish::io::IOManager::full_message_cb, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3))) {
 	if (is_default_manager) {
 		this->loop = std::make_shared<::ev::default_loop>();
 	} else {
@@ -35,8 +37,8 @@ void IOManager::start() {
 
 	const auto interface_addr = rmrf::net::get_first_general_socketaddr("::1", 8085);
 
-		// auto server = std::make_shared<rmrf::net::tcp_server_socket>(interface_addr, client_cb);
-	auto server = std::make_shared<rmrf::net::tcp_server_socket>(8085, client_cb);
+	// auto server = std::make_shared<rmrf::net::tcp_server_socket>(interface_addr, client_cb);
+	// auto server = std::make_shared<rmrf::net::tcp_server_socket>(8085, client_cb);
 
 }
 
