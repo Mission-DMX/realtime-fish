@@ -47,8 +47,8 @@ namespace dmxfish::dmx {
 			this->update_sequence_number(0);
 			this->update_physical_id(physical_id);
 			this->update_device_universe(id_on_device);
-			this->data[16] = (uint8_t) ((512 && 0xFF00) >> 8);
-			this->data[17] = (uint8_t) (512 && 0x00FF);
+			this->data[16] = (uint8_t) ((512 & 0xFF00) >> 8);
+			this->data[17] = (uint8_t) (512 & 0x00FF);
 		}
 
 		void update_sequence_number(const uint8_t seq_num) {
@@ -72,7 +72,7 @@ namespace dmxfish::dmx {
 		}
 
 		virtual channel_8bit_t& operator[](size_t p) {
-			return this->data[artnet_pkg_size - 512 - 1 + p];
+			return this->data[artnet_pkg_size - 512 + p];
 		}
 
 		virtual universe_iterator begin() {
