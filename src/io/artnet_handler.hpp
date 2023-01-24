@@ -32,7 +32,7 @@ namespace dmxfish::io {
 
 			void udp_incomming_cb(const rmrf::net::udp_packet<dmxfish::dmx::artnet_pkg_size>& data, rmrf::net::socketaddr& source) {
 				// Don't do anything with data and source yet, Later implement RDM, POLL_REPLY and SYNC
-				::spdlog::warn("Got incomming Art-Net packet of size %i from %s.", data.length(), source.str());
+				::spdlog::warn("Got incomming Art-Net packet of size {0} from {1}.", data.length(), source.str());
 			}
 		public:
 			artnet_handler(const std::string& binding_interface_description)

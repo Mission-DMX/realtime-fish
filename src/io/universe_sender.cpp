@@ -1,6 +1,7 @@
 #include "universe_sender.hpp"
 
 #include "io/artnet_handler.hpp"
+#include "net/sock_address_factory.hpp"
 
 namespace dmxfish::io {
 
@@ -12,6 +13,11 @@ bool publish_universe_update(std::shared_ptr<dmxfish::dmx::universe> universe) {
 		return true;
 	}
 	return false;
+}
+
+std::shared_ptr<dmxfish::dmx::universe> get_temporary_universe(const std::string& output_description) {
+	// TODO build parser that assignes a free universe
+	return _artnet_handler.get_or_create_universe(1, rmrf::net::get_first_general_socketaddr(output_description, 6454), 1);
 }
 
 }
