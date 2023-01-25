@@ -9,10 +9,12 @@
 
 #include "rmrf-net/tcp_client.hpp"
 #include "io/message_buffer.hpp"
+#include "io/msg_type.hpp"
 
 namespace dmxfish::io {
 
 	class IOManager : public std::enable_shared_from_this<IOManager> {
+
 		private:
 			bool running;
 			std::shared_ptr<std::thread> iothread;
@@ -26,7 +28,7 @@ namespace dmxfish::io {
 			void writeData(std::string str);
 		private:
 			void run();
-			void full_message_cb(std::string& str, const std::string& s, bool msg_full);
+			void full_message_cb(msg_t msg_type, const std::string& s, bool msg_full);
 			void client_cb(std::shared_ptr<rmrf::net::tcp_client> client);
 	};
 }

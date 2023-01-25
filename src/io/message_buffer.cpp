@@ -9,15 +9,16 @@ message_buffer::message_buffer(found_message_cb_t found_message_cb_
 		// max(max_line_size),
 		data_buffer(std::ostringstream::ate),
 		// buffer_length{0},
-    size_left{0},
-    msg_type{""},
-    internal_state{0} {
+    size_left(0),
+    // msg_type(nullptr),
+    msg_type{dmxfish::io::msg_t::NOTHING},
+    internal_state(NEXT_MSG) {
 		};
 
 
 void message_buffer::clear() {
-	this->internal_state = 0;
-	this->msg_type = {0};
+	this->internal_state = NEXT_MSG;
+	this->msg_type = dmxfish::io::msg_t::NOTHING;
 	this->size_left = 0;
 
 	this->data_buffer.str(std::string());
@@ -25,20 +26,25 @@ void message_buffer::clear() {
 	// this->buffer_length = 0;
 }
 
+dmxfish::io::msg_t message_buffer::get_msg_type(const std::string& s){
+	return dmxfish::io::msg_t::UPDATE_STATE;
+}
+
+
 void message_buffer::conn_data_in_cb(const std::string& data_in) {
   const auto length = data_in.length();
   if (length > 0){
     switch (internal_state) {
       case 0:
-        msg_type = data_in.substr(0,1);
-        internal_state = 1;
+        msg_type = get_msg_type(data_in.substr(0,1));
+        internal_state = GETLENGTH;
         return conn_data_in_cb(data_in.substr(1,length));
         break;
       case 1:
 			{
 				const char* ch = new char(data_in.at(0));
         size_left = atoi(ch);
-        internal_state = 2;
+        internal_state = READ_MSG;
         return conn_data_in_cb(data_in.substr(1,length));
         break;
 			}

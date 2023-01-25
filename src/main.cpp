@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <string>
+// #include <string>
 
 
 int main(int argc, char* argv[], char* env[]) {
@@ -33,11 +33,11 @@ int main(int argc, char* argv[], char* env[]) {
 
 	}
 
-		io_manager->writeData("1134");
-		io_manager->writeData("2131");
-		io_manager->writeData("7134");
-		io_manager->writeData("1234");
-		io_manager->writeData("7234");
+		// io_manager->writeData("1134");
+		// io_manager->writeData("2131");
+		// io_manager->writeData("7134");
+		// io_manager->writeData("1234");
+		// io_manager->writeData("7234");
 
 
 
@@ -51,48 +51,51 @@ int main(int argc, char* argv[], char* env[]) {
 	// RM_STOP = 2,
 	curr_state_u->set_new_state(value);
 
-	// ::spdlog::debug("A: b:{:b}  s:{:s}", curr_state_u->IsInitialized(), curr_state_u->DebugString());
+	::spdlog::debug("A: b:{:b}  s:{:s}", curr_state_u->IsInitialized(), curr_state_u->DebugString());
 
-	// std::ostream stream;
+		std::fstream test("obj/test.data", std::ios::out | std::ios::trunc | std::ios::binary);
 
-		std::string test = std::string();
-    if (!curr_state_u->SerializeToString(&test)) {
-      std::cerr << "Failed to write address book." << std::endl;
+    if (!curr_state_u->SerializeToOstream(&test)) {
+			  std::cerr << "Failed to write stuff" << std::endl;
       return -1;
     }
 
-		// ::spdlog::debug("BinMSG: {:s}", test);
-		//
-		// auto curr_state_rcv = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
-		// const std::string* testrsv = &test;
-		//
-		// ::spdlog::debug("BinMSGrsv: {:s}", *testrsv);
-		// if (!curr_state_rcv->ParseFromString(*testrsv)) {
-		// 	std::cerr << "Failed to read address book." << std::endl;
-		// 	return -1;
-		// }
-		//
-		// ::spdlog::debug("B: b:{:b}  s:{:s}", curr_state_rcv->IsInitialized(), curr_state_rcv->DebugString());
-		//
-		//
-		// ::missiondmx::fish::ipcmessages::RunMode value_rsv = curr_state_rcv->new_state();
-		// switch (value_rsv) {
-		// 	case ::missiondmx::fish::ipcmessages::RM_DIRECT:
-		// 		::spdlog::debug("Test A");
-		// 		break;
-		// 	case ::missiondmx::fish::ipcmessages::RM_FILTER:
-		// 		::spdlog::debug("Test B");
-		// 		break;
-		// 	case ::missiondmx::fish::ipcmessages::RM_STOP:
-		// 		::spdlog::debug("Test C");
-		// 		break;
-		// 	default:
-		// 		::spdlog::debug("Test D");
-		// }
+
+		auto curr_state_rcv = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
+
+
+		::spdlog::debug("Sending...");
+		test.close();
+
+		std::fstream testin("obj/test.data", std::ios::in | std::ios::binary);
+
+    if (!curr_state_rcv->ParseFromIstream(&testin)) {
+			  std::cerr << "Failed to read stuff" << std::endl;
+      return -1;
+    }
+		testin.close();
+		::spdlog::debug("Got It...");
+
+		::spdlog::debug("B: b:{:b}  s:{:s}", curr_state_rcv->IsInitialized(), curr_state_rcv->DebugString());
+
+		::missiondmx::fish::ipcmessages::RunMode value_rsv = curr_state_rcv->new_state();
+		switch (value_rsv) {
+			case ::missiondmx::fish::ipcmessages::RM_DIRECT:
+				::spdlog::debug("Test A");
+				break;
+			case ::missiondmx::fish::ipcmessages::RM_FILTER:
+				::spdlog::debug("Test B");
+				break;
+			case ::missiondmx::fish::ipcmessages::RM_STOP:
+				::spdlog::debug("Test C");
+				break;
+			default:
+				::spdlog::debug("Test D");
+		}
 
 
 	start_time = time(NULL);
-	while (run_time_state->running && time(NULL) < start_time+10) {
+	while (run_time_state->running && time(NULL) < start_time+1000) {
 
 	}
 	::spdlog::debug("Main End");

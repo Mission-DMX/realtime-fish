@@ -15,11 +15,21 @@ void IOManager::run() {
 }
 
 void IOManager::client_cb(std::shared_ptr<rmrf::net::tcp_client> client){
-		::spdlog::debug("Client Here");
+	::spdlog::debug("Client Here");
 }
 
-void IOManager::full_message_cb(std::string& str, const std::string& s, bool msg_full){
-		::spdlog::debug("Got full message: {:s}, {:s}, {:b}", str, s, msg_full);
+void IOManager::full_message_cb(msg_t msg_type, const std::string& s, bool msg_full){
+	switch (msg_type) {
+		case dmxfish::io::msg_t::UPDATE_STATE:
+				::spdlog::debug("Update-State: Got full message: {:s}" , s);
+				break;
+		case dmxfish::io::msg_t::CURRENT_STATE_UPDATE:
+				::spdlog::debug("CurrentState: Got full message: {:s}" , s);
+				break;
+		default:
+				::spdlog::debug("Error: Got full message: {:s}" , s);
+				break;
+	}
 }
 
 IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) : running(true), iothread(nullptr), run_time_state(run_time_state_), loop(nullptr), msg_buffer(std::make_shared<message_buffer>(std::bind(&dmxfish::io::IOManager::full_message_cb, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3))) {
@@ -35,10 +45,9 @@ void IOManager::start() {
 	const auto thread_id = std::hash<std::thread::id>{}(this->iothread->get_id());
 	::spdlog::debug("Started IO manager with loop on thread with id {0:d};.", thread_id);
 
-	const auto interface_addr = rmrf::net::get_first_general_socketaddr("::1", 8085);
+	const auto interface_addr = rmrf::net::get_first_general_socketaddr("127.0.0.1", 9861);
+	auto server = std::make_shared<rmrf::net::tcp_server_socket>(interface_addr, std::bind(&dmxfish::io::IOManager::client_cb, this, std::placeholders::_1));
 
-	// auto server = std::make_shared<rmrf::net::tcp_server_socket>(interface_addr, client_cb);
-	// auto server = std::make_shared<rmrf::net::tcp_server_socket>(8085, client_cb);
 
 }
 
