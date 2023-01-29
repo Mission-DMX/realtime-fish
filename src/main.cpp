@@ -12,8 +12,10 @@
 #include <proto_src/RealTimeControl.pb.h>
 
 #include <netdb.h>
-
+#include <fstream>
 #include <unistd.h>
+
+#include "google/protobuf/util/delimited_message_util.h"
 
 void perform_main_update(std::shared_ptr<dmxfish::dmx::universe> u) {
 	time_t start_time = time(NULL);
@@ -70,59 +72,107 @@ int main(int argc, char* argv[], char* env[]) {
 
 	auto curr_state_u = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
 
+	missiondmx::fish::ipcmessages::update_state* us = new missiondmx::fish::ipcmessages::update_state();
+	us->set_new_state(::missiondmx::fish::ipcmessages::RM_DIRECT);
+
 	::missiondmx::fish::ipcmessages::RunMode value = ::missiondmx::fish::ipcmessages::RM_DIRECT;
 	// RM_DIRECT = 1,
 	// RM_STOP = 2,
 	curr_state_u->set_new_state(value);
 
 	::spdlog::debug("A: b:{:b}  s:{:s}", curr_state_u->IsInitialized(), curr_state_u->DebugString());
-	auto msg = new std::string();
-	if (!curr_state_u->SerializeToString(msg)) {
-		  std::cerr << "Failed to write stuff" << std::endl;
-	  return -1;
-	}
+	std::fstream test("obj/test.data", std::ios::out | std::ios::trunc | std::ios::binary);
 
+	std::cout << "AB: " << test.tellg() << std::endl;
 
-	auto curr_state_u_rsv = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
-	if (!curr_state_u_rsv->ParseFromString(*msg)) {
-		  std::cerr << "Failed to write stuff" << std::endl;
-	  return -1;
-	}
-
-	::spdlog::debug("B: b:{:b}  s:{:s}", curr_state_u_rsv->IsInitialized(), curr_state_u_rsv->DebugString());
-
-	::missiondmx::fish::ipcmessages::RunMode value_rsv = curr_state_u_rsv->new_state();
-	switch (value_rsv) {
-		case ::missiondmx::fish::ipcmessages::RM_DIRECT:
-			::spdlog::debug("Test A");
-			break;
-		case ::missiondmx::fish::ipcmessages::RM_FILTER:
-			::spdlog::debug("Test B");
-			break;
-		case ::missiondmx::fish::ipcmessages::RM_STOP:
-			::spdlog::debug("Test C");
-			break;
-		default:
-			::spdlog::debug("Test D");
-	}
-
-
-
-
-
-
-
-
-
-
-	// auto stream = std::make_shared<std::deque<uint8_t>>();
-	// // auto stream = std::deque<uint8_t>();
-	// stream->push_back(0x010);
+  // if (!curr_state_u->SerializeToOstream(&test)) {
+	// 	  std::cerr << "Failed to write stuff" << std::endl;
+  //   return -1;
+  // }
+	// std::cout << "ABC: " << test.tellg() << std::endl;
+	// test.close();
 	//
-	// auto sstream = std::stringstream();
-	// sstream << "bc" << std::endl;
+	//
+	// ::spdlog::debug("Sending...");
+	//
+	//
+	// auto curr_state_rcv = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
+	// std::fstream testin("obj/test.data", std::ios::in | std::ios::binary);
+	//
+  // if (!curr_state_rcv->ParseFromIstream(&testin)) {
+	// 	  std::cerr << "Failed to read stuff" << std::endl;
+  //   return -1;
+  // }
+	// testin.close();
+	// ::spdlog::debug("Got It...");
+	//
+	//
+	// ::spdlog::debug("B: b:{:b}  s:{:s}", curr_state_rcv->IsInitialized(), curr_state_rcv->DebugString());
+	//
+	// ::missiondmx::fish::ipcmessages::RunMode value_rsv = curr_state_rcv->new_state();
+	// switch (value_rsv) {
+	// 	case ::missiondmx::fish::ipcmessages::RM_DIRECT:
+	// 		::spdlog::debug("Test A");
+	// 		break;
+	// 	case ::missiondmx::fish::ipcmessages::RM_FILTER:
+	// 		::spdlog::debug("Test B");
+	// 		break;
+	// 	case ::missiondmx::fish::ipcmessages::RM_STOP:
+	// 		::spdlog::debug("Test C");
+	// 		break;
+	// 	default:
+	// 		::spdlog::debug("Test D");
+	// }
 
-	// ::spdlog::debug("B:  s:{:s}", sstream);
+
+
+
+
+  if (google::protobuf::util::SerializeDelimitedToOstream(*(curr_state_u.get()), &test)) {
+		  std::cerr << "Failed to write stuff" << std::endl;
+    return -1;
+  }
+	
+	// if (!us->SerializeToOstream(&test)) {
+	// 	  std::cerr << "Failed to write stuff" << std::endl;
+  //   return -1;
+  // }
+	std::cout << "ABC: " << test.tellg() << std::endl;
+	// test.close();
+	//
+	//
+	// ::spdlog::debug("Sending...");
+	//
+	//
+	// auto curr_state_rcv = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
+	// std::fstream testin("obj/test.data", std::ios::in | std::ios::binary);
+	//
+  // if (!curr_state_rcv->ParseFromIstream(&testin)) {
+	// 	  std::cerr << "Failed to read stuff" << std::endl;
+  //   return -1;
+  // }
+	// testin.close();
+	// ::spdlog::debug("Got It...");
+	//
+	//
+	// ::spdlog::debug("B: b:{:b}  s:{:s}", curr_state_rcv->IsInitialized(), curr_state_rcv->DebugString());
+	//
+	// ::missiondmx::fish::ipcmessages::RunMode value_rsv = curr_state_rcv->new_state();
+	// switch (value_rsv) {
+	// 	case ::missiondmx::fish::ipcmessages::RM_DIRECT:
+	// 		::spdlog::debug("Test A");
+	// 		break;
+	// 	case ::missiondmx::fish::ipcmessages::RM_FILTER:
+	// 		::spdlog::debug("Test B");
+	// 		break;
+	// 	case ::missiondmx::fish::ipcmessages::RM_STOP:
+	// 		::spdlog::debug("Test C");
+	// 		break;
+	// 	default:
+	// 		::spdlog::debug("Test D");
+	// }
+
+
 
 
 

@@ -21,6 +21,7 @@ private:
 	found_message_cb_t found_message_cb;
 	// std::string::size_type max;
 	std::ostringstream data_buffer;
+	// std::deque<uint8_t> data_buffer;
 	size_t size_left;
 	internal_state_t internal_state;
 	dmxfish::io::msg_t msg_type;
