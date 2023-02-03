@@ -1,75 +1,193 @@
 #include "io/message_buffer.hpp"
 
+#include "lib/logging.hpp"
+
 namespace dmxfish::io {
 
-message_buffer::message_buffer(found_message_cb_t found_message_cb_
-		//, std::string::size_type max_line_size
-	) :
-		found_message_cb(found_message_cb_),
-		// max(max_line_size),
-		data_buffer(std::ostringstream::ate),
-		// buffer_length{0},
-    size_left(0),
-    // msg_type(nullptr),
-    msg_type{dmxfish::io::msg_t::NOTHING},
-    internal_state(NEXT_MSG) {
-		};
+		message_buffer_input::message_buffer_input(std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer_):
+			io_buffer(io_buffer_),
+			nr_of_read_msg(0),
+			localoffset(0),
+			localoffset_last(0),
+			byte_count(0),
+			byte_count_temp(0)
+		{
+		}
 
+	bool message_buffer_input::Next(const void** data, int* size){
+		if (this->nr_of_read_msg >= this->io_buffer->size()){
+			return false;
+		}
+		*data = (io_buffer->at(nr_of_read_msg).ptr())+localoffset;
+		*size = sizetemp();
+		byte_count_temp += io_buffer->at(nr_of_read_msg).size();
+		localoffset_last = localoffset;
+		localoffset = 0;
+		nr_of_read_msg++;
+		return true;
+	}
 
-void message_buffer::clear() {
-	this->internal_state = NEXT_MSG;
-	this->msg_type = dmxfish::io::msg_t::NOTHING;
-	this->size_left = 0;
+	void message_buffer_input::BackUp(int count){
+		if (count > 0){
+			nr_of_read_msg--;
+			localoffset = sizetemp() - count + localoffset_last;
+		}
+		byte_count_temp -= count;
+	}
 
-	this->data_buffer.str(std::string());
-	this->data_buffer.clear();
-	// this->buffer_length = 0;
-}
+	bool message_buffer_input::HandleReadResult(bool res){
+		if (res){
+			FinishRead();
+		}
+		else {
+			Restore();
+		}
+		byte_count_temp = 0;
+		return res;
+	}
 
-dmxfish::io::msg_t message_buffer::get_msg_type(const std::string& s){
-	return dmxfish::io::msg_t::UPDATE_STATE;
-}
+	void message_buffer_input::Restore(){
+		nr_of_read_msg = 0;
+		localoffset = 0;
+	}
 
+	void message_buffer_input::FinishRead(){
+		while (nr_of_read_msg > 0) {
+			io_buffer->pop_front();
+			nr_of_read_msg--;
+		}
+		if (localoffset > 0){
+			io_buffer->at(0).advance(localoffset);
+		}
+		nr_of_read_msg = 0;
+		localoffset = 0;
+		byte_count += byte_count_temp;
+	}
 
-void message_buffer::conn_data_in_cb(const std::string& data_in) {
-  const auto length = data_in.length();
-  if (length > 0){
-    switch (internal_state) {
-      case 0:
-        msg_type = get_msg_type(data_in.substr(0,1));
-        internal_state = GETLENGTH;
-        return conn_data_in_cb(data_in.substr(1,length));
-        break;
-      case 1:
-			{
-				const char* ch = new char(data_in.at(0));
-        size_left = atoi(ch);
-        internal_state = READ_MSG;
-        return conn_data_in_cb(data_in.substr(1,length));
-        break;
+	bool message_buffer_input::Skip(int count){
+		::spdlog::debug("Run Skip...for skipping {} bytes", count);
+		if (count > sizestream()){
+			return false;
+		}
+		while (count > 0){
+			if (this->nr_of_read_msg >= this->io_buffer->size()){
+				return false;
 			}
-      case 2:
-        if (length >= size_left){
-        	const std::string data_to_send = this->data_buffer.str() + data_in.substr(0, size_left);
-          this->found_message_cb(msg_type, data_to_send, true);
-					size_t a = size_left;
-          this->clear();
-          return conn_data_in_cb(data_in.substr(a, length));
-        } else {
-      		this->data_buffer << data_in.substr(0, length);
-      		// this->buffer_length += length;
-      		this->size_left -= length;
-        }
-        break;
-      default:
-        break;
-    }
-  }
+			if (count < io_buffer->at(nr_of_read_msg).size()){
+				byte_count_temp += count;
+				localoffset += count;
+			} else{
+				localoffset = 0;
+				byte_count_temp += io_buffer->at(nr_of_read_msg).size();
+				nr_of_read_msg++;
+			}
+		}
+		return true;
+	}
 
-	// if (this->buffer_length > this->max) {
-	// 	this->found_message_cb(this->data_buffer.str(), false);
-	// 	this->clear();
-	// }
-}
+	int64_t message_buffer_input::ByteCount() const{
+		return this->byte_count + this->byte_count_temp;
+	}
 
+
+	bool message_buffer_input::ReadVarint32(uint32_t* num){
+		*num = 0;
+		int size = 0;
+		uint8_t* data;
+		int cnt = 1;
+		while(true){
+			if(Next((const void**) &data, &size)){
+				while(size>0){
+					if(*data>=128){
+						*num +=(*data % 128) * 128 * cnt;
+						cnt *= 128;
+						data++;
+						size--;
+					}
+					else{
+						*num += *data;
+						return true;
+					}
+				}
+			}else{
+				return false;
+			}
+		}
+		return false;
+	}
+
+
+	int64_t message_buffer_input::sizetemp() const{
+		if (this->io_buffer->size()>this->nr_of_read_msg){
+			return this->io_buffer->at(this->nr_of_read_msg).size() - this->localoffset;
+		}
+		return 0;
+	}
+
+	int64_t message_buffer_input::sizestream() const{
+		int cnt = 0;
+		int num = nr_of_read_msg;
+		while (num<this->io_buffer->size()){
+			cnt += io_buffer->at(num).size();
+		}
+		return cnt - this->localoffset;
+	}
+
+
+
+
+
+	message_buffer_output::message_buffer_output(std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer_):
+		io_buffer(io_buffer_),
+		new_buff(nullptr),
+		byte_count(0)
+	{}
+
+		bool message_buffer_output::Next(void** data, int* size){
+			if (new_buff != nullptr){
+				const ::rmrf::net::iorecord& new_rec = ::rmrf::net::iorecord(new_buff, 4);
+				this->io_buffer->push_back(new_rec);
+				byte_count += 4;
+			}
+			new_buff = new uint32_t;
+			*size = 4;
+			*data = new_buff;
+			return true;
+		}
+
+	void message_buffer_output::BackUp(int count){
+		if (count>4){
+			return;
+		}
+		const ::rmrf::net::iorecord& new_rec = ::rmrf::net::iorecord(new_buff, 4-count);
+		this->io_buffer->push_back(new_rec);
+		byte_count += (4-count);
+		new_buff = nullptr;
+	}
+
+	int64_t message_buffer_output::ByteCount() const {
+		return this->byte_count;
+	}
+
+	void message_buffer_output::WriteVarint32(uint32_t num){
+		// uint32_t save = num;
+		std::deque<uint8_t> array;
+		while (num>=128){
+			array.push_back(num%128+128);
+			num = num / 128;
+		}
+		array.push_back(num);
+		while (array.size()>0){
+			int size;
+			uint8_t * data;
+			Next((void**) &data, &size);
+			while (size > 0 && array.size()>0) {
+				*data = array.front();
+				data++;
+				array.pop_front();
+				size--;
+			}
+			BackUp(size);
+		}
+	}
 }

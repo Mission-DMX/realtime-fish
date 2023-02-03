@@ -4,13 +4,12 @@
 #include <chrono>
 #include <sstream>
 #include <stdexcept>
-#include <string>
 
 #include "lib/logging.hpp"
-#include "net/sock_address_factory.hpp"
-#include <netdb.h>
-#include <functional>
-#include <functional>
+
+#include "proto_src/RealTimeControl.pb.h"
+#include "google/protobuf/util/delimited_message_util.h"
+
 
 namespace dmxfish::io {
 
@@ -51,29 +50,14 @@ void IOManager::run() {
 	::spdlog::debug("Leaving ev defloop");
 }
 
-void IOManager::client_cb(std::shared_ptr<rmrf::net::tcp_client> client){
-	::spdlog::debug("Client Here");
-  // gui_clients.emplace<GuiVerbindung>(client);
-  client->write_data("abc");
-  // client->write_data("avcvdfadsf");
-  this->conn_client=client;
-}
+IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) :
+    running(true),
+    iothread(nullptr),
+    run_time_state(run_time_state_),
+    loop(nullptr),
+    gui_connections(std::make_shared<GUI_Connection_Handler>(std::bind(&dmxfish::io::IOManager::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2)))
 
-void IOManager::full_message_cb(msg_t msg_type, const std::string& s, bool msg_full){
-	switch (msg_type) {
-		case dmxfish::io::msg_t::UPDATE_STATE:
-				::spdlog::debug("Update-State: Got full message: {:s}" , s);
-				break;
-		case dmxfish::io::msg_t::CURRENT_STATE_UPDATE:
-				::spdlog::debug("CurrentState: Got full message: {:s}" , s);
-				break;
-		default:
-				::spdlog::debug("Error: Got full message: {:s}" , s);
-				break;
-	}
-}
-
-IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) : running(true), iothread(nullptr), run_time_state(run_time_state_), loop(nullptr), msg_buffer(std::make_shared<message_buffer>(std::bind(&dmxfish::io::IOManager::full_message_cb, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3))) {
+{
 	if (is_default_manager) {
 		if(!check_version_libev())
 			throw std::runtime_error("Unable to initialize libev");
@@ -87,21 +71,41 @@ IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_d
 }
 
 void IOManager::start() {
-	this->external_control_server = std::make_shared<rmrf::net::tcp_server_socket>(8085, std::bind(&dmxfish::io::IOManager::client_cb, this, std::placeholders::_1));
-	::spdlog::debug("Opened control port.");
-}
-
-void IOManager::writeData(std::string str){
-	this->msg_buffer->conn_data_in_cb(str);
+  this->gui_connections->activate_tcp_connection(8085);
 }
 
 IOManager::~IOManager() {
-	this->external_control_server = nullptr;
 	this->running = false;
 	this->loop->break_loop(::ev::ALL);
 	this->iothread->join();
 
 	::spdlog::debug("Stopped IO manager");
+}
+
+bool IOManager::parse_message_cb(uint32_t msg_type, message_buffer_input* buff){
+	switch ((::missiondmx::fish::ipcmessages::MsgType) msg_type) {
+		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_STATE:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
+				bool cleanEOF;
+				if (buff->HandleReadResult(google::protobuf::util::ParseDelimitedFromZeroCopyStream(msg.get(), buff, &cleanEOF))){
+						return true;
+				}
+				return false;
+			}
+		case ::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
+				bool cleanEOF;
+				if (buff->HandleReadResult(google::protobuf::util::ParseDelimitedFromZeroCopyStream(msg.get(), buff, &cleanEOF))){
+						return true;
+				}
+				return false;
+			}
+		default:
+				::spdlog::debug("Error: Got full message: C");
+				return false;
+	}
 }
 
 }

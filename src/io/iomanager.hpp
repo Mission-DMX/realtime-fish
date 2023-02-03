@@ -5,12 +5,7 @@
 
 #include "lib/evpp.hpp"
 #include "io/state_book.hpp"
-#include "rmrf-net/tcp_server_socket.hpp"
-
-
-#include "rmrf-net/tcp_client.hpp"
-#include "io/message_buffer.hpp"
-#include "io/msg_type.hpp"
+#include "io/gui_connection_handler.hpp"
 
 namespace dmxfish::io {
 
@@ -21,17 +16,13 @@ namespace dmxfish::io {
 			std::shared_ptr<std::thread> iothread;
 			std::shared_ptr<runtime_state_t> run_time_state;
 			std::shared_ptr<::ev::loop_ref> loop;
-			std::shared_ptr<message_buffer> msg_buffer;
-			std::shared_ptr<rmrf::net::tcp_server_socket> external_control_server;
-			std::shared_ptr<rmrf::net::tcp_client> conn_client;
+			std::shared_ptr<GUI_Connection_Handler> gui_connections;
 		public:
 			IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager = false);
 			~IOManager();
 			void start();
-			void writeData(std::string str);
 		private:
 			void run();
-			void full_message_cb(msg_t msg_type, const std::string& s, bool msg_full);
-			void client_cb(std::shared_ptr<rmrf::net::tcp_client> client);
+			bool parse_message_cb(uint32_t msg_type, message_buffer_input* buff);
 	};
 }

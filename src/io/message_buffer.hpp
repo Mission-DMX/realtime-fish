@@ -1,38 +1,47 @@
-
 #include <functional>
-#include <memory>
-#include <string>
-#include <sstream>
 
-#include "io/msg_type.hpp"
+#include "rmrf-net/ioqueue.hpp"
 
-namespace dmxfish::io {
+// #include "absl/strings/cord.h"
+#include "google/protobuf/io/zero_copy_stream.h"
 
-class message_buffer {
-public:
+namespace dmxfish::io{
 
-	typedef std::function<void(msg_t msg_type, const std::string&, bool)> found_message_cb_t;
+class message_buffer_input : public google::protobuf::io::ZeroCopyInputStream{
 private:
-	enum internal_state_t{
-		NEXT_MSG,
-		GETLENGTH,
-		READ_MSG
-	};
-	found_message_cb_t found_message_cb;
-	// std::string::size_type max;
-	std::ostringstream data_buffer;
-	// std::deque<uint8_t> data_buffer;
-	size_t size_left;
-	internal_state_t internal_state;
-	dmxfish::io::msg_t msg_type;
+	std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer;
+	int nr_of_read_msg;
+	int localoffset;
+	int localoffset_last;
+	int64_t byte_count;
+	int64_t byte_count_temp;
 public:
-
-		// message_buffer(found_message_cb_t found_message_cb_, std::string::size_type max_line_size);
-		message_buffer(found_message_cb_t found_message_cb_);
-		void conn_data_in_cb(const std::string& data_in);
+	message_buffer_input(std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer_);
+	bool Next(const void** data, int* size);
+	void BackUp(int count);
+	bool Skip(int count);
+	int64_t ByteCount() const;
+	bool HandleReadResult(bool res);
+	bool ReadVarint32(uint32_t *);
 private:
-	void clear();
-	dmxfish::io::msg_t get_msg_type(const std::string& s);
+	inline void Restore();
+	inline void FinishRead();
+	int64_t sizetemp() const;
+	int64_t sizestream() const;
+};
+
+// This class should be deletet, memory leakage!!!
+class message_buffer_output : public google::protobuf::io::ZeroCopyOutputStream{
+private:
+	std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer;
+	uint32_t* new_buff;
+	int64_t byte_count;
+public:
+	message_buffer_output(std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer_);
+	void BackUp(int count);
+	int64_t ByteCount() const;
+	bool Next(void** data, int* size);
+	void WriteVarint32(uint32_t);
 };
 
 }
