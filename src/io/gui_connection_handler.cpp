@@ -42,16 +42,12 @@ void GUI_Connection_Handler::client_cb(std::shared_ptr<rmrf::net::tcp_client> cl
 	curr_state_u3->set_last_error("Error Wathever2");
 
 	auto testBuffer = clients.front();
-	std::cout << "before writing "<< std::endl;
 	testBuffer->getOstream()->WriteVarint32(::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE);
-	std::cout << "in between "<< std::endl;
 	std::cout << "GC: finishedSerialize: " << curr_state_u->current_state() << " finished: " << google::protobuf::util::SerializeDelimitedToZeroCopyStream(*(curr_state_u.get()), testBuffer->getOstream()) << std::endl;
+	// testBuffer->handle_messages();
+
 	testBuffer->getOstream()->WriteVarint32(::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE);
 	std::cout << "GC: finishedSerialize: " << curr_state_u3->current_state() << " finished: " << google::protobuf::util::SerializeDelimitedToZeroCopyStream(*(curr_state_u3.get()), testBuffer->getOstream()) << std::endl;
-
-	auto curr_state_u2 = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
-	auto curr_state_u4 = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
-	bool test;
 	testBuffer->handle_messages();
 
 }

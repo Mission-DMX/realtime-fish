@@ -56,7 +56,7 @@ int main(int argc, char* argv[], char* env[]) {
 
 
 	start_time = time(NULL);
-	while (run_time_state->running && time(NULL) < start_time+20) {
+	while (run_time_state->running && time(NULL) < start_time+2) {
 
 	}
 

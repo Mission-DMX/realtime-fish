@@ -1,20 +1,21 @@
 #include <functional>
 
 #include "rmrf-net/ioqueue.hpp"
-
+#include <istream>
 // #include "absl/strings/cord.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 
 namespace dmxfish::io{
 
-class message_buffer_input : public google::protobuf::io::ZeroCopyInputStream{
+class message_buffer_input : public google::protobuf::io::ZeroCopyInputStream, public std::istream{
 private:
 	std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer;
 	int nr_of_read_msg;
+	std::deque<rmrf::net::iorecord>::iterator actual_record;
 	int localoffset;
 	int localoffset_last;
-	int64_t byte_count;
-	int64_t byte_count_temp;
+	int byte_count;
+	int byte_count_temp;
 public:
 	message_buffer_input(std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer_);
 	bool Next(const void** data, int* size);
@@ -26,8 +27,8 @@ public:
 private:
 	inline void Restore();
 	inline void FinishRead();
-	int64_t sizetemp() const;
-	int64_t sizestream() const;
+	int sizetemp() const;
+	int sizestream() const;
 };
 
 // This class should be deletet, memory leakage!!!
