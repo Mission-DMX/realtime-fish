@@ -25,6 +25,8 @@ class client_handler{
     std::shared_ptr<rmrf::net::tcp_client> tcp_client;
     internal_state_t internal_state;
     uint32_t msg_type;
+    uint32_t msg_length;
+		int pls_size;
 	public:
     client_handler(parse_message_cb_t found_message_cb_, std::shared_ptr<rmrf::net::tcp_client>);
 		message_buffer_output* getOstream(){return output_stream.get();}

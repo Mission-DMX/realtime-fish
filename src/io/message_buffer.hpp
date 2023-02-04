@@ -4,10 +4,12 @@
 #include <istream>
 // #include "absl/strings/cord.h"
 #include "google/protobuf/io/zero_copy_stream.h"
+#include "google/protobuf/io/coded_stream.h"
 
 namespace dmxfish::io{
 
-class message_buffer_input : public google::protobuf::io::ZeroCopyInputStream{
+class message_buffer_input : public google::protobuf::io::ZeroCopyInputStream//, public google::protobuf::io::CodedInputStream
+{
 private:
 	std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer;
 	int nr_of_read_msg;
@@ -24,11 +26,11 @@ public:
 	int64_t ByteCount() const;
 	bool HandleReadResult(bool res);
 	bool ReadVarint32(uint32_t *);
+	int streamsize() const;
 private:
 	inline void Restore();
 	inline void FinishRead();
 	int sizetemp() const;
-	int sizestream() const;
 };
 
 // This class should be deletet, memory leakage!!!

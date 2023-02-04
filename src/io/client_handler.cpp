@@ -30,11 +30,12 @@ namespace dmxfish::io {
     void client_handler::handle_messages(){
       switch (internal_state) {
         case NEXT_MSG:
-            if(getIstream()->HandleReadResult(getIstream()->ReadVarint32(&msg_type))){
+          {
+            if(getIstream()->HandleReadResult(getIstream()->ReadVarint32(&this->msg_type))){
             // googles lengh read function, does not work
             // if(getIstream()->HandleReadResult(((google::protobuf::io::CodedInputStream*) getIstream())->ReadVarint32(&msg_type))){
-              std::cout << "msg_type: " << msg_type << std::endl;
-              this->internal_state = READ_MSG;
+              std::cout << "msg_type: " << this->msg_type << std::endl;
+              this->internal_state = GETLENGTH;
             }
             else {
               // ::spdlog::debug("NEXT_MSG: MsgWasNotLongEnough");
@@ -42,20 +43,35 @@ namespace dmxfish::io {
             }
             // ::spdlog::debug("NextMsg");
             return handle_messages();
+          }
         case GETLENGTH:
-            ::spdlog::debug("GetLength");
-            break;
-        case READ_MSG:
           {
-            if (parse_message_cb(msg_type, getIstream())){
-              this->internal_state = NEXT_MSG;
-            } else{
-              // ::spdlog::debug("ReadMSG: MsgWasNotLongEnough");
+            // if(getIstream()->HandleReadResult(getIstream()->ReadVarint32(&this->msg_length))){
+            int size_before = getIstream()->streamsize();
+            if(getIstream()->ReadVarint32(&this->msg_length)){
+              this->pls_size = size_before - getIstream()->streamsize();
+              getIstream()->HandleReadResult(false);
+              std::cout << "msg_length: " << this->msg_length << std::endl;
+              this->internal_state = READ_MSG;
+            } else {
+              getIstream()->HandleReadResult(false);
               return;
             }
-            // ::spdlog::debug("ReadMSG");
             return handle_messages();
-            break;
+          }
+        case READ_MSG:
+          {
+            if (getIstream()->streamsize() >= this->msg_length - this->pls_size){
+              if (parse_message_cb(msg_type, getIstream())){
+                this->internal_state = NEXT_MSG;
+              } else{
+                ::spdlog::debug("ReadMSG: Error");
+                return;
+              }
+              // ::spdlog::debug("ReadMSG");
+              return handle_messages();
+            }
+            ::spdlog::debug("ReadMSG: Msg was not long enough");
           }
         default:
             ::spdlog::debug("Error: Unknown State");

@@ -43,10 +43,17 @@ void GUI_Connection_Handler::client_cb(std::shared_ptr<rmrf::net::tcp_client> cl
 
 	auto testBuffer = clients.front();
 	testBuffer->getOstream()->WriteVarint32(::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE);
+		// -> google Variante fuer Write Int, funktioniert nicht
+		// ((google::protobuf::io::CodedOutputStream*) testBuffer->getOstream())->WriteVarint32(::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE);
 
-	// -> google Variante fuer Write Int, funktioniert nicht
-	// ((google::protobuf::io::CodedOutputStream*) testBuffer->getOstream())->WriteVarint32(::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE);
-	std::cout << "GC: finishedSerialize: " << curr_state_u->current_state() << " finished: " << google::protobuf::util::SerializeDelimitedToZeroCopyStream(*(curr_state_u.get()), testBuffer->getOstream()) << std::endl;
+	uint32_t length = curr_state_u->ByteSizeLong();
+	testBuffer->getOstream()->WriteVarint32(length);
+	std::cout << "GC: finishedSerialize: " << curr_state_u->current_state() << " finished: " << curr_state_u->SerializeToZeroCopyStream(testBuffer->getOstream()) << std::endl;
+
+
+	// std::cout << "GC: finishedSerialize: " << curr_state_u->current_state() << " finished: " << google::protobuf::util::SerializeDelimitedToZeroCopyStream(*(curr_state_u.get()), testBuffer->getOstream()) << std::endl;
+
+
 	// testBuffer->handle_messages();
 
 	testBuffer->getOstream()->WriteVarint32(::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE);

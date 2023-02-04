@@ -65,7 +65,7 @@ namespace dmxfish::io {
 
 	bool message_buffer_input::Skip(int count){
 		::spdlog::debug("Run Skip...for skipping {} bytes", count);
-		if (count > sizestream()){
+		if (count > streamsize()){
 			return false;
 		}
 
@@ -116,15 +116,7 @@ namespace dmxfish::io {
 		return false;
 	}
 
-
-	int message_buffer_input::sizetemp() const{
-		if (this->actual_record < this->io_buffer->end()){
-			return (*this->actual_record).size() - this->localoffset;
-		}
-		return 0;
-	}
-
-	int message_buffer_input::sizestream() const{
+	int message_buffer_input::streamsize() const{
 		int cnt = 0;
 		std::deque<rmrf::net::iorecord>::iterator temp_it = this->actual_record;
 		while (temp_it<=this->io_buffer->end()){
@@ -132,6 +124,13 @@ namespace dmxfish::io {
 			temp_it++;
 		}
 		return cnt - this->localoffset;
+	}
+
+	int message_buffer_input::sizetemp() const{
+		if (this->actual_record < this->io_buffer->end()){
+			return (*this->actual_record).size() - this->localoffset;
+		}
+		return 0;
 	}
 
 
