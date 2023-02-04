@@ -19,20 +19,17 @@ namespace dmxfish::io {
 		if (this->actual_record >= this->io_buffer->end()){
 			return false;
 		}
-		// *data = (io_buffer->at(nr_of_read_msg).ptr())+localoffset;
 		*data = (*this->actual_record).ptr() + localoffset;
 		*size = sizetemp();
 		this->byte_count_temp += (*this->actual_record).size();
 		this->localoffset_last = this->localoffset;
 		this->localoffset = 0;
-		// this->actual_record.next();
 		this->actual_record++;
 		return true;
 	}
 
 	void message_buffer_input::BackUp(int count){
 		if (count > 0){
-			// this->actual_record.prev();
 			this->actual_record--;
 			this->localoffset = sizetemp() - count + this->localoffset_last;
 		}
@@ -52,7 +49,6 @@ namespace dmxfish::io {
 
 	void message_buffer_input::Restore(){
 		this->actual_record = this->io_buffer->begin();
-		// this->nr_of_read_msg = 0;
 		this->localoffset = 0;
 	}
 
@@ -61,10 +57,8 @@ namespace dmxfish::io {
 			this->io_buffer->pop_front();
 		}
 		if (this->localoffset > 0){
-			// this->io_buffer->at(0).advance(localoffset);
 			(*this->actual_record).advance(this->localoffset);
 		}
-		// nr_of_read_msg = 0;
 		this->localoffset = 0;
 		this->byte_count += this->byte_count_temp;
 	}
@@ -74,19 +68,6 @@ namespace dmxfish::io {
 		if (count > sizestream()){
 			return false;
 		}
-		// while (count > 0){
-		// 	if (this->nr_of_read_msg >= this->io_buffer->size()){
-		// 		return false;
-		// 	}
-		// 	if (count < io_buffer->at(nr_of_read_msg).size()){
-		// 		byte_count_temp += count;
-		// 		localoffset += count;
-		// 	} else{
-		// 		localoffset = 0;
-		// 		byte_count_temp += io_buffer->at(nr_of_read_msg).size();
-		// 		nr_of_read_msg++;
-		// 	}
-		// }
 
 		while (count > 0){
 			if (this->actual_record >= this->io_buffer->end()){
@@ -141,19 +122,13 @@ namespace dmxfish::io {
 			return (*this->actual_record).size() - this->localoffset;
 		}
 		return 0;
-		// if (this->io_buffer->size()>this->nr_of_read_msg){
-		// 	return this->io_buffer->at(this->nr_of_read_msg).size() - this->localoffset;
-		// }
-		// return 0;
 	}
 
 	int message_buffer_input::sizestream() const{
 		int cnt = 0;
-		// int num = nr_of_read_msg;
 		std::deque<rmrf::net::iorecord>::iterator temp_it = this->actual_record;
 		while (temp_it<=this->io_buffer->end()){
 			cnt += (*temp_it).size();
-			// temp_it.next();
 			temp_it++;
 		}
 		return cnt - this->localoffset;
@@ -196,7 +171,6 @@ namespace dmxfish::io {
 	}
 
 	void message_buffer_output::WriteVarint32(uint32_t num){
-		// uint32_t save = num;
 		std::deque<uint8_t> array;
 		while (num>=128){
 			array.push_back(num%128+128);

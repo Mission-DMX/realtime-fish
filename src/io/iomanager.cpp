@@ -102,6 +102,8 @@ bool IOManager::parse_message_cb(uint32_t msg_type, message_buffer_input* buff){
             std::cout << "CurUpState state: " << msg->current_state() << std::endl;
 						return true;
 				}
+
+        std::cout << "CurUpState state: false" << std::endl;
 				return false;
 			}
 		default:

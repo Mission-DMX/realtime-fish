@@ -7,7 +7,7 @@
 
 namespace dmxfish::io{
 
-class message_buffer_input : public google::protobuf::io::ZeroCopyInputStream, public std::istream{
+class message_buffer_input : public google::protobuf::io::ZeroCopyInputStream{
 private:
 	std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer;
 	int nr_of_read_msg;

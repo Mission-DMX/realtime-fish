@@ -30,8 +30,11 @@ namespace dmxfish::io {
     void client_handler::handle_messages(){
       switch (internal_state) {
         case NEXT_MSG:
-            if(getIstream()->HandleReadResult((getIstream())->ReadVarint32(&msg_type))){
-              internal_state = READ_MSG;
+            if(getIstream()->HandleReadResult(getIstream()->ReadVarint32(&msg_type))){
+            // googles lengh read function, does not work
+            // if(getIstream()->HandleReadResult(((google::protobuf::io::CodedInputStream*) getIstream())->ReadVarint32(&msg_type))){
+              std::cout << "msg_type: " << msg_type << std::endl;
+              this->internal_state = READ_MSG;
             }
             else {
               // ::spdlog::debug("NEXT_MSG: MsgWasNotLongEnough");
@@ -45,7 +48,7 @@ namespace dmxfish::io {
         case READ_MSG:
           {
             if (parse_message_cb(msg_type, getIstream())){
-              internal_state = NEXT_MSG;
+              this->internal_state = NEXT_MSG;
             } else{
               // ::spdlog::debug("ReadMSG: MsgWasNotLongEnough");
               return;
