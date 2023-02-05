@@ -7,7 +7,12 @@
 
 #include "lib/logging.hpp"
 
+#include "proto_src/MessageTypes.pb.h"
+#include "proto_src/Console.pb.h"
+#include "proto_src/DirectMode.pb.h"
+#include "proto_src/FilterMode.pb.h"
 #include "proto_src/RealTimeControl.pb.h"
+#include "proto_src/UniverseControl.pb.h"
 #include "google/protobuf/util/delimited_message_util.h"
 
 
