@@ -11,7 +11,7 @@ namespace dmxfish::io {
 
 class client_handler{
 	public:
-    typedef std::function<bool(uint32_t, message_buffer_input*)> parse_message_cb_t;
+    typedef std::function<bool(uint32_t, message_buffer_input&)> parse_message_cb_t;
 	private:
 		enum internal_state_t{
 			NEXT_MSG,
@@ -29,8 +29,8 @@ class client_handler{
 		int pls_size;
 	public:
     client_handler(parse_message_cb_t found_message_cb_, std::shared_ptr<rmrf::net::tcp_client>);
-		message_buffer_output* getOstream(){return output_stream.get();}
-		message_buffer_input* getIstream(){return input_stream.get();}
+		message_buffer_output& getOstream(){return *output_stream.get();}
+		message_buffer_input& getIstream(){return *input_stream.get();}
     void handle_messages();
 };
 
