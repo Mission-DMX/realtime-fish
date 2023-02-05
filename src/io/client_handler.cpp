@@ -50,7 +50,7 @@ namespace dmxfish::io {
           }
         case READ_MSG:
           {
-            if (getIstream().streamsize() >= this->msg_length - this->pls_size){
+            if (getIstream().streamsize() >= this->msg_length + this->pls_size){
               if (parse_message_cb(msg_type, getIstream())){
                 this->internal_state = NEXT_MSG;
               } else{
