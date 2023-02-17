@@ -20,32 +20,32 @@ namespace dmxfish::io {
 
 bool check_version_libev()
 {
-    auto ev_major{ev::version_major()};
-    auto ev_minor{ev::version_minor()};
+		auto ev_major{ev::version_major()};
+		auto ev_minor{ev::version_minor()};
 
-    constexpr auto exp_major{EV_VERSION_MAJOR};
-    constexpr auto exp_minor{EV_VERSION_MINOR};
+		constexpr auto exp_major{EV_VERSION_MAJOR};
+		constexpr auto exp_minor{EV_VERSION_MINOR};
 
-    std::stringstream str;
-    str <<
-        "Checking dependency: libev: detected " <<
-        std::dec << ev_major << "." << std::setw(2) << std::setfill('0') << ev_minor <<
-        ", compiled " <<
-        std::dec << exp_major << "." << std::setw(2) << std::setfill('0') << exp_minor;
+		std::stringstream str;
+		str <<
+				"Checking dependency: libev: detected " <<
+				std::dec << ev_major << "." << std::setw(2) << std::setfill('0') << ev_minor <<
+				", compiled " <<
+				std::dec << exp_major << "." << std::setw(2) << std::setfill('0') << exp_minor;
 
-    if (ev_major != exp_major) {
+		if (ev_major != exp_major) {
 		::spdlog::debug(str.str().c_str());
-        ::spdlog::error("Checking dependency: libev: failed version check: Major API version mismatch.");
-        return false;
-    }
+				::spdlog::error("Checking dependency: libev: failed version check: Major API version mismatch.");
+				return false;
+		}
 
-    if (ev_minor < exp_minor) {
+		if (ev_minor < exp_minor) {
 		::spdlog::debug(str.str().c_str());
-        ::spdlog::error("Checking dependency: libev: failed version check: Minor API version too old.");
-        return false;
-    }
+				::spdlog::error("Checking dependency: libev: failed version check: Minor API version too old.");
+				return false;
+		}
 
-    return true;
+		return true;
 }
 
 void IOManager::run() {
@@ -56,11 +56,11 @@ void IOManager::run() {
 }
 
 IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) :
-    running(true),
-    iothread(nullptr),
-    run_time_state(run_time_state_),
-    loop(nullptr),
-    gui_connections(std::make_shared<GUI_Connection_Handler>(std::bind(&dmxfish::io::IOManager::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2)))
+		running(true),
+		iothread(nullptr),
+		run_time_state(run_time_state_),
+		loop(nullptr),
+		gui_connections(std::make_shared<GUI_Connection_Handler>(std::bind(&dmxfish::io::IOManager::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2)))
 
 {
 	if (is_default_manager) {
@@ -76,7 +76,7 @@ IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_d
 }
 
 void IOManager::start() {
-  this->gui_connections->activate_tcp_connection(8085);
+	this->gui_connections->activate_tcp_connection(8085);
 }
 
 IOManager::~IOManager() {
@@ -94,7 +94,7 @@ bool IOManager::parse_message_cb(uint32_t msg_type, message_buffer_input& buff){
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
 				bool cleanEOF;
 				if (buff.HandleReadResult(google::protobuf::util::ParseDelimitedFromZeroCopyStream(msg.get(), &buff, &cleanEOF))){
-            std::cout << "Update State state: " << msg->new_state() << std::endl;
+						std::cout << "Update State state: " << msg->new_state() << std::endl;
 						return true;
 				}
 				return false;
@@ -105,11 +105,11 @@ bool IOManager::parse_message_cb(uint32_t msg_type, message_buffer_input& buff){
 				bool cleanEOF;
 				// if (buff->HandleReadResult(msg->ParseFromZeroCopyStream(buff))){
 				if (buff.HandleReadResult(google::protobuf::util::ParseDelimitedFromZeroCopyStream(msg.get(), &buff, &cleanEOF))){
-            std::cout << "CurUpState state: " << msg->current_state() << std::endl;
+						std::cout << "CurUpState state: " << msg->current_state() << std::endl;
 						return true;
 				}
 
-        std::cout << "CurUpState state: false" << std::endl;
+				std::cout << "CurUpState state: false" << std::endl;
 				return false;
 			}
 		default:
