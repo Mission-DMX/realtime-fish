@@ -106,6 +106,8 @@ namespace dmxfish::io {
 					}
 					else{
 						*num += *data;
+						size--;
+						BackUp(size);
 						return true;
 					}
 				}
