@@ -8,31 +8,6 @@
 
 namespace dmxfish::io{
 
-class message_buffer_input : public google::protobuf::io::ZeroCopyInputStream//, public google::protobuf::io::CodedInputStream
-{
-private:
-	std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer;
-	int nr_of_read_msg;
-	std::deque<rmrf::net::iorecord>::iterator actual_record;
-	int localoffset;
-	int localoffset_last;
-	int byte_count;
-	int byte_count_temp;
-public:
-	message_buffer_input(std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer_);
-	bool Next(const void** data, int* size);
-	void BackUp(int count);
-	bool Skip(int count);
-	int64_t ByteCount() const;
-	bool HandleReadResult(bool res);
-	bool ReadVarint32(uint32_t *);
-	int streamsize() const;
-private:
-	inline void Restore();
-	inline void FinishRead();
-	int sizetemp() const;
-};
-
 // This class should be deletet, memory leakage!!!
 class message_buffer_output : public google::protobuf::io::ZeroCopyOutputStream{
 private:

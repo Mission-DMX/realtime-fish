@@ -87,7 +87,7 @@ IOManager::~IOManager() {
 	::spdlog::debug("Stopped IO manager");
 }
 
-bool IOManager::parse_message_cb(uint32_t msg_type, message_buffer_input& buff){
+bool IOManager::parse_message_cb(uint32_t msg_type, client_handler& buff){
 	switch ((::missiondmx::fish::ipcmessages::MsgType) msg_type) {
 		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_STATE:
 			{
