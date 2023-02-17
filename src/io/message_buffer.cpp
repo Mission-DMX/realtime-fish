@@ -4,16 +4,16 @@
 
 namespace dmxfish::io {
 
-		message_buffer_input::message_buffer_input(std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer_):
-			io_buffer(io_buffer_),
-			nr_of_read_msg(0),
-			actual_record(this->io_buffer->begin()),
-			localoffset(0),
-			localoffset_last(0),
-			byte_count(0),
-			byte_count_temp(0)
-		{
-		}
+	message_buffer_input::message_buffer_input(std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer_):
+		io_buffer(io_buffer_),
+		nr_of_read_msg(0),
+		actual_record(this->io_buffer->begin()),
+		localoffset(0),
+		localoffset_last(0),
+		byte_count(0),
+		byte_count_temp(0)
+	{
+	}
 
 	bool message_buffer_input::Next(const void** data, int* size){
 		if (this->actual_record >= this->io_buffer->end()){
