@@ -41,6 +41,7 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		bool Skip(int count);
 		int64_t ByteCount() const;
 		bool HandleReadResult(bool res);
+	private:
 		bool ReadVarint32(uint32_t *);
 		int streamsize() const;
 		inline void Restore();
