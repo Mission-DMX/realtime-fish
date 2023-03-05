@@ -11,13 +11,15 @@ namespace dmxfish::io {
 		output_stream(std::make_shared<message_buffer_output>(this->io_buffer)),
 		tcp_client(client),
 		internal_state(NEXT_MSG),
+		msg_type(0),
 		nr_of_read_msg(0),
 		actual_record(this->io_buffer->begin()),
 		localoffset(0),
 		localoffset_last(0),
 		byte_count(0),
 		byte_count_temp(0),
-		limit_(5)
+		limit_(5),
+		read_var_int_multiplier(1)
 	{
 
 	}
@@ -27,14 +29,13 @@ namespace dmxfish::io {
 			case NEXT_MSG:
 				{
 					if(ReadVarint32(&this->msg_type)){
-					// googles lengh read function, does not work
-					// if(getIstream().HandleReadResult(((google::protobuf::io::CodedInputStream*) getIstream())->ReadVarint32(&msg_type))){
 						std::cout << "msg_type: " << this->msg_type << std::endl;
+						this->msg_length = 0;
 						this->internal_state = GETLENGTH;
 						this->limit_ = 5;
 					}
 					else {
-						::spdlog::debug("NEXT_MSG: Error");
+						::spdlog::debug("NEXT_MSG: Not finishing byte for Varint");
 						return;
 					}
 					// ::spdlog::debug("NextMsg");
@@ -42,13 +43,12 @@ namespace dmxfish::io {
 				}
 			case GETLENGTH:
 				{
-					int size_before = streamsize();
 					if(ReadVarint32(&this->msg_length)){
-						this->pls_size = size_before - streamsize();
 						std::cout << "msg_length: " << this->msg_length << std::endl;
 						this->internal_state = READ_MSG;
 						this->limit_ =  this->msg_length;
 					} else {
+						::spdlog::debug("GETLENGTH: Not finishing byte for Varint");
 						return;
 					}
 					return handle_messages();
@@ -57,6 +57,7 @@ namespace dmxfish::io {
 				{
 					if (streamsize() >= this->msg_length){
 						if (parse_message_cb(msg_type, *this)){
+							this->msg_type = 0;
 							this->internal_state = NEXT_MSG;
 							this->limit_ = 5;
 						} else{
@@ -130,11 +131,11 @@ namespace dmxfish::io {
 	bool client_handler::Skip(int count){
 		if (count > limit_) {
 	    if (limit_ < 0) return false;
-	    this->Skip(limit_);
+	    this->SkipLocal(limit_);
 	    limit_ = 0;
 	    return false;
 	  } else {
-	    if (!this->Skip(count)) return false;
+	    if (!this->SkipLocal(count)) return false;
 	    limit_ -= count;
 	    return true;
 	  }
@@ -163,6 +164,7 @@ namespace dmxfish::io {
 	}
 
 	int64_t client_handler::ByteCount() const{
+		::spdlog::debug("ByteCount");
 		if (limit_ < 0) {
 	    return this->byte_count + this->byte_count_temp + limit_; // - prior_bytes_read_;
 	  } else {
@@ -174,25 +176,23 @@ namespace dmxfish::io {
 		return this->byte_count + this->byte_count_temp;
 	}
 
-
 	bool client_handler::ReadVarint32(uint32_t* num){
-		*num = 0;
 		int size = 0;
 		uint8_t* data;
-		int cnt = 1;
 		while(true){
 			if(Next((const void**) &data, &size)){
 				while(size>0){
 					if(*data>=128){
-						*num +=(*data % 128) * cnt;
-						cnt *= 128;
+						*num +=(*data % 128) * this->read_var_int_multiplier;
+						this->read_var_int_multiplier *= 128;
 						data++;
 						size--;
 					}
 					else{
-						*num += *data * cnt;
+						*num += *data * this->read_var_int_multiplier;
 						size--;
 						BackUp(size);
+						this->read_var_int_multiplier = 1;
 						return true;
 					}
 				}

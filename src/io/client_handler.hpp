@@ -31,6 +31,7 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		int byte_count;
 		int byte_count_temp;
 		int64_t limit_;
+		int read_var_int_multiplier;
 	public:
 		client_handler(parse_message_cb_t found_message_cb_, std::shared_ptr<rmrf::net::tcp_client>);
 		message_buffer_output& getOstream(){return *output_stream.get();}
