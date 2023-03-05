@@ -8,7 +8,6 @@ namespace dmxfish::io {
 	client_handler::client_handler(parse_message_cb_t parse_message_cb_, std::shared_ptr<rmrf::net::tcp_client> client):
 		parse_message_cb(parse_message_cb_),
 		io_buffer(std::make_shared<::rmrf::net::ioqueue<::rmrf::net::iorecord>>()),
-		// input_stream(std::make_shared<message_buffer_input>(this->io_buffer)),
 		output_stream(std::make_shared<message_buffer_output>(this->io_buffer)),
 		tcp_client(client),
 		internal_state(NEXT_MSG),
@@ -43,36 +42,19 @@ namespace dmxfish::io {
 				}
 			case GETLENGTH:
 				{
-					// // if(getIstream().HandleReadResult(getIstream().ReadVarint32(&this->msg_length))){
-					// int size_before = streamsize();
-					// if(ReadVarint32(&this->msg_length)){
-					// 	this->pls_size = size_before - streamsize();
-					// 	HandleReadResult(false);
-					// 	std::cout << "msg_length: " << this->msg_length << std::endl;
-					// 	this->internal_state = READ_MSG;
-					// 	this->limit_ = this->pls_size + this->msg_length;
-					// } else {
-					// 	HandleReadResult(false);
-					// 	return;
-					// }
-					// return handle_messages();
-					// if(getIstream().HandleReadResult(getIstream().ReadVarint32(&this->msg_length))){
 					int size_before = streamsize();
 					if(ReadVarint32(&this->msg_length)){
 						this->pls_size = size_before - streamsize();
-						// HandleReadResult(true);
 						std::cout << "msg_length: " << this->msg_length << std::endl;
 						this->internal_state = READ_MSG;
 						this->limit_ =  this->msg_length;
 					} else {
-						// HandleReadResult(false);
 						return;
 					}
 					return handle_messages();
 				}
 			case READ_MSG:
 				{
-					// if (streamsize() >= this->msg_length + this->pls_size){
 					if (streamsize() >= this->msg_length){
 						if (parse_message_cb(msg_type, *this)){
 							this->internal_state = NEXT_MSG;
@@ -81,7 +63,6 @@ namespace dmxfish::io {
 							::spdlog::debug("ReadMSG: Error");
 							return;
 						}
-						// ::spdlog::debug("ReadMSG");
 						return handle_messages();
 					}
 					::spdlog::debug("ReadMSG: Msg was not long enough");
@@ -135,22 +116,6 @@ namespace dmxfish::io {
 		this->byte_count_temp -= count;
 	}
 
-	// bool client_handler::HandleReadResult(bool res){
-	// 	if (res){
-	// 		FinishRead();
-	// 	}
-	// 	else {
-	// 		Restore();
-	// 	}
-	// 	this->byte_count_temp = 0;
-	// 	return res;
-	// }
-	//
-	// void client_handler::Restore(){
-	// 	this->actual_record = this->io_buffer->begin();
-	// 	this->localoffset = 0;
-	// }
-
 	void client_handler::FinishRead(){
 		while (this->io_buffer->begin() < this->actual_record) {
 			this->io_buffer->pop_front();
@@ -198,7 +163,6 @@ namespace dmxfish::io {
 	}
 
 	int64_t client_handler::ByteCount() const{
-		// return this->byte_count + this->byte_count_temp;
 		if (limit_ < 0) {
 	    return this->byte_count + this->byte_count_temp + limit_; // - prior_bytes_read_;
 	  } else {

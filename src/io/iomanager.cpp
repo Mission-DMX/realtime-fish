@@ -13,7 +13,6 @@
 #include "proto_src/FilterMode.pb.h"
 #include "proto_src/RealTimeControl.pb.h"
 #include "proto_src/UniverseControl.pb.h"
-// #include "google/protobuf/util/delimited_message_util.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 
 
@@ -88,16 +87,13 @@ IOManager::~IOManager() {
 	::spdlog::debug("Stopped IO manager");
 }
 
-// bool IOManager::parse_message_cb(uint32_t msg_type, client_handler& buff){
 bool IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
 	switch ((::missiondmx::fish::ipcmessages::MsgType) msg_type) {
 		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_STATE:
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
 				bool cleanEOF;
-				// if (buff.HandleReadResult(msg->ParseFromZeroCopyStream(&buff))){
 				if (msg->ParseFromZeroCopyStream(&buff)){
-				// if (buff.HandleReadResult(google::protobuf::util::ParseDelimitedFromZeroCopyStream(msg.get(), &buff, &cleanEOF))){
 						std::cout << "Update State state: " << msg->new_state() << std::endl;
 						return true;
 				}
@@ -107,9 +103,7 @@ bool IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCo
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
 				bool cleanEOF;
-				// if (buff.HandleReadResult(msg->ParseFromZeroCopyStream(&buff))){
 				if (msg->ParseFromZeroCopyStream(&buff)){
-				// if (buff.HandleReadResult(google::protobuf::util::ParseDelimitedFromZeroCopyStream(msg.get(), &buff, &cleanEOF))){
 						std::cout << "CurUpState state: " << msg->current_state() << std::endl;
 						return true;
 				}

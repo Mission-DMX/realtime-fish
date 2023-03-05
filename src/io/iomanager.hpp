@@ -23,7 +23,6 @@ namespace dmxfish::io {
 			void start();
 		private:
 			void run();
-			// bool parse_message_cb(uint32_t, client_handler&);
 			bool parse_message_cb(uint32_t, google::protobuf::io::ZeroCopyInputStream&);
 	};
 }
