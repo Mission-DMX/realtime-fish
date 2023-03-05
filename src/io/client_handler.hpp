@@ -31,6 +31,7 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		int localoffset_last;
 		int byte_count;
 		int byte_count_temp;
+		int64_t limit_;
 	public:
 		client_handler(parse_message_cb_t found_message_cb_, std::shared_ptr<rmrf::net::tcp_client>);
 		message_buffer_output& getOstream(){return *output_stream.get();}
@@ -42,6 +43,9 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		int64_t ByteCount() const;
 		bool HandleReadResult(bool res);
 	private:
+		void BackUpLocal(int count);
+		bool SkipLocal(int count);
+		int64_t ByteCountLocal() const;
 		bool ReadVarint32(uint32_t *);
 		int streamsize() const;
 		inline void Restore();

@@ -17,7 +17,8 @@ namespace dmxfish::io {
 		localoffset(0),
 		localoffset_last(0),
 		byte_count(0),
-		byte_count_temp(0)
+		byte_count_temp(0),
+		limit_(5)
 	{
 
 	}
@@ -31,6 +32,7 @@ namespace dmxfish::io {
 					// if(getIstream().HandleReadResult(((google::protobuf::io::CodedInputStream*) getIstream())->ReadVarint32(&msg_type))){
 						std::cout << "msg_type: " << this->msg_type << std::endl;
 						this->internal_state = GETLENGTH;
+						this->limit_ = 5;
 					}
 					else {
 						// ::spdlog::debug("NEXT_MSG: MsgWasNotLongEnough");
@@ -41,13 +43,27 @@ namespace dmxfish::io {
 				}
 			case GETLENGTH:
 				{
+					// // if(getIstream().HandleReadResult(getIstream().ReadVarint32(&this->msg_length))){
+					// int size_before = streamsize();
+					// if(ReadVarint32(&this->msg_length)){
+					// 	this->pls_size = size_before - streamsize();
+					// 	HandleReadResult(false);
+					// 	std::cout << "msg_length: " << this->msg_length << std::endl;
+					// 	this->internal_state = READ_MSG;
+					// 	this->limit_ = this->pls_size + this->msg_length;
+					// } else {
+					// 	HandleReadResult(false);
+					// 	return;
+					// }
+					// return handle_messages();
 					// if(getIstream().HandleReadResult(getIstream().ReadVarint32(&this->msg_length))){
 					int size_before = streamsize();
 					if(ReadVarint32(&this->msg_length)){
 						this->pls_size = size_before - streamsize();
-						HandleReadResult(false);
+						HandleReadResult(true);
 						std::cout << "msg_length: " << this->msg_length << std::endl;
 						this->internal_state = READ_MSG;
+						this->limit_ =  this->msg_length;
 					} else {
 						HandleReadResult(false);
 						return;
@@ -56,9 +72,11 @@ namespace dmxfish::io {
 				}
 			case READ_MSG:
 				{
-					if (streamsize() >= this->msg_length + this->pls_size){
+					// if (streamsize() >= this->msg_length + this->pls_size){
+					if (streamsize() >= this->msg_length){
 						if (parse_message_cb(msg_type, *this)){
 							this->internal_state = NEXT_MSG;
+							this->limit_ = 5;
 						} else{
 							::spdlog::debug("ReadMSG: Error");
 							return;
@@ -75,6 +93,7 @@ namespace dmxfish::io {
 	}
 
 	bool client_handler::Next(const void** data, int* size){
+		if (limit_ <= 0) return false;
 		if (this->actual_record >= this->io_buffer->end()){
 			return false;
 		}
@@ -84,9 +103,30 @@ namespace dmxfish::io {
 		this->localoffset_last = this->localoffset;
 		this->localoffset = 0;
 		this->actual_record++;
+		std::cout << "NextLimit: " << this->limit_ << std::endl;
+		std::cout << "NextR:" << std::hex;
+		for(int i = 0; i< *size; i++){
+			std::cout << " " <<(int) *((uint8_t*)*data+i);
+		}
+		std::cout << std::dec << std::endl;
+		limit_ -= *size;
+		if (limit_ < 0) {
+		 *size += limit_;
+		}
+
 		return true;
 	}
 	void client_handler::BackUp(int count){
+		if (limit_ < 0) {
+	    this->BackUpLocal(count - limit_);
+	    limit_ = count;
+	  } else {
+	    this->BackUpLocal(count);
+    	limit_ += count;
+		}
+	}
+
+	void client_handler::BackUpLocal(int count){
 		if (count > 0){
 			this->actual_record--;
 			this->localoffset = sizetemp() - count + this->localoffset_last;
@@ -122,6 +162,19 @@ namespace dmxfish::io {
 	}
 
 	bool client_handler::Skip(int count){
+		if (count > limit_) {
+	    if (limit_ < 0) return false;
+	    this->Skip(limit_);
+	    limit_ = 0;
+	    return false;
+	  } else {
+	    if (!this->Skip(count)) return false;
+	    limit_ -= count;
+	    return true;
+	  }
+	}
+
+	bool client_handler::SkipLocal(int count){
 		::spdlog::debug("Run Skip...for skipping {} bytes", count);
 		if (count > streamsize()){
 			return false;
@@ -144,6 +197,15 @@ namespace dmxfish::io {
 	}
 
 	int64_t client_handler::ByteCount() const{
+		// return this->byte_count + this->byte_count_temp;
+		if (limit_ < 0) {
+	    return this->byte_count + this->byte_count_temp + limit_; // - prior_bytes_read_;
+	  } else {
+	    return this->byte_count + this->byte_count_temp; //  - prior_bytes_read_;
+	  }
+	}
+
+	int64_t client_handler::ByteCountLocal() const{
 		return this->byte_count + this->byte_count_temp;
 	}
 
