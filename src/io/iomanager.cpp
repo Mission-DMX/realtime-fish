@@ -95,7 +95,8 @@ bool IOManager::parse_message_cb(uint32_t msg_type, client_handler& buff){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
 				bool cleanEOF;
-				if (buff.HandleReadResult(msg->ParseFromZeroCopyStream(&buff))){
+				// if (buff.HandleReadResult(msg->ParseFromZeroCopyStream(&buff))){
+				if (msg->ParseFromZeroCopyStream(&buff)){
 				// if (buff.HandleReadResult(google::protobuf::util::ParseDelimitedFromZeroCopyStream(msg.get(), &buff, &cleanEOF))){
 						std::cout << "Update State state: " << msg->new_state() << std::endl;
 						return true;
@@ -106,7 +107,8 @@ bool IOManager::parse_message_cb(uint32_t msg_type, client_handler& buff){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
 				bool cleanEOF;
-				if (buff.HandleReadResult(msg->ParseFromZeroCopyStream(&buff))){
+				// if (buff.HandleReadResult(msg->ParseFromZeroCopyStream(&buff))){
+				if (msg->ParseFromZeroCopyStream(&buff)){
 				// if (buff.HandleReadResult(google::protobuf::util::ParseDelimitedFromZeroCopyStream(msg.get(), &buff, &cleanEOF))){
 						std::cout << "CurUpState state: " << msg->current_state() << std::endl;
 						return true;

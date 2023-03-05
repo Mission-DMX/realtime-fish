@@ -27,7 +27,7 @@ namespace dmxfish::io {
 		switch (this->internal_state) {
 			case NEXT_MSG:
 				{
-					if(HandleReadResult(ReadVarint32(&this->msg_type))){
+					if(ReadVarint32(&this->msg_type)){
 					// googles lengh read function, does not work
 					// if(getIstream().HandleReadResult(((google::protobuf::io::CodedInputStream*) getIstream())->ReadVarint32(&msg_type))){
 						std::cout << "msg_type: " << this->msg_type << std::endl;
@@ -35,7 +35,7 @@ namespace dmxfish::io {
 						this->limit_ = 5;
 					}
 					else {
-						// ::spdlog::debug("NEXT_MSG: MsgWasNotLongEnough");
+						::spdlog::debug("NEXT_MSG: Error");
 						return;
 					}
 					// ::spdlog::debug("NextMsg");
@@ -60,12 +60,12 @@ namespace dmxfish::io {
 					int size_before = streamsize();
 					if(ReadVarint32(&this->msg_length)){
 						this->pls_size = size_before - streamsize();
-						HandleReadResult(true);
+						// HandleReadResult(true);
 						std::cout << "msg_length: " << this->msg_length << std::endl;
 						this->internal_state = READ_MSG;
 						this->limit_ =  this->msg_length;
 					} else {
-						HandleReadResult(false);
+						// HandleReadResult(false);
 						return;
 					}
 					return handle_messages();
@@ -124,6 +124,7 @@ namespace dmxfish::io {
 	    this->BackUpLocal(count);
     	limit_ += count;
 		}
+		FinishRead();
 	}
 
 	void client_handler::BackUpLocal(int count){
@@ -134,21 +135,21 @@ namespace dmxfish::io {
 		this->byte_count_temp -= count;
 	}
 
-	bool client_handler::HandleReadResult(bool res){
-		if (res){
-			FinishRead();
-		}
-		else {
-			Restore();
-		}
-		this->byte_count_temp = 0;
-		return res;
-	}
-
-	void client_handler::Restore(){
-		this->actual_record = this->io_buffer->begin();
-		this->localoffset = 0;
-	}
+	// bool client_handler::HandleReadResult(bool res){
+	// 	if (res){
+	// 		FinishRead();
+	// 	}
+	// 	else {
+	// 		Restore();
+	// 	}
+	// 	this->byte_count_temp = 0;
+	// 	return res;
+	// }
+	//
+	// void client_handler::Restore(){
+	// 	this->actual_record = this->io_buffer->begin();
+	// 	this->localoffset = 0;
+	// }
 
 	void client_handler::FinishRead(){
 		while (this->io_buffer->begin() < this->actual_record) {
