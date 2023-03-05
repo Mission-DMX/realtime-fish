@@ -184,13 +184,13 @@ namespace dmxfish::io {
 			if(Next((const void**) &data, &size)){
 				while(size>0){
 					if(*data>=128){
-						*num +=(*data % 128) * 128 * cnt;
+						*num +=(*data % 128) * cnt;
 						cnt *= 128;
 						data++;
 						size--;
 					}
 					else{
-						*num += *data;
+						*num += *data * cnt;
 						size--;
 						BackUp(size);
 						return true;
