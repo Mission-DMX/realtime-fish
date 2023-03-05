@@ -12,12 +12,8 @@ namespace dmxfish::io {
 		tcp_client(client),
 		internal_state(NEXT_MSG),
 		msg_type(0),
-		nr_of_read_msg(0),
 		actual_record(this->io_buffer->begin()),
-		localoffset(0),
-		localoffset_last(0),
 		byte_count(0),
-		byte_count_temp(0),
 		limit_(5),
 		read_var_int_multiplier(1)
 	{
@@ -38,7 +34,6 @@ namespace dmxfish::io {
 						::spdlog::debug("NEXT_MSG: Not finishing byte for Varint");
 						return;
 					}
-					// ::spdlog::debug("NextMsg");
 					return handle_messages();
 				}
 			case GETLENGTH:
@@ -79,101 +74,86 @@ namespace dmxfish::io {
 		if (this->actual_record >= this->io_buffer->end()){
 			return false;
 		}
-		*data = (*this->actual_record).ptr() + localoffset;
-		*size = sizetemp();
-		this->byte_count_temp += (*this->actual_record).size();
-		this->localoffset_last = this->localoffset;
-		this->localoffset = 0;
-		this->actual_record++;
-		std::cout << "NextLimit: " << this->limit_ << std::endl;
-		std::cout << "NextR:" << std::hex;
-		for(int i = 0; i< *size; i++){
-			std::cout << " " <<(int) *((uint8_t*)*data+i);
+		if (this->io_buffer->begin() != this->actual_record){
+			this->io_buffer->pop_front();
 		}
-		std::cout << std::dec << std::endl;
-		limit_ -= *size;
+		*data = (*this->actual_record).ptr();
+		*size = (*this->actual_record).size();
+		this->byte_count += *size;
+		this->actual_record++;
+		this->limit_ -= *size;
 		if (limit_ < 0) {
-		 *size += limit_;
+		 *size += this->limit_;
 		}
 
 		return true;
 	}
+
+
 	void client_handler::BackUp(int count){
 		if (limit_ < 0) {
-	    this->BackUpLocal(count - limit_);
-	    limit_ = count;
+	    this->BackUpLocal(count - this->limit_);
+	    this->limit_ = count;
 	  } else {
 	    this->BackUpLocal(count);
-    	limit_ += count;
+    	this->limit_ += count;
 		}
-		FinishRead();
 	}
 
-	void client_handler::BackUpLocal(int count){
-		if (count > 0){
-			this->actual_record--;
-			this->localoffset = sizetemp() - count + this->localoffset_last;
-		}
-		this->byte_count_temp -= count;
-	}
-
-	void client_handler::FinishRead(){
-		while (this->io_buffer->begin() < this->actual_record) {
+	inline void client_handler::BackUpLocal(int count){
+		if (count == 0){
 			this->io_buffer->pop_front();
+		} else {
+			this->actual_record--;
+			this->actual_record->advance(this->actual_record->size()-count);
+			this->byte_count -= count;
 		}
-		if (this->localoffset > 0){
-			(*this->actual_record).advance(this->localoffset);
-		}
-		this->localoffset = 0;
-		this->byte_count += this->byte_count_temp;
 	}
 
 	bool client_handler::Skip(int count){
-		if (count > limit_) {
+		if (count > this->limit_) {
 	    if (limit_ < 0) return false;
 	    this->SkipLocal(limit_);
-	    limit_ = 0;
+	    this->limit_ = 0;
 	    return false;
 	  } else {
 	    if (!this->SkipLocal(count)) return false;
-	    limit_ -= count;
+	    this->limit_ -= count;
 	    return true;
 	  }
 	}
 
-	bool client_handler::SkipLocal(int count){
+	inline bool client_handler::SkipLocal(int count){
 		::spdlog::debug("Run Skip...for skipping {} bytes", count);
-		if (count > streamsize()){
-			return false;
-		}
+		// if (count > streamsize()){
+		// 	return false;
+		// }
 
 		while (count > 0){
 			if (this->actual_record >= this->io_buffer->end()){
 				return false;
 			}
-			if (count < (*this->actual_record).size()){
-				this->byte_count_temp += count;
-				this->localoffset += count;
+			if (count < this->actual_record->size()){
+				this->byte_count += count;
+				this->actual_record->advance(count);
+				count = 0;
 			} else{
-				this->localoffset = 0;
-				this->byte_count_temp += (*this->actual_record).size();
+				count -= this->actual_record->size();
+				this->byte_count += this->actual_record->size();
 				this->actual_record++;
+				this->io_buffer->pop_front();
 			}
 		}
 		return true;
 	}
 
 	int64_t client_handler::ByteCount() const{
-		::spdlog::debug("ByteCount");
-		if (limit_ < 0) {
-	    return this->byte_count + this->byte_count_temp + limit_; // - prior_bytes_read_;
+		// ::spdlog::debug("ByteCount");
+		if (this->limit_ < 0) {
+	    return this->byte_count + this->limit_;
 	  } else {
-	    return this->byte_count + this->byte_count_temp; //  - prior_bytes_read_;
+	    return this->byte_count;
 	  }
-	}
-
-	int64_t client_handler::ByteCountLocal() const{
-		return this->byte_count + this->byte_count_temp;
 	}
 
 	bool client_handler::ReadVarint32(uint32_t* num){
@@ -206,18 +186,11 @@ namespace dmxfish::io {
 	int client_handler::streamsize() const{
 		int cnt = 0;
 		std::deque<rmrf::net::iorecord>::iterator temp_it = this->actual_record;
-		while (temp_it<=this->io_buffer->end()){
-			cnt += (*temp_it).size();
+		while (temp_it < this->io_buffer->end()){
+			cnt += temp_it->size();
 			temp_it++;
 		}
-		return cnt - this->localoffset;
-	}
-
-	int client_handler::sizetemp() const{
-		if (this->actual_record < this->io_buffer->end()){
-			return (*this->actual_record).size() - this->localoffset;
-		}
-		return 0;
+		return cnt;
 	}
 
 }

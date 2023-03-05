@@ -23,13 +23,8 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		internal_state_t internal_state;
 		uint32_t msg_type;
 		uint32_t msg_length;
-		int pls_size;
-		int nr_of_read_msg;
 		std::deque<rmrf::net::iorecord>::iterator actual_record;
-		int localoffset;
-		int localoffset_last;
 		int byte_count;
-		int byte_count_temp;
 		int64_t limit_;
 		int read_var_int_multiplier;
 	public:
@@ -43,11 +38,8 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 	private:
 		void BackUpLocal(int count);
 		bool SkipLocal(int count);
-		int64_t ByteCountLocal() const;
 		bool ReadVarint32(uint32_t *);
 		int streamsize() const;
-		inline void FinishRead();
-		int sizetemp() const;
 };
 
 }
