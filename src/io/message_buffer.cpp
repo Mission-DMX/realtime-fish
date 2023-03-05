@@ -1,5 +1,5 @@
 #include "io/message_buffer.hpp"
-
+#include "google/protobuf/io/zero_copy_stream.h"
 #include "lib/logging.hpp"
 
 namespace dmxfish::io {

@@ -88,8 +88,8 @@ IOManager::~IOManager() {
 	::spdlog::debug("Stopped IO manager");
 }
 
-bool IOManager::parse_message_cb(uint32_t msg_type, client_handler& buff){
-// bool IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
+// bool IOManager::parse_message_cb(uint32_t msg_type, client_handler& buff){
+bool IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
 	switch ((::missiondmx::fish::ipcmessages::MsgType) msg_type) {
 		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_STATE:
 			{
