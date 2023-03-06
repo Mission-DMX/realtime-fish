@@ -93,12 +93,12 @@ PROTO_OBJDIR := ${OBJDIR}/proto
 
 TEST_SOURCES := $(call rwildcard,${TESTDIR},*.cpp *.c)
 TEST_SRCOBJS := $(patsubst ${TESTDIR}/%.c,${TESTOBJDIR}/%.o,$(patsubst ${TESTDIR}/%.cpp,${TESTOBJDIR}/%.o,${TEST_SOURCES}))
-TEST_TARGETS := $(patsubst ${TESTOBJDIR}/%.o,${TESTBINDIR}/%,${TEST_SRCOBJS})
+TEST_TARGETS := $(patsubst ${TESTOBJDIR}/%.o,${TESTBINDIR}/%, $(filter %_test.o, ${TEST_SRCOBJS}))
 
 PROTO_SRCOBJS := $(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,$(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,${PROTO_SOURCES_B}))
 DEPFLAGS_PROTO = ${DEPFLAGS} -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
 
-OBJECTS := $(filter-out obj/main.o ,${SRCOBJS}) ${OBJDIR}/libproto.a ${OBJDIR}/librmrfnet.a
+OBJECTS := $(filter-out %_test.o ,${TEST_SRCOBJS}) $(filter-out obj/main.o ,${SRCOBJS}) ${OBJDIR}/libproto.a ${OBJDIR}/librmrfnet.a
 
 .PRECIOUS: ${DEPDIR}/%.d ${OBJDIR}/**/%.o ${POTOBJS} ${POOBJS}
 .PHONY: all test clean install lintian style translation

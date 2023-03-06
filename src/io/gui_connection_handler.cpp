@@ -27,6 +27,7 @@ void GUI_Connection_Handler::activate_tcp_connection(int port){
 }
 
 void GUI_Connection_Handler::client_cb(std::shared_ptr<rmrf::net::tcp_client> client){
+	::spdlog::debug("test client CB");
 	this->clients.push_back(std::make_shared<client_handler>(message_cb, client));
 	::spdlog::debug("Client found the server");
 

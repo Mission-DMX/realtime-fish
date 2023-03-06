@@ -1,4 +1,4 @@
-#include "io/iomanager.hpp"
+#include "../test/iomanager_t.hpp"
 
 #include <iomanip>
 #include <chrono>
@@ -16,7 +16,10 @@
 #include "google/protobuf/io/zero_copy_stream.h"
 
 
-namespace dmxfish::io {
+
+namespace dmxfish::test {
+
+using namespace dmxfish::io;
 
 bool check_version_libev()
 {
@@ -55,21 +58,18 @@ void IOManager::run() {
 	::spdlog::debug("Leaving ev defloop");
 }
 
-IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) :
+IOManager::IOManager(client_handler::parse_message_cb_t parse_cb) :
 		running(true),
 		iothread(nullptr),
-		run_time_state(run_time_state_),
 		loop(nullptr),
-		gui_connections(std::make_shared<GUI_Connection_Handler>(std::bind(&dmxfish::io::IOManager::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2)))
+		gui_connections(std::make_shared<GUI_Connection_Handler>(parse_cb))
 
 {
-	if (is_default_manager) {
-		if(!check_version_libev())
-			throw std::runtime_error("Unable to initialize libev");
-		this->loop = std::make_shared<::ev::default_loop>();
-	} else {
-		this->loop = std::make_shared<::ev::dynamic_loop>();
-	}
+
+	if(!check_version_libev())
+		throw std::runtime_error("Unable to initialize libev");
+	this->loop = std::make_shared<::ev::default_loop>();
+
 	this->iothread = std::make_shared<std::thread>(std::bind(&IOManager::run, this));
 	const auto thread_id = std::hash<std::thread::id>{}(this->iothread->get_id());
 	::spdlog::debug("Started IO manager with loop on thread with id {}.", thread_id);
@@ -87,34 +87,10 @@ IOManager::~IOManager() {
 	::spdlog::debug("Stopped IO manager");
 }
 
-bool IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
-	switch ((::missiondmx::fish::ipcmessages::MsgType) msg_type) {
-		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_STATE:
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
-				bool cleanEOF;
-				if (msg->ParseFromZeroCopyStream(&buff)){
-						std::cout << "Update State state: " << msg->new_state() << std::endl;
-						return true;
-				}
-				return false;
-			}
-		case ::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE:
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
-				bool cleanEOF;
-				if (msg->ParseFromZeroCopyStream(&buff)){
-						std::cout << "CurUpState state: " << msg->current_state() << std::endl;
-						return true;
-				}
 
-				std::cout << "CurUpState state: false" << std::endl;
-				return false;
-			}
-		default:
-				::spdlog::debug("Error: Got full message: C");
-				return false;
-	}
-}
 
 }
+// int main(int argc, char* argv[], char* env[]) {
+// 	spdlog::set_level(spdlog::level::debug);
+// 	::spdlog::debug("Only for others");
+// }
