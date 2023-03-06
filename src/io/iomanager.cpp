@@ -80,8 +80,15 @@ void IOManager::start() {
 }
 
 IOManager::~IOManager() {
+	::spdlog::debug("Stopped IO manager1");
 	this->running = false;
+	::spdlog::debug("Stopped IO manager2");
 	this->loop->break_loop(::ev::ALL);
+	::spdlog::debug("Stopped IO manager3");
+	this->loop.get()->~loop_ref();
+	::spdlog::debug("Stopped IO manager4");
+	this->iothread.get()->~thread();
+	::spdlog::debug("Stopped IO manager5");
 	this->iothread->join();
 
 	::spdlog::debug("Stopped IO manager");

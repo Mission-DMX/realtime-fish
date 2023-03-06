@@ -1,3 +1,4 @@
+#pragma once
 #include <functional>
 #include <memory>
 
@@ -35,6 +36,7 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		void BackUp(int count);
 		bool Skip(int count);
 		int64_t ByteCount() const;
+		std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> get_io_buffer(){return this->io_buffer;};
 	private:
 		void BackUpLocal(int count);
 		bool SkipLocal(int count);

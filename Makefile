@@ -39,6 +39,7 @@ CXXFLAGS_PROTO += `${PKG_TOOL} --cflags protobuf`
 DEPFLAGS += `${PKG_TOOL} --cflags spdlog`
 # LFLAGS += `${PKG_TOOL} --libs libevent`
 LFLAGS += `${PKG_TOOL} --libs spdlog`
+LFLAGS += `${PKG_TOOL} --libs protobuf`
 
 CXXFLAGS_A_PROTO := ${CXXFLAGS}
 # CXXFLAGS += -Werror
@@ -60,7 +61,6 @@ SED ?= sed
 
 SRCDIR ?= src
 LIBSRCDIR ?= lib
-APPDIR ?= ${SRCDIR}/app
 BINDIR ?= bin
 DEPDIR ?= dep
 OBJDIR ?= obj
@@ -98,6 +98,8 @@ TEST_TARGETS := $(patsubst ${TESTOBJDIR}/%.o,${TESTBINDIR}/%,${TEST_SRCOBJS})
 PROTO_SRCOBJS := $(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,$(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,${PROTO_SOURCES_B}))
 DEPFLAGS_PROTO = ${DEPFLAGS} -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
 
+OBJECTS := $(filter-out obj/main.o ,${SRCOBJS}) ${OBJDIR}/libproto.a ${OBJDIR}/librmrfnet.a
+
 .PRECIOUS: ${DEPDIR}/%.d ${OBJDIR}/**/%.o ${POTOBJS} ${POOBJS}
 .PHONY: all test clean install lintian style translation
 
@@ -105,7 +107,6 @@ all: ${BINDIR}/fish
 	echo Done
 
 test: ${TEST_TARGETS}
-	echo ${TESTOBJDIR} && echo ${OBJECTS} && echo ${TESTDIR} && \
 	for a in ${TEST_TARGETS}; do \
 		echo $$a; \
 		$$a; \
@@ -136,7 +137,7 @@ ${TESTDIR}/%.ldflags:
 	touch $@
 
 ${TESTBINDIR}/%: ${TESTOBJDIR}/%.o ${OBJECTS} Makefile ${TESTDIR}/%.ldflags
-	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${TESTOBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${LFLAGS} -Itest -o $@ $< ${OBJECTS} $(shell [ -r $(patsubst ${TESTOBJDIR}/%.o,${TESTDIR}/%.ldflags,$<) ] && cat $(patsubst ${TESTOBJDIR}/%.o,${TESTDIR}/%.ldflags,$<) ) && touch $@
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${TESTOBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${OBJECTS} ${LFLAGS} -Itest -o $@ $< $(shell [ -r $(patsubst ${TESTOBJDIR}/%.o,${TESTDIR}/%.ldflags,$<) ] && cat $(patsubst ${TESTOBJDIR}/%.o,${TESTDIR}/%.ldflags,$<) ) && touch $@
 
 ${TESTOBJDIR}/%.o: ${TESTDIR}/%.cpp ${DEPDIR}/%.d ${DEPDIR}/test Makefile
 	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${TESTOBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} -I${TESTDIR} ${CXXFLAGS} ${DEPFLAGS} ${LFLAGS} -o $@ -c $< && touch $@
