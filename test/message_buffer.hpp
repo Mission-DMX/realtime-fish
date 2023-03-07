@@ -7,7 +7,7 @@
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/io/coded_stream.h"
 
-namespace dmxfish::io{
+namespace dmxfish::test{
 
 // This class should be deletet, memory leakage!!!
 class message_buffer_output : public google::protobuf::io::ZeroCopyOutputStream{

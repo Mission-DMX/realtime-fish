@@ -1,8 +1,8 @@
-#include "io/message_buffer.hpp"
+#include "../test/message_buffer.hpp"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "lib/logging.hpp"
 
-namespace dmxfish::io {
+namespace dmxfish::test {
 
 
 	message_buffer_output::message_buffer_output(std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer_):

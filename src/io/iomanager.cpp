@@ -15,7 +15,6 @@
 #include "proto_src/UniverseControl.pb.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 
-
 namespace dmxfish::io {
 
 bool check_version_libev()
@@ -116,5 +115,4 @@ bool IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCo
 				return false;
 	}
 }
-
 }
