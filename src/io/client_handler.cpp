@@ -8,7 +8,6 @@ namespace dmxfish::io {
 	client_handler::client_handler(parse_message_cb_t parse_message_cb_, std::shared_ptr<rmrf::net::tcp_client> client):
 		parse_message_cb(parse_message_cb_),
 		io_buffer(std::make_shared<::rmrf::net::ioqueue<::rmrf::net::iorecord>>()),
-		// output_stream(std::make_shared<message_buffer_output>(this->io_buffer)),
 		tcp_client(client),
 		internal_state(NEXT_MSG),
 		msg_type(0),
@@ -25,7 +24,6 @@ namespace dmxfish::io {
 			case NEXT_MSG:
 				{
 					if(ReadVarint32(&this->msg_type)){
-						// std::cout << "msg_type: " << this->msg_type << std::endl;
 						this->msg_length = 0;
 						this->internal_state = GETLENGTH;
 						this->limit_ = 5;
@@ -39,7 +37,6 @@ namespace dmxfish::io {
 			case GETLENGTH:
 				{
 					if(ReadVarint32(&this->msg_length)){
-						// std::cout << "msg_length: " << this->msg_length << std::endl;
 						this->internal_state = READ_MSG;
 						this->limit_ =  this->msg_length;
 					} else {
@@ -51,14 +48,10 @@ namespace dmxfish::io {
 			case READ_MSG:
 				{
 					if (streamsize() >= this->msg_length){
-						if (parse_message_cb(msg_type, *this)){
-							this->msg_type = 0;
-							this->internal_state = NEXT_MSG;
-							this->limit_ = 5;
-						} else{
-							::spdlog::debug("ReadMSG: Error");
-							return;
-						}
+						parse_message_cb(msg_type, *this);
+						this->msg_type = 0;
+						this->internal_state = NEXT_MSG;
+						this->limit_ = 5;
 						return handle_messages();
 					}
 					::spdlog::debug("ReadMSG: Msg was not long enough");

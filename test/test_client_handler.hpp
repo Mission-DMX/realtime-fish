@@ -12,6 +12,6 @@ namespace dmxfish::test {
 		public:
 			Test_Client_Handler();
 			~Test_Client_Handler();
-      bool parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff);
+      void parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff);
 	};
 }

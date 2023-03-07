@@ -86,7 +86,7 @@ IOManager::~IOManager() {
 	::spdlog::debug("Stopped IO manager");
 }
 
-bool IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
+void IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
 	switch ((::missiondmx::fish::ipcmessages::MsgType) msg_type) {
 		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_STATE:
 			{
@@ -94,9 +94,9 @@ bool IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCo
 				bool cleanEOF;
 				if (msg->ParseFromZeroCopyStream(&buff)){
 						std::cout << "Update State state: " << msg->new_state() << std::endl;
-						return true;
+						return;
 				}
-				return false;
+				return;
 			}
 		case ::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE:
 			{
@@ -104,15 +104,15 @@ bool IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCo
 				bool cleanEOF;
 				if (msg->ParseFromZeroCopyStream(&buff)){
 						std::cout << "CurUpState state: " << msg->current_state() << std::endl;
-						return true;
+						return;
 				}
 
 				std::cout << "CurUpState state: false" << std::endl;
-				return false;
+				return;
 			}
 		default:
 				::spdlog::debug("Error: Got full message: C");
-				return false;
+				return;
 	}
 }
 }

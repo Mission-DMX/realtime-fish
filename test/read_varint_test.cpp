@@ -14,9 +14,9 @@
 
 using namespace dmxfish::io;
 
-bool parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
+void parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
 	::spdlog::debug("Nothing here");
-	return true;
+	return;
 	// std::vector<uint8_t> sum_data;
 	// int size = 0;
 	// uint8_t* data = nullptr;

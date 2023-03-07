@@ -13,7 +13,7 @@ Test_Client_Handler::Test_Client_Handler()
 Test_Client_Handler::~Test_Client_Handler() {
 }
 
-bool Test_Client_Handler::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
+void Test_Client_Handler::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
 	std::vector<uint8_t> sum_data;
 	int size = 0;
 	uint8_t* data = nullptr;
@@ -26,7 +26,7 @@ bool Test_Client_Handler::parse_message_cb(uint32_t msg_type, google::protobuf::
 	}
 	buff.BackUp(0);
 	::spdlog::debug("callback reached type: {}, length: {}", msg_type, sum_data.size());
-	return true;
+	return;
 }
 
 }

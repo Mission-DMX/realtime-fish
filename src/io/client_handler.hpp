@@ -10,7 +10,7 @@ namespace dmxfish::io {
 
 class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 	public:
-		typedef std::function<bool(uint32_t, google::protobuf::io::ZeroCopyInputStream&)> parse_message_cb_t;
+		typedef std::function<void(uint32_t, google::protobuf::io::ZeroCopyInputStream&)> parse_message_cb_t;
 	private:
 		enum internal_state_t{
 			NEXT_MSG,
