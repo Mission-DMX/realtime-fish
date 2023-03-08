@@ -9,7 +9,8 @@
 namespace dmxfish::dmx {
 
 	typedef uint8_t channel_8bit_t;
-	typedef std::iterator<contiguous_iterator_tag, channel_8bit_t> universe_iterator;
+	//typedef std::iterator<std::contiguous_iterator_tag, channel_8bit_t> universe_iterator;
+	typedef channel_8bit_t* universe_iterator;
 
 	enum class universe_type : uint8_t {
 		PHYSICAL = 0,
@@ -21,13 +22,13 @@ namespace dmxfish::dmx {
 		const int id;
 		const universe_type type;
 	public:
-		universe(const int id, const universe_type type) : id(id), type(type) {}
+		universe(const int _id, const universe_type _type) : id(_id), type(_type) {}
 
-		const int getID() const {
+		int getID() const {
 			return this->id;
 		}
 
-		const universe_type getUniverseType() const {
+		universe_type getUniverseType() const {
 			return this->type;
 		}
 
