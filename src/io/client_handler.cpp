@@ -5,10 +5,10 @@
 
 namespace dmxfish::io {
 
-	client_handler::client_handler(parse_message_cb_t parse_message_cb_, std::shared_ptr<rmrf::net::tcp_client> client):
+	client_handler::client_handler(parse_message_cb_t parse_message_cb_, std::shared_ptr<rmrf::net::connection_client> client):
 		parse_message_cb(parse_message_cb_),
 		io_buffer(std::make_shared<::rmrf::net::ioqueue<::rmrf::net::iorecord>>()),
-		tcp_client(client),
+		connection_client(client),
 		internal_state(NEXT_MSG),
 		msg_type(0),
 		actual_record(this->io_buffer->begin()),

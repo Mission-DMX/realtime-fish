@@ -3,7 +3,8 @@
 #include <memory>
 
 #include "rmrf-net/ioqueue.hpp"
-#include "rmrf-net/tcp_client.hpp"
+// #include "rmrf-net/tcp_client.hpp"
+#include "rmrf-net/connection_client.hpp"
 #include "google/protobuf/io/zero_copy_stream.h"
 
 namespace dmxfish::io {
@@ -19,7 +20,7 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		};
 		parse_message_cb_t parse_message_cb;
 		std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer;
-		std::shared_ptr<rmrf::net::tcp_client> tcp_client;
+		std::shared_ptr<rmrf::net::connection_client> connection_client;
 		internal_state_t internal_state;
 		uint32_t msg_type;
 		uint32_t msg_length;
@@ -28,7 +29,7 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		int64_t limit_;
 		int read_var_int_multiplier;
 	public:
-		client_handler(parse_message_cb_t found_message_cb_, std::shared_ptr<rmrf::net::tcp_client>);
+		client_handler(parse_message_cb_t found_message_cb_, std::shared_ptr<rmrf::net::connection_client>);
 		void handle_messages();
 		bool Next(const void** data, int* size);
 		void BackUp(int count);
