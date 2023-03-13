@@ -137,7 +137,7 @@ ${TESTDIR}/%.ldflags:
 	touch $@
 
 ${TESTBINDIR}/%: ${TESTOBJDIR}/%.o ${OBJECTS} Makefile ${TESTDIR}/%.ldflags
-	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${TESTOBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${OBJECTS} ${LFLAGS} -Itest -o $@ $< $(shell [ -r $(patsubst ${TESTOBJDIR}/%.o,${TESTDIR}/%.ldflags,$<) ] && cat $(patsubst ${TESTOBJDIR}/%.o,${TESTDIR}/%.ldflags,$<) ) && touch $@
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${TESTOBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS}  $< $(shell [ -r $(patsubst ${TESTOBJDIR}/%.o,${TESTDIR}/%.ldflags,$<) ] && cat $(patsubst ${TESTOBJDIR}/%.o,${TESTDIR}/%.ldflags,$<) ) ${OBJECTS} ${LFLAGS} -o $@ && touch $@
 
 ${TESTOBJDIR}/%.o: ${TESTDIR}/%.cpp ${DEPDIR}/%.d ${DEPDIR}/test Makefile
 	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${TESTOBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} -I${TESTDIR} ${CXXFLAGS} ${DEPFLAGS} ${LFLAGS} -o $@ -c $< && touch $@

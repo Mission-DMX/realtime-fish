@@ -16,7 +16,12 @@ namespace dmxfish::io {
 		limit_(5),
 		read_var_int_multiplier(1)
 	{
+		this->connection_client->set_incomming_data_callback(std::bind(&dmxfish::io::client_handler::push_msg, this, std::placeholders::_1));
+	}
 
+	void client_handler::push_msg(const rmrf::net::iorecord& data){
+		this->io_buffer->push_back(data);
+		this->handle_messages();
 	}
 
 	void client_handler::handle_messages(){

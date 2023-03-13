@@ -11,6 +11,7 @@
 #include "rmrf-net/sock_address_factory.hpp"
 #include "rmrf-net/client_factory.hpp"
 #include "rmrf-net/connection_client.hpp"
+#include "io/iomanager.hpp"
 
 #include "proto_src/RealTimeControl.pb.h"
 #include "proto_src/MessageTypes.pb.h"
@@ -85,26 +86,37 @@ void parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStre
 	// return true;
 }
 
+void run(std::shared_ptr<::ev::loop_ref> loop) {
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	::spdlog::debug("Entering ev defloop");
+	loop->run(0);
+	::spdlog::debug("Leaving ev defloop");
+}
 
 BOOST_AUTO_TEST_CASE(helloworld) {
 
 
 	spdlog::set_level(spdlog::level::debug);
-	auto io_manager_test = std::make_shared<dmxfish::test::IOManager>(std::bind(&parse_message_cb, std::placeholders::_1, std::placeholders::_2));
-	io_manager_test->start();
+
+	std::shared_ptr<::ev::loop_ref> loop = std::make_shared<::ev::default_loop>();
+
+	std::shared_ptr<std::thread> iothread = std::make_shared<std::thread>(std::bind(&run, loop));
+	auto serv = std::make_shared<dmxfish::test::Test_Client_Handler>();
+
+
 	::spdlog::debug("test1");
 
-	auto client = rmrf::net::connect("::1", "8085", AF_INET6);
-	// auto socket_address = rmrf::net::get_first_general_socketaddr("::1", 8085);
+	// auto client = rmrf::net::connect("::1", "8085", AF_INET6);
+	// auto socket_address = rmrf::net::get_first_general_socketaddr("::1", 8086);
 	// auto client = std::make_shared<rmrf::net::connection_client>((rmrf::net::auto_fd&&) nullptr, socket_address, (rmrf::net::connection_client::destructor_cb_type) nullptr);
 	// auto client = rmrf::net::connect(socket_address);
 
 	::spdlog::debug("test2");
 	time_t start_time = time(NULL);
-	while (time(NULL) < start_time+2) {
+	while (time(NULL) < start_time+5) {
 
 	}
-	auto test_cl_h = std::make_shared<dmxfish::test::Test_Client_Handler>();
+	// auto client = rmrf::net::connect("::1", "8086", AF_INET6);
 	// auto client_h = std::make_shared<dmxfish::io::client_handler>(std::bind(&dmxfish::test::Test_Client_Handler::parse_message_cb, test_cl_h.get() , std::placeholders::_1, std::placeholders::_2), std::make_shared<rmrf::net::connection_client>(client.get()));
 	// auto mess_buff = std::make_shared<dmxfish::test::message_buffer_output>(client_h->get_io_buffer());
 	//

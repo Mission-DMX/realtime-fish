@@ -91,23 +91,116 @@ void IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCo
 		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_STATE:
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
-				bool cleanEOF;
 				if (msg->ParseFromZeroCopyStream(&buff)){
-						std::cout << "Update State state: " << msg->new_state() << std::endl;
-						return;
+					return;
 				}
 				return;
 			}
 		case ::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE:
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
-				bool cleanEOF;
 				if (msg->ParseFromZeroCopyStream(&buff)){
-						std::cout << "CurUpState state: " << msg->current_state() << std::endl;
-						return;
+					return;
 				}
-
-				std::cout << "CurUpState state: false" << std::endl;
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::Universe>();
+				if (msg->ParseFromZeroCopyStream(&buff)){
+					return;
+				}
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE_LIST:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::universes_list>();
+				if (msg->ParseFromZeroCopyStream(&buff)){
+					return;
+				}
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MSGT_REQUEST_UNIVERSE_LIST:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::request_universe_list>();
+				if (msg->ParseFromZeroCopyStream(&buff)){
+					return;
+				}
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MSGT_DELETE_UNIVERSE:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::delete_universe>();
+				if (msg->ParseFromZeroCopyStream(&buff)){
+					return;
+				}
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::button_state_change>();
+				if (msg->ParseFromZeroCopyStream(&buff)){
+					return;
+				}
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MSGT_FADER_POSITION:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::fader_position>();
+				if (msg->ParseFromZeroCopyStream(&buff)){
+					return;
+				}
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MSGT_ROTARY_ENCODER_CHANGE:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::rotary_encoder_change>();
+				if (msg->ParseFromZeroCopyStream(&buff)){
+					return;
+				}
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::dmx_output>();
+				if (msg->ParseFromZeroCopyStream(&buff)){
+					if (this->run_time_state->is_direct_mode){
+						//send data to universe
+					}
+					return;
+				}
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MSGT_REQUEST_DMX_DATA:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::request_dmx_data>();
+				if (msg->ParseFromZeroCopyStream(&buff)){
+					return;
+				}
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MSGT_ENTER_SCENE:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::enter_scene>();
+				if (msg->ParseFromZeroCopyStream(&buff)){
+					return;
+				}
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MSGT_LOAD_SHOW_FILE:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::load_show_file>();
+				if (msg->ParseFromZeroCopyStream(&buff)){
+					return;
+				}
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::update_parameter>();
+				if (msg->ParseFromZeroCopyStream(&buff)){
+					return;
+				}
 				return;
 			}
 		default:
