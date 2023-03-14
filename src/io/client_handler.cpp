@@ -20,6 +20,7 @@ namespace dmxfish::io {
 	}
 
 	void client_handler::push_msg(const rmrf::net::iorecord& data){
+		::spdlog::debug("reached callback");
 		this->io_buffer->push_back(data);
 		this->handle_messages();
 	}

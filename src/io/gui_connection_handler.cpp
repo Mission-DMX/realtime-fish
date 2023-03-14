@@ -22,8 +22,9 @@ void GUI_Connection_Handler::activate_tcp_connection(uint16_t port){
 	this->external_control_server = std::make_shared<rmrf::net::tcp_server_socket>(socket_address, std::bind(&dmxfish::io::GUI_Connection_Handler::client_cb, this, std::placeholders::_1, std::placeholders::_2));
 	::spdlog::debug("Opened control port.");
 }
+
 void GUI_Connection_Handler::client_cb(rmrf::net::async_server_socket::self_ptr_type server_sock, std::shared_ptr<rmrf::net::connection_client> client){
-	this->clients.push_back(std::make_shared<client_handler>(message_cb, client));
+	this->clients.push_back(std::make_shared<client_handler>(this->message_cb, client));
 	::spdlog::debug("Client found the server");
 }
 
