@@ -7,6 +7,7 @@
 #include <string>
 
 #include "lib/logging.hpp"
+#include "lib/macros.hpp"
 #include "net/sock_address_factory.hpp"
 #include <netdb.h>
 
@@ -49,11 +50,12 @@ void IOManager::run() {
 	::spdlog::debug("Leaving ev defloop");
 }
 
-void client_cb(std::shared_ptr<rmrf::net::tcp_client> client){
-		::spdlog::debug("Client Here");
+void client_cb(rmrf::net::async_server_socket::self_ptr_type server, std::shared_ptr<rmrf::net::connection_client> client){
+	MARK_UNUSED(server);
+	::spdlog::debug("A client connected to the external control port. Address: {0}", client->get_peer_address().str());
 }
 
-IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) : running(true), iothread(nullptr), run_time_state(run_time_state_), loop(nullptr) {
+IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) : running(true), iothread(nullptr), run_time_state(run_time_state_), loop(nullptr), external_control_server{nullptr} {
 	if (is_default_manager) {
 		if(!check_version_libev())
 			throw std::runtime_error("Unable to initialize libev");
