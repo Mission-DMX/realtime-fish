@@ -1,6 +1,6 @@
 [submodule "submodules/rmrf"]
 	path = submodules/rmrf
-	url = https://git.chaotikum.org/ReadMailReallyFast/code.git
+	url = https://github.com/LRahlff/ReadMailReallyFast.git
 [submodule "submodules/Docs"]
 	path = submodules/Docs
 	url = git@github.com:Mission-DMX/Docs.git

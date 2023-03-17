@@ -7,13 +7,8 @@
 
 #include "io/iomanager.hpp"
 #include "io/universe_sender.hpp"
-#include "rmrf-net/tcp_client.hpp"
-
-#include <proto_src/RealTimeControl.pb.h>
-
-#include <netdb.h>
-
-#include <unistd.h>
+#include "rmrf-net/client_factory.hpp"
+#include "rmrf-net/ioqueue.hpp"
 
 void perform_main_update(std::shared_ptr<dmxfish::dmx::universe> u) {
 	time_t start_time = time(NULL);
@@ -48,9 +43,24 @@ int main(int argc, char* argv[], char* env[]) {
 	auto run_time_state = std::make_shared<runtime_state_t>();
 	auto u = dmxfish::io::get_temporary_universe("10.0.15.1");
 	dmxfish::io::IOManager manager(run_time_state, true);
+
 	manager.start();
+  perform_main_update(u);
+	time_t start_time = time(NULL);
+	while (run_time_state->running && time(NULL) < start_time+2) {
 
-	perform_main_update(u);
+	}
 
+	auto client = rmrf::net::connect("::1", "8085", AF_INET6);
+
+	start_time = time(NULL);
+	while (run_time_state->running && time(NULL) < start_time+2) {
+
+	}
+
+	start_time = time(NULL);
+	while (run_time_state->running && time(NULL) < start_time+20) {
+
+	}
 	::spdlog::debug("Main End");
 }

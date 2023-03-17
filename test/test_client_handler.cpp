@@ -1,4 +1,6 @@
-#include "io/iomanager.hpp"
+#include "../test/test_client_handler.hpp"
+
+#include "rmrf-net/sock_address_factory.hpp"
 
 #include <iomanip>
 #include <chrono>
@@ -6,11 +8,6 @@
 #include <stdexcept>
 
 #include "lib/logging.hpp"
-
-#include "lib/macros.hpp"
-#include "net/sock_address_factory.hpp"
-#include <netdb.h>
-
 
 #include "proto_src/MessageTypes.pb.h"
 #include "proto_src/Console.pb.h"
@@ -20,8 +17,7 @@
 #include "proto_src/UniverseControl.pb.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 
-
-namespace dmxfish::io {
+namespace dmxfish::test {
 
 bool check_version_libev()
 {
@@ -53,46 +49,56 @@ bool check_version_libev()
 		return true;
 }
 
-void IOManager::run() {
+void Test_Client_Handler::run() {
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	::spdlog::debug("Entering ev defloop");
 	this->loop->run(0);
 	::spdlog::debug("Leaving ev defloop");
 }
 
-IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) :
+Test_Client_Handler::Test_Client_Handler() :
 		running(true),
 		iothread(nullptr),
-		run_time_state(run_time_state_),
 		loop(nullptr),
-		gui_connections(std::make_shared<GUI_Connection_Handler>(std::bind(&dmxfish::io::IOManager::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2)))
+		external_control_server(nullptr),
+		timer(fish::test::timer(this->loop))
 
 {
-	if (is_default_manager) {
-		if(!check_version_libev())
-			throw std::runtime_error("Unable to initialize libev");
-		this->loop = std::make_shared<::ev::default_loop>();
-	} else {
-		this->loop = std::make_shared<::ev::dynamic_loop>();
-	}
-	this->iothread = std::make_shared<std::thread>(std::bind(&IOManager::run, this));
+	if(!check_version_libev())
+		throw std::runtime_error("Unable to initialize libev");
+	this->loop = std::make_shared<::ev::default_loop>();
+	this->iothread = std::make_shared<std::thread>(std::bind(&Test_Client_Handler::run, this));
 	const auto thread_id = std::hash<std::thread::id>{}(this->iothread->get_id());
-	::spdlog::debug("Started IO manager with loop on thread with id {}.", thread_id);
+	::spdlog::debug("Test: Started IO manager with loop on thread with id {}.", thread_id);
+	this->timer = fish::test::timer(this->loop);
 }
 
-void IOManager::start() {
-	this->gui_connections->activate_tcp_connection(8085);
+void Test_Client_Handler::start() {
+	auto socket_address = rmrf::net::get_first_general_socketaddr("::1", 8086);
+	this->external_control_server = std::make_shared<rmrf::net::tcp_server_socket>(socket_address, std::bind(&dmxfish::test::Test_Client_Handler::client_cb, this, std::placeholders::_1, std::placeholders::_2));
+	::spdlog::debug("Test: Opened control port.");
+	this->timer.start();
 }
 
-IOManager::~IOManager() {
+void Test_Client_Handler::client_cb(rmrf::net::async_server_socket::self_ptr_type server, std::shared_ptr<rmrf::net::connection_client> client){
+	MARK_UNUSED(server);
+	::spdlog::debug("Test: A client connected to the external control port. Address: {0}", client->get_peer_address().str());
+	this->client_handler = std::make_shared<dmxfish::io::client_handler>(std::bind(&dmxfish::test::Test_Client_Handler::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2), client);
+	::spdlog::debug("Test: Client found the server");
+}
+
+Test_Client_Handler::~Test_Client_Handler() {
+	::spdlog::debug("Test: Stopping IO manager");
+	this->timer.stop();
 	this->running = false;
 	this->loop->break_loop(::ev::ALL);
 	this->iothread->join();
 
-	::spdlog::debug("Stopped IO manager");
+	::spdlog::debug("Test: Stopped IO manager");
 }
 
-void IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
+void Test_Client_Handler::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
+	::spdlog::debug("got message with type: {}", msg_type);
 	switch ((::missiondmx::fish::ipcmessages::MsgType) msg_type) {
 		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_STATE:
 			{
@@ -170,9 +176,6 @@ void IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCo
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::dmx_output>();
 				if (msg->ParseFromZeroCopyStream(&buff)){
-					if (this->run_time_state->is_direct_mode){
-						//send data to universe
-					}
 					return;
 				}
 				return;

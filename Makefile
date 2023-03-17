@@ -1,4 +1,4 @@
-S = $(shell uname -s)
+OS = $(shell uname -s)
 
 # CFLAGS += -march=native -masm=intel -pipe -fsanitize=address,signed-integer-overflow,undefined -pedantic -Wall -Wextra -Werror -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src
 CFLAGS += -march=native -masm=intel -pipe -pedantic -Wall -Wextra -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src
@@ -39,6 +39,7 @@ CXXFLAGS_PROTO += `${PKG_TOOL} --cflags protobuf`
 DEPFLAGS += `${PKG_TOOL} --cflags spdlog`
 # LFLAGS += `${PKG_TOOL} --libs libevent`
 LFLAGS += `${PKG_TOOL} --libs spdlog`
+LFLAGS += `${PKG_TOOL} --libs protobuf`
 
 CXXFLAGS_A_PROTO := ${CXXFLAGS}
 # CXXFLAGS += -Werror
@@ -60,7 +61,6 @@ SED ?= sed
 
 SRCDIR ?= src
 LIBSRCDIR ?= lib
-APPDIR ?= ${SRCDIR}/app
 BINDIR ?= bin
 DEPDIR ?= dep
 OBJDIR ?= obj
@@ -68,6 +68,9 @@ POTDIR ?= po/tpl
 PODIR ?= po/lang
 MODIR ?= po/bin
 
+TESTDIR ?= test
+TESTBINDIR ?= bin/test
+TESTOBJDIR ?= obj/test
 
 rwildcard = $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
 
@@ -81,20 +84,33 @@ SRCOBJS := $(patsubst ${SRCDIR}/%.c,${OBJDIR}/%.o,$(patsubst ${SRCDIR}/%.cpp,${O
 RMRFNET_SRCOBJS := $(patsubst ${LIBSRCDIR}/rmrf-net/%.c,${OBJDIR}/rmrf-net/%.o,$(patsubst ${LIBSRCDIR}/rmrf-net/%.cpp,${OBJDIR}/rmrf-net/%.o,${RMRFNET_SOURCES}))
 DEPFLAGS_RMRF = ${DEPFLAGS} -Isubmodules/rmrf/src -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
 
+
 PROTO_DEFDIR := ${LIBSRCDIR}/IPCMessages
 PROTO_SRCDIR := ${LIBSRCDIR}/proto_src
 PROTO_SOURCES_A := $(call rwildcard,${PROTO_DEFDIR},*.proto)
 PROTO_SOURCES_B := $(patsubst ${PROTO_DEFDIR}/%.proto,${PROTO_SRCDIR}/%.pb.cc,${PROTO_SOURCES_A})
 PROTO_OBJDIR := ${OBJDIR}/proto
 
+TEST_SOURCES := $(call rwildcard,${TESTDIR},*.cpp *.c)
+TEST_SRCOBJS := $(patsubst ${TESTDIR}/%.c,${TESTOBJDIR}/%.o,$(patsubst ${TESTDIR}/%.cpp,${TESTOBJDIR}/%.o,${TEST_SOURCES}))
+TEST_TARGETS := $(patsubst ${TESTOBJDIR}/%.o,${TESTBINDIR}/%, $(filter %_test.o, ${TEST_SRCOBJS}))
+
 PROTO_SRCOBJS := $(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,$(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,${PROTO_SOURCES_B}))
 DEPFLAGS_PROTO = ${DEPFLAGS} -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
 
+OBJECTS := $(filter-out %_test.o ,${TEST_SRCOBJS}) $(filter-out obj/main.o ,${SRCOBJS}) ${OBJDIR}/libproto.a ${OBJDIR}/librmrfnet.a
+
 .PRECIOUS: ${DEPDIR}/%.d ${OBJDIR}/**/%.o ${POTOBJS} ${POOBJS}
-.PHONY: all clean install lintian style translation
+.PHONY: all test clean install lintian style translation
 
 all: ${BINDIR}/fish
 	echo Done
+
+test: ${TEST_TARGETS}
+	for a in ${TEST_TARGETS}; do \
+		echo $$a; \
+		$$a; \
+	done
 
 ${PROTO_SRCDIR}/%.pb.cc: ${PROTO_DEFDIR}/%.proto Makefile
 	${MKDIR} ${@D} && ${PROTO_TOOL} -I=${PROTO_DEFDIR} --cpp_out=${PROTO_SRCDIR} $< && touch $@
@@ -116,6 +132,23 @@ ${OBJDIR}/%.o: ${SRCDIR}/%.cpp $(PROTO_SOURCES_B) Makefile
 
 ${BINDIR}/fish: ${SRCOBJS} ${OBJDIR}/librmrfnet.a ${OBJDIR}/libproto.a
 	${MKDIR} ${@D} && ${CXX} -o $@ $^ ${LFLAGS} && touch $@
+
+${TESTDIR}/%.ldflags:
+	touch $@
+
+${TESTBINDIR}/%: ${TESTOBJDIR}/%.o ${OBJECTS} Makefile ${TESTDIR}/%.ldflags
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${TESTOBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS}  $< $(shell [ -r $(patsubst ${TESTOBJDIR}/%.o,${TESTDIR}/%.ldflags,$<) ] && cat $(patsubst ${TESTOBJDIR}/%.o,${TESTDIR}/%.ldflags,$<) ) ${OBJECTS} ${LFLAGS} -o $@ && touch $@
+
+${TESTOBJDIR}/%.o: ${TESTDIR}/%.cpp ${DEPDIR}/%.d ${DEPDIR}/test Makefile
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${TESTOBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} -I${TESTDIR} ${CXXFLAGS} ${DEPFLAGS} ${LFLAGS} -o $@ -c $< && touch $@
+
+${TESTOBJDIR}/%.o: ${TESTDIR}/%.c ${DEPDIR}/%.d ${DEPDIR}/test Makefile
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${TESTOBJDIR}/%,${DEPDIR}/%,${@D}) && ${CC} -I${TESTDIR} -std=c11 -std=c17 ${CFLAGS} ${DEPFLAGS} ${LFLAGS} -o $@ -c $< && touch $@
+
+${DEPDIR}/%.d: ;
+
+${DEPDIR}/test:
+	${MKDIR} ${DEPDIR}/test
 
 clean:
 	rm -rf ${BINDIR}
