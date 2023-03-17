@@ -3,7 +3,8 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include "lib/logging.hpp"
-#include "../test/test_iomanager.hpp"
+
+#include "../test/test_client_handler.hpp"
 
 #include "rmrf-net/client_factory.hpp"
 
@@ -18,7 +19,7 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 
 	spdlog::set_level(spdlog::level::debug);
 
-	auto iomanager = std::make_shared<dmxfish::test::Test_IOManager>();
+	auto iomanager = std::make_shared<dmxfish::test::Test_Client_Handler>();
 	iomanager->start();
 
 	time_t start_time = time(NULL);
@@ -44,6 +45,24 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 
 	start_time = time(NULL);
 	while (time(NULL) < start_time+20) {
+
+	}
+
+	client->write_data(rmrf::net::iorecord(&msgtype, sizeof(msgtype)));
+	::spdlog::debug("after writing2");
+
+
+
+	start_time = time(NULL);
+	while (time(NULL) < start_time+39) {
+
+	}
+
+	client->write_data(rmrf::net::iorecord(&msgtype, sizeof(msgtype)));
+	::spdlog::debug("after writing3");
+
+	start_time = time(NULL);
+	while (time(NULL) < start_time+130) {
 
 	}
 

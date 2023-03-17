@@ -15,6 +15,20 @@
 #include "proto_src/UniverseControl.pb.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 
+#include "lib/macros.hpp"
+#include "net/sock_address_factory.hpp"
+#include <netdb.h>
+
+
+#include "proto_src/MessageTypes.pb.h"
+#include "proto_src/Console.pb.h"
+#include "proto_src/DirectMode.pb.h"
+#include "proto_src/FilterMode.pb.h"
+#include "proto_src/RealTimeControl.pb.h"
+#include "proto_src/UniverseControl.pb.h"
+#include "google/protobuf/io/zero_copy_stream.h"
+
+
 namespace dmxfish::io {
 
 bool check_version_libev()

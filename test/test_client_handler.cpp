@@ -1,4 +1,4 @@
-#include "../test/test_iomanager.hpp"
+#include "../test/test_client_handler.hpp"
 
 #include "rmrf-net/sock_address_factory.hpp"
 
@@ -49,41 +49,47 @@ bool check_version_libev()
 		return true;
 }
 
-void Test_IOManager::run() {
+void Test_Client_Handler::run() {
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	::spdlog::debug("Entering ev defloop");
 	this->loop->run(0);
 	::spdlog::debug("Leaving ev defloop");
 }
 
-Test_IOManager::Test_IOManager() :
+Test_Client_Handler::Test_Client_Handler() :
 		running(true),
 		iothread(nullptr),
 		loop(nullptr),
-		external_control_server(nullptr)
+		external_control_server(nullptr),
+		timer(fish::test::timer(this->loop))
 
 {
 	if(!check_version_libev())
 		throw std::runtime_error("Unable to initialize libev");
 	this->loop = std::make_shared<::ev::default_loop>();
-	this->iothread = std::make_shared<std::thread>(std::bind(&Test_IOManager::run, this));
+	this->iothread = std::make_shared<std::thread>(std::bind(&Test_Client_Handler::run, this));
 	const auto thread_id = std::hash<std::thread::id>{}(this->iothread->get_id());
 	::spdlog::debug("Test: Started IO manager with loop on thread with id {}.", thread_id);
+	this->timer = fish::test::timer(this->loop);
 }
 
-void Test_IOManager::start() {
+void Test_Client_Handler::start() {
 	auto socket_address = rmrf::net::get_first_general_socketaddr("::1", 8086);
-	this->external_control_server = std::make_shared<rmrf::net::tcp_server_socket>(socket_address, std::bind(&dmxfish::test::Test_IOManager::client_cb, this, std::placeholders::_1, std::placeholders::_2));
+	this->external_control_server = std::make_shared<rmrf::net::tcp_server_socket>(socket_address, std::bind(&dmxfish::test::Test_Client_Handler::client_cb, this, std::placeholders::_1, std::placeholders::_2));
 	::spdlog::debug("Test: Opened control port.");
+	this->timer.start();
 }
 
-void Test_IOManager::client_cb(rmrf::net::async_server_socket::self_ptr_type server_sock, std::shared_ptr<rmrf::net::connection_client> client){
-	this->client_handler = std::make_shared<dmxfish::io::client_handler>(std::bind(&dmxfish::test::Test_IOManager::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2), client);
+void Test_Client_Handler::client_cb(rmrf::net::async_server_socket::self_ptr_type server, std::shared_ptr<rmrf::net::connection_client> client){
+	MARK_UNUSED(server);
+	::spdlog::debug("Test: A client connected to the external control port. Address: {0}", client->get_peer_address().str());
+	this->client_handler = std::make_shared<dmxfish::io::client_handler>(std::bind(&dmxfish::test::Test_Client_Handler::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2), client);
 	::spdlog::debug("Test: Client found the server");
 }
 
-Test_IOManager::~Test_IOManager() {
+Test_Client_Handler::~Test_Client_Handler() {
 	::spdlog::debug("Test: Stopping IO manager");
+	this->timer.stop();
 	this->running = false;
 	this->loop->break_loop(::ev::ALL);
 	this->iothread->join();
@@ -91,7 +97,7 @@ Test_IOManager::~Test_IOManager() {
 	::spdlog::debug("Test: Stopped IO manager");
 }
 
-void Test_IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
+void Test_Client_Handler::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){
 	::spdlog::debug("got message with type: {}", msg_type);
 	switch ((::missiondmx::fish::ipcmessages::MsgType) msg_type) {
 		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_STATE:

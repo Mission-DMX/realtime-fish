@@ -23,7 +23,9 @@ void GUI_Connection_Handler::activate_tcp_connection(uint16_t port){
 	::spdlog::debug("Opened control port.");
 }
 
-void GUI_Connection_Handler::client_cb(rmrf::net::async_server_socket::self_ptr_type server_sock, std::shared_ptr<rmrf::net::connection_client> client){
+void GUI_Connection_Handler::client_cb(rmrf::net::async_server_socket::self_ptr_type server, std::shared_ptr<rmrf::net::connection_client> client){
+	MARK_UNUSED(server);
+	::spdlog::debug("A client connected to the external control port. Address: {0}", client->get_peer_address().str());
 	this->clients.push_back(std::make_shared<client_handler>(this->message_cb, client));
 	::spdlog::debug("Client found the server");
 }

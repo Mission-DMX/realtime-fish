@@ -67,7 +67,6 @@ namespace dmxfish::dmx {
 		}
 
 		const ::rmrf::net::udp_packet<artnet_pkg_size>& prep_and_get_packet() const {
-			// TODO do we need to convert all data entries to BE?
 			return data;
 		}
 
