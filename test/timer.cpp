@@ -36,7 +36,7 @@ void timer::timeout_cb (EV_P_ ev_timer *w, int revents)
     // ev_timer_stop (loop, w);
     // ev_timer_set (w, 2., 0.);
     // ev_timer_start (loop, w);
-    w->repeat = 60.;
+    w->repeat = 2.;
     ev_timer_again (loop, w);
     // ev_break (EV_A_ EVBREAK_ONE);
   // }

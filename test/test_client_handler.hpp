@@ -7,6 +7,7 @@
 #include "io/state_book.hpp"
 #include "io/gui_connection_handler.hpp"
 #include "io/client_handler.hpp"
+#include "dmx/universe.hpp"
 
 #include "../test/timer.hpp"
 
@@ -21,6 +22,7 @@ namespace dmxfish::test {
 			std::shared_ptr<rmrf::net::tcp_server_socket> external_control_server;
 			std::shared_ptr<dmxfish::io::client_handler> client_handler;
 			fish::test::timer timer;
+			std::shared_ptr<dmxfish::dmx::universe> universe;
 		public:
 			Test_Client_Handler();
 			~Test_Client_Handler();
