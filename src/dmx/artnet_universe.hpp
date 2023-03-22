@@ -35,6 +35,9 @@ namespace dmxfish::dmx {
 		artnet_universe(const int _id, const uint16_t id_on_device, const uint8_t physical_id = 0)
 		    : universe(_id, universe_type::ARTNET), data{} {
 			this->data.advance(artnet_pkg_size);
+			for(auto& field : this->data) {
+				field = 0;
+			}
 			strncpy((char*) this->data.raw(), "Art-Net", 9);
 			this->data[7] = 0;
 			// Opcode = ART_DMX
