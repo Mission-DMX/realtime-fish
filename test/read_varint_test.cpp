@@ -5,7 +5,8 @@
 #include "lib/logging.hpp"
 
 #include "../test/test_client_handler.hpp"
-#include "../test/message_buffer.hpp"
+#include "../test/test_message_buffer.hpp"
+// #include "io/message_buffer.hpp"
 
 #include "rmrf-net/client_factory.hpp"
 #include "rmrf-net/ioqueue.hpp"
@@ -29,7 +30,9 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 	while (time(NULL) < start_time+2) {
 
 	}
+
 	auto client = rmrf::net::connect("::1", "8086");
+
 
 	if(!client) {
 		BOOST_CHECK_MESSAGE(false, "Es konnte keine Verbindung zu [::1]:8086 aufgebaut werden. Läuft der Server?");
@@ -53,27 +56,11 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 	::spdlog::debug("4msg size: {}", msg->ByteSizeLong());
 
 	auto io_buff = std::make_shared<::rmrf::net::ioqueue<::rmrf::net::iorecord>>();
-	auto mess_buff = std::make_shared<::dmxfish::test::message_buffer_output>(io_buff);
 
-
-	mess_buff->WriteVarint32(::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT);
-	mess_buff->WriteVarint32(msg->ByteSizeLong());
-	msg->SerializeToZeroCopyStream(mess_buff.get());
-
-	// auto iterator = io_buff->begin();
-	int i =0;
-	while(io_buff->begin() < io_buff->end()){
-		client->write_data(*io_buff->begin());
-		::spdlog::debug("wrote {}", i++);
-		io_buff->pop_front();
-	}
-
-	// uint32_t msgtype = 25410;
-	// ::spdlog::debug("before writing");
-	// client->write_data(rmrf::net::iorecord(&msgtype, sizeof(msgtype)));
-	// ::spdlog::debug("after writing");
-
-
+	auto out_b = std::make_unique<dmxfish::test::message_buffer_output>(move(client));
+	out_b->WriteVarint32(::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT);
+	out_b->WriteVarint32(msg->ByteSizeLong());
+	msg->SerializeToZeroCopyStream(out_b.get());
 
 	start_time = time(NULL);
 	while (time(NULL) < start_time+60) {

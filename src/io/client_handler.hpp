@@ -3,9 +3,11 @@
 #include <memory>
 
 #include "rmrf-net/ioqueue.hpp"
+#include "io/message_buffer.hpp"
 // #include "rmrf-net/tcp_client.hpp"
 #include "rmrf-net/connection_client.hpp"
 #include "google/protobuf/io/zero_copy_stream.h"
+#include "google/protobuf/message_lite.h"
 
 namespace dmxfish::io {
 
@@ -28,6 +30,7 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		int byte_count;
 		int64_t limit_;
 		int read_var_int_multiplier;
+		std::shared_ptr<message_buffer_output> output_buffer;
 	public:
 		client_handler(parse_message_cb_t found_message_cb_, std::shared_ptr<rmrf::net::connection_client>);
 		void handle_messages();
@@ -36,6 +39,7 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		bool Skip(int count);
 		int64_t ByteCount() const;
 		std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> get_io_buffer(){return this->io_buffer;};
+		void write_message(google::protobuf::MessageLite&, uint32_t);
 	private:
 		void push_msg(const rmrf::net::iorecord&);
 		void BackUpLocal(int count);

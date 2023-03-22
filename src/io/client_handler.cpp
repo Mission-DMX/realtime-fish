@@ -14,7 +14,8 @@ namespace dmxfish::io {
 		actual_record(this->io_buffer->begin()),
 		byte_count(0),
 		limit_(5),
-		read_var_int_multiplier(1)
+		read_var_int_multiplier(1),
+		output_buffer(std::make_shared<message_buffer_output>(client))
 	{
 		this->connection_client->set_incomming_data_callback(std::bind(&dmxfish::io::client_handler::push_msg, this, std::placeholders::_1));
 	}
@@ -60,7 +61,7 @@ namespace dmxfish::io {
 						this->limit_ = 5;
 						return handle_messages();
 					}
-					::spdlog::debug("ReadMSG: Msg was not long enough");
+					::spdlog::debug("ReadMSG: Msg was not long enough: is {}, should: {}", streamsize(), this->msg_length);
 					break;
 				}
 			default:
@@ -121,6 +122,12 @@ namespace dmxfish::io {
 	    this->limit_ -= count;
 	    return true;
 	  }
+	}
+
+	void client_handler::write_message(google::protobuf::MessageLite& msg, uint32_t msg_type){
+		this->output_buffer->WriteVarint32(msg_type);
+		this->output_buffer->WriteVarint32(msg.ByteSizeLong());
+		msg.SerializeToZeroCopyStream(this->output_buffer.get());
 	}
 
 	inline bool client_handler::SkipLocal(int count){
