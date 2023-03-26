@@ -16,15 +16,15 @@
 
 #include <unistd.h>
 
-void perform_main_update(std::shared_ptr<dmxfish::dmx::universe> u) {
+void perform_main_update(std::shared_ptr<runtime_state_t> t) {
 	namespace stdc = std::chrono;
-	while (*u != runtime_state_t::RM_STOP) {
+	while (t->running) {
 		const auto start_time = stdc::system_clock::now().time_since_epoch();
 		// TODO Fetch FPGA input data structure from iomanager and either lock or copy it
-		if (*u == runtime_state_t::RM_FILTER) {
-			// TODO calculate filters using input data
-		} else { // Direct mode
+		if (t->is_direct_mode) {
 			// TODO fetch and apply updates from GUI and FPGA
+		} else { // Direct mode
+			// TODO calculate filters using input data
 		}
 		// TODO Release input data structure if it was locked and not copied.
 		// TODO push universes
@@ -49,8 +49,8 @@ int main(int argc, char* argv[], char* env[]) {
 	spdlog::set_level(spdlog::level::debug);
 	auto run_time_state = std::make_shared<runtime_state_t>();
 
-	stdin_watcher sin_w([](){
-		*run_time_state = runtime_state_t::RM_STOP;
+	stdin_watcher sin_w([run_time_state](){
+		run_time_state->running = false;
 		::spdlog::info("Stopping server from keyboard now.");
 	});
 
