@@ -14,6 +14,9 @@
 #include "rmrf-net/client_factory.hpp"
 #include "rmrf-net/ioqueue.hpp"
 
+
+#include "proto_src/RealTimeControl.pb.h"
+
 void perform_main_update(std::shared_ptr<dmxfish::dmx::universe> u) {
 	time_t start_time = time(NULL);
 	while (time(NULL) < start_time+15) {
@@ -63,9 +66,21 @@ int main(int argc, char* argv[], char* env[]) {
 
 	}
 
+	// every cycle update
+	auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
+	msg->set_current_state(::missiondmx::fish::ipcmessages::RM_DIRECT);
+	msg->set_showfile_apply_state(::missiondmx::fish::ipcmessages::SFAS_INVALID);
+	// can't we run multiple scenes at the same time?
+	msg->set_current_scene(-1);
+	msg->set_last_cycle_time(10);
+	msg->set_last_error("No Error occured");
+
+	iomanager.broadcast_message(msg, ::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE);
+
 	start_time = time(NULL);
 	while (run_time_state->running && time(NULL) < start_time+20) {
 
 	}
+
 	::spdlog::debug("Main End");
 }

@@ -16,11 +16,13 @@ namespace dmxfish::io {
 		private:
 			std::shared_ptr<rmrf::net::tcp_server_socket> external_control_server;
 			std::list<std::shared_ptr<client_handler>> clients;
+			// std::list<client_handler> clients;
 			client_handler::parse_message_cb_t message_cb;
 		public:
 			GUI_Connection_Handler(client_handler::parse_message_cb_t);
 			~GUI_Connection_Handler();
 			void activate_tcp_connection(uint16_t);
+			void broadcast_message(google::protobuf::MessageLite&, uint32_t);
 		private:
 			void client_cb(rmrf::net::async_server_socket::self_ptr_type, std::shared_ptr<rmrf::net::connection_client>);
 	};

@@ -107,6 +107,25 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					switch (msg->new_state()) {
+						case ::missiondmx::fish::ipcmessages::RM_FILTER:
+							{
+								// this->run_time_state->running = true;
+								this->run_time_state->is_direct_mode = false;
+								break;
+							}
+						case ::missiondmx::fish::ipcmessages::RM_DIRECT:
+							{
+								// this->run_time_state->running = true;
+								this->run_time_state->is_direct_mode = true;
+								break;
+							}
+						case ::missiondmx::fish::ipcmessages::RM_STOP:
+							{
+								this->run_time_state->running = false;
+								break;
+							}
+						}
 					return;
 				}
 				return;
@@ -245,5 +264,9 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 				::spdlog::debug("Error: Got full message: C");
 				return;
 	}
+}
+
+void IOManager::broadcast_message(google::protobuf::MessageLite& msg, uint32_t msg_type){
+	this->gui_connections->broadcast_message(msg, msg_type);
 }
 }

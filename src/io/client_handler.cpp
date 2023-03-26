@@ -17,10 +17,10 @@ namespace dmxfish::io {
 		read_var_int_multiplier(1),
 		output_buffer(std::make_shared<message_buffer_output>(client))
 	{
-		this->connection_client->set_incomming_data_callback(std::bind(&dmxfish::io::client_handler::push_msg, this, std::placeholders::_1));
+		this->connection_client->set_incomming_data_callback(std::bind(&dmxfish::io::client_handler::incomming_data_callback, this, std::placeholders::_1));
 	}
 
-	void client_handler::push_msg(const rmrf::net::iorecord& data){
+	void client_handler::incomming_data_callback(const rmrf::net::iorecord& data){
 		::spdlog::debug("reached callback");
 		this->io_buffer->push_back(data);
 		this->handle_messages();
