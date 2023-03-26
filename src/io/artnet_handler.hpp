@@ -77,11 +77,6 @@ namespace dmxfish::io {
 				if (record == this->nodes.end()) {
 					return nullptr;
 				}
-				if (record != this->nodes.end()) {
-					const auto seq = record->second.sequence_number;
-					// record->second = node_registry(id, device_universe_id, addr, record->second.ptr);
-					// record->second.sequence_number = seq;
-				}
 				return record->second.ptr;
 			}
 	};
