@@ -20,4 +20,8 @@ std::shared_ptr<dmxfish::dmx::universe> get_temporary_universe(const std::string
 	return _artnet_handler.get_or_create_universe(1, rmrf::net::get_first_general_socketaddr(output_description, 6454), 1);
 }
 
+std::shared_ptr<dmxfish::dmx::universe> get_universe(const int id) {
+	return _artnet_handler.get_universe(id);
+}
+
 }

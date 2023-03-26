@@ -6,7 +6,7 @@
 
 #include "../test/test_client_handler.hpp"
 #include "../test/test_message_buffer.hpp"
-// #include "io/message_buffer.hpp"
+#include "io/universe_sender.hpp"
 
 #include "rmrf-net/client_factory.hpp"
 #include "rmrf-net/ioqueue.hpp"
@@ -22,6 +22,8 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 
 
 	spdlog::set_level(spdlog::level::debug);
+
+	auto u = dmxfish::io::get_temporary_universe("10.15.0.1");
 
 	auto iomanager = std::make_shared<dmxfish::test::Test_Client_Handler>();
 	iomanager->start();
@@ -45,15 +47,11 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 	auto msg = std::make_shared<missiondmx::fish::ipcmessages::dmx_output>();
 	msg->set_universe_id(1);
 
-	::spdlog::debug("1msg size: {}", msg->ByteSizeLong());
 	msg->add_channel_data(1);
 
-	::spdlog::debug("2msg size: {}", msg->ByteSizeLong());
 	for (int j = 0; j<20; j++){
 		msg->add_channel_data(j+2);
-		// ::spdlog::debug("3msg size: {}", msg->ByteSizeLong());
 	}
-	::spdlog::debug("4msg size: {}", msg->ByteSizeLong());
 
 	auto io_buff = std::make_shared<::rmrf::net::ioqueue<::rmrf::net::iorecord>>();
 

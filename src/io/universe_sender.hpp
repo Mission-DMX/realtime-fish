@@ -10,4 +10,6 @@ namespace dmxfish::io {
 	bool publish_universe_update(std::shared_ptr<dmxfish::dmx::universe> universe);
 
 	std::shared_ptr<dmxfish::dmx::universe> get_temporary_universe(const std::string& output_description);
+
+	std::shared_ptr<dmxfish::dmx::universe> get_universe(const int);
 }

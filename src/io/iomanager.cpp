@@ -28,6 +28,7 @@
 #include "proto_src/UniverseControl.pb.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 
+#include "io/universe_sender.hpp"
 
 namespace dmxfish::io {
 
@@ -180,6 +181,13 @@ void IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCo
 				if (msg->ParseFromZeroCopyStream(&buff)){
 					if (this->run_time_state->is_direct_mode){
 						//send data to universe
+						auto universe = dmxfish::io::get_universe(msg->universe_id());
+						if(universe){
+							for (int i = 0; i< msg->channel_data_size(); i++){
+								(*universe)[i] = msg->channel_data(i);
+							}
+						::spdlog::debug("did not find the universe with id: {}", msg->universe_id());
+						}
 					}
 					return;
 				}

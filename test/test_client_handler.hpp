@@ -22,7 +22,7 @@ namespace dmxfish::test {
 			std::shared_ptr<rmrf::net::tcp_server_socket> external_control_server;
 			std::shared_ptr<dmxfish::io::client_handler> client_handler;
 			fish::test::timer timer;
-			std::shared_ptr<dmxfish::dmx::universe> universe;
+			// std::shared_ptr<dmxfish::dmx::universe> universe;
 		public:
 			Test_Client_Handler();
 			~Test_Client_Handler();

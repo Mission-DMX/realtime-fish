@@ -12,7 +12,6 @@ namespace dmxfish::io {
 		data_buff((uint8_t*) malloc(BUFF_SIZE)),
 		pre_used(0)
 	{
-		::spdlog::debug("messoutput test : {}", BUFF_SIZE);
 	}
 
 	message_buffer_output::~message_buffer_output()
