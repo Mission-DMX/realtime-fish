@@ -186,7 +186,9 @@ void IOManager::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCo
 							for (int i = 0; i< msg->channel_data_size(); i++){
 								(*universe)[i] = msg->channel_data(i);
 							}
-						::spdlog::debug("did not find the universe with id: {}", msg->universe_id());
+						}
+						else {
+							::spdlog::debug("did not find the universe with id: {}", msg->universe_id());
 						}
 					}
 					return;
