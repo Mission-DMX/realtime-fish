@@ -7,6 +7,7 @@
 #include "io/state_book.hpp"
 #include "io/gui_connection_handler.hpp"
 #include "io/client_handler.hpp"
+#include "rmrf-net/unix_socket_server.hpp"
 #include "dmx/universe.hpp"
 
 #include "../test/timer.hpp"
@@ -19,7 +20,7 @@ namespace dmxfish::test {
 			bool running;
 			std::shared_ptr<std::thread> iothread;
 			std::shared_ptr<::ev::loop_ref> loop;
-			std::shared_ptr<rmrf::net::tcp_server_socket> external_control_server;
+			std::shared_ptr<rmrf::net::unix_socket_server> external_control_server;
 			std::shared_ptr<dmxfish::io::client_handler> client_handler;
 			fish::test::timer timer;
 			// std::shared_ptr<dmxfish::dmx::universe> universe;

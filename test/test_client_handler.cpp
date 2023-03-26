@@ -77,8 +77,12 @@ Test_Client_Handler::Test_Client_Handler() :
 }
 
 void Test_Client_Handler::start() {
-	auto socket_address = rmrf::net::get_first_general_socketaddr("::1", 8086);
-	this->external_control_server = std::make_shared<rmrf::net::tcp_server_socket>(socket_address, std::bind(&dmxfish::test::Test_Client_Handler::client_cb, this, std::placeholders::_1, std::placeholders::_2));
+	// auto socket_address = rmrf::net::get_first_general_socketaddr("::1", 8086);
+	::spdlog::debug("Test: A");
+	auto socket_address = rmrf::net::get_first_general_socketaddr("/tmp/9Lq7BNBnBycd6nxyz.socket", "", rmrf::net::socket_t::UNIX);
+	::spdlog::debug("Test: B");
+	// this->external_control_server = std::make_shared<rmrf::net::tcp_server_socket>(socket_address, std::bind(&dmxfish::test::Test_Client_Handler::client_cb, this, std::placeholders::_1, std::placeholders::_2));
+	this->external_control_server = std::make_shared<rmrf::net::unix_socket_server>(socket_address, std::bind(&dmxfish::test::Test_Client_Handler::client_cb, this, std::placeholders::_1, std::placeholders::_2));
 	::spdlog::debug("Test: Opened control port.");
 	this->timer.start();
 }
