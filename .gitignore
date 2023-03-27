@@ -37,5 +37,7 @@ dep
 
 # IDE stuff
 *.kdev4
-
+.project
+.cproject
+.settings
 lib/

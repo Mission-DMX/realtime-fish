@@ -28,7 +28,7 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t) {
 		}
 		// TODO Release input data structure if it was locked and not copied.
 
-		push_all_registered_universes();
+		dmxfish::io::push_all_registered_universes();
 		// TODO push updates to UI
 
 		// stop timer and wait 2ms until next cycle
