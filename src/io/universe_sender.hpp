@@ -1,8 +1,11 @@
 #pragma once
 
+#include <forward_list>
 #include <memory>
 
 #include "dmx/universe.hpp"
+
+#include "proto_src/UniverseControl.pb.h"
 
 namespace dmxfish::io {
 
@@ -33,4 +36,15 @@ namespace dmxfish::io {
 	 * @return A shared pointer to the universe
 	 */
 	std::shared_ptr<dmxfish::dmx::universe> get_temporary_universe(const std::string& output_description);
+
+	/**
+	 * Create or update a universe from a given IPC message.
+	 * @param u The universe definition to use
+	 */
+	std::shared_ptr<dmxfish::dmx::universe> register_universe_from_message(const missiondmx::fish::ipcmessages::Universe& u);
+
+	/**
+	 * Get a list of all registered universes.
+	 */
+	std::forward_list<std::weak_ptr<dmxfish::dmx::universe>> get_universe_list();
 }
