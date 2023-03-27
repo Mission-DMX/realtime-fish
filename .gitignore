@@ -34,3 +34,8 @@
 bin
 obj
 dep
+
+# IDE stuff
+*.kdev4
+
+lib/
