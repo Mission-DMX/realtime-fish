@@ -31,8 +31,11 @@
 *.out
 *.app
 
+bin
+obj
+dep
+
 # IDE stuff
 *.kdev4
 
-bin/
 lib/

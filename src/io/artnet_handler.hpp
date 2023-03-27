@@ -56,11 +56,9 @@ namespace dmxfish::io {
 
 			std::shared_ptr<::dmxfish::dmx::artnet_universe> get_or_create_universe(const int id, const rmrf::net::socketaddr& addr, const uint16_t device_universe_id) {
 				auto record = this->nodes.find(id);
-				::spdlog::debug("Looking for ArtNet Universe: {}", id);
 				if (record == this->nodes.end()) {
 					auto u = std::make_shared<::dmxfish::dmx::artnet_universe>(id, device_universe_id);
 					node_registry r{id, device_universe_id, addr, u};
-					::spdlog::debug("Created ArtNet Universe: {}", id);
 					this->nodes.insert({id, r});
 					return u;
 				}
