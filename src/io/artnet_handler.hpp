@@ -69,6 +69,14 @@ namespace dmxfish::io {
 				}
 				return record->second.ptr;
 			}
+
+			bool unlink_universe(const int id) {
+				if(!nodes.contains(id)) {
+					return false;
+				}
+				nodes.erase(id);
+				return true;
+			}
 	};
 
 }

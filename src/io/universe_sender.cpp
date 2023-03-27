@@ -33,11 +33,19 @@ bool push_all_registered_universes() {
 				return u_ptr.use_count() == 0;
 		});
 	}
+	return !house_keeping_required;
 }
 
 std::shared_ptr<dmxfish::dmx::universe> get_temporary_universe(const std::string& output_description) {
 	// TODO build parser that assignes a free universe
 	return _artnet_handler.get_or_create_universe(1, rmrf::net::get_first_general_socketaddr(output_description, 6454), 1);
+}
+
+void unregister_universe(const int id) {
+	_artnet_handler.unlink_universe(id);
+	std::erase_if(active_universes, [id](std::weak_ptr<dmxfish::dmx::universe>& u_ptr) {
+				return u_ptr.use_count() == 0 || u_ptr.lock()->getID() == id;
+			});
 }
 
 }

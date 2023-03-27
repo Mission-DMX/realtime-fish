@@ -25,7 +25,7 @@ namespace dmxfish::dmx {
 	public:
 		universe(const int _id, const universe_type _type) : id(_id), type(_type) {}
 
-		int getID() const {
+		[[nodiscard]] inline int getID() const {
 			return this->id;
 		}
 
