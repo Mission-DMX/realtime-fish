@@ -30,6 +30,7 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		int64_t limit_;
 		int read_var_int_multiplier;
 		std::shared_ptr<message_buffer_output> output_buffer;
+		int streamsize;
 	public:
 		client_handler(parse_message_cb_t found_message_cb_, std::shared_ptr<rmrf::net::connection_client>);
 		void handle_messages();
@@ -44,7 +45,7 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		void BackUpLocal(int count);
 		bool SkipLocal(int count);
 		bool ReadVarint32(uint32_t *);
-		int streamsize() const;
+		// int streamsize() const;
 };
 
 }

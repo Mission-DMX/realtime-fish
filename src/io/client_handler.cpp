@@ -15,13 +15,15 @@ namespace dmxfish::io {
 		byte_count(0),
 		limit_(5),
 		read_var_int_multiplier(1),
-		output_buffer(std::make_shared<message_buffer_output>(client))
+		output_buffer(std::make_shared<message_buffer_output>(client)),
+		streamsize(0)
 	{
 		this->connection_client->set_incomming_data_callback(std::bind(&dmxfish::io::client_handler::incomming_data_callback, this, std::placeholders::_1));
 	}
 
 	void client_handler::incomming_data_callback(const rmrf::net::iorecord& data){
 		::spdlog::debug("reached callback");
+		this->streamsize += data.size();
 		this->io_buffer->push_back(data);
 		this->handle_messages();
 	}
@@ -54,14 +56,14 @@ namespace dmxfish::io {
 				}
 			case READ_MSG:
 				{
-					if (streamsize() >= this->msg_length){
+					if (this->streamsize >= this->msg_length){
 						parse_message_cb(msg_type, *this);
 						this->msg_type = 0;
 						this->internal_state = NEXT_MSG;
 						this->limit_ = 5;
 						return handle_messages();
 					}
-					::spdlog::debug("ReadMSG: Msg was not long enough: is {}, should: {}", streamsize(), this->msg_length);
+					::spdlog::debug("ReadMSG: Msg was not long enough: is {}, should: {}", this->streamsize, this->msg_length);
 					break;
 				}
 			default:
@@ -72,7 +74,10 @@ namespace dmxfish::io {
 
 	bool client_handler::Next(const void** data, int* size){
 		if (limit_ <= 0) return false;
-		if (this->actual_record >= this->io_buffer->end()){
+		// if (this->actual_record >= this->io_buffer->end()){
+		// 	return false;
+		// }
+		if (this->streamsize <= 0){
 			return false;
 		}
 		if (this->io_buffer->begin() != this->actual_record){
@@ -86,7 +91,7 @@ namespace dmxfish::io {
 		if (limit_ < 0) {
 		 *size += this->limit_;
 		}
-
+		this->streamsize -= *size;
 		return true;
 	}
 
@@ -107,6 +112,7 @@ namespace dmxfish::io {
 		} else {
 			this->actual_record--;
 			this->actual_record->advance(this->actual_record->size()-count);
+			this->streamsize += count;
 			this->byte_count -= count;
 		}
 	}
@@ -137,14 +143,17 @@ namespace dmxfish::io {
 		// }
 
 		while (count > 0){
-			if (this->actual_record >= this->io_buffer->end()){
+			// if (this->actual_record >= this->io_buffer->end()){
+			// 	return false;
+			// }
+			if (this->streamsize <= 0){
 				return false;
 			}
 			if (count < this->actual_record->size()){
 				this->byte_count += count;
 				this->actual_record->advance(count);
 				count = 0;
-			} else{
+			} else {
 				count -= this->actual_record->size();
 				this->byte_count += this->actual_record->size();
 				this->actual_record++;
@@ -190,14 +199,14 @@ namespace dmxfish::io {
 		return false;
 	}
 
-	int client_handler::streamsize() const{
-		int cnt = 0;
-		std::deque<rmrf::net::iorecord>::iterator temp_it = this->actual_record;
-		while (temp_it < this->io_buffer->end()){
-			cnt += temp_it->size();
-			temp_it++;
-		}
-		return cnt;
-	}
+	// int client_handler::streamsize() const{
+	// 	int cnt = 0;
+	// 	std::deque<rmrf::net::iorecord>::iterator temp_it = this->actual_record;
+	// 	while (temp_it < this->io_buffer->end()){
+	// 		cnt += temp_it->size();
+	// 		temp_it++;
+	// 	}
+	// 	return cnt;
+	// }
 
 }
