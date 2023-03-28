@@ -70,8 +70,8 @@ int main(int argc, char* argv[], char* env[]) {
 
 	}
 	//
-	auto socket_address = rmrf::net::get_first_general_socketaddr("/tmp/9Lq7BNBnBycd6nxyz.socket", "", rmrf::net::socket_t::UNIX);
-	auto client = rmrf::net::connect(socket_address);
+	// auto socket_address = rmrf::net::get_first_general_socketaddr("/tmp/9Lq7BNBnBycd6nxyz.socket", "", rmrf::net::socket_t::UNIX);
+	// auto client = rmrf::net::connect(socket_address);
 	//
 	// start_time = time(NULL);
 	// while (run_time_state->running && time(NULL) < start_time+2) {

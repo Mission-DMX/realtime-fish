@@ -33,11 +33,13 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 
 	}
 
-	auto client = rmrf::net::connect("::1", "8086");
+	// auto client = rmrf::net::connect("::1", "8086");
+	auto socket_address = rmrf::net::get_first_general_socketaddr("/tmp/9Lq7BNBnBycd6nxyz.socket", "", rmrf::net::socket_t::UNIX);
+	auto client = rmrf::net::connect(socket_address);
 
 
 	if(!client) {
-		BOOST_CHECK_MESSAGE(false, "Es konnte keine Verbindung zu [::1]:8086 aufgebaut werden. Läuft der Server?");
+		BOOST_CHECK_MESSAGE(false, "Es konnte keine Verbindung zu /tmp/9Lq7BNBnBycd6nxyz.socket aufgebaut werden. Läuft der Server?");
 	}
 
 	start_time = time(NULL);
