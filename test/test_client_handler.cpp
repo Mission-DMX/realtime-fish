@@ -51,7 +51,7 @@ bool check_version_libev()
 }
 
 void Test_Client_Handler::run() {
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	std::this_thread::sleep_for(std::chrono::milliseconds(400));
 	::spdlog::debug("Entering ev defloop");
 	this->loop->run(0);
 	::spdlog::debug("Leaving ev defloop");
@@ -69,7 +69,7 @@ Test_Client_Handler::Test_Client_Handler() :
 	this->loop = std::make_shared<::ev::default_loop>();
 	this->iothread = std::make_shared<std::thread>(std::bind(&Test_Client_Handler::run, this));
 	const auto thread_id = std::hash<std::thread::id>{}(this->iothread->get_id());
-	::spdlog::debug("Test: Started IO manager with loop on thread with id {}.", thread_id);
+	::spdlog::debug("Test: Started Test_Client_Handler with loop on thread with id {}.", thread_id);
 }
 
 void Test_Client_Handler::start() {
@@ -86,12 +86,12 @@ void Test_Client_Handler::client_cb(rmrf::net::async_server_socket::self_ptr_typ
 }
 
 Test_Client_Handler::~Test_Client_Handler() {
-	::spdlog::debug("Test: Stopping IO manager");
+	::spdlog::debug("Test: Test_Client_Handler");
 	this->running = false;
 	this->loop->break_loop(::ev::ALL);
 	this->iothread->join();
 
-	::spdlog::debug("Test: Stopped IO manager");
+	::spdlog::debug("Test: Test_Client_Handler");
 }
 
 void Test_Client_Handler::parse_message_cb(uint32_t msg_type, google::protobuf::io::ZeroCopyInputStream& buff){

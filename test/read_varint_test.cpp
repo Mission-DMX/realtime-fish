@@ -33,7 +33,6 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 
 	}
 
-	// auto client = rmrf::net::connect("::1", "8086");
 	auto socket_address = rmrf::net::get_first_general_socketaddr("/tmp/9Lq7BNBnBycd6nxyz.socket", "", rmrf::net::socket_t::UNIX);
 	auto client = rmrf::net::connect(socket_address);
 
