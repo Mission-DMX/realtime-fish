@@ -38,14 +38,12 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		void BackUp(int count);
 		bool Skip(int count);
 		int64_t ByteCount() const;
-		std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> get_io_buffer(){return this->io_buffer;};
 		void write_message(google::protobuf::MessageLite&, uint32_t);
 	private:
 		void incomming_data_callback(const rmrf::net::iorecord&);
 		void BackUpLocal(int count);
 		bool SkipLocal(int count);
 		bool ReadVarint32(uint32_t *);
-		// int streamsize() const;
 };
 
 }

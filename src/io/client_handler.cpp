@@ -74,10 +74,7 @@ namespace dmxfish::io {
 
 	bool client_handler::Next(const void** data, int* size){
 		if (limit_ <= 0) return false;
-		// if (this->actual_record >= this->io_buffer->end()){
-		// 	return false;
-		// }
-		if (this->streamsize <= 0){
+		if (this->actual_record >= this->io_buffer->end()){
 			return false;
 		}
 		if (this->io_buffer->begin() != this->actual_record){
@@ -138,15 +135,9 @@ namespace dmxfish::io {
 
 	inline bool client_handler::SkipLocal(int count){
 		::spdlog::debug("Run Skip...for skipping {} bytes", count);
-		// if (count > streamsize()){
-		// 	return false;
-		// }
 
 		while (count > 0){
-			// if (this->actual_record >= this->io_buffer->end()){
-			// 	return false;
-			// }
-			if (this->streamsize <= 0){
+			if (this->actual_record >= this->io_buffer->end()){
 				return false;
 			}
 			if (count < this->actual_record->size()){
@@ -164,7 +155,6 @@ namespace dmxfish::io {
 	}
 
 	int64_t client_handler::ByteCount() const{
-		// ::spdlog::debug("ByteCount");
 		if (this->limit_ < 0) {
 	    return this->byte_count + this->limit_;
 	  } else {
@@ -198,15 +188,5 @@ namespace dmxfish::io {
 		}
 		return false;
 	}
-
-	// int client_handler::streamsize() const{
-	// 	int cnt = 0;
-	// 	std::deque<rmrf::net::iorecord>::iterator temp_it = this->actual_record;
-	// 	while (temp_it < this->io_buffer->end()){
-	// 		cnt += temp_it->size();
-	// 		temp_it++;
-	// 	}
-	// 	return cnt;
-	// }
 
 }
