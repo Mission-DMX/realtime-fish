@@ -33,7 +33,7 @@ void GUI_Connection_Handler::client_cb(rmrf::net::async_server_socket::self_ptr_
 	::spdlog::debug("Client found the server");
 }
 
-void GUI_Connection_Handler::broadcast_message(google::protobuf::MessageLite& msg, uint32_t msg_type){
+void GUI_Connection_Handler::push_msg_to_all_gui(google::protobuf::MessageLite& msg, uint32_t msg_type){
 	for (std::list<std::shared_ptr<client_handler>>::iterator it = this->clients.begin(); it != this->clients.end(); it++){
 		it->get()->write_message(msg, msg_type);
 	}

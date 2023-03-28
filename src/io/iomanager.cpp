@@ -318,7 +318,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 	}
 }
 
-void IOManager::broadcast_message(google::protobuf::MessageLite& msg, uint32_t msg_type){
-	this->gui_connections->broadcast_message(msg, msg_type);
+void IOManager::push_msg_to_all_gui(google::protobuf::MessageLite& msg, uint32_t msg_type){
+	this->gui_connections->push_msg_to_all_gui(msg, msg_type);
 }
 }

@@ -24,7 +24,7 @@ namespace dmxfish::io {
 			GUI_Connection_Handler(client_handler::parse_message_cb_t);
 			~GUI_Connection_Handler();
 			void activate_tcp_connection();
-			void broadcast_message(google::protobuf::MessageLite&, uint32_t);
+			void push_msg_to_all_gui(google::protobuf::MessageLite&, uint32_t);
 		private:
 			void client_cb(rmrf::net::async_server_socket::self_ptr_type, std::shared_ptr<rmrf::net::connection_client>);
 	};

@@ -22,7 +22,7 @@ namespace dmxfish::io {
 			IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager = false);
 			~IOManager();
 			void start();
-			void broadcast_message(google::protobuf::MessageLite&, uint32_t);
+			void push_msg_to_all_gui(google::protobuf::MessageLite&, uint32_t);
 		private:
 			void run();
 			void parse_message_cb(uint32_t, client_handler&);
