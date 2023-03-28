@@ -32,6 +32,29 @@
 
 namespace dmxfish::io {
 
+
+static void get_protobuf_msg_of_universe(missiondmx::fish::ipcmessages::Universe* universe_to_edit, std::shared_ptr<dmxfish::dmx::universe> universe_to_read){
+	// auto msg_universe = std::make_shared<missiondmx::fish::ipcmessages::Universe>();
+	universe_to_edit->set_id(universe_to_read->getID());
+
+	switch (universe_to_read->getUniverseType()) {
+		case dmxfish::dmx::universe_type::PHYSICAL:
+			// not finished
+			universe_to_edit->set_physical_location(1);
+			break;
+		case dmxfish::dmx::universe_type::ARTNET:
+			auto universe_inner = universe_to_edit->mutable_remote_location();
+			universe_inner->set_ip_address("Dummy data - we cant get real one");
+			universe_inner->set_port(6454);
+			universe_inner->set_universe_on_device(1);
+			break;
+		// case dmxfish::dmx::universe_type::sACN:
+		// 	// not finished, not supported in Protobuf
+		// 	break;
+	}
+	// return universe_to_edit;
+}
+
 bool check_version_libev()
 {
 		auto ev_major{ev::version_major()};
@@ -142,6 +165,8 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::Universe>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					// dmxfish::io::register_universe_from_message();
+					dmxfish::io::register_universe_from_message(*msg.get());
 					return;
 				}
 				return;
@@ -150,6 +175,10 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::universes_list>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					// int i = 0;
+					for(int i = 0 ; i < msg->list_of_universes_size(); i++){
+						dmxfish::io::register_universe_from_message(msg->list_of_universes(i));
+					}
 					return;
 				}
 				return;
@@ -158,6 +187,28 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::request_universe_list>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					if(msg->universe_id()<0){
+						auto universes = dmxfish::io::get_universe_list();
+						auto msg_universes = std::make_shared<missiondmx::fish::ipcmessages::universes_list>();
+						for (std::weak_ptr<dmxfish::dmx::universe> universe : universes){
+							if (universe.use_count()>0){
+								auto universe_to_write_to = msg_universes->add_list_of_universes();
+								dmxfish::io::get_protobuf_msg_of_universe(universe_to_write_to, universe.lock());
+							}
+						}
+						client.write_message(*msg_universes.get(), ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE_LIST);
+
+					}else{
+						auto universe = dmxfish::io::get_universe(msg->universe_id());
+						if(universe){
+							auto universe_to_edit = missiondmx::fish::ipcmessages::Universe();
+							dmxfish::io::get_protobuf_msg_of_universe(&universe_to_edit, universe);
+							client.write_message(universe_to_edit, ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE);
+						}
+						else {
+							::spdlog::debug("did not find the universe with id: {}", msg->universe_id());
+						}
+					}
 					return;
 				}
 				return;
@@ -166,6 +217,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::delete_universe>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					dmxfish::io::unregister_universe(msg->id());
 					return;
 				}
 				return;
@@ -221,13 +273,13 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 					auto universe = dmxfish::io::get_universe(msg->universe_id());
 					// send universe back to UI
 					if(universe){
-						auto msg_new = std::make_shared<missiondmx::fish::ipcmessages::dmx_output>();
-						msg_new->set_universe_id(msg->universe_id());
-						msg_new->add_channel_data(1);
+						auto msg_dmx_data = std::make_shared<missiondmx::fish::ipcmessages::dmx_output>();
+						msg_dmx_data->set_universe_id(msg->universe_id());
+						msg_dmx_data->add_channel_data(1);
 						for (int j = 0; j<512; j++){
-							msg_new->add_channel_data((*universe)[j]);
+							msg_dmx_data->add_channel_data((*universe)[j]);
 						}
-						client.write_message(*(msg_new.get()), ::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT);
+						client.write_message(*(msg_dmx_data.get()), ::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT);
 					}
 					else {
 						::spdlog::debug("did not find the universe with id: {}", msg->universe_id());
