@@ -65,12 +65,13 @@ int main(int argc, char* argv[], char* env[]) {
 
   // perform_main_update(u);
 	//
-	// time_t start_time = time(NULL);
-	// while (run_time_state->running && time(NULL) < start_time+2) {
+	time_t start_time = time(NULL);
+	while (run_time_state->running && time(NULL) < start_time+2) {
+
+	}
 	//
-	// }
-	//
-	// auto client = rmrf::net::connect("::1", "8085", AF_INET6);
+	auto socket_address = rmrf::net::get_first_general_socketaddr("/tmp/9Lq7BNBnBycd6nxyz.socket", "", rmrf::net::socket_t::UNIX);
+	auto client = rmrf::net::connect(socket_address);
 	//
 	// start_time = time(NULL);
 	// while (run_time_state->running && time(NULL) < start_time+2) {

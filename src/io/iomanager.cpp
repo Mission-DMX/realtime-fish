@@ -90,7 +90,7 @@ IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_d
 }
 
 void IOManager::start() {
-	this->gui_connections->activate_tcp_connection(8085);
+	this->gui_connections->activate_tcp_connection();
 }
 
 IOManager::~IOManager() {

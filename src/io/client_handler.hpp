@@ -4,7 +4,6 @@
 
 #include "rmrf-net/ioqueue.hpp"
 #include "io/message_buffer.hpp"
-// #include "rmrf-net/tcp_client.hpp"
 #include "rmrf-net/connection_client.hpp"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/message_lite.h"

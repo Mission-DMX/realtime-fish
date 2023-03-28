@@ -16,10 +16,9 @@ GUI_Connection_Handler::~GUI_Connection_Handler() {
 	::spdlog::debug("Stopped GUI_Connection_Handler");
 }
 
-void GUI_Connection_Handler::activate_tcp_connection(uint16_t port){
-	// this->external_control_server = std::make_shared<rmrf::net::tcp_server_socket>(port, std::bind(&dmxfish::io::GUI_Connection_Handler::client_cb, this, std::placeholders::_1, std::placeholders::_2));
-	auto socket_address = rmrf::net::get_first_general_socketaddr("::1", port);
-	this->external_control_server = std::make_shared<rmrf::net::tcp_server_socket>(socket_address, std::bind(&dmxfish::io::GUI_Connection_Handler::client_cb, this, std::placeholders::_1, std::placeholders::_2));
+void GUI_Connection_Handler::activate_tcp_connection(){
+	auto socket_address = rmrf::net::get_first_general_socketaddr("/tmp/9Lq7BNBnBycd6nxyz.socket", "", rmrf::net::socket_t::UNIX);
+	this->external_control_server = std::make_shared<rmrf::net::unix_socket_server>(socket_address, std::bind(&dmxfish::io::GUI_Connection_Handler::client_cb, this, std::placeholders::_1, std::placeholders::_2));
 	::spdlog::debug("Opened control port.");
 }
 
