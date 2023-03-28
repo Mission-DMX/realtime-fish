@@ -1,7 +1,7 @@
 #include "io/message_buffer.hpp"
 #include "lib/logging.hpp"
 
-#define BUFF_SIZE 64
+#define BUFF_SIZE 1024
 
 namespace dmxfish::io {
 

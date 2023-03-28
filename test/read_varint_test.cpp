@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 	msg->SerializeToZeroCopyStream(out_b.get());
 
 	start_time = time(NULL);
-	while (time(NULL) < start_time+60) {
+	while (time(NULL) < start_time+5) {
 
 	}
 	BOOST_CHECK_EQUAL("abc", "abc");

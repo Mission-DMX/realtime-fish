@@ -66,10 +66,6 @@ int main(int argc, char* argv[], char* env[]) {
 
   // perform_main_update(u);
 	//
-	time_t start_time = time(NULL);
-	while (run_time_state->running && time(NULL) < start_time+2) {
-
-	}
 	//
 	// auto socket_address = rmrf::net::get_first_general_socketaddr("/tmp/9Lq7BNBnBycd6nxyz.socket", "", rmrf::net::socket_t::UNIX);
 	// auto client = rmrf::net::connect(socket_address);
@@ -83,7 +79,6 @@ int main(int argc, char* argv[], char* env[]) {
 	// auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
 	// msg->set_current_state(::missiondmx::fish::ipcmessages::RM_DIRECT);
 	// msg->set_showfile_apply_state(::missiondmx::fish::ipcmessages::SFAS_INVALID);
-	// // can't we run multiple scenes at the same time?
 	// msg->set_current_scene(-1);
 	// msg->set_last_cycle_time(10);
 	// msg->set_last_error("No Error occured");

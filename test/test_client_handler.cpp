@@ -61,8 +61,7 @@ Test_Client_Handler::Test_Client_Handler() :
 		running(true),
 		iothread(nullptr),
 		loop(nullptr),
-		external_control_server(nullptr),
-		timer(fish::test::timer(this->loop))
+		external_control_server(nullptr)
 
 {
 	if(!check_version_libev())
@@ -71,14 +70,12 @@ Test_Client_Handler::Test_Client_Handler() :
 	this->iothread = std::make_shared<std::thread>(std::bind(&Test_Client_Handler::run, this));
 	const auto thread_id = std::hash<std::thread::id>{}(this->iothread->get_id());
 	::spdlog::debug("Test: Started IO manager with loop on thread with id {}.", thread_id);
-	this->timer = fish::test::timer(this->loop);
 }
 
 void Test_Client_Handler::start() {
 	auto socket_address = rmrf::net::get_first_general_socketaddr("/tmp/9Lq7BNBnBycd6nxyz.socket", "", rmrf::net::socket_t::UNIX);
 	this->external_control_server = std::make_shared<rmrf::net::unix_socket_server>(socket_address, std::bind(&dmxfish::test::Test_Client_Handler::client_cb, this, std::placeholders::_1, std::placeholders::_2));
 	::spdlog::debug("Test: Opened control port.");
-	this->timer.start();
 }
 
 void Test_Client_Handler::client_cb(rmrf::net::async_server_socket::self_ptr_type server, std::shared_ptr<rmrf::net::connection_client> client){
@@ -90,7 +87,6 @@ void Test_Client_Handler::client_cb(rmrf::net::async_server_socket::self_ptr_typ
 
 Test_Client_Handler::~Test_Client_Handler() {
 	::spdlog::debug("Test: Stopping IO manager");
-	this->timer.stop();
 	this->running = false;
 	this->loop->break_loop(::ev::ALL);
 	this->iothread->join();
@@ -183,6 +179,9 @@ void Test_Client_Handler::parse_message_cb(uint32_t msg_type, google::protobuf::
 							(*universe)[i] = msg->channel_data(i);
 						}
 						dmxfish::io::publish_universe_update(universe);
+					}
+					else {
+						::spdlog::debug("did not find the universe with id: {}", msg->universe_id());
 					}
 					return;
 				}

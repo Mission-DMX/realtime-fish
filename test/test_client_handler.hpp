@@ -10,8 +10,6 @@
 #include "rmrf-net/unix_socket_server.hpp"
 #include "dmx/universe.hpp"
 
-#include "../test/timer.hpp"
-
 namespace dmxfish::test {
 
 	class Test_Client_Handler : public std::enable_shared_from_this<Test_Client_Handler> {
@@ -22,7 +20,6 @@ namespace dmxfish::test {
 			std::shared_ptr<::ev::loop_ref> loop;
 			std::shared_ptr<rmrf::net::unix_socket_server> external_control_server;
 			std::shared_ptr<dmxfish::io::client_handler> client_handler;
-			fish::test::timer timer;
 		public:
 			Test_Client_Handler();
 			~Test_Client_Handler();
