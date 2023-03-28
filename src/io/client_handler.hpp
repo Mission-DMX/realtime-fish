@@ -20,17 +20,18 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 			READ_MSG
 		};
 		parse_message_cb_t parse_message_cb;
-		std::shared_ptr<::rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer;
+		std::shared_ptr<rmrf::net::ioqueue<::rmrf::net::iorecord>> io_buffer;
 		std::shared_ptr<rmrf::net::connection_client> connection_client;
 		internal_state_t internal_state;
 		uint32_t msg_type;
 		uint32_t msg_length;
-		std::deque<rmrf::net::iorecord>::iterator actual_record;
+		// std::deque<rmrf::net::iorecord>::iterator actual_record;
 		int byte_count;
 		int64_t limit_;
 		int read_var_int_multiplier;
 		std::shared_ptr<message_buffer_output> output_buffer;
 		int streamsize;
+		std::unique_ptr<rmrf::net::iorecord> actual_record;
 	public:
 		client_handler(parse_message_cb_t found_message_cb_, std::shared_ptr<rmrf::net::connection_client>);
 		void handle_messages();

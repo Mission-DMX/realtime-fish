@@ -7,11 +7,10 @@ namespace dmxfish::io {
 
 	client_handler::client_handler(parse_message_cb_t parse_message_cb_, std::shared_ptr<rmrf::net::connection_client> client):
 		parse_message_cb(parse_message_cb_),
-		io_buffer(std::make_shared<::rmrf::net::ioqueue<::rmrf::net::iorecord>>()),
+		io_buffer(std::make_shared<rmrf::net::ioqueue<::rmrf::net::iorecord>>()),
 		connection_client(client),
 		internal_state(NEXT_MSG),
 		msg_type(0),
-		actual_record(this->io_buffer->begin()),
 		byte_count(0),
 		limit_(5),
 		read_var_int_multiplier(1),
@@ -74,16 +73,15 @@ namespace dmxfish::io {
 
 	bool client_handler::Next(const void** data, int* size){
 		if (limit_ <= 0) return false;
-		if (this->actual_record >= this->io_buffer->end()){
+
+		if (this->io_buffer->empty()){
 			return false;
 		}
-		if (this->io_buffer->begin() != this->actual_record){
-			this->io_buffer->pop_front();
-		}
-		*data = (*this->actual_record).ptr();
-		*size = (*this->actual_record).size();
+		this->actual_record = std::make_unique<rmrf::net::iorecord>(this->io_buffer->pop_front());
+
+		*data = this->actual_record->ptr();
+		*size = this->actual_record->size();
 		this->byte_count += *size;
-		this->actual_record++;
 		this->limit_ -= *size;
 		if (limit_ < 0) {
 		 *size += this->limit_;
@@ -104,14 +102,10 @@ namespace dmxfish::io {
 	}
 
 	inline void client_handler::BackUpLocal(int count){
-		if (count == 0){
-			this->io_buffer->pop_front();
-		} else {
-			this->actual_record--;
-			this->actual_record->advance(this->actual_record->size()-count);
-			this->streamsize += count;
-			this->byte_count -= count;
-		}
+		this->actual_record->advance(this->actual_record->size()-count);
+		this->streamsize += count;
+		this->byte_count -= count;
+		this->io_buffer->push_front(*this->actual_record.get());
 	}
 
 	bool client_handler::Skip(int count){
@@ -127,31 +121,31 @@ namespace dmxfish::io {
 	  }
 	}
 
+	inline bool client_handler::SkipLocal(int count){
+		::spdlog::debug("Run Skip...for skipping {} bytes", count);
+		while (count > 0){
+			if (this->io_buffer->empty()){
+				return false;
+			}
+			this->actual_record = std::make_unique<rmrf::net::iorecord>(this->io_buffer->pop_front());
+			this->streamsize -= this->actual_record->size();
+			count -= this->actual_record->size();
+			this->byte_count += this->actual_record->size();
+			if (count < 0){
+				this->byte_count += count;
+				this->actual_record->advance(-count);
+				this->streamsize -= count;
+				this->io_buffer->push_front(*this->actual_record.get());
+				// count = 0;
+			}
+		}
+		return true;
+	}
+
 	void client_handler::write_message(google::protobuf::MessageLite& msg, uint32_t msg_type){
 		this->output_buffer->WriteVarint32(msg_type);
 		this->output_buffer->WriteVarint32(msg.ByteSizeLong());
 		msg.SerializeToZeroCopyStream(this->output_buffer.get());
-	}
-
-	inline bool client_handler::SkipLocal(int count){
-		::spdlog::debug("Run Skip...for skipping {} bytes", count);
-
-		while (count > 0){
-			if (this->actual_record >= this->io_buffer->end()){
-				return false;
-			}
-			if (count < this->actual_record->size()){
-				this->byte_count += count;
-				this->actual_record->advance(count);
-				count = 0;
-			} else {
-				count -= this->actual_record->size();
-				this->byte_count += this->actual_record->size();
-				this->actual_record++;
-				this->io_buffer->pop_front();
-			}
-		}
-		return true;
 	}
 
 	int64_t client_handler::ByteCount() const{
