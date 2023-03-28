@@ -29,6 +29,7 @@ endif
 
 PKG_TOOL = pkg-config
 PROTO_TOOL = protoc
+XSDTOOL = xsdcxx
 
 CFLAGS_RMRF_NET += `${PKG_TOOL} --cflags libnl-3.0`
 CXXFLAGS_RMRF_NET += `${PKG_TOOL} --cflags libnl-3.0`
@@ -90,6 +91,14 @@ PROTO_OBJDIR := ${OBJDIR}/proto
 PROTO_SRCOBJS := $(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,$(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,${PROTO_SOURCES_B}))
 DEPFLAGS_PROTO = ${DEPFLAGS} -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
 
+XMLTREE_DEFDIR := ${LIBSRCDIR}/ProjectFile
+XMLTREE_SRCDIR := ${LIBSRCDIR}/xml_src
+XMLTREE_SCHEMAS := $(call rwildcard,${XMLTREE_DEFDIR},*.xsd)
+XMLTREE_CFILES := $(patsubst ${XMLTREE_DEFDIR}/%.xsd,${XMLTREE_SRCDIR}/%.xml.cpp,${XMLTREE_SCHEMAS})
+XMLTREE_OBJDIR := ${OBJDIR}/project_xml
+XMLTREE_SRCOBJS := $(patsubst ${XMLTREE_SRCDIR}/%.xml.cpp,${XMLTREE_OBJDIR}/%.o,$(patsubst ${XMLTREE_SRCDIR}/%.xml.cpp,${XMLTREE_OBJDIR}/%.o,${XMLTREE_CFILES}))
+XMLTREE_CXXFLAGS := ${CXXFLAGS}
+
 .PRECIOUS: ${DEPDIR}/%.d ${OBJDIR}/**/%.o ${POTOBJS} ${POOBJS}
 .PHONY: all clean install lintian style translation
 
@@ -105,6 +114,15 @@ ${PROTO_OBJDIR}/%.o: ${PROTO_SRCDIR}/%.pb.cc $(PROTO_SOURCES_B)
 ${OBJDIR}/libproto.a: ${PROTO_SRCOBJS}
 	${MKDIR} ${@D} && ar rsv $@ $^ && touch $@
 
+${XMLTREE_SRCDIR}/%.xml.cpp: ${XMLTREE_DEFDIR}/%.xsd Makefile
+	${MKDIR} ${@D} && cd ${@D} && ${XSDTOOL} cxx-tree --generate-polymorphic --std c++11 --hxx-suffix .xml.hpp --cxx-suffix .xml.cpp ../../$< && cd ../.. && touch $@
+
+${XMLTREE_OBJDIR}/%.o: ${XMLTREE_SRCDIR}/%.xml.cpp $(XMLTREE_CFILES)
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${XMLTREE_CXXFLAGS} -o $@ -c $< && touch $@
+
+${OBJDIR}/showxml.a: ${XMLTREE_SRCOBJS}
+	${MKDIR} ${@D} && ar rsv $@ $^ && touch $@
+
 ${RMRFNET_OBJDIR}/%.o: ${RMRFNET_SRCDIR}/%.cpp Makefile
 	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${DEPFLAGS_RMRF} ${CXXFLAGS_RMRF_NET} -o $@ -c $< && touch $@
 
@@ -114,7 +132,7 @@ ${OBJDIR}/librmrfnet.a: ${RMRFNET_SRCOBJS}
 ${OBJDIR}/%.o: ${SRCDIR}/%.cpp $(PROTO_SOURCES_B) Makefile
 	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${DEPFLAGS} -o $@ -c $< && touch $@
 
-${BINDIR}/fish: ${SRCOBJS} ${OBJDIR}/librmrfnet.a ${OBJDIR}/libproto.a
+${BINDIR}/fish: ${SRCOBJS} ${OBJDIR}/librmrfnet.a ${OBJDIR}/libproto.a ${OBJDIR}/showxml.a
 	${MKDIR} ${@D} && ${CXX} -o $@ $^ ${LFLAGS} && touch $@
 
 clean:
@@ -123,3 +141,4 @@ clean:
 	rm -rf ${DEPDIR}
 	rm -rf ${MODIR}
 	rm -rf ${PROTO_SRCDIR}
+	rm -rf ${XMLTREE_SRCDIR}
