@@ -63,8 +63,6 @@ Test_Client_Handler::Test_Client_Handler() :
 		loop(nullptr),
 		external_control_server(nullptr),
 		timer(fish::test::timer(this->loop))
-		// ,
-		// universe(dmxfish::io::get_temporary_universe("10.15.0.1"))
 
 {
 	if(!check_version_libev())
@@ -180,10 +178,12 @@ void Test_Client_Handler::parse_message_cb(uint32_t msg_type, google::protobuf::
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::dmx_output>();
 				if (msg->ParseFromZeroCopyStream(&buff)){
 					auto universe = dmxfish::io::get_universe(msg->universe_id());
-					for (int i = 0; i< msg->channel_data_size(); i++){
-						(*universe)[i] = msg->channel_data(i);
+					if (universe){
+						for (int i = 0; i< msg->channel_data_size(); i++){
+							(*universe)[i] = msg->channel_data(i);
+						}
+						dmxfish::io::publish_universe_update(universe);
 					}
-					dmxfish::io::publish_universe_update(universe);
 					return;
 				}
 				return;
