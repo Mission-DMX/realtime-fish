@@ -129,7 +129,7 @@ ${RMRFNET_OBJDIR}/%.o: ${RMRFNET_SRCDIR}/%.cpp Makefile
 ${OBJDIR}/librmrfnet.a: ${RMRFNET_SRCOBJS}
 	${MKDIR} ${@D} && ar rsv $@ $^ && touch $@
 
-${OBJDIR}/%.o: ${SRCDIR}/%.cpp $(PROTO_SOURCES_B) Makefile
+${OBJDIR}/%.o: ${SRCDIR}/%.cpp $(PROTO_SOURCES_B) $(XMLTREE_CFILES) Makefile
 	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${DEPFLAGS} -o $@ -c $< && touch $@
 
 ${BINDIR}/fish: ${SRCOBJS} ${OBJDIR}/librmrfnet.a ${OBJDIR}/libproto.a ${OBJDIR}/showxml.a
