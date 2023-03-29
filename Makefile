@@ -3,7 +3,7 @@ OS = $(shell uname -s)
 # CFLAGS += -march=native -masm=intel -pipe -fsanitize=address,signed-integer-overflow,undefined -pedantic -Wall -Wextra -Werror -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src
 CFLAGS += -march=native -masm=intel -pipe -pedantic -Wall -Wextra -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src
 
-CXXFLAGS += ${CFLAGS} -std=c++11 -std=c++17 -std=c++2a -Wuseless-cast -Weffc++ -I/usr/local/include -Wno-non-virtual-dtor
+CXXFLAGS += ${CFLAGS} -std=c++2a -Wuseless-cast -Weffc++ -I/usr/local/include -Wno-non-virtual-dtor
 DEPFLAGS = -MT $@ -MMD -MP -MF $(patsubst ${OBJDIR}/%.o,${DEPDIR}/%.d,$@) -pthread
 
 ifeq "${OS}" "Linux"
@@ -41,6 +41,8 @@ DEPFLAGS += `${PKG_TOOL} --cflags spdlog`
 # LFLAGS += `${PKG_TOOL} --libs libevent`
 LFLAGS += `${PKG_TOOL} --libs spdlog`
 LFLAGS += `${PKG_TOOL} --libs protobuf`
+LFLAGS += `${PKG_TOOL} --libs xerces-c`
+CFLAGS += `${PKG_TOOL} --cflags xerces-c`
 
 CXXFLAGS_A_PROTO := ${CXXFLAGS}
 # CXXFLAGS += -Werror
