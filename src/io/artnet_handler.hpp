@@ -24,7 +24,7 @@ namespace dmxfish::io {
 				uint8_t sequence_number;
 				rmrf::net::socketaddr node_address;
 				std::shared_ptr<::dmxfish::dmx::artnet_universe> ptr;
-				
+
 				node_registry(int _id, uint16_t _device_universe_id, rmrf::net::socketaddr _node_address, std::shared_ptr<::dmxfish::dmx::artnet_universe> _ptr)
 					: internal_universe_id(_id), device_universe_id(_device_universe_id),
 					  sequence_number(1), node_address(_node_address), ptr(_ptr) { }
@@ -70,6 +70,15 @@ namespace dmxfish::io {
 				}
 				return record->second.ptr;
 			}
+
+			std::shared_ptr<::dmxfish::dmx::artnet_universe> get_universe(const int id) {
+				auto record = this->nodes.find(id);
+				if (record == this->nodes.end()) {
+					return nullptr;
+				}
+				return record->second.ptr;
+			}
+
 
 			bool unlink_universe(const int id) {
 				if(!nodes.contains(id)) {

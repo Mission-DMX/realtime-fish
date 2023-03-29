@@ -84,4 +84,8 @@ std::forward_list<std::weak_ptr<dmxfish::dmx::universe>> get_universe_list() {
 	return l;
 }
 
+std::shared_ptr<dmxfish::dmx::universe> get_universe(const int id) {
+	return _artnet_handler.get_universe(id);
+}
+
 }

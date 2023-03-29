@@ -38,6 +38,12 @@ namespace dmxfish::io {
 	std::shared_ptr<dmxfish::dmx::universe> get_temporary_universe(const std::string& output_description);
 
 	/**
+	 * Use this method to get the universe with given id.
+	 * @param id The ID of the universe
+	 */
+	std::shared_ptr<dmxfish::dmx::universe> get_universe(const int);
+
+	/**
 	 * Create or update a universe from a given IPC message.
 	 * @param u The universe definition to use
 	 */
