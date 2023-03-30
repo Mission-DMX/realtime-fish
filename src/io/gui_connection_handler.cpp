@@ -17,7 +17,7 @@ GUI_Connection_Handler::~GUI_Connection_Handler() {
 }
 
 void GUI_Connection_Handler::activate_tcp_connection(){
-	auto socket_address = rmrf::net::get_first_general_socketaddr("/tmp/9Lq7BNBnBycd6nxyz.socket", "", rmrf::net::socket_t::UNIX);
+	auto socket_address = rmrf::net::get_first_general_socketaddr("/var/run/fish.sock", "", rmrf::net::socket_t::UNIX);
 	this->external_control_server = std::make_shared<rmrf::net::unix_socket_server>(socket_address, std::bind(&dmxfish::io::GUI_Connection_Handler::client_cb, this, std::placeholders::_1, std::placeholders::_2));
 	::spdlog::debug("Opened control port.");
 }
@@ -37,6 +37,7 @@ void GUI_Connection_Handler::push_msg_to_all_gui(google::protobuf::MessageLite& 
 	for (std::list<std::shared_ptr<client_handler>>::iterator it = this->clients.begin(); it != this->clients.end(); it++){
 		it->get()->write_message(msg, msg_type);
 	}
+	// ::spdlog::debug("{} clients connected", this->clients.size());
 }
 
 }

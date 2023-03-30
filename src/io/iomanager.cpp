@@ -125,6 +125,7 @@ IOManager::~IOManager() {
 }
 
 void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
+	::spdlog::debug("Msg came in with type : {}", msg_type);
 	switch ((::missiondmx::fish::ipcmessages::MsgType) msg_type) {
 		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_STATE:
 			// change the running mode

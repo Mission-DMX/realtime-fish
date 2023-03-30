@@ -2,6 +2,7 @@
 
 #include "lib/logging.hpp"
 #include "google/protobuf/io/coded_stream.h"
+#include <sstream>
 
 namespace dmxfish::test {
 
@@ -88,6 +89,12 @@ namespace dmxfish::test {
 		 *size += this->limit_;
 		}
 		this->streamsize -= *size;
+		auto strstream = std::stringstream();
+		strstream << "Test: Next:" << std::hex;
+		for(int i = 0; i < *size; i++){
+			strstream << " " << (int) *((*((uint8_t**)data))+i);
+		}
+		::spdlog::debug("{}", strstream.str());
 		return true;
 	}
 
