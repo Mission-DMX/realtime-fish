@@ -6,7 +6,7 @@
 #include "dmx/universe.hpp"
 #include "filters/scene.hpp"
 
-#include "xml_src/ShowFile_v0.xml.hpp"
+#include "xml/show_files.hpp"
 
 namespace dmxfish::filters {
 

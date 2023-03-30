@@ -1,5 +1,7 @@
 #include "filters/project_configuration.hpp"
 
+#include "filters/scene_factory.hpp"
+
 namespace dmxfish::filters {
 
 project_configuration::project_configuration(const MissionDMX::ShowFile::BordConfiguration& show_file_dom) : scenes{}, universes{} {
@@ -8,7 +10,8 @@ project_configuration::project_configuration(const MissionDMX::ShowFile::BordCon
 	} else {
 		this->name = "No Name";
 	}
-	this->scenes.reserve(0); // TODO reserve space for scenes and call scene factory
+	populate_scene_vector(this->scenes, show_file_dom.scene());
+
 	// TODO populate universes by calling get_or_create from universe_sender
 	if(const auto as = show_file_dom.default_active_scene(); as.present()) {
 		this->default_active_scene = as.get();
