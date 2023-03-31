@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "filters/filter.hpp"
+#include "LinearAllocator.h"
 
 namespace dmxfish::filters {
 
@@ -16,9 +17,10 @@ class scene {
 private:
 	const scene_filter_vector_t filters;
 	const scene_boundry_vec_t dependency_boundries;
+	const std::shared_ptr<LinearAllocator> used_allocator;
 public:
-	scene (scene_filter_vector_t f, scene_boundry_vec_t b)
-		: filters(std::move(f)), dependency_boundries(std::move(b)) {
+	scene (scene_filter_vector_t f, scene_boundry_vec_t b, std::shared_ptr<LinearAllocator> alloc)
+		: filters(std::move(f)), dependency_boundries(std::move(b)), used_allocator(alloc) {
 		// The vectors are initialized
 	}
 
