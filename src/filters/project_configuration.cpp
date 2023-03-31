@@ -4,7 +4,7 @@
 
 namespace dmxfish::filters {
 
-project_configuration::project_configuration(const MissionDMX::ShowFile::BordConfiguration& show_file_dom) : scenes{}, universes{} {
+project_configuration::project_configuration(const MissionDMX::ShowFile::BordConfiguration& show_file_dom) : scenes{}, universes{}, name{} {
 	if(const auto optional_name = show_file_dom.show_name(); optional_name.present()) {
 		this->name = optional_name.get();
 	} else {
@@ -15,8 +15,6 @@ project_configuration::project_configuration(const MissionDMX::ShowFile::BordCon
 	// TODO populate universes by calling get_or_create from universe_sender
 	if(const auto as = show_file_dom.default_active_scene(); as.present()) {
 		this->default_active_scene = as.get();
-	} else {
-		this->default_active_scene = 0;
 	}
 	this->current_active_scene = this->default_active_scene;
 	this->scenes[this->get_active_scene()].on_start();

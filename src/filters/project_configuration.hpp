@@ -15,8 +15,8 @@ private:
 	std::vector<scene> scenes;
 	std::vector<std::shared_ptr<dmxfish::dmx::universe>> universes;
 	std::string name;
-	unsigned int default_active_scene;
-	unsigned int current_active_scene;
+	unsigned int default_active_scene = 0;
+	unsigned int current_active_scene = 0;
 public:
 	project_configuration(const MissionDMX::ShowFile::BordConfiguration& show_file_dom);
 

@@ -7,17 +7,35 @@
 
 namespace dmxfish::filters {
 
+// TODO find a way to change shared_ptr to unique_ptr as this scene is the only object requiring ownership
+
+using scene_filter_vector_t = std::vector<std::shared_ptr<filter>>;
+using scene_boundry_vec_t = std::vector<size_t>;
+
 class scene {
 private:
-	std::vector<std::unique_ptr<filter>> filters;
+	const scene_filter_vector_t filters;
+	const scene_boundry_vec_t dependency_boundries;
 public:
-	scene () : filters{} {
+	scene (scene_filter_vector_t f, scene_boundry_vec_t b)
+		: filters(std::move(f)), dependency_boundries(std::move(b)) {
+		// The vectors are initialized
 	}
+
+	scene() = delete;
+	scene(const scene&) = delete;
+	scene(scene&&) = default;
 
 	/**
 	 * Call this method in order to update all filter values.
 	 */
 	inline void invoke_filters() {
+		// TODO evaluate single threaded vs multi threaded performance
+		// Theoretically we can calculate results in [db_n, db_n+1)
+		// in parallel but we might get in trouble with false
+		// sharing (filters have different memory footprints)
+		// as well as parallelization overhead.
+		// -> Profiling required
 		for(auto& filter : filters) {
 			filter->update();
 		}

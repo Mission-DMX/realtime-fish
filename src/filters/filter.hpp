@@ -22,9 +22,10 @@ public:
 	 * and throw an exception of type channel_mapping_exception if it fails to do so. It can assume its own names
 	 * for the lookup as the scene factory is responsible for the correct mappings.
 	 *
+	 * @param configuration the key value pairs to configure the filter
 	 * @param input_channels The mapping table the UI provided
 	 */
-	virtual void setup_filter(const channel_mapping& input_channels) = 0;
+	virtual void setup_filter(const std::map<std::string, std::string>& configuration, const channel_mapping& input_channels) = 0;
 	filter() {}
 	virtual ~filter() {}
 

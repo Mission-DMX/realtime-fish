@@ -54,7 +54,7 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmx
 		// stop timer and wait 2ms until next cycle
 		const auto end_time = stdc::system_clock::now().time_since_epoch();
 
-		auto cycle_time = (end_time - start_time);
+		const auto cycle_time = (end_time - start_time);
 		push_updates_to_ui(t, iom, cycle_time.count());
 
 		std::this_thread::sleep_for(stdc::milliseconds(18) - cycle_time);
