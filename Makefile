@@ -20,8 +20,8 @@ LFLAGS += -lev -lprotobuf
 ifeq "${BUILD_MODE}" "Release"
 # TODO add march for target arch once decision has been made
 # TODO make sure AVX2 is avaiable on the selected embedded processor
-CFLAGS += -O3 -fomit-fame-pointer -funrollloop -mavx2
-CXXFLAGS += -O3 -fomit-fame-pointer -funrollloop -mavx2
+CFLAGS += -O3 -fomit-frame-pointer -funroll-loops -mavx2
+CXXFLAGS += -O3 -fomit-frame-pointer -funroll-loops -mavx2
 else
 CFLAGS += -g -Og -march=native -masm=intel
 CXXFLAGS += -g -Og -march=native -masm=intel

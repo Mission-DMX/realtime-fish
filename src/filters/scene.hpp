@@ -4,7 +4,10 @@
 #include <vector>
 
 #include "filters/filter.hpp"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
 #include "LinearAllocator.h"
+#pragma GCC diagnostic pop
 
 namespace dmxfish::filters {
 
@@ -38,7 +41,7 @@ public:
 		// sharing (filters have different memory footprints)
 		// as well as parallelization overhead.
 		// -> Profiling required
-		for(auto& filter : filters) {
+		for(auto& filter : this->filters) {
 			filter->update();
 		}
 	}
@@ -47,6 +50,9 @@ public:
 	 * This method gets called when the scene becomes visible.
 	 */
 	void on_start() {
+		for(auto& filter: this->filters) {
+			filter->scene_activated();
+		}
 	}
 
 	/**
