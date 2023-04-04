@@ -4,11 +4,11 @@
 #include <vector>
 
 #include "dmx/universe.hpp"
-#include "filters/scene.hpp"
+#include "executioners/scene.hpp"
 
 #include "xml/show_files.hpp"
 
-namespace dmxfish::filters {
+namespace dmxfish::execution {
 
 class project_configuration {
 private:

@@ -1,4 +1,4 @@
-#include "filters/scene_factory.hpp"
+#include "executioners/scene_factory.hpp"
 
 #include <deque>
 #include <map>
@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-namespace dmxfish::filters {
+namespace dmxfish::execution {
 
 	struct filter_info {
 		std::string name;

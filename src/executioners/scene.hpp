@@ -9,7 +9,7 @@
 #include "LinearAllocator.h"
 #pragma GCC diagnostic pop
 
-namespace dmxfish::filters {
+namespace dmxfish::execution {
 
 // TODO find a way to change shared_ptr to unique_ptr as this scene is the only object requiring ownership
 

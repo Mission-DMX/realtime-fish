@@ -2,10 +2,10 @@
 
 #include <vector>
 
-#include "filters/scene.hpp"
+#include "executioners/scene.hpp"
 #include "xml/show_files.hpp"
 
-namespace dmxfish::filters {
+namespace dmxfish::execution {
 
 class scheduling_exception : public std::exception {
 private:

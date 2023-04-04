@@ -1,8 +1,8 @@
 #include "filters/project_configuration.hpp"
 
-#include "filters/scene_factory.hpp"
+#include "executioners/scene_factory.hpp"
 
-namespace dmxfish::filters {
+namespace dmxfish::execution {
 
 project_configuration::project_configuration(const MissionDMX::ShowFile::BordConfiguration& show_file_dom) : scenes{}, universes{}, name{} {
 	if(const auto optional_name = show_file_dom.show_name(); optional_name.present()) {
