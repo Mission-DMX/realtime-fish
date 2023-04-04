@@ -1,4 +1,4 @@
-#include "filters/project_configuration.hpp"
+#include "executioners/project_configuration.hpp"
 
 #include "executioners/scene_factory.hpp"
 

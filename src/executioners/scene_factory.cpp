@@ -24,6 +24,7 @@ namespace dmxfish::execution {
 	};
 
     [[nodiscard]] inline size_t get_filter_memory_size(const ::MissionDMX::ShowFile::Scene& s) {
+        using namespace ::dmxfish::filters;
         size_t sum = 0;
 		for(const auto& f : s.filter()) {
 			// TODO add filters by checking for their type and adding the corresponding sizeof to sum
@@ -32,7 +33,8 @@ namespace dmxfish::execution {
         return sum;
     }
 
-    [[nodiscard]] inline std::shared_ptr<filter> construct_filter(int type, std::shared_ptr<LinearAllocator> pac) {
+    [[nodiscard]] inline std::shared_ptr<dmxfish::filters::filter> construct_filter(int type, std::shared_ptr<LinearAllocator> pac) {
+        using namespace ::dmxfish::filters;
 		// TODO implement using allocate_shared(pac) and custom deleter
 		throw scheduling_exception("The requested filter type is not yet implemented.");
 		return nullptr;
@@ -92,7 +94,8 @@ namespace dmxfish::execution {
 		}
 	}
 
-	[[nodiscard]] inline channel_mapping construct_channel_input_mapping(channel_mapping& global_cm, const filter_info& i) {
+	[[nodiscard]] inline dmxfish::filters::channel_mapping construct_channel_input_mapping(dmxfish::filters::channel_mapping& global_cm, const filter_info& i) {
+		using namespace dmxfish::filters;
 		channel_mapping configuration_cm;
 		for(const auto& entry : i.channel_mapping) {
 			bool found = false;
@@ -120,11 +123,11 @@ namespace dmxfish::execution {
 	}
 
 	inline void connect_filters(scene_filter_vector_t& fv, std::map<size_t, filter_info>& filter_info_map) {
-		channel_mapping cm;
+		dmxfish::filters::channel_mapping cm;
 		for(size_t i = 0; i < fv.size(); i++) {
 			const auto& finfo = filter_info_map[i];
 			fv[i]->get_output_channels(cm, finfo.name);
-			channel_mapping input_channels = construct_channel_input_mapping(cm, finfo);
+			auto input_channels = construct_channel_input_mapping(cm, finfo);
 			fv[i]->setup_filter(finfo.configuration, finfo.initial_parameters, input_channels);
 		}
 	};

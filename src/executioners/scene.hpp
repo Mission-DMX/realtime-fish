@@ -13,7 +13,7 @@ namespace dmxfish::execution {
 
 // TODO find a way to change shared_ptr to unique_ptr as this scene is the only object requiring ownership
 
-using scene_filter_vector_t = std::vector<std::shared_ptr<filter>>;
+using scene_filter_vector_t = std::vector<std::shared_ptr<dmxfish::filters::filter>>;
 using scene_boundry_vec_t = std::vector<size_t>;
 
 class scene {
