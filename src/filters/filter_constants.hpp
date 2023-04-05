@@ -33,7 +33,7 @@ namespace dmxfish::filters {
         }
 
         virtual  bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
-            if(key != value) {
+            if(key != "value") {
                 return false;
             }
             try {

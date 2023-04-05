@@ -11,16 +11,27 @@
 
 namespace dmxfish::execution {
 
+COMPILER_SUPRESS("-Weffc++")
 	class ZeroDeletingLinearAllocator : public ::LinearAllocator {
 	public:
 		ZeroDeletingLinearAllocator(const std::size_t totalSize) : LinearAllocator(totalSize) {}
-		virtual ~ZeroDeletingLinearAllocator() {}
 		virtual void Free(void* ptr) override {
 			// Do nothing as all memory will be deallocated soon anyway.
 			// Basically the same destructor that would delete the filters
 			// will also delete this allocator.
+			MARK_UNUSED(ptr);
+		}
+
+		typedef ::dmxfish::filters::filter value_type;
+		::dmxfish::filters::filter* allocate (std::size_t n) {
+			return reinterpret_cast<::dmxfish::filters::filter*>(this->Allocate(n));
+		}
+		void deallocate (::dmxfish::filters::filter* p, std::size_t n) {
+			MARK_UNUSED(n);
+			this->Free((void*) p);
 		}
 	};
+COMPILER_RESTORE("-Weffc++")
 
 	struct filter_info {
 		std::string name;
@@ -62,18 +73,31 @@ namespace dmxfish::execution {
         return sum;
     }
 
+    struct filter_deleter {
+        void operator()(dmxfish::filters::filter* obj) {
+	    MARK_UNUSED(obj);
+	    // Do nothing as we're using linear allocators
+        }
+    };
+
+    template<class T>
+    [[nodiscard]] inline std::shared_ptr<T> calloc(std::shared_ptr<ZeroDeletingLinearAllocator> pac) {
+	    const auto ptr = pac->Allocate(sizeof(T));
+	    return std::shared_ptr<T>(new(ptr) T(), filter_deleter{});
+    }
+
     [[nodiscard]] inline std::shared_ptr<dmxfish::filters::filter> construct_filter(int type, std::shared_ptr<ZeroDeletingLinearAllocator> pac) {
         using namespace ::dmxfish::filters;
 		// implement using allocate_shared(pac)
 		switch(static_cast<filter_type>(type)) {
 			case filter_type::constants_8bit:
-				return std::allocate_shared<constant_8bit>(pac);
+				return calloc<constant_8bit>(pac);
 			case filter_type::constants_16bit:
-				return std::allocate_shared<constant_16bit>(pac);
+				return calloc<constant_16bit>(pac);
 			case filter_type::constants_float:
-				return std::allocate_shared<constant_float>(pac);
+				return calloc<constant_float>(pac);
 			case filter_type::constants_pixel:
-				return std::allocate_shared<constant_color>(pac);
+				return calloc<constant_color>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}
@@ -172,7 +196,7 @@ namespace dmxfish::execution {
 			fv[i]->setup_filter(finfo.configuration, finfo.initial_parameters, input_channels);
 		}
 		// TODO link to universes
-	};
+	}
 
     [[nodiscard]] inline std::tuple<scene_filter_vector_t, scene_boundry_vec_t, std::shared_ptr<ZeroDeletingLinearAllocator>> compute_filter(const ::MissionDMX::ShowFile::Scene& s) {
 	    auto pac = std::make_shared<ZeroDeletingLinearAllocator>(get_filter_memory_size(s));
