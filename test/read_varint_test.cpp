@@ -28,6 +28,7 @@ void parse_message_cb(uint32_t msg_type, dmxfish::test::client_side& client){
 	while(client.Next((const void**) &data, &size)){
 		count += size;
 	}
+
 	::spdlog::debug("TEST: Msg has type {} and size {}", msg_type, count);
 
 }
@@ -37,6 +38,19 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 
 
 	spdlog::set_level(spdlog::level::debug);
+	
+	size_t test = 1;
+	spdlog::debug("Test1 : {}", test);
+	test--;
+	spdlog::debug("Test2 : {}", test);
+	test--;
+	spdlog::debug("Test3 : {}", test);
+	test++;
+	spdlog::debug("Test4 : {}", test);
+	test++;
+	spdlog::debug("Test5 : {}", test);
+	
+	
 
 	auto u = dmxfish::io::get_temporary_universe("10.15.0.1");
 
@@ -51,7 +65,7 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 
 	}
 
-	auto socket_address = rmrf::net::get_first_general_socketaddr("/var/run/fish.sock", "", rmrf::net::socket_t::UNIX);
+	auto socket_address = rmrf::net::get_first_general_socketaddr("/tmp/fish.sock", "", rmrf::net::socket_t::UNIX);
 	auto client = rmrf::net::connect(socket_address);
 
 
@@ -78,8 +92,22 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 	client_ha->write_message(*msg_universe_init.get(), ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE);
 
 
+
 	start_time = time(NULL);
-	while (time(NULL) < start_time+20) {
+	while (time(NULL) < start_time+10) {
+
+	}
+
+	auto msg_universe_direct = std::make_shared<missiondmx::fish::ipcmessages::dmx_output>();
+	msg_universe_direct->set_universe_id(1);
+	for(int i = 0; i < 512; i++){
+		msg_universe_direct->add_channel_data(i/2);
+	}
+	client_ha->write_message(*msg_universe_direct.get(), ::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT);
+
+
+	start_time = time(NULL);
+	while (time(NULL) < start_time+5) {
 
 	}
 
@@ -87,31 +115,17 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 	msg->set_universe_id(1);
 	client_ha->write_message(*msg.get(), ::missiondmx::fish::ipcmessages::MSGT_REQUEST_DMX_DATA);
 
-	auto msg_universe_direct = std::make_shared<missiondmx::fish::ipcmessages::dmx_output>();
-	msg_universe_direct->set_universe_id(1);
-	for(int i = 0; i < 512; i++){
-		msg_universe_direct->add_channel_data(i/2);
-	}
-	client_ha->write_message(*msg_universe_init.get(), ::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT);
-
-
-
 	start_time = time(NULL);
 	while (time(NULL) < start_time+8) {
 
 	}
-
-
-	msg = std::make_shared<missiondmx::fish::ipcmessages::request_dmx_data>();
-	msg->set_universe_id(1);
-	client_ha->write_message(*msg.get(), ::missiondmx::fish::ipcmessages::MSGT_REQUEST_DMX_DATA);
 
 	msg_universe_direct = std::make_shared<missiondmx::fish::ipcmessages::dmx_output>();
 	msg_universe_direct->set_universe_id(1);
 	for(int i = 0; i < 512; i++){
 		msg_universe_direct->add_channel_data((511-i)/2);
 	}
-	client_ha->write_message(*msg_universe_init.get(), ::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT);
+	client_ha->write_message(*msg_universe_direct.get(), ::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT);
 
 	start_time = time(NULL);
 	while (time(NULL) < start_time+1) {

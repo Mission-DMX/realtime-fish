@@ -37,7 +37,7 @@ namespace dmxfish::io {
 		return this->byte_count;
 	}
 
-	void message_buffer_output::WriteVarint32(uint32_t num){
+	void message_buffer_output::WriteVarint32(size_t num){
 		while(true){
 			while (num>=128){
 				if(this->pre_used >= BUFF_SIZE){

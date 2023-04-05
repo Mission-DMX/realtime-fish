@@ -5,6 +5,8 @@
 namespace dmxfish::io {
 
 GUI_Connection_Handler::GUI_Connection_Handler(client_handler::parse_message_cb_t message_cb_):
+external_control_server(nullptr),
+clients(),
 message_cb(message_cb_)
 {
 
@@ -16,8 +18,9 @@ GUI_Connection_Handler::~GUI_Connection_Handler() {
 	::spdlog::debug("Stopped GUI_Connection_Handler");
 }
 
-void GUI_Connection_Handler::activate_tcp_connection(){
-	auto socket_address = rmrf::net::get_first_general_socketaddr("/var/run/fish.sock", "", rmrf::net::socket_t::UNIX);
+void GUI_Connection_Handler::activate_connection(){
+	// auto socket_address = rmrf::net::get_first_general_socketaddr("/var/run/fish.sock", "", rmrf::net::socket_t::UNIX);
+	auto socket_address = rmrf::net::get_first_general_socketaddr("/tmp/fish.sock", "", rmrf::net::socket_t::UNIX);
 	this->external_control_server = std::make_shared<rmrf::net::unix_socket_server>(socket_address, std::bind(&dmxfish::io::GUI_Connection_Handler::client_cb, this, std::placeholders::_1, std::placeholders::_2));
 	::spdlog::debug("Opened control port.");
 }
@@ -34,8 +37,8 @@ void GUI_Connection_Handler::client_cb(rmrf::net::async_server_socket::self_ptr_
 }
 
 void GUI_Connection_Handler::push_msg_to_all_gui(google::protobuf::MessageLite& msg, uint32_t msg_type){
-	for (std::list<std::shared_ptr<client_handler>>::iterator it = this->clients.begin(); it != this->clients.end(); it++){
-		it->get()->write_message(msg, msg_type);
+	for (auto& c : this->clients){
+		c->write_message(msg, msg_type);
 	}
 	// ::spdlog::debug("{} clients connected", this->clients.size());
 }

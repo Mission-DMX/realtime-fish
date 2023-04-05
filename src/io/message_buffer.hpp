@@ -22,7 +22,7 @@ public:
 	void BackUp(int count);
 	int64_t ByteCount() const;
 	bool Next(void** data, int* size);
-	void WriteVarint32(uint32_t);
+	void WriteVarint32(size_t);
 private:
 	void datasend();
 };

@@ -26,12 +26,13 @@ class client_handler: public google::protobuf::io::ZeroCopyInputStream {
 		uint32_t msg_type;
 		uint32_t msg_length;
 		// std::deque<rmrf::net::iorecord>::iterator actual_record;
-		int byte_count;
-		int64_t limit_;
+		int64_t byte_count;
+		int limit_;
 		int read_var_int_multiplier;
 		std::shared_ptr<message_buffer_output> output_buffer;
-		int streamsize;
+		size_t streamsize;
 		std::unique_ptr<rmrf::net::iorecord> actual_record;
+        int last_limit;
 	public:
 		client_handler(parse_message_cb_t found_message_cb_, std::shared_ptr<rmrf::net::connection_client>);
 		void handle_messages();

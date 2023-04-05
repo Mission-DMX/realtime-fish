@@ -4,6 +4,7 @@
 #include "google/protobuf/io/coded_stream.h"
 #include <sstream>
 
+
 namespace dmxfish::test {
 
 	client_side::client_side(parse_message_cb_t parse_message_cb_, std::unique_ptr<rmrf::net::connection_client> client):
@@ -89,6 +90,7 @@ namespace dmxfish::test {
 		 *size += this->limit_;
 		}
 		this->streamsize -= *size;
+		
 		auto strstream = std::stringstream();
 		strstream << "Test: Next:" << std::hex;
 		for(int i = 0; i < *size; i++){

@@ -11,11 +11,14 @@ namespace dmxfish::io {
 		connection_client(client),
 		internal_state(NEXT_MSG),
 		msg_type(0),
+		msg_length(0),
 		byte_count(0),
 		limit_(5),
 		read_var_int_multiplier(1),
 		output_buffer(std::make_shared<message_buffer_output>(client)),
-		streamsize(0)
+		streamsize(0),
+		actual_record(nullptr),
+        last_limit(0)
 	{
 		this->connection_client->set_incomming_data_callback(std::bind(&dmxfish::io::client_handler::incomming_data_callback, this, std::placeholders::_1));
 	}
@@ -72,22 +75,39 @@ namespace dmxfish::io {
 	}
 
 	bool client_handler::Next(const void** data, int* size){
-		if (limit_ <= 0) return false;
+		if (limit_ <= 0){
+//            ::spdlog::debug("limit was reached");
+            return false;
+        }
 
-		if (this->io_buffer->empty()){
+		if (this->streamsize <= 0){
+//            ::spdlog::debug("streamsize is {}", this->streamsize);
 			return false;
 		}
-		this->actual_record = std::make_unique<rmrf::net::iorecord>(this->io_buffer->pop_front());
 
-		*data = this->actual_record->ptr();
-		*size = this->actual_record->size();
-		this->byte_count += *size;
-		this->limit_ -= *size;
-		if (limit_ < 0) {
-		 *size += this->limit_;
-		}
-		this->streamsize -= *size;
-		return true;
+        if (this->last_limit < 0){
+//            ::spdlog::debug("last limit was less than 0");
+            this->actual_record->advance(this->actual_record->size()+last_limit);
+        } else {
+            if (this->io_buffer->empty()) {
+//                ::spdlog::debug("Message_buffer is empty but streamsize is {}", this->streamsize);
+                return false;
+            }
+            this->actual_record = std::make_unique<rmrf::net::iorecord>(this->io_buffer->pop_front());
+        }
+
+        *data = this->actual_record->ptr();
+        *size = this->actual_record->size();
+
+        this->byte_count += *size;
+        this->limit_ -= *size;
+        if (limit_ < 0) {
+            *size += this->limit_;
+        }
+        this->last_limit = this->limit_;
+        this->streamsize -= *size;
+
+        return true;
 	}
 
 
@@ -102,7 +122,8 @@ namespace dmxfish::io {
 	}
 
 	inline void client_handler::BackUpLocal(int count){
-		this->actual_record->advance(this->actual_record->size()-count);
+        this->last_limit = 0;
+        this->actual_record->advance(this->actual_record->size()-count);
 		this->streamsize += count;
 		this->byte_count -= count;
 		this->io_buffer->push_front(*this->actual_record.get());
@@ -142,8 +163,8 @@ namespace dmxfish::io {
 		return true;
 	}
 
-	void client_handler::write_message(google::protobuf::MessageLite& msg, uint32_t msg_type){
-		this->output_buffer->WriteVarint32(msg_type);
+	void client_handler::write_message(google::protobuf::MessageLite& msg, uint32_t msgtype){
+		this->output_buffer->WriteVarint32(msgtype);
 		this->output_buffer->WriteVarint32(msg.ByteSizeLong());
 		msg.SerializeToZeroCopyStream(this->output_buffer.get());
 	}

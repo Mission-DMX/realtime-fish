@@ -43,14 +43,18 @@ static void get_protobuf_msg_of_universe(missiondmx::fish::ipcmessages::Universe
 			universe_to_edit->set_physical_location(1);
 			break;
 		case dmxfish::dmx::universe_type::ARTNET:
-			auto universe_inner = universe_to_edit->mutable_remote_location();
-			universe_inner->set_ip_address("Dummy data - we cant get real one right now");
-			universe_inner->set_port(6454);
-			universe_inner->set_universe_on_device(1);
+			{
+				auto universe_inner = universe_to_edit->mutable_remote_location();
+				universe_inner->set_ip_address("Dummy data - we cant get real one right now");
+				universe_inner->set_port(6454);
+				universe_inner->set_universe_on_device(1);
+				break;
+			}
+		case dmxfish::dmx::universe_type::sACN:
+			// not finished, not supported in Protobuf
 			break;
-		// case dmxfish::dmx::universe_type::sACN:
-		// 	// not finished, not supported in Protobuf
-		// 	break;
+		default:
+			break;
 	}
 	// return universe_to_edit;
 }
@@ -113,7 +117,7 @@ IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_d
 }
 
 void IOManager::start() {
-	this->gui_connections->activate_tcp_connection();
+	this->gui_connections->activate_connection();
 }
 
 IOManager::~IOManager() {
@@ -187,7 +191,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 				return;
 			}
 		case ::missiondmx::fish::ipcmessages::MSGT_REQUEST_UNIVERSE_LIST:
-			// send dmx data to UI (of one or multiple universes)
+//			 send dmx data to UI (of one or multiple universes)
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::request_universe_list>();
 				if (msg->ParseFromZeroCopyStream(&client)){
@@ -257,7 +261,6 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::dmx_output>();
 				if (msg->ParseFromZeroCopyStream(&client)){
 					if (this->run_time_state->is_direct_mode){
-						//send data to universe
 						auto universe = dmxfish::io::get_universe(msg->universe_id());
 						if(universe){
 							for (int i = 0; i< msg->channel_data_size() && i < 512; i++){
@@ -270,6 +273,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 					}
 					return;
 				}
+				::spdlog::debug("could not parse msg of type: dmx_output");
 				return;
 			}
 		case ::missiondmx::fish::ipcmessages::MSGT_REQUEST_DMX_DATA:
