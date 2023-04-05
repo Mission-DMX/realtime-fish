@@ -6,7 +6,21 @@
 #include <utility>
 #include <vector>
 
+#include "filters/types.hpp"
+#include "filters/filter_constants.hpp"
+
 namespace dmxfish::execution {
+
+	class ZeroDeletingLinearAllocator : public ::LinearAllocator {
+	public:
+		ZeroDeletingLinearAllocator(const std::size_t totalSize) : LinearAllocator(totalSize) {}
+		virtual ~ZeroDeletingLinearAllocator() {}
+		virtual void Free(void* ptr) override {
+			// Do nothing as all memory will be deallocated soon anyway.
+			// Basically the same destructor that would delete the filters
+			// will also delete this allocator.
+		}
+	};
 
 	struct filter_info {
 		std::string name;
@@ -27,16 +41,42 @@ namespace dmxfish::execution {
         using namespace ::dmxfish::filters;
         size_t sum = 0;
 		for(const auto& f : s.filter()) {
-			// TODO add filters by checking for their type and adding the corresponding sizeof to sum
-			throw scheduling_exception("The requested filter type is not yet implemented.");
+			// add filters by checking for their type and adding the corresponding sizeof to sum
+			switch(static_cast<filter_type>(f.type())) {
+				case filter_type::constants_8bit:
+					sum += sizeof(constant_8bit);
+					break;
+				case filter_type::constants_16bit:
+					sum += sizeof(constant_16bit);
+					break;
+				case filter_type::constants_float:
+					sum += sizeof(constant_float);
+					break;
+				case filter_type::constants_pixel:
+					sum += sizeof(constant_color);
+					break;
+				default:
+					throw scheduling_exception("The requested filter type is not yet implemented.");
+			}
 		}
         return sum;
     }
 
-    [[nodiscard]] inline std::shared_ptr<dmxfish::filters::filter> construct_filter(int type, std::shared_ptr<LinearAllocator> pac) {
+    [[nodiscard]] inline std::shared_ptr<dmxfish::filters::filter> construct_filter(int type, std::shared_ptr<ZeroDeletingLinearAllocator> pac) {
         using namespace ::dmxfish::filters;
-		// TODO implement using allocate_shared(pac) and custom deleter
-		throw scheduling_exception("The requested filter type is not yet implemented.");
+		// implement using allocate_shared(pac)
+		switch(static_cast<filter_type>(type)) {
+			case filter_type::constants_8bit:
+				return std::allocate_shared<constant_8bit>(pac);
+			case filter_type::constants_16bit:
+				return std::allocate_shared<constant_16bit>(pac);
+			case filter_type::constants_float:
+				return std::allocate_shared<constant_float>(pac);
+			case filter_type::constants_pixel:
+				return std::allocate_shared<constant_color>(pac);
+			default:
+				throw scheduling_exception("The requested filter type is not yet implemented.");
+		}
 		return nullptr;
 	}
 
@@ -65,7 +105,7 @@ namespace dmxfish::execution {
 		return fq;
 	}
 
-    inline void schedule_filters(const ::MissionDMX::ShowFile::Scene& s, scene_filter_vector_t& fv, scene_boundry_vec_t& b, std::shared_ptr<LinearAllocator> pac, std::map<size_t, filter_info>& filter_info_map) {
+    inline void schedule_filters(const ::MissionDMX::ShowFile::Scene& s, scene_filter_vector_t& fv, scene_boundry_vec_t& b, std::shared_ptr<ZeroDeletingLinearAllocator> pac, std::map<size_t, filter_info>& filter_info_map) {
 		auto missing_filter_stack = enque_filters(s.filter());
 		std::set<std::string> resolved_filters;
 		while(!missing_filter_stack.empty()) {
@@ -124,16 +164,18 @@ namespace dmxfish::execution {
 
 	inline void connect_filters(scene_filter_vector_t& fv, std::map<size_t, filter_info>& filter_info_map) {
 		dmxfish::filters::channel_mapping cm;
+		// TODO connect input data structure
 		for(size_t i = 0; i < fv.size(); i++) {
 			const auto& finfo = filter_info_map[i];
 			fv[i]->get_output_channels(cm, finfo.name);
 			auto input_channels = construct_channel_input_mapping(cm, finfo);
 			fv[i]->setup_filter(finfo.configuration, finfo.initial_parameters, input_channels);
 		}
+		// TODO link to universes
 	};
 
-    [[nodiscard]] inline std::tuple<scene_filter_vector_t, scene_boundry_vec_t, std::shared_ptr<LinearAllocator>> compute_filter(const ::MissionDMX::ShowFile::Scene& s) {
-	    auto pac = std::make_shared<LinearAllocator>(get_filter_memory_size(s));
+    [[nodiscard]] inline std::tuple<scene_filter_vector_t, scene_boundry_vec_t, std::shared_ptr<ZeroDeletingLinearAllocator>> compute_filter(const ::MissionDMX::ShowFile::Scene& s) {
+	    auto pac = std::make_shared<ZeroDeletingLinearAllocator>(get_filter_memory_size(s));
 	    scene_filter_vector_t filters;
 	    scene_boundry_vec_t boundries;
 	    filters.reserve(s.filter().size());

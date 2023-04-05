@@ -11,8 +11,6 @@
 
 namespace dmxfish::execution {
 
-// TODO find a way to change shared_ptr to unique_ptr as this scene is the only object requiring ownership
-
 using scene_filter_vector_t = std::vector<std::shared_ptr<dmxfish::filters::filter>>;
 using scene_boundry_vec_t = std::vector<size_t>;
 
@@ -21,6 +19,7 @@ private:
 	const scene_filter_vector_t filters;
 	const scene_boundry_vec_t dependency_boundries;
 	const std::shared_ptr<LinearAllocator> used_allocator;
+	// TODO introduce std::map<std::string, std::shared_ptr<dmxfish::filters::filter>> for gui parameter updates
 public:
 	scene (scene_filter_vector_t f, scene_boundry_vec_t b, std::shared_ptr<LinearAllocator> alloc)
 		: filters(std::move(f)), dependency_boundries(std::move(b)), used_allocator(alloc) {

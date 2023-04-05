@@ -5,7 +5,21 @@
 
 #include "dmx/pixel.hpp"
 
+#include "lib/macros.hpp"
+
 namespace dmxfish::filters {
+
+class filter_config_exception : public std::exception {
+private:
+    std::string cause;
+
+public:
+    filter_config_exception(const std::string cause_) : cause(cause_) {}
+
+    [[nodiscard]] inline virtual const char* what() const throw () {
+        return this->cause.c_str();
+    }
+};
 
 struct channel_mapping {
 public:
@@ -53,5 +67,18 @@ public:
 	 * This method gets called when the scene got activated.
 	 */
 	virtual void scene_activated() = 0;
+
+	/**
+	 * This method gets called if the GUI published a parameter update.
+	 * @param key the parameter to change
+	 * @param value the new value to set
+	 * @return true if the update was successful
+	 */
+	virtual bool receive_update_from_gui(const std::string& key, const std::string& value) {
+		MARK_UNUSED(key);
+		MARK_UNUSED(value);
+		return false;
+	}
 };
+
 }

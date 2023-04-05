@@ -18,11 +18,11 @@ public:
     }
 };
 
-    /**
-     * This method populates the provided vector with ready-initialized scenes using the provided scene definitions.
-     * @param v The vector to populate
-     * @param ss The scene sequence to use
-     */
-    void populate_scene_vector(std::vector<scene>& v, const MissionDMX::ShowFile::BordConfiguration::scene_sequence& ss);
+/**
+ * This method populates the provided vector with ready-initialized scenes using the provided scene definitions.
+ * @param v The vector to populate
+ * @param ss The scene sequence to use
+ */
+void populate_scene_vector(std::vector<scene>& v, const MissionDMX::ShowFile::BordConfiguration::scene_sequence& ss);
 
 }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bord_configuration show_name="testshow" default_active_scene="1" notes="Example show file notes">
+  <scene human_readable_name="Test scene 01" id="1">
+    <filter type="123" id="str1234">
+      <channellink input_channel_id="str1234" output_channel_id="str1234" />
+      <filterConfiguration name="str1234" value="str1234" />
+      <initialParameters name="str1234" value="str1234" />
+    </filter>
+  </scene>
+  <device id="123" channel="str1234" type="str1234" name="str1234" universe_id="123" />
+  <universe name="str1234" description="str1234" id="123" />
+</bord_configuration>
