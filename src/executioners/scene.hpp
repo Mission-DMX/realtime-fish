@@ -48,7 +48,7 @@ public:
 	/**
 	 * This method gets called when the scene becomes visible.
 	 */
-	void on_start() {
+	inline void on_start() {
 		for(auto& filter: this->filters) {
 			filter->scene_activated();
 		}
@@ -57,7 +57,11 @@ public:
 	/**
 	 * This method gets called when the scene becomes invisible.
 	 */
-	void on_stop() {}
+	inline void on_stop() {}
+
+	[[nodiscard]] inline size_t get_filter_count() {
+		return this->filters.size();
+	}
 };
 
 }
