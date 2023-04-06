@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<bord_configuration show_name="testshow" default_active_scene="1" notes="Example show file notes">
-  <scene human_readable_name="Test scene 01" id="1">
-    <filter type="0" id="const_8bit">
-      <channellink input_channel_id="str1234" output_channel_id="str1234" />
-      <filterConfiguration name="value" value="50" />
-    </filter>
-    <filter type="1" id="const_16bit">
-      <channellink input_channel_id="str1234" output_channel_id="str1234" />
-      <filterConfiguration name="value" value="9000" />
-    </filter>
-    <filter type="2" id="const_float">
-      <channellink input_channel_id="str1234" output_channel_id="str1234" />
-      <filterConfiguration name="value" value="13.6" />
-    </filter>
-    <filter type="2" id="const_color">
-      <channellink input_channel_id="str1234" output_channel_id="str1234" />
-      <filterConfiguration name="value" value="270.0,0.5,0.99" />
-    </filter>
-    <!--<filter type="123" id="blah"><channellink input_channel_id="str1234" output_channel_id="str1234" /><filterConfiguration name="str1234" value="str1234" /><initialParameters name="str1234" value="str1234" /></filter>-->
-  </scene>
-  <scene human_readable_name="another scene" id="2">
-    <filter type="0" id="const_8bit">
-      <channellink input_channel_id="str1234" output_channel_id="str1234" />
-      <filterConfiguration name="value" value="50" />
-    </filter>
-  </scene>
+<BordConfiguration show_name="testshow" default_active_Scene="1" notes="Example show file notes">
+  <Scene human_readable_name="Test Scene 01" id="1">
+    <Filter type="0" id="const_8bit">
+      <ChannelLink input_channel_id="str1234" output_channel_id="str1234" />
+      <FilterConfiguration name="value" value="50" />
+    </Filter>
+    <Filter type="1" id="const_16bit">
+      <ChannelLink input_channel_id="str1234" output_channel_id="str1234" />
+      <FilterConfiguration name="value" value="9000" />
+    </Filter>
+    <Filter type="2" id="const_float">
+      <ChannelLink input_channel_id="str1234" output_channel_id="str1234" />
+      <FilterConfiguration name="value" value="13.6" />
+    </Filter>
+    <Filter type="2" id="const_color">
+      <ChannelLink input_channel_id="str1234" output_channel_id="str1234" />
+      <FilterConfiguration name="value" value="270.0,0.5,0.99" />
+    </Filter>
+    <!--<Filter type="123" id="blah"><ChannelLink input_channel_id="str1234" output_channel_id="str1234" /><FilterConfiguration name="str1234" value="str1234" /><initialParameters name="str1234" value="str1234" /></Filter>-->
+  </Scene>
+  <Scene human_readable_name="another Scene" id="2">
+    <Filter type="0" id="const_8bit">
+      <ChannelLink input_channel_id="str1234" output_channel_id="str1234" />
+      <FilterConfiguration name="value" value="50" />
+    </Filter>
+  </Scene>
   <!-- TODO change me -->
-  <device id="123" channel="str1234" type="str1234" name="str1234" universe_id="123" />
-  <universe name="str1234" description="str1234" id="123" />
-</bord_configuration>
+  <Device id="123" channel="str1234" type="str1234" name="str1234" universe_id="123" />
+  <Universe name="str1234" description="str1234" id="123" />
+</BordConfiguration>
