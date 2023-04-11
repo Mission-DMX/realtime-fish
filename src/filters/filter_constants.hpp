@@ -27,8 +27,10 @@ namespace dmxfish::filters {
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(input_channels);
             MARK_UNUSED(configuration);
-            if(!initial_parameters.contains("value") || !this->receive_update_from_gui("value", initial_parameters.at("value"))) {
-                throw filter_config_exception("Unable to set value of constant.");
+            if(!initial_parameters.contains("value")){
+                throw filter_config_exception("Unable to set value of constant filter: initial configuration does not contain value parameter");
+            } else if (!this->receive_update_from_gui("value", initial_parameters.at("value"))) {
+                throw filter_config_exception("Unable to set value of constant filter: unable to parse parameter.");
             }
         }
 

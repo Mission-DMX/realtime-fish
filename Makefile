@@ -109,6 +109,8 @@ XMLTREE_OBJDIR := ${OBJDIR}/project_xml
 XMLTREE_SRCOBJS := $(patsubst ${XMLTREE_SRCDIR}/%.xml.cpp,${XMLTREE_OBJDIR}/%.o,$(patsubst ${XMLTREE_SRCDIR}/%.xml.cpp,${XMLTREE_OBJDIR}/%.o,${XMLTREE_CFILES}))
 XMLTREE_CXXFLAGS := ${CXXFLAGS}
 
+XSD_ARGS := --generate-doxygen --generate-polymorphic --std c++11 --hxx-suffix .xml.hpp --cxx-suffix .xml.cpp
+
 OBJECTS := $(filter-out %_test.o ,${TEST_SRCOBJS}) $(filter-out obj/main.o ,${SRCOBJS}) ${OBJDIR}/libproto.a ${OBJDIR}/librmrfnet.a ${OBJDIR}/showxml.a
 
 .PRECIOUS: ${DEPDIR}/%.d ${OBJDIR}/**/%.o ${POTOBJS} ${POOBJS}
@@ -133,7 +135,7 @@ ${OBJDIR}/libproto.a: ${PROTO_SRCOBJS}
 	${MKDIR} ${@D} && ar rsv $@ $^ && touch $@
 
 ${XMLTREE_SRCDIR}/%.xml.cpp: ${XMLTREE_DEFDIR}/%.xsd Makefile
-	${MKDIR} ${@D} && cd ${@D} && ${XSDTOOL} cxx-tree --generate-polymorphic --std c++11 --hxx-suffix .xml.hpp --cxx-suffix .xml.cpp ../../$< && cd ../.. && touch $@
+	${MKDIR} ${@D} && cd ${@D} && ${XSDTOOL} cxx-tree ${XSD_ARGS} ../../$< && cd ../.. && touch $@
 
 ${XMLTREE_OBJDIR}/%.o: ${XMLTREE_SRCDIR}/%.xml.cpp $(XMLTREE_CFILES)
 	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${XMLTREE_CXXFLAGS} -o $@ -c $< && touch $@

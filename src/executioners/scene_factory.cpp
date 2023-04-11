@@ -3,18 +3,23 @@
 #include <deque>
 #include <map>
 #include <set>
+#include <sstream>
 #include <utility>
 #include <vector>
 
 #include "filters/types.hpp"
 #include "filters/filter_constants.hpp"
 
+#include <iostream>
+
 namespace dmxfish::execution {
 
 COMPILER_SUPRESS("-Weffc++")
 	class ZeroDeletingLinearAllocator : public ::LinearAllocator {
 	public:
-		ZeroDeletingLinearAllocator(const std::size_t totalSize) : LinearAllocator(totalSize) {}
+		ZeroDeletingLinearAllocator(const std::size_t totalSize) : LinearAllocator(totalSize) {
+			this->Init();
+		}
 		virtual void Free(void* ptr) override {
 			// Do nothing as all memory will be deallocated soon anyway.
 			// Basically the same destructor that would delete the filters
@@ -44,8 +49,24 @@ COMPILER_RESTORE("-Weffc++")
 					std::map<std::string, std::string> _initial_parameters,
 					std::vector<std::pair<std::string, std::string>> _channel_mapping
 		) : name(_name), configuration(_configuration), initial_parameters(_initial_parameters), channel_mapping(_channel_mapping) {}
-		//filter_info(const filter_info&) = default;
-		//filter_info(filter_info&&) = default;
+
+		[[nodiscard]] std::string str() const {
+			std::stringstream ss;
+			ss << "{\"name\": \"" << this->name << "\", \"conf\": {";
+			for(const auto& [k, v] : this->configuration) {
+				ss << "\"" << k << "\": \"" << v << "\",";
+			}
+			ss << "}, \"initialParameters\": {";
+			for(const auto& [k, v] : this->initial_parameters) {
+				ss << "\"" << k << "\": \"" << v << "\",";
+			}
+			ss << "} \"channel_mappings\": [";
+			for(const auto& cp : this->channel_mapping) {
+				ss << cp.first << " -> " << cp.second;
+			}
+			ss << "]}";
+			return ss.str();
+		}
 	};
 
     [[nodiscard]] inline size_t get_filter_memory_size(const ::MissionDMX::ShowFile::Scene& s) {
@@ -131,7 +152,7 @@ COMPILER_RESTORE("-Weffc++")
 
     inline void schedule_filters(const ::MissionDMX::ShowFile::Scene& s, scene_filter_vector_t& fv, scene_boundry_vec_t& b, std::shared_ptr<ZeroDeletingLinearAllocator> pac, std::map<size_t, filter_info>& filter_info_map) {
 		auto missing_filter_stack = enque_filters(s.filter());
-		std::set<std::string> resolved_filters;
+		std::set<std::string> resolved_filters{};
 		while(!missing_filter_stack.empty()) {
 			bool placed_filter = false;
 			for(size_t i = 0; i < missing_filter_stack.size(); i++) {
@@ -146,7 +167,14 @@ COMPILER_RESTORE("-Weffc++")
 					placed_filter = true;
 					fv.emplace_back(std::move(construct_filter(f_template.type(), pac)));
 					const auto filter_index = fv.size() - 1;
-					filter_info_map[filter_index] = filter_info(f_template.id(), convert_configuration(f_template.filterConfiguration()), convert_configuration(f_template.initialParameters()), convert_channel_mapping(f_template.channellink()));
+					const auto fid = f_template.id();
+					const auto conf = convert_configuration(f_template.filterConfiguration());
+					const auto initial_params = convert_configuration(f_template.initialParameters());
+					const auto mapping = convert_channel_mapping(f_template.channellink());
+					const filter_info fi(fid, conf, initial_params, mapping);
+					// TODO replace with message buffer insertion
+					std::cout << "Loading configuration of filter " << filter_index << " of type " << fid << " with config: " << fi.str() << "." << std::endl;
+					filter_info_map[filter_index] = fi;
 				} else {
 					missing_filter_stack.push_back(f_template);
 				}
@@ -190,7 +218,7 @@ COMPILER_RESTORE("-Weffc++")
 		dmxfish::filters::channel_mapping cm;
 		// TODO connect input data structure
 		for(size_t i = 0; i < fv.size(); i++) {
-			const auto& finfo = filter_info_map[i];
+			auto& finfo = filter_info_map[i];
 			fv[i]->get_output_channels(cm, finfo.name);
 			auto input_channels = construct_channel_input_mapping(cm, finfo);
 			fv[i]->setup_filter(finfo.configuration, finfo.initial_parameters, input_channels);
@@ -211,7 +239,10 @@ COMPILER_RESTORE("-Weffc++")
 	    return std::make_tuple(filters, boundries, pac);
     }
 
-    void populate_scene_vector(std::vector<scene>& v, const MissionDMX::ShowFile::BordConfiguration::scene_sequence& ss) {
+    [[nodiscard]] bool populate_scene_vector(std::vector<scene>& v, const MissionDMX::ShowFile::BordConfiguration::scene_sequence& ss) {
+		if(ss.size() == 0) {
+			return false;
+		}
         v.reserve(ss.size());
 		for(auto& stemplate : ss) {
 			auto filter_tuple = compute_filter(stemplate);
@@ -219,6 +250,7 @@ COMPILER_RESTORE("-Weffc++")
 				std::move(std::get<1>(filter_tuple)),
 				std::get<2>(filter_tuple));
 		}
+		return true;
     }
 
 }
