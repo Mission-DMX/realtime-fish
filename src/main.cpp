@@ -42,9 +42,12 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmx
 		const auto start_time = stdc::system_clock::now().time_since_epoch();
 		// TODO Fetch FPGA input data structure from iomanager and either lock or copy it
 		if (t->is_direct_mode) {
-			// TODO fetch and apply updates from GUI and FPGA
+			// TODO fetch and apply updates from FPGA
 		} else { // Direct mode
-			// TODO calculate filters using input data
+			// TODO apply data from input structure on show.
+			if(auto sptr = iom->get_active_show(); sptr != nullptr) {
+				sptr->run_cycle_update();
+			}
 		}
 		// TODO Release input data structure if it was locked and not copied.
 
