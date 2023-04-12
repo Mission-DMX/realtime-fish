@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "lib/evpp.hpp"
+#include "executioners/project_configuration.hpp"
 #include "io/state_book.hpp"
 #include "io/gui_connection_handler.hpp"
 #include "io/client_handler.hpp"

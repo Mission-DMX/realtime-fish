@@ -41,17 +41,7 @@ std::shared_ptr<dmxfish::dmx::universe> get_temporary_universe(const std::string
 	return _artnet_handler.get_or_create_universe(-1, rmrf::net::get_first_general_socketaddr(output_description, 6454), 1);
 }
 
-std::shared_ptr<dmxfish::dmx::universe> register_universe_from_message(const missiondmx::fish::ipcmessages::Universe& u_dev) {
-	std::shared_ptr<dmxfish::dmx::universe> u_ptr_candidate = nullptr;
-	if(u_dev.has_remote_location()) {
-		// ArtNet
-		const auto& artnet_definition = u_dev.remote_location();
-		const auto address = rmrf::net::get_first_general_socketaddr(artnet_definition.ip_address(), artnet_definition.port());
-		u_ptr_candidate = _artnet_handler.get_or_create_universe(u_dev.id(), address, artnet_definition.universe_on_device());
-	} else {
-		// local universes are not yet implemented
-		return nullptr;
-	}
+void check_update_required_from_registration(std::shared_ptr<dmxfish::dmx::universe> u_ptr_candidate) {
 	bool insert_required = true;
 	for (auto& u_ptr : active_universes) {
 		if(u_ptr.use_count() > 0) {
@@ -66,6 +56,34 @@ std::shared_ptr<dmxfish::dmx::universe> register_universe_from_message(const mis
 	if(insert_required) {
 		active_universes.push_back(u_ptr_candidate);
 	}
+}
+
+std::shared_ptr<dmxfish::dmx::universe> register_universe_from_message(const missiondmx::fish::ipcmessages::Universe& u_dev) {
+	std::shared_ptr<dmxfish::dmx::universe> u_ptr_candidate = nullptr;
+	if(u_dev.has_remote_location()) {
+		// ArtNet
+		const auto& artnet_definition = u_dev.remote_location();
+		const auto address = rmrf::net::get_first_general_socketaddr(artnet_definition.ip_address(), artnet_definition.port());
+		u_ptr_candidate = _artnet_handler.get_or_create_universe(u_dev.id(), address, artnet_definition.universe_on_device());
+	} else {
+		// TODO local universes are not yet implemented
+		return nullptr;
+	}
+	check_update_required_from_registration(u_ptr_candidate);
+	return u_ptr_candidate;
+}
+
+std::shared_ptr<dmxfish::dmx::universe> register_universe_from_xml(const MissionDMX::ShowFile::Universe& universe) {
+	std::shared_ptr<dmxfish::dmx::universe> u_ptr_candidate = nullptr;
+	if(universe.artnet_location().present()) {
+		const auto& artnet_definition = universe.artnet_location().get();
+		const auto address = rmrf::net::get_first_general_socketaddr(artnet_definition.ip_address(), artnet_definition.udp_port());
+		u_ptr_candidate = _artnet_handler.get_or_create_universe(universe.id(), address, artnet_definition.device_universe_id());
+	} else {
+		// TODO other universe types are not yet implemented
+		return nullptr;
+	}
+	check_update_required_from_registration(u_ptr_candidate);
 	return u_ptr_candidate;
 }
 

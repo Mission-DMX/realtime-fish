@@ -7,6 +7,8 @@
 
 #include "proto_src/UniverseControl.pb.h"
 
+#include "xml/show_files.hpp"
+
 namespace dmxfish::io {
 
 	// TODO write method that creates/updates all universes from show file and removes the unessessary ones from active_universes registry
@@ -48,6 +50,12 @@ namespace dmxfish::io {
 	 * @param u The universe definition to use
 	 */
 	std::shared_ptr<dmxfish::dmx::universe> register_universe_from_message(const missiondmx::fish::ipcmessages::Universe& u);
+
+	/**
+	 * Create or update a universe from XML data.
+	 * @param universe The XML data used to construct the universe.
+	 */
+	std::shared_ptr<dmxfish::dmx::universe> register_universe_from_xml(const MissionDMX::ShowFile::Universe& universe);
 
 	/**
 	 * Get a list of all registered universes.

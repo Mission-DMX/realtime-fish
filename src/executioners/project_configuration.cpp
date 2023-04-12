@@ -5,11 +5,6 @@
 
 namespace dmxfish::execution {
 
-[[nodiscard]] inline bool is_universe_setup_correct() {
-	return (uptr->type == universe_type::PHYSICAL && universe.physical_location().present()) // TODO implement complete comparison once physical universes are implemented
-		|| (uptr->type == universe_type::ARTNET && universe.artnet_location.present()); // TODO check for more than type data
-}
-
 project_configuration::project_configuration(const MissionDMX::ShowFile::BordConfiguration& show_file_dom) : scenes{}, universes{}, name{} {
 	if(const auto optional_name = show_file_dom.show_name(); optional_name.present()) {
 		this->name = optional_name.get();
@@ -18,17 +13,7 @@ project_configuration::project_configuration(const MissionDMX::ShowFile::BordCon
 	}
 
 	for(const auto& universe : show_file_dom.universe()) {
-		using namespace dmxfish::io;
-		using namespace dmxfish::dmx;
-		auto uptr = get_universe(universe.id());
-		if(uptr == nullptr) {
-			uptr = register_universe_from_xml(universe);
-		} else if (!is_universe_setup_correct(uptr)) {
-			unregister_universe(universe.id());
-			// FIXME If the loading fails later on there is no roll back possible. We should add a recovery list for this purpose.
-			uptr = register_universe_from_xml(universe);
-		}
-		this->universes.push_back(uptr);
+		this->universes.push_back(dmxfish::io::register_universe_from_xml(universe));
 	}
 
 	auto scene_loading_result = populate_scene_vector(this->scenes, show_file_dom.scene());
