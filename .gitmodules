@@ -4,3 +4,6 @@
 [submodule "submodules/Docs"]
 	path = submodules/Docs
 	url = git@github.com:Mission-DMX/Docs.git
+[submodule "submodules/memory-allocators"]
+	path = submodules/memory-allocators
+	url = https://github.com/mtrebi/memory-allocators.git

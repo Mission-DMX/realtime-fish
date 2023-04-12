@@ -7,5 +7,8 @@ The part of the software that translates the users wishes to DMX in real time.
 	* libev-dev
 	* libprotobuf-dev
 	* libspdlog-dev
+	* protobuf-compiler
+	* xsdcxx
+	* libxerces-c-dev
 2. Perform a recursive clone of this repository.
 3. Call `gmake` on the root directory of this repo.

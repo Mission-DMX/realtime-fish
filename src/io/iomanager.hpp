@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "lib/evpp.hpp"
+#include "executioners/project_configuration.hpp"
 #include "io/state_book.hpp"
 #include "io/gui_connection_handler.hpp"
 #include "io/client_handler.hpp"
@@ -18,11 +19,15 @@ namespace dmxfish::io {
 			std::shared_ptr<runtime_state_t> run_time_state;
 			std::shared_ptr<::ev::loop_ref> loop;
 			std::shared_ptr<GUI_Connection_Handler> gui_connections;
+			std::shared_ptr<dmxfish::execution::project_configuration> active_show = nullptr;
 		public:
 			IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager = false);
 			~IOManager();
 			void start();
 			void push_msg_to_all_gui(google::protobuf::MessageLite&, uint32_t);
+			[[nodiscard]] inline std::shared_ptr<dmxfish::execution::project_configuration> get_active_show() {
+				return this->active_show;
+			}
 		private:
 			void run();
 			void parse_message_cb(uint32_t, client_handler&);

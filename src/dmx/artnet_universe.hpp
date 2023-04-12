@@ -87,3 +87,9 @@ namespace dmxfish::dmx {
 	};
 
 }
+
+/*
+ * For further development: https://art-net.org.uk/how-it-works/packet-summary-2/
+ * features a somewhat complete documunentation of art net packet types.
+ * At least time keeping should be implemented.
+ */

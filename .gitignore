@@ -48,3 +48,4 @@ realtime-fish.project
 .idea*
 *CMakeLists.txt
 lib/
+tools/generator-tmp
