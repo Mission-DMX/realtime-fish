@@ -40,5 +40,12 @@ dep
 .project
 .cproject
 .settings
+.clang-format
+.clangd
+.codelite*
+realtime-fish.mk
+realtime-fish.project
+.idea*
+*CMakeLists.txt
 lib/
 tools/generator-tmp

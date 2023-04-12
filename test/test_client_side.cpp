@@ -1,36 +1,36 @@
-#include "io/client_handler.hpp"
+#include "../test/test_client_side.hpp"
 
 #include "lib/logging.hpp"
 #include "google/protobuf/io/coded_stream.h"
+#include <sstream>
 
-namespace dmxfish::io {
 
-	client_handler::client_handler(parse_message_cb_t parse_message_cb_, std::shared_ptr<rmrf::net::connection_client> client):
+namespace dmxfish::test {
+
+	client_side::client_side(parse_message_cb_t parse_message_cb_, std::unique_ptr<rmrf::net::connection_client> client):
 		parse_message_cb(parse_message_cb_),
 		io_buffer(std::make_shared<rmrf::net::ioqueue<::rmrf::net::iorecord>>()),
-		connection_client(client),
+		// connection_client(client),
 		internal_state(NEXT_MSG),
 		msg_type(0),
-		msg_length(0),
 		byte_count(0),
 		limit_(5),
 		read_var_int_multiplier(1),
-		output_buffer(std::make_shared<message_buffer_output>(client)),
-		streamsize(0),
-		actual_record(nullptr),
-        last_limit(0)
+		// output_buffer(std::move(client)),
+		streamsize(0)
 	{
-		this->connection_client->set_incomming_data_callback(std::bind(&dmxfish::io::client_handler::incomming_data_callback, this, std::placeholders::_1));
+		client->set_incomming_data_callback(std::bind(&dmxfish::test::client_side::incomming_data_callback, this, std::placeholders::_1));
+		this->output_buffer = std::make_shared<message_buffer_output>(std::move(client));
 	}
 
-	void client_handler::incomming_data_callback(const rmrf::net::iorecord& data){
-		::spdlog::debug("reached callback");
+	void client_side::incomming_data_callback(const rmrf::net::iorecord& data){
+		::spdlog::debug("TEST: reached callback");
 		this->streamsize += data.size();
 		this->io_buffer->push_back(data);
 		this->handle_messages();
 	}
 
-	void client_handler::handle_messages(){
+	void client_side::handle_messages(){
 		switch (this->internal_state) {
 			case NEXT_MSG:
 				{
@@ -40,7 +40,7 @@ namespace dmxfish::io {
 						this->limit_ = 5;
 					}
 					else {
-						::spdlog::debug("NEXT_MSG: Not finishing byte for Varint");
+						::spdlog::debug("TEST: NEXT_MSG: Not finishing byte for Varint");
 						return;
 					}
 					return handle_messages();
@@ -51,7 +51,7 @@ namespace dmxfish::io {
 						this->internal_state = READ_MSG;
 						this->limit_ =  this->msg_length;
 					} else {
-						::spdlog::debug("GETLENGTH: Not finishing byte for Varint");
+						::spdlog::debug("TEST: GETLENGTH: Not finishing byte for Varint");
 						return;
 					}
 					return handle_messages();
@@ -65,53 +65,43 @@ namespace dmxfish::io {
 						this->limit_ = 5;
 						return handle_messages();
 					}
-					::spdlog::debug("ReadMSG: Msg was not long enough: is {}, should: {}", this->streamsize, this->msg_length);
+					::spdlog::debug("TEST: ReadMSG: Msg was not long enough: is {}, should: {}", this->streamsize, this->msg_length);
 					break;
 				}
 			default:
-					::spdlog::debug("Error: Unknown State");
+					::spdlog::debug("TEST: Error: Unknown State");
 					break;
 		}
 	}
 
-	bool client_handler::Next(const void** data, int* size){
-		if (limit_ <= 0){
-//            ::spdlog::debug("limit was reached");
-            return false;
-        }
+	bool client_side::Next(const void** data, int* size){
+		if (limit_ <= 0) return false;
 
-		if (this->streamsize <= 0){
-//            ::spdlog::debug("streamsize is {}", this->streamsize);
+		if (this->io_buffer->empty()){
 			return false;
 		}
+		this->actual_record = std::make_unique<rmrf::net::iorecord>(this->io_buffer->pop_front());
 
-        if (this->last_limit < 0){
-//            ::spdlog::debug("last limit was less than 0");
-            this->actual_record->advance(this->actual_record->size()+last_limit);
-        } else {
-            if (this->io_buffer->empty()) {
-//                ::spdlog::debug("Message_buffer is empty but streamsize is {}", this->streamsize);
-                return false;
-            }
-            this->actual_record = std::make_unique<rmrf::net::iorecord>(this->io_buffer->pop_front());
-        }
-
-        *data = this->actual_record->ptr();
-        *size = this->actual_record->size();
-
-        this->byte_count += *size;
-        this->limit_ -= *size;
-        if (limit_ < 0) {
-            *size += this->limit_;
-        }
-        this->last_limit = this->limit_;
-        this->streamsize -= *size;
-
-        return true;
+		*data = this->actual_record->ptr();
+		*size = this->actual_record->size();
+		this->byte_count += *size;
+		this->limit_ -= *size;
+		if (limit_ < 0) {
+		 *size += this->limit_;
+		}
+		this->streamsize -= *size;
+		
+		auto strstream = std::stringstream();
+		strstream << "Test: Next:" << std::hex;
+		for(int i = 0; i < *size; i++){
+			strstream << " " << (int) *((*((uint8_t**)data))+i);
+		}
+		::spdlog::debug("{}", strstream.str());
+		return true;
 	}
 
 
-	void client_handler::BackUp(int count){
+	void client_side::BackUp(int count){
 		if (limit_ < 0) {
 	    this->BackUpLocal(count - this->limit_);
 	    this->limit_ = count;
@@ -121,15 +111,14 @@ namespace dmxfish::io {
 		}
 	}
 
-	inline void client_handler::BackUpLocal(int count){
-        this->last_limit = 0;
-        this->actual_record->advance(this->actual_record->size()-count);
+	inline void client_side::BackUpLocal(int count){
+		this->actual_record->advance(this->actual_record->size()-count);
 		this->streamsize += count;
 		this->byte_count -= count;
 		this->io_buffer->push_front(*this->actual_record.get());
 	}
 
-	bool client_handler::Skip(int count){
+	bool client_side::Skip(int count){
 		if (count > this->limit_) {
 	    if (limit_ < 0) return false;
 	    this->SkipLocal(limit_);
@@ -142,7 +131,7 @@ namespace dmxfish::io {
 	  }
 	}
 
-	inline bool client_handler::SkipLocal(int count){
+	inline bool client_side::SkipLocal(int count){
 		::spdlog::debug("Run Skip...for skipping {} bytes", count);
 		while (count > 0){
 			if (this->io_buffer->empty()){
@@ -163,13 +152,13 @@ namespace dmxfish::io {
 		return true;
 	}
 
-	void client_handler::write_message(google::protobuf::MessageLite& msg, uint32_t msgtype){
-		this->output_buffer->WriteVarint32(msgtype);
+	void client_side::write_message(google::protobuf::MessageLite& msg, uint32_t msg_type){
+		this->output_buffer->WriteVarint32(msg_type);
 		this->output_buffer->WriteVarint32(msg.ByteSizeLong());
 		msg.SerializeToZeroCopyStream(this->output_buffer.get());
 	}
 
-	int64_t client_handler::ByteCount() const{
+	int64_t client_side::ByteCount() const{
 		if (this->limit_ < 0) {
 	    return this->byte_count + this->limit_;
 	  } else {
@@ -177,7 +166,7 @@ namespace dmxfish::io {
 	  }
 	}
 
-	bool client_handler::ReadVarint32(uint32_t* num){
+	bool client_side::ReadVarint32(uint32_t* num){
 		int size = 0;
 		uint8_t* data;
 		while(true){
