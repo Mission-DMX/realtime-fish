@@ -4,26 +4,26 @@
   <scene human_readable_name="Test Scene 01" id="1">
     <filter type="0" id="const_8bit">
       <channel_link input_channel_id="str1234" output_channel_id="nobody.str1234" />
-      <initialParameters name="value" value="50" />
+      <initial_parameters name="value" value="50" />
     </filter>
     <filter type="1" id="const_16bit">
       <channel_link input_channel_id="str1234" output_channel_id="nobody.str1234" />
-      <initialParameters name="value" value="9000" />
+      <initial_parameters name="value" value="9000" />
     </filter>
     <filter type="2" id="const_float">
       <channel_link input_channel_id="str1234" output_channel_id="nobody.str1234" />
-      <initialParameters name="value" value="13.6" />
+      <initial_parameters name="value" value="13.6" />
     </filter>
     <filter type="3" id="const_color">
       <channel_link input_channel_id="str1234" output_channel_id="nobody.str1234" />
-      <initialParameters name="value" value="270.0,0.5,0.99" />
+      <initial_parameters name="value" value="270.0,0.5,0.99" />
     </filter>
     <!--<filter type="123" id="blah"><channel_link input_channel_id="str1234" output_channel_id="str1234" /><filter_configuration name="str1234" value="str1234" /><initialParameters name="str1234" value="str1234" /></filter>-->
   </scene>
   <scene human_readable_name="another Scene" id="2">
     <filter type="0" id="const_8bit">
       <channel_link input_channel_id="str1234" output_channel_id="str1234" />
-      <filter_configuration name="value" value="50" />
+      <initial_parameters name="value" value="50" />
     </filter>
   </scene>
   <!-- TODO change me -->

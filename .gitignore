@@ -41,3 +41,4 @@ dep
 .cproject
 .settings
 lib/
+tools/generator-tmp

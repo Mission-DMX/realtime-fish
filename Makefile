@@ -114,16 +114,19 @@ XSD_ARGS := --generate-doxygen --generate-polymorphic --std c++11 --hxx-suffix .
 OBJECTS := $(filter-out %_test.o ,${TEST_SRCOBJS}) $(filter-out obj/main.o ,${SRCOBJS}) ${OBJDIR}/libproto.a ${OBJDIR}/librmrfnet.a ${OBJDIR}/showxml.a
 
 .PRECIOUS: ${DEPDIR}/%.d ${OBJDIR}/**/%.o ${POTOBJS} ${POOBJS}
-.PHONY: all test clean install lintian style translation
+.PHONY: all tools test clean install lintian style translation
 
-all: ${BINDIR}/fish
+all: ${BINDIR}/fish tools
 	echo Done
 
-test: ${TEST_TARGETS}
+test: ${TEST_TARGETS} all
 	for a in ${TEST_TARGETS}; do \
 		echo $$a; \
 		$$a; \
 	done
+
+tools: ${BINDIR}/tools/sample_xml_generator
+	echo Created tools.
 
 ${PROTO_SRCDIR}/%.pb.cc: ${PROTO_DEFDIR}/%.proto Makefile
 	${MKDIR} ${@D} && ${PROTO_TOOL} -I=${PROTO_DEFDIR} --cpp_out=${PROTO_SRCDIR} $< && touch $@
@@ -169,6 +172,11 @@ ${TESTOBJDIR}/%.o: ${TESTDIR}/%.c ${DEPDIR}/%.d ${DEPDIR}/test Makefile
 
 ${DEPDIR}/%.d: ;
 
+${BINDIR}/tools/sample_xml_generator: Makefile ${XMLTREE_DEFDIR}/ShowFile_v0.xsd
+	${MKDIR} ${@D} && ${MKDIR} tools/generator-tmp && cd tools/generator-tmp && \
+	${XSDTOOL} cxx-tree ${XSD_ARGS} --generate-serialization ../../${XMLTREE_DEFDIR}/ShowFile_v0.xsd && cd ../.. && \
+	${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/sample_xml_generator.cpp tools/generator-tmp/ShowFile_v0.xml.cpp ${LFLAGS} -o $@
+
 ${DEPDIR}/test:
 	${MKDIR} ${DEPDIR}/test
 
@@ -179,3 +187,4 @@ clean:
 	rm -rf ${MODIR}
 	rm -rf ${PROTO_SRCDIR}
 	rm -rf ${XMLTREE_SRCDIR}
+	rm -rf tools/generator-tmp

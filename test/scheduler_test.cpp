@@ -16,8 +16,8 @@ BOOST_AUTO_TEST_CASE(scheduler_test) {
 		const auto cwd = std::filesystem::current_path().string();
 		properties.no_namespace_schema_location("file:///" + cwd + "/submodules/Docs/FormatSchemes/ProjectFile/ShowFile_v0.xsd");
 		properties.schema_location("http://www.w3.org/2001/XMLSchema", "file:///" + cwd + "/src/xml/schema/XMLSchema.xsd");
-		//std::unique_ptr<MissionDMX::ShowFile::BordConfiguration> bc = MissionDMX::ShowFile::bord_configuration("./test/test_bord_config.xml", 0, properties);
-		std::unique_ptr<MissionDMX::ShowFile::BordConfiguration> bc = MissionDMX::ShowFile::bord_configuration("./test/test_bord_config.xml", xml_schema::flags::dont_validate);
+		std::unique_ptr<MissionDMX::ShowFile::BordConfiguration> bc = MissionDMX::ShowFile::bord_configuration("./test/test_bord_config.xml", 0, properties);
+		//std::unique_ptr<MissionDMX::ShowFile::BordConfiguration> bc = MissionDMX::ShowFile::bord_configuration("./test/test_bord_config.xml", xml_schema::flags::dont_validate);
 		std::cout << "Loaded XML file." << std::endl;
 
 		if(dmxfish::execution::populate_scene_vector(v, bc->scene()))
