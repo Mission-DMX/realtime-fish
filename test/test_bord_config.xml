@@ -1,32 +1,39 @@
-<?xml version="1.0" encoding="utf-8"?>
-<bord_configuration show_name="testshow" default_active_scene="1" notes="Example show file notes" xmlns="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile">
-  <!-- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" -->
-  <scene human_readable_name="Test Scene 01" id="1">
-    <filter type="0" id="const_8bit">
-      <channel_link input_channel_id="str1234" output_channel_id="nobody.str1234" />
-      <initial_parameters name="value" value="50" />
-    </filter>
-    <filter type="1" id="const_16bit">
-      <channel_link input_channel_id="str1234" output_channel_id="nobody.str1234" />
-      <initial_parameters name="value" value="9000" />
-    </filter>
-    <filter type="2" id="const_float">
-      <channel_link input_channel_id="str1234" output_channel_id="nobody.str1234" />
-      <initial_parameters name="value" value="13.6" />
-    </filter>
-    <filter type="3" id="const_color">
-      <channel_link input_channel_id="str1234" output_channel_id="nobody.str1234" />
-      <initial_parameters name="value" value="270.0,0.5,0.99" />
-    </filter>
-    <!--<filter type="123" id="blah"><channel_link input_channel_id="str1234" output_channel_id="str1234" /><filter_configuration name="str1234" value="str1234" /><initialParameters name="str1234" value="str1234" /></filter>-->
-  </scene>
-  <scene human_readable_name="another Scene" id="2">
-    <filter type="0" id="const_8bit">
-      <channel_link input_channel_id="str1234" output_channel_id="str1234" />
-      <initial_parameters name="value" value="50" />
-    </filter>
-  </scene>
-  <!-- TODO change me -->
-  <device id="123" channel="str1234" type="str1234" name="str1234" universe_id="123" />
-  <universe name="str1234" description="str1234" id="123" />
-</bord_configuration>
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<p1:bord_configuration xmlns:p1="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile" default_active_scene="0" notes="This field may contain any human readable show notes" show_name="A generated sample show file" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/home/leondietrich/localdev/realtime-fish/submodules/Docs/FormatSchemes/ProjectFile/ShowFile_v0.xsd">
+  <p1:scene human_readable_name="An example scene containing all filters with an example." id="0">
+    <p1:filter id="const_8bit" type="0">
+      <p1:initialParameters name="value" value="50"/>
+    </p1:filter>
+    <p1:filter id="const_16bit" type="1">
+      <p1:initialParameters name="value" value="9001"/>
+    </p1:filter>
+    <p1:filter id="const_float" type="2">
+      <p1:initialParameters name="value" value="13.6"/>
+    </p1:filter>
+    <p1:filter id="const_color" type="3">
+      <p1:initialParameters name="value" value="270.0,0.5,0.99"/>
+    </p1:filter>
+    <p1:filter id="debug_8bit" type="4">
+      <p1:channellink input_channel_id="value" output_channel_id="const_8bit:value"/>
+    </p1:filter>
+    <p1:filter id="debug_16bit" type="5">
+      <p1:channellink input_channel_id="value" output_channel_id="const_16bit:value"/>
+    </p1:filter>
+    <p1:filter id="debug_float" type="6">
+      <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+    </p1:filter>
+    <p1:filter id="debug_color" type="7">
+      <p1:channellink input_channel_id="value" output_channel_id="const_color:value"/>
+    </p1:filter>
+  </p1:scene>
+  <p1:scene human_readable_name="A minimal example scene. It does not contain any filters." id="1"/>
+  <p1:device channel="0" id="0" name="The name or description of a device" type="A device type. Keep in mind that fish does not use information about devices." universe_id="0"/>
+  <p1:universe description="A universe mapped to the first DMX port on the console. The description field can be used for the user to store notes or hints about the stage configuration. Please note that the ID of the universe is different from the physical address and a shared name space with other universe types in which it needs to be unique." id="0" name="Universe 1">
+    <p1:physical_location>0</p1:physical_location>
+  </p1:universe>
+  <p1:universe description="This universe would be mapped to an artnet device (such as a stage box or complex light controller). Keep in mind that physical universes and artnet configurations are mutually exclusive." id="0" name="ArtNet Universe 1">
+    <p1:artnet_location device_universe_id="0" ip_address="10.0.15.1" udp_port="6465"/>
+  </p1:universe>
+  <p1:uihint name="key" value="value"/>
+  <p1:uihint name="description" value="This is a key value storage not uitilized by fish. The GUI may use this to store any data it may desire."/>
+</p1:bord_configuration>

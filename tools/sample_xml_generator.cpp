@@ -24,6 +24,18 @@ MissionDMX::ShowFile::Scene get_first_scene() {
 	filters.emplace_back(3, "const_color");
 	filters[3].initialParameters().push_back(MissionDMX::ShowFile::KeyValuePair("value", "270.0,0.5,0.99"));
 
+	filters.emplace_back(4, "debug_8bit");
+	filters[4].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_8bit:value"));
+
+	filters.emplace_back(5, "debug_16bit");
+	filters[5].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_16bit:value"));
+
+	filters.emplace_back(6, "debug_float");
+	filters[6].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_float:value"));
+
+	filters.emplace_back(7, "debug_color");
+	filters[7].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_color:value"));
+
 	for(const auto& f : filters)
 		s.filter().push_back(f);
 	return s;

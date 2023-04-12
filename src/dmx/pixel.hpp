@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace dmxfish::dmx {
 
 struct rgb_output_pixel {
@@ -27,6 +29,8 @@ struct pixel {
 
 	pixel () : hue(0.), saturation(0.), value(0.) {}
 	pixel (double h, double s, double v) : hue(h), saturation(s), value(v) {}
+
+	[[nodiscard]] std::string str();
 };
 
 }

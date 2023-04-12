@@ -5,6 +5,10 @@ namespace dmxfish::filters {
         constants_8bit = 0,
         constants_16bit = 1,
         constants_float = 2,
-        constants_pixel = 3
+        constants_pixel = 3,
+        debug_8bit = 4,
+        debug_16bit = 5,
+        debug_float = 6,
+        debug_pixel = 7
     };
 }

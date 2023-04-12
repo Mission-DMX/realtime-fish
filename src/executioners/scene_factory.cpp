@@ -9,6 +9,7 @@
 
 #include "filters/types.hpp"
 #include "filters/filter_constants.hpp"
+#include "filters/filter_debug_output.hpp"
 
 #include <iostream>
 
@@ -50,7 +51,7 @@ COMPILER_RESTORE("-Weffc++")
 					std::vector<std::pair<std::string, std::string>> _channel_mapping
 		) : name(_name), configuration(_configuration), initial_parameters(_initial_parameters), channel_mapping(_channel_mapping) {}
 
-		[[nodiscard]] std::string str() const {
+		[[nodiscard]] inline std::string str() const {
 			std::stringstream ss;
 			ss << "{\"name\": \"" << this->name << "\", \"conf\": {";
 			for(const auto& [k, v] : this->configuration) {
@@ -87,6 +88,18 @@ COMPILER_RESTORE("-Weffc++")
 				case filter_type::constants_pixel:
 					sum += sizeof(constant_color);
 					break;
+				case filter_type::debug_8bit:
+					sum += sizeof(debug_8bit);
+					break;
+				case filter_type::debug_16bit:
+					sum += sizeof(debug_16bit);
+					break;
+				case filter_type::debug_float:
+					sum += sizeof(debug_float);
+					break;
+				case filter_type::debug_pixel:
+					sum += sizeof(debug_pixel);
+					break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -119,6 +132,14 @@ COMPILER_RESTORE("-Weffc++")
 				return calloc<constant_float>(pac);
 			case filter_type::constants_pixel:
 				return calloc<constant_color>(pac);
+			case filter_type::debug_8bit:
+				return calloc<debug_8bit>(pac);
+			case filter_type::debug_16bit:
+				return calloc<debug_16bit>(pac);
+			case filter_type::debug_float:
+				return calloc<debug_float>(pac);
+			case filter_type::debug_pixel:
+				return calloc<debug_pixel>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}
@@ -150,9 +171,29 @@ COMPILER_RESTORE("-Weffc++")
 		return fq;
 	}
 
-    inline void schedule_filters(const ::MissionDMX::ShowFile::Scene& s, scene_filter_vector_t& fv, scene_boundry_vec_t& b, std::shared_ptr<ZeroDeletingLinearAllocator> pac, std::map<size_t, filter_info>& filter_info_map) {
+	template<class T>
+	[[nodiscard]] std::string iteratable_to_string(const T& s) {
+		std::stringstream ss;
+		bool first = true;
+		for(const auto& element : s) {
+			if(!first) {
+				ss << ", ";
+			} else {
+				first = false;
+			}
+			if constexpr (std::is_same<T, std::deque<::MissionDMX::ShowFile::Filter>>::value) {
+				ss << element.id();
+			} else {
+				ss << element;
+			}
+		}
+		return ss.str();
+	}
+
+    inline void schedule_filters(const ::MissionDMX::ShowFile::Scene& s, scene_filter_vector_t& fv, scene_boundry_vec_t& b, std::shared_ptr<ZeroDeletingLinearAllocator> pac, std::map<size_t, filter_info>& filter_info_map, std::stringstream& msg_stream) {
 		auto missing_filter_stack = enque_filters(s.filter());
 		std::set<std::string> resolved_filters{};
+		size_t round = 0;
 		while(!missing_filter_stack.empty()) {
 			bool placed_filter = false;
 			for(size_t i = 0; i < missing_filter_stack.size(); i++) {
@@ -167,23 +208,27 @@ COMPILER_RESTORE("-Weffc++")
 					placed_filter = true;
 					fv.emplace_back(std::move(construct_filter(f_template.type(), pac)));
 					const auto filter_index = fv.size() - 1;
-					const auto fid = f_template.id();
+					const auto& fid = f_template.id();
 					const auto conf = convert_configuration(f_template.filterConfiguration());
 					const auto initial_params = convert_configuration(f_template.initialParameters());
 					const auto mapping = convert_channel_mapping(f_template.channellink());
 					const filter_info fi(fid, conf, initial_params, mapping);
-					// TODO replace with message buffer insertion
-					std::cout << "Loading configuration of filter " << filter_index << " of type " << fid << " with config: " << fi.str() << "." << std::endl;
+					msg_stream << "Loading configuration of filter " << filter_index << " of type " << fid << " with config: " << fi.str() << ". Scheduled." << std::endl;
 					filter_info_map[filter_index] = fi;
+					resolved_filters.insert(fid);
 				} else {
 					missing_filter_stack.push_back(f_template);
 				}
 			}
 			if(!placed_filter) {
-				throw scheduling_exception("There were no filters with resolved dependencies within this round. Possible causes: broken or cyclic dependencies.");
+				throw scheduling_exception("There were no filters with resolved dependencies within this round (" + std::to_string(round) + "). Possible causes: broken or cyclic dependencies.\nAlready scheduled filters: "
+						+ iteratable_to_string(resolved_filters) + "\nStill missing filters: " + iteratable_to_string(missing_filter_stack));
 			}
 			b.emplace_back(fv.size());
+			msg_stream << "Next round." << std::endl;
+			round++;
 		}
+		msg_stream << "Finished scheduling " << resolved_filters.size() << " filters in " << round << " rounds." << std::endl;
 	}
 
 	[[nodiscard]] inline dmxfish::filters::channel_mapping construct_channel_input_mapping(dmxfish::filters::channel_mapping& global_cm, const filter_info& i) {
@@ -226,31 +271,44 @@ COMPILER_RESTORE("-Weffc++")
 		// TODO link to universes
 	}
 
-    [[nodiscard]] inline std::tuple<scene_filter_vector_t, scene_boundry_vec_t, std::shared_ptr<ZeroDeletingLinearAllocator>> compute_filter(const ::MissionDMX::ShowFile::Scene& s) {
+    [[nodiscard]] inline std::tuple<scene_filter_vector_t, scene_boundry_vec_t, std::shared_ptr<ZeroDeletingLinearAllocator>> compute_filter(const ::MissionDMX::ShowFile::Scene& s, std::stringstream& msg_stream) {
 	    auto pac = std::make_shared<ZeroDeletingLinearAllocator>(get_filter_memory_size(s));
 	    scene_filter_vector_t filters;
 	    scene_boundry_vec_t boundries;
 	    filters.reserve(s.filter().size());
 	    std::map<size_t, filter_info> filter_info_map;
 
-	    schedule_filters(s, filters, boundries, pac, filter_info_map);
+	    schedule_filters(s, filters, boundries, pac, filter_info_map, msg_stream);
 	    connect_filters(filters, filter_info_map);
 
 	    return std::make_tuple(filters, boundries, pac);
     }
 
-    [[nodiscard]] bool populate_scene_vector(std::vector<scene>& v, const MissionDMX::ShowFile::BordConfiguration::scene_sequence& ss) {
+    [[nodiscard]] std::pair<std::string, bool> populate_scene_vector(std::vector<scene>& v, const MissionDMX::ShowFile::BordConfiguration::scene_sequence& ss) {
 		if(ss.size() == 0) {
-			return false;
+			return std::make_pair("There were no scenes defined. Skipping.", false);
 		}
         v.reserve(ss.size());
+		std::stringstream msg_stream;
+		bool worked = true;
+
 		for(auto& stemplate : ss) {
-			auto filter_tuple = compute_filter(stemplate);
-			v.emplace_back(std::move(std::get<0>(filter_tuple)),
-				std::move(std::get<1>(filter_tuple)),
-				std::get<2>(filter_tuple));
+			// TODO make parallel
+			try {
+				auto filter_tuple = compute_filter(stemplate, msg_stream);
+				v.emplace_back(std::move(std::get<0>(filter_tuple)),
+					std::move(std::get<1>(filter_tuple)),
+					std::get<2>(filter_tuple));
+			} catch (const ::dmxfish::filters::filter_config_exception& e) {
+				msg_stream << "Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
+				worked = false;
+			} catch (const scheduling_exception& e) {
+				msg_stream << "Failed to schedule filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
+				worked = false;
+			}
 		}
-		return true;
+		msg_stream << "Done." << std::endl;
+		return std::make_pair(msg_stream.str(), worked);
     }
 
 }
