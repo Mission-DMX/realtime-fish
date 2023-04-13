@@ -9,6 +9,7 @@ namespace dmxfish::filters {
         debug_8bit = 4,
         debug_16bit = 5,
         debug_float = 6,
-        debug_pixel = 7
+        debug_pixel = 7,
+	filter_16bit_to_dual_byte = 8,
     };
 }

@@ -9,6 +9,7 @@
 
 #include "filters/types.hpp"
 #include "filters/filter_constants.hpp"
+#include "filters/filter_conversion.hpp"
 #include "filters/filter_debug_output.hpp"
 
 #include <iostream>
@@ -100,6 +101,9 @@ COMPILER_RESTORE("-Weffc++")
 				case filter_type::debug_pixel:
 					sum += sizeof(debug_pixel);
 					break;
+				case filter_type::filter_16bit_to_dual_byte:
+					sum += sizeof(filter_16bit_to_dual_byte);
+					break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -140,6 +144,8 @@ COMPILER_RESTORE("-Weffc++")
 				return calloc<debug_float>(pac);
 			case filter_type::debug_pixel:
 				return calloc<debug_pixel>(pac);
+			case filter_type::filter_16bit_to_dual_byte:
+				return calloc<filter_16bit_to_dual_byte>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}
