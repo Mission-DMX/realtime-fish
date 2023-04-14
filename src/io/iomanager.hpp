@@ -9,6 +9,8 @@
 #include "io/gui_connection_handler.hpp"
 #include "io/client_handler.hpp"
 
+#include "proto_src/FilterMode.pb.h"
+
 namespace dmxfish::io {
 
 	class IOManager : public std::enable_shared_from_this<IOManager> {
@@ -21,6 +23,7 @@ namespace dmxfish::io {
 			std::shared_ptr<GUI_Connection_Handler> gui_connections;
 			std::shared_ptr<dmxfish::execution::project_configuration> active_show = nullptr;
 			std::string latest_error;
+			::missiondmx::fish::ipcmessages::ShowFileApplyState show_file_apply_state = ::missiondmx::fish::ipcmessages::SFAS_INVALID;
 		public:
 			IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager = false);
 			~IOManager();
@@ -33,6 +36,10 @@ namespace dmxfish::io {
 
 			[[nodiscard]] inline std::string get_latest_error() {
 				return this->latest_error;
+			}
+
+			[[nodiscard]] inline ::missiondmx::fish::ipcmessages::ShowFileApplyState get_show_file_loading_state() {
+				return this->show_file_apply_state;
 			}
 		private:
 			void run();

@@ -28,7 +28,7 @@
 void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxfish::io::IOManager> iom, int c_time) {
 	auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
 	msg->set_current_state(t->running?(t->is_direct_mode?(::missiondmx::fish::ipcmessages::RM_FILTER):(::missiondmx::fish::ipcmessages::RM_DIRECT)):(::missiondmx::fish::ipcmessages::RM_STOP));
-	msg->set_showfile_apply_state(::missiondmx::fish::ipcmessages::SFAS_INVALID);
+	msg->set_showfile_apply_state(iom->get_show_file_loading_state());
 	if (t->is_direct_mode) {
 		msg->set_current_scene(-1);
 	} else if(auto s = iom->get_active_show(); s != nullptr) {

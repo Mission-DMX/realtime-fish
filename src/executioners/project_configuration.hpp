@@ -24,6 +24,10 @@ public:
 		return this->current_active_scene;
 	}
 
+	[[nodiscard]] inline unsigned int get_default_scene() {
+		return this->default_active_scene;
+	}
+
 	void set_active_scene(unsigned int new_scene);
 
 	void run_cycle_update();

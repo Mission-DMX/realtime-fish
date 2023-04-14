@@ -10,7 +10,6 @@
 #include "proto_src/MessageTypes.pb.h"
 #include "proto_src/Console.pb.h"
 #include "proto_src/DirectMode.pb.h"
-#include "proto_src/FilterMode.pb.h"
 #include "proto_src/RealTimeControl.pb.h"
 #include "proto_src/UniverseControl.pb.h"
 #include "google/protobuf/io/zero_copy_stream.h"
@@ -312,7 +311,15 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::load_show_file>();
 				if (msg->ParseFromZeroCopyStream(&client)){
-					return;
+					using namespace missiondmx::fish::ipcmessages;
+					this->show_file_apply_state = SFAS_SHOW_LOADING;
+					// TODO load project configuration with msg->show_data() in new thread and dispatch update code below
+					// TODO switch to new project configuration
+					this->show_file_apply_state = SFAS_SHOW_UPDATING;
+					if(msg->goto_default_scene()) {
+						this->active_show->set_active_scene(this->active_show->get_default_scene());
+					}
+					this->show_file_apply_state = SFAS_SHOW_ACTIVE;
 				}
 				return;
 			}
