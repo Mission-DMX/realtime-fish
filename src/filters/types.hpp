@@ -12,5 +12,6 @@ namespace dmxfish::filters {
         debug_pixel = 7,
 	filter_16bit_to_dual_byte = 8,
 	filter_16bit_to_bool = 9,
+	filter_multiply_add = 10,
     };
 }

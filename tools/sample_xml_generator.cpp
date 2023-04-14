@@ -42,6 +42,8 @@ MissionDMX::ShowFile::Scene get_first_scene() {
 	filters.emplace_back(9, "conversion_16bit_to_bool");
 	filters[9].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_16bit:value"));
 
+	// TODO configure mac filter (10)
+
 	for(const auto& f : filters)
 		s.filter().push_back(f);
 	return s;

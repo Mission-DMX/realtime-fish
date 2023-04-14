@@ -107,6 +107,9 @@ COMPILER_RESTORE("-Weffc++")
 				case filter_type::filter_16bit_to_bool:
 					sum += sizeof(filter_16bit_to_bool);
 					break;
+				case filter_type::filter_multiply_add:
+					sum += sizeof(filter_multiply_add);
+					break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -151,6 +154,8 @@ COMPILER_RESTORE("-Weffc++")
 				return calloc<filter_16bit_to_dual_byte>(pac);
 			case filter_type::filter_16bit_to_bool:
 				return calloc<filter_16bit_to_bool>(pac);
+			case filter_type::filter_multiply_add:
+				return calloc<filter_multiply_add>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}
