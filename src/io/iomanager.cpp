@@ -98,6 +98,7 @@ void IOManager::run() {
 IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) :
 		running(true),
 		iothread(nullptr),
+		show_loading_thread(nullptr),
 		run_time_state(run_time_state_),
 		loop(nullptr),
 		gui_connections(std::make_shared<GUI_Connection_Handler>(std::bind(&dmxfish::io::IOManager::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2))),
@@ -313,13 +314,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 				if (msg->ParseFromZeroCopyStream(&client)){
 					using namespace missiondmx::fish::ipcmessages;
 					this->show_file_apply_state = SFAS_SHOW_LOADING;
-					// TODO load project configuration with msg->show_data() in new thread and dispatch update code below
-					// TODO switch to new project configuration
-					this->show_file_apply_state = SFAS_SHOW_UPDATING;
-					if(msg->goto_default_scene()) {
-						this->active_show->set_active_scene(this->active_show->get_default_scene());
-					}
-					this->show_file_apply_state = SFAS_SHOW_ACTIVE;
+					this->show_loading_thread = std::make_shared<std::thread>(std::bind(&IOManager::load_show_file, this, msg));
 				}
 				return;
 			}
@@ -339,5 +334,17 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 
 void IOManager::push_msg_to_all_gui(google::protobuf::MessageLite& msg, uint32_t msg_type){
 	this->gui_connections->push_msg_to_all_gui(msg, msg_type);
+}
+
+void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::load_show_file> msg) {
+	using namespace missiondmx::fish::ipcmessages;
+	// TODO load project configuration with msg->show_data() in new thread and dispatch update code below
+	// TODO switch to new project configuration
+	this->show_file_apply_state = SFAS_SHOW_UPDATING;
+	if(msg->goto_default_scene()) {
+		this->active_show->set_active_scene(this->active_show->get_default_scene());
+	}
+	this->show_file_apply_state = SFAS_SHOW_ACTIVE;
+
 }
 }

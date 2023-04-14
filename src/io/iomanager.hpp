@@ -17,7 +17,7 @@ namespace dmxfish::io {
 
 		private:
 			bool running;
-			std::shared_ptr<std::thread> iothread;
+			std::shared_ptr<std::thread> iothread, show_loading_thread;
 			std::shared_ptr<runtime_state_t> run_time_state;
 			std::shared_ptr<::ev::loop_ref> loop;
 			std::shared_ptr<GUI_Connection_Handler> gui_connections;
@@ -43,6 +43,7 @@ namespace dmxfish::io {
 			}
 		private:
 			void run();
+			void load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::load_show_file> msg);
 			void parse_message_cb(uint32_t, client_handler&);
 	};
 }
