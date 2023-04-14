@@ -101,7 +101,8 @@ IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_d
 		iothread(nullptr),
 		run_time_state(run_time_state_),
 		loop(nullptr),
-		gui_connections(std::make_shared<GUI_Connection_Handler>(std::bind(&dmxfish::io::IOManager::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2)))
+		gui_connections(std::make_shared<GUI_Connection_Handler>(std::bind(&dmxfish::io::IOManager::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2))),
+		latest_error{"No Error occured"}
 
 {
 	if (is_default_manager) {

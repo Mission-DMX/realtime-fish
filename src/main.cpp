@@ -29,9 +29,15 @@ void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxf
 	auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
 	msg->set_current_state(t->running?(t->is_direct_mode?(::missiondmx::fish::ipcmessages::RM_FILTER):(::missiondmx::fish::ipcmessages::RM_DIRECT)):(::missiondmx::fish::ipcmessages::RM_STOP));
 	msg->set_showfile_apply_state(::missiondmx::fish::ipcmessages::SFAS_INVALID);
-	msg->set_current_scene(-1);
+	if (t->is_direct_mode) {
+		msg->set_current_scene(-1);
+	} else if(auto s = iom->get_active_show(); s != nullptr) {
+		msg->set_current_scene(s->get_active_scene());
+	} else {
+		msg->set_current_scene(-2);
+	}
 	msg->set_last_cycle_time(c_time);
-	msg->set_last_error("No Error occured");
+	msg->set_last_error(iom->get_latest_error());
 	iom->push_msg_to_all_gui(*msg.get(), ::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE);
 }
 
@@ -42,7 +48,7 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmx
 		const auto start_time = stdc::system_clock::now().time_since_epoch();
 		// TODO Fetch FPGA input data structure from iomanager and either lock or copy it
 		if (t->is_direct_mode) {
-			// TODO fetch and apply updates from FPGA
+			// TODO fetch and apply updates from FPGA, also send values to GUI
 		} else { // Direct mode
 			// TODO apply data from input structure on show.
 			if(auto sptr = iom->get_active_show(); sptr != nullptr) {

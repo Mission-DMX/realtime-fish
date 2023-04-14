@@ -20,13 +20,19 @@ namespace dmxfish::io {
 			std::shared_ptr<::ev::loop_ref> loop;
 			std::shared_ptr<GUI_Connection_Handler> gui_connections;
 			std::shared_ptr<dmxfish::execution::project_configuration> active_show = nullptr;
+			std::string latest_error;
 		public:
 			IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager = false);
 			~IOManager();
 			void start();
 			void push_msg_to_all_gui(google::protobuf::MessageLite&, uint32_t);
+
 			[[nodiscard]] inline std::shared_ptr<dmxfish::execution::project_configuration> get_active_show() {
 				return this->active_show;
+			}
+
+			[[nodiscard]] inline std::string get_latest_error() {
+				return this->latest_error;
 			}
 		private:
 			void run();
