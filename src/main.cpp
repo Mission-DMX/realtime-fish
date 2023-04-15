@@ -64,9 +64,11 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmx
 		const auto end_time = stdc::system_clock::now().time_since_epoch();
 
 		const auto cycle_time = (end_time - start_time);
-		push_updates_to_ui(t, iom, cycle_time.count());
+		const auto cycle_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(cycle_time).count();
+		push_updates_to_ui(t, iom, cycle_time_ms);
 
-		std::this_thread::sleep_for(stdc::milliseconds(18) - cycle_time);
+		if(cycle_time_ms < 18)
+			std::this_thread::sleep_for(stdc::milliseconds(18) - cycle_time);
 	}
 }
 
