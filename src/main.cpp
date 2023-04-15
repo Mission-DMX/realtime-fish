@@ -25,7 +25,7 @@
 
 
 
-void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxfish::io::IOManager> iom, int c_time) {
+void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxfish::io::IOManager> iom, unsigned long c_time) {
 	auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
 	msg->set_current_state(t->running?(t->is_direct_mode?(::missiondmx::fish::ipcmessages::RM_FILTER):(::missiondmx::fish::ipcmessages::RM_DIRECT)):(::missiondmx::fish::ipcmessages::RM_STOP));
 	msg->set_showfile_apply_state(iom->get_show_file_loading_state());
@@ -52,7 +52,12 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmx
 		} else { // Direct mode
 			// TODO apply data from input structure on show.
 			if(auto sptr = iom->get_active_show(); sptr != nullptr) {
-				sptr->run_cycle_update();
+				try {
+					sptr->run_cycle_update();
+				} catch (const std::exception& e) {
+					iom->set_latest_error(e.what());
+					iom->mark_show_file_execution_error();
+				}
 			}
 		}
 		// TODO Release input data structure if it was locked and not copied.

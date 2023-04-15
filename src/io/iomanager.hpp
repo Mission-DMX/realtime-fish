@@ -34,12 +34,20 @@ namespace dmxfish::io {
 				return this->active_show;
 			}
 
-			[[nodiscard]] inline std::string get_latest_error() {
+			[[nodiscard]] inline std::string get_latest_error() const {
 				return this->latest_error;
 			}
 
-			[[nodiscard]] inline ::missiondmx::fish::ipcmessages::ShowFileApplyState get_show_file_loading_state() {
+			[[nodiscard]] inline ::missiondmx::fish::ipcmessages::ShowFileApplyState get_show_file_loading_state() const {
 				return this->show_file_apply_state;
+			}
+
+			inline void set_latest_error(std::string error) {
+				this->latest_error = error;
+			}
+
+			inline void mark_show_file_execution_error() {
+				this->show_file_apply_state = ::missiondmx::fish::ipcmessages::SFAS_ERROR_SHOW_RUNNING;
 			}
 		private:
 			void run();

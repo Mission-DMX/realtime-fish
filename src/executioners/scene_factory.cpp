@@ -11,6 +11,7 @@
 #include "filters/filter_constants.hpp"
 #include "filters/filter_conversion.hpp"
 #include "filters/filter_debug_output.hpp"
+#include "filters/filter_universe_output.hpp"
 
 #include <iostream>
 
@@ -110,6 +111,9 @@ COMPILER_RESTORE("-Weffc++")
 				case filter_type::filter_multiply_add:
 					sum += sizeof(filter_multiply_add);
 					break;
+				case filter_type::filter_universe_output:
+					sum += sizeof(filter_universe_output);
+					break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -156,6 +160,8 @@ COMPILER_RESTORE("-Weffc++")
 				return calloc<filter_16bit_to_bool>(pac);
 			case filter_type::filter_multiply_add:
 				return calloc<filter_multiply_add>(pac);
+			case filter_type::filter_universe_output:
+				return calloc<filter_universe_output>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}

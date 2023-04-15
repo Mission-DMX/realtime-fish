@@ -55,6 +55,8 @@ COMPILER_SUPRESS("-Weffc++")
         }
 
         virtual  bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(_value);
             return false;
         }
 
