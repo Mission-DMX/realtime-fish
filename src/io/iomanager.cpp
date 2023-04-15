@@ -28,6 +28,7 @@
 #include "google/protobuf/io/zero_copy_stream.h"
 
 #include "io/universe_sender.hpp"
+#include "xml/show_files.hpp"
 
 namespace dmxfish::io {
 
@@ -294,7 +295,9 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 						client.write_message(*(msg_dmx_data.get()), ::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT);
 					}
 					else {
-						::spdlog::debug("did not find the universe with id: {}", msg->universe_id());
+						const auto error_msg = "did not find the universe with id: " + std::to_string(msg->universe_id());
+						this->latest_error = error_msg;
+						::spdlog::debug(error_msg);
 					}
 					return;
 				}
@@ -313,7 +316,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::load_show_file>();
 				if (msg->ParseFromZeroCopyStream(&client)){
 					using namespace missiondmx::fish::ipcmessages;
-					this->show_file_apply_state = SFAS_SHOW_LOADING;
+					this->show_file_apply_state = this->active_show == nullptr ? SFAS_SHOW_LOADING : SFAS_SHOW_UPDATING;
 					this->show_loading_thread = std::make_shared<std::thread>(std::bind(&IOManager::load_show_file, this, msg));
 				}
 				return;
@@ -321,6 +324,14 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER:
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::update_parameter>();
+				if (msg->ParseFromZeroCopyStream(&client)){
+					return;
+				}
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MGST_LOG_MESSAGE:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::long_log_update>();
 				if (msg->ParseFromZeroCopyStream(&client)){
 					return;
 				}
@@ -338,13 +349,43 @@ void IOManager::push_msg_to_all_gui(google::protobuf::MessageLite& msg, uint32_t
 
 void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::load_show_file> msg) {
 	using namespace missiondmx::fish::ipcmessages;
-	// TODO load project configuration with msg->show_data() in new thread and dispatch update code below
-	// TODO switch to new project configuration
-	this->show_file_apply_state = SFAS_SHOW_UPDATING;
-	if(msg->goto_default_scene()) {
-		this->active_show->set_active_scene(this->active_show->get_default_scene());
+	std::stringstream loading_result_stream;
+	bool success = false;
+	try {
+		std::istringstream istr(msg->show_data());
+		auto candidate = MissionDMX::ShowFile::bord_configuration(istr, xml_schema::flags::dont_validate);
+		loading_result_stream << "Show XML successfully parsed." << std::endl;
+		auto show_candidate = std::make_shared<dmxfish::execution::project_configuration>(std::move(candidate), loading_result_stream);
+		if(!msg->goto_default_scene()) {
+			const auto current_scene = this->active_show->get_active_scene();
+			loading_result_stream << "Switching to last active scene " << current_scene << "." << std::endl;
+			show_candidate->set_active_scene(current_scene);
+		}
+		this->active_show = show_candidate;
+		loading_result_stream << "Switched to new show." << std::endl;
+		success = true;
+	} catch (const xml_schema::exception& e) {
+		loading_result_stream << "\nAn error occurred while parsing the show file XML:" << std::endl;
+		loading_result_stream << e << std::endl;
+	} catch (const dmxfish::execution::project_config_exception& e) {
+		loading_result_stream << "\nAn error occurred while scheduling the filters:" << std::endl;
+		loading_result_stream << e.what() << std::endl;
 	}
-	this->show_file_apply_state = SFAS_SHOW_ACTIVE;
-
+	if(!success) {
+		if (this->active_show == nullptr) {
+			this->latest_error = "An error occurred while loading the show configuration. No show file is currently loaded. Please review the detailed log message.";
+			this->show_file_apply_state = SFAS_NO_SHOW_ERROR;
+		} else {
+			this->latest_error = "An error occurred while loading the new show configuration. The last successfully loaded configuration is still active. Please review the detailed log message.";
+			this->show_file_apply_state = SFAS_SHOW_ACTIVE;
+		}
+	} else {
+		this->show_file_apply_state = SFAS_SHOW_ACTIVE;
+	}
+	long_log_update log_msg;
+	log_msg.set_level(success ? LL_INFO : LL_ERROR);
+	log_msg.set_time_stamp(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+	log_msg.set_what(loading_result_stream.str());
+	this->push_msg_to_all_gui(log_msg, MGST_LOG_MESSAGE);
 }
 }
