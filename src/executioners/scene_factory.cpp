@@ -114,6 +114,15 @@ COMPILER_RESTORE("-Weffc++")
 				case filter_type::filter_universe_output:
 					sum += sizeof(filter_universe_output);
 					break;
+				case filter_type::filter_float_to_16bit:
+					sum += sizeof(filter_float_to_16bit);
+					break;
+				case filter_type::filter_float_to_8bit:
+					sum += sizeof(filter_float_to_8bit);
+					break;
+				case filter_type::filter_round_number:
+					sum += sizeof(filter_round_number);
+					break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -162,6 +171,12 @@ COMPILER_RESTORE("-Weffc++")
 				return calloc<filter_multiply_add>(pac);
 			case filter_type::filter_universe_output:
 				return calloc<filter_universe_output>(pac);
+			case filter_type::filter_float_to_16bit:
+				return calloc<filter_float_to_16bit>(pac);
+			case filter_type::filter_float_to_8bit:
+				return calloc<filter_float_to_8bit>(pac);
+			case filter_type::filter_round_number:
+				return calloc<filter_round_number>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}
