@@ -55,7 +55,7 @@ public:
 		return this->scenes[this->scene_id_mapping.at(show_id)].update_filter_parameter(filter_id, key, value);
 	}
 
-	void set_active_scene(unsigned int new_scene);
+	bool set_active_scene(unsigned int new_scene);
 
 	void run_cycle_update();
 };

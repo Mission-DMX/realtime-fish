@@ -32,10 +32,15 @@ project_configuration::project_configuration(std::unique_ptr<MissionDMX::ShowFil
 	logging_target << "Show file '" << this->get_name() << "' successfully loaded." << std::endl;
 }
 
-void project_configuration::set_active_scene(unsigned int new_scene) {
+bool project_configuration::set_active_scene(unsigned int new_scene) {
+	if(!this->scene_id_mapping.contains(new_scene)) {
+		return false;
+	}
+	const auto new_scene_index = this->scene_id_mapping.at(new_scene);
 	this->scenes[this->get_active_scene()].on_stop();
-	this->current_active_scene = new_scene;
+	this->current_active_scene = new_scene_index;
 	this->scenes[this->get_active_scene()].on_start();
+	return true;
 }
 
 void project_configuration::run_cycle_update() {

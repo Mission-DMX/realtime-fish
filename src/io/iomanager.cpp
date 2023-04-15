@@ -237,6 +237,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::button_state_change>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					// TODO implement
 					return;
 				}
 				return;
@@ -245,6 +246,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::fader_position>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					// TODO implement
 					return;
 				}
 				return;
@@ -253,6 +255,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::rotary_encoder_change>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					// TODO implement
 					return;
 				}
 				return;
@@ -305,8 +308,17 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			}
 		case ::missiondmx::fish::ipcmessages::MSGT_ENTER_SCENE:
 			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::enter_scene>();
+				auto msg = std::make_unique<missiondmx::fish::ipcmessages::enter_scene>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					if(this->active_show == nullptr) {
+						this->latest_error = "Request for scene switch couldn't be executed as there is currently no loaded scene.";
+						return;
+					} else {
+						const auto sid = msg->scene_id();
+						if(!this->active_show->set_active_scene(sid)) {
+							this->latest_error = "The requested scene id (" + std::to_string(sid) + ") was not found.";
+						}
+					}
 					return;
 				}
 				return;
@@ -347,6 +359,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::long_log_update>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					// TODO the GUI shouldn't send us log messages. What should we do with it?
 					return;
 				}
 				return;

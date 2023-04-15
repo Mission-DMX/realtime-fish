@@ -48,6 +48,7 @@ BOOST_AUTO_TEST_CASE(scheduler_test) {
 			v[1].invoke_filters();
 			v[1].on_stop();
 			// TODO catch spdlog output to search for correct output.
+			// TODO check that scene_index_map is correct
 		}
 	} catch (const xml_schema::exception& e) {
 		std::cerr << e << std::endl;
