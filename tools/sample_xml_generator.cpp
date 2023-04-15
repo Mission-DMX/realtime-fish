@@ -31,7 +31,7 @@ MissionDMX::ShowFile::Scene get_first_scene() {
 	filters[5].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_16bit:value"));
 
 	filters.emplace_back(6, "debug_float");
-	filters[6].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_float:value"));
+	filters[6].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "multiply_add_filter:value"));
 
 	filters.emplace_back(7, "debug_color");
 	filters[7].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_color:value"));
@@ -42,7 +42,14 @@ MissionDMX::ShowFile::Scene get_first_scene() {
 	filters.emplace_back(9, "conversion_16bit_to_bool");
 	filters[9].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_16bit:value"));
 
-	// TODO configure mac filter (10)
+	filters.emplace_back(10, "multiply_add_filter");
+	filters[10].channellink().push_back(MissionDMX::ShowFile::ChannelLink("factor1", "const_16bit:value"));
+	filters[10].channellink().push_back(MissionDMX::ShowFile::ChannelLink("factor2", "const_16bit:value"));
+	filters[10].channellink().push_back(MissionDMX::ShowFile::ChannelLink("summand", "const_16bit:value"));
+
+	filters.emplace_back(11, "universe_output");
+	filters[11].filterConfiguration().push_back(::MissionDMX::ShowFile::KeyValuePair("1", "input_1"));
+	filters[11].channellink().push_back(MissionDMX::ShowFile::ChannelLink("input_1", "const_8bit:value"));
 
 	for(const auto& f : filters)
 		s.filter().push_back(f);
