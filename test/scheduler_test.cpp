@@ -1,10 +1,12 @@
 #define BOOST_AUTO_TEST_MAIN
-#define BOOST_TEST_MODULE RMRF_TESTS
+#define BOOST_TEST_MODULE FISH_TESTS
 #include <boost/test/included/unit_test.hpp>
 
 #include <filesystem>
 #include <map>
 #include <memory>
+
+#include "io/universe_sender.hpp"
 
 #include "executioners/scene_factory.hpp"
 #include "lib/logging.hpp"
@@ -30,6 +32,10 @@ BOOST_AUTO_TEST_CASE(scheduler_test) {
 		std::unique_ptr<MissionDMX::ShowFile::BordConfiguration> bc = MissionDMX::ShowFile::bord_configuration("./test/test_bord_config.xml", xml_schema::flags::dont_validate);
 		std::cout << "Loaded XML file." << std::endl;
 
+		for(const auto& universe : bc->universe()) {
+			dmxfish::io::register_universe_from_xml(universe);
+		}
+
 		if(const auto res = dmxfish::execution::populate_scene_vector(v, bc->scene(), scene_index_map); ends_with(res.first, "\nDone.\n") && res.second) {
 			std::cout << "Parsing complete." << std::endl;
 		} else {
@@ -39,7 +45,7 @@ BOOST_AUTO_TEST_CASE(scheduler_test) {
 
 		BOOST_CHECK_EQUAL(v.size(), 2);
 		if(v.size() == 2) {
-			BOOST_CHECK_EQUAL(v[0].get_filter_count(), 8);
+			BOOST_CHECK_EQUAL(v[0].get_filter_count(), 12);
 			BOOST_CHECK_EQUAL(v[1].get_filter_count(), 0);
 			v[0].on_start();
 			v[0].invoke_filters();
@@ -49,6 +55,9 @@ BOOST_AUTO_TEST_CASE(scheduler_test) {
 			v[1].on_stop();
 			// TODO catch spdlog output to search for correct output.
 			// TODO check that scene_index_map is correct
+			auto test_universe = dmxfish::io::get_universe(1);
+			BOOST_CHECK_EQUAL((*test_universe)[2], 199);
+			BOOST_CHECK_EQUAL((*test_universe)[1], 0);
 		}
 	} catch (const xml_schema::exception& e) {
 		std::cerr << e << std::endl;
