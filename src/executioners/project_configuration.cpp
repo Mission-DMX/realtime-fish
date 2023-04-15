@@ -5,7 +5,7 @@
 
 namespace dmxfish::execution {
 
-project_configuration::project_configuration(std::unique_ptr<MissionDMX::ShowFile::BordConfiguration> show_file_dom, std::stringstream& logging_target) : scenes{}, universes{}, name{} {
+project_configuration::project_configuration(std::unique_ptr<MissionDMX::ShowFile::BordConfiguration> show_file_dom, std::stringstream& logging_target) : scenes{}, universes{}, name{}, scene_id_mapping{} {
 	if(const auto optional_name = show_file_dom->show_name(); optional_name.present()) {
 		this->name = optional_name.get();
 	} else {
@@ -16,7 +16,7 @@ project_configuration::project_configuration(std::unique_ptr<MissionDMX::ShowFil
 		this->universes.push_back(dmxfish::io::register_universe_from_xml(universe));
 	}
 
-	auto scene_loading_result = populate_scene_vector(this->scenes, show_file_dom->scene());
+	auto scene_loading_result = populate_scene_vector(this->scenes, show_file_dom->scene(), this->scene_id_mapping);
 	logging_target << "Scene scheduling results: " << (scene_loading_result.second ? "Success." : "Failed.") << " Logs:" << std::endl << scene_loading_result.first << std::endl;
 	if(!scene_loading_result.second) {
 		throw project_config_exception("Scheduling failed. Please review log.");

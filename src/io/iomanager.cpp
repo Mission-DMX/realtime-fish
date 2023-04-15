@@ -325,7 +325,21 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::update_parameter>();
 				if (msg->ParseFromZeroCopyStream(&client)){
-					return;
+					try {
+						if(this->active_show == nullptr) {
+							this->latest_error = "Requested to update filter parameter, but no show is loaded.";
+						} else {
+							const auto scene = msg->scene_id();
+							const auto fid = msg->filter_id();
+							const auto k = msg->parameter_key();
+							const auto v = msg->parameter_value();
+							if(!this->active_show->update_filter_parameter(scene, fid, k, v)) {
+								this->latest_error = "The requested filter (" + fid + " in scene " + std::to_string(scene) + ") reported that it failed to update the parameter " + k + " to " + v + ".";
+							}
+						}
+					} catch (const std::invalid_argument& e) {
+						this->latest_error = e.what();
+					}
 				}
 				return;
 			}
@@ -361,6 +375,7 @@ void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::lo
 			loading_result_stream << "Switching to last active scene " << current_scene << "." << std::endl;
 			show_candidate->set_active_scene(current_scene);
 		}
+		this->last_active_show = this->active_show;
 		this->active_show = show_candidate;
 		loading_result_stream << "Switched to new show." << std::endl;
 		success = true;

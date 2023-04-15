@@ -21,7 +21,7 @@ namespace dmxfish::io {
 			std::shared_ptr<runtime_state_t> run_time_state;
 			std::shared_ptr<::ev::loop_ref> loop;
 			std::shared_ptr<GUI_Connection_Handler> gui_connections;
-			std::shared_ptr<dmxfish::execution::project_configuration> active_show = nullptr;
+			std::shared_ptr<dmxfish::execution::project_configuration> active_show = nullptr, last_active_show = nullptr;
 			std::string latest_error;
 			::missiondmx::fish::ipcmessages::ShowFileApplyState show_file_apply_state = ::missiondmx::fish::ipcmessages::SFAS_INVALID;
 		public:

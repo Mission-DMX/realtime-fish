@@ -3,6 +3,7 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <filesystem>
+#include <map>
 #include <memory>
 
 #include "executioners/scene_factory.hpp"
@@ -20,6 +21,7 @@ BOOST_AUTO_TEST_CASE(scheduler_test) {
 	spdlog::set_level(spdlog::level::debug);
 	try {
 		std::vector<dmxfish::execution::scene> v;
+		std::map<int32_t, size_t> scene_index_map;
 		xml_schema::properties properties;
 		const auto cwd = std::filesystem::current_path().string();
 		properties.no_namespace_schema_location("file:///" + cwd + "/submodules/Docs/FormatSchemes/ProjectFile/ShowFile_v0.xsd");
@@ -28,7 +30,7 @@ BOOST_AUTO_TEST_CASE(scheduler_test) {
 		std::unique_ptr<MissionDMX::ShowFile::BordConfiguration> bc = MissionDMX::ShowFile::bord_configuration("./test/test_bord_config.xml", xml_schema::flags::dont_validate);
 		std::cout << "Loaded XML file." << std::endl;
 
-		if(const auto res = dmxfish::execution::populate_scene_vector(v, bc->scene()); ends_with(res.first, "\nDone.\n") && res.second) {
+		if(const auto res = dmxfish::execution::populate_scene_vector(v, bc->scene(), scene_index_map); ends_with(res.first, "\nDone.\n") && res.second) {
 			std::cout << "Parsing complete." << std::endl;
 		} else {
 			std::cout << "Parsing failed. (reported: " << (res.second == true ? "true" : "false") << ") Parsing log:" << std::endl;
