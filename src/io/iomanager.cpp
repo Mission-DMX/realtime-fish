@@ -106,16 +106,19 @@ IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_d
 		latest_error{"No Error occured"}
 
 {
+	this->loop_interrupter = std::make_unique<::ev::async>();
+	this->loop_interrupter->set<IOManager, &IOManager::cb_interrupt_async>(this);
 	if (is_default_manager) {
 		if(!check_version_libev())
 			throw std::runtime_error("Unable to initialize libev");
-		this->loop = std::make_shared<::ev::default_loop>();
+		this->loop = std::make_unique<::ev::default_loop>();
 	} else {
-		this->loop = std::make_shared<::ev::dynamic_loop>();
+		this->loop = std::make_unique<::ev::dynamic_loop>();
 	}
 	this->iothread = std::make_shared<std::thread>(std::bind(&IOManager::run, this));
 	const auto thread_id = std::hash<std::thread::id>{}(this->iothread->get_id());
 	::spdlog::debug("Started IO manager with loop on thread with id {}.", thread_id);
+	this->loop_interrupter->start();
 }
 
 void IOManager::start() {
@@ -123,11 +126,19 @@ void IOManager::start() {
 }
 
 IOManager::~IOManager() {
+	::spdlog::debug("Stopping IO manager");
 	this->running = false;
-	this->loop->break_loop(::ev::ALL);
+	this->loop_interrupter->send();
 	this->iothread->join();
-
+	this->loop_interrupter->stop();
 	::spdlog::debug("Stopped IO manager");
+}
+
+void IOManager::cb_interrupt_async(::ev::async& w, int events) {
+	MARK_UNUSED(w);
+	MARK_UNUSED(events);
+	::spdlog::debug("Loop interrupt triggered.");
+	this->loop->break_loop(::ev::ALL);
 }
 
 void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){

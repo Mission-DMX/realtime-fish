@@ -88,14 +88,16 @@ int main(int argc, char* argv[], char* env[]) {
 	auto run_time_state = std::make_shared<runtime_state_t>();
 
 	stdin_watcher sin_w([run_time_state](){
-		run_time_state->running = false;
-		::spdlog::info("Stopping server from keyboard now.");
+		if(run_time_state->running) {
+			run_time_state->running = false;
+			::spdlog::info("Stopping server from keyboard now.");
+		}
 	});
 	// dmxfish::io::IOManager manager(run_time_state, true);
 	auto manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
 
 	manager->start();
-
+	::spdlog::info("Fish started. Press ENTER to close the server.");
 
 	perform_main_update(run_time_state, manager);
 

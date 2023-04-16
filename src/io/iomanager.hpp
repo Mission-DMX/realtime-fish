@@ -19,7 +19,8 @@ namespace dmxfish::io {
 			bool running;
 			std::shared_ptr<std::thread> iothread, show_loading_thread;
 			std::shared_ptr<runtime_state_t> run_time_state;
-			std::shared_ptr<::ev::loop_ref> loop;
+			std::unique_ptr<::ev::loop_ref> loop;
+			std::unique_ptr<::ev::async> loop_interrupter;
 			std::shared_ptr<GUI_Connection_Handler> gui_connections;
 			std::shared_ptr<dmxfish::execution::project_configuration> active_show = nullptr, last_active_show = nullptr;
 			std::string latest_error;
@@ -53,5 +54,6 @@ namespace dmxfish::io {
 			void run();
 			void load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::load_show_file> msg);
 			void parse_message_cb(uint32_t, client_handler&);
+			void cb_interrupt_async(::ev::async& w, int events);
 	};
 }

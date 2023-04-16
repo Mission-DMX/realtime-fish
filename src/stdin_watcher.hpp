@@ -28,7 +28,7 @@ private:
     void cb(::ev::io &w, int events) {
         (void)w;
         (void)events;
-        //this->e_stdin.stop();
         this->icb();
+        this->e_stdin.stop();
     }
 };
