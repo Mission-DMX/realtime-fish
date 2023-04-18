@@ -123,6 +123,12 @@ COMPILER_RESTORE("-Weffc++")
 				case filter_type::filter_round_number:
 					sum += sizeof(filter_round_number);
 					break;
+				case filter_type::filter_pixel_to_rgb_channels:
+					sum += sizeof(filter_pixel_to_rgb_channels);
+					break;
+				case filter_type::filter_pixel_to_rgbw_channels:
+					sum += sizeof(filter_pixel_to_rgbw_channels);
+					break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -177,6 +183,10 @@ COMPILER_RESTORE("-Weffc++")
 				return calloc<filter_float_to_8bit>(pac);
 			case filter_type::filter_round_number:
 				return calloc<filter_round_number>(pac);
+			case filter_type::filter_pixel_to_rgb_channels:
+				return calloc<filter_pixel_to_rgb_channels>(pac);
+			case filter_type::filter_pixel_to_rgbw_channels:
+				return calloc<filter_pixel_to_rgbw_channels>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}
@@ -323,7 +333,7 @@ COMPILER_RESTORE("-Weffc++")
 	    return std::make_tuple(filters, boundries, pac, filter_index);
     }
 
-    [[nodiscard]] std::pair<std::string, bool> populate_scene_vector(std::vector<scene>& v, const MissionDMX::ShowFile::BordConfiguration::scene_sequence& ss, std::map<int32_t, size_t>& scene_index_map) {
+    [[nodiscard]] std::pair<std::string, bool> populate_scene_vector(std::vector<scene>& v, const MissionDMX::ShowFile::BordConfiguration::scene_sequence& ss, std::map<uint32_t, size_t>& scene_index_map) {
 		if(ss.size() == 0) {
 			return std::make_pair("There were no scenes defined. Skipping.", false);
 		}
@@ -341,7 +351,7 @@ COMPILER_RESTORE("-Weffc++")
 					std::get<3>(filter_tuple)
 				);
 				const auto last_index = v.size() - 1;
-				const auto sid = (stemplate.id().present() ? stemplate.id().get() : last_index);
+				const uint32_t sid = (uint32_t) (stemplate.id().present() ? stemplate.id().get() : last_index);
 				scene_index_map[sid] = last_index;
 			} catch (const ::dmxfish::filters::filter_config_exception& e) {
 				msg_stream << "Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;

@@ -179,5 +179,129 @@ COMPILER_SUPRESS("-Weffc++")
     using filter_float_to_16bit = filter_float_to_X_template<uint16_t>;
     using filter_float_to_8bit = filter_float_to_X_template<uint8_t>;
     using filter_round_number = filter_float_to_X_template<double>;
+
+    class filter_pixel_to_rgb_channels : public filter {
+    private:
+        dmxfish::dmx::pixel* input = nullptr;
+        uint8_t r = 0, g = 0, b = 0;
+    public:
+        filter_pixel_to_rgb_channels() : filter() {}
+        virtual ~filter_pixel_to_rgb_channels() {}
+
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+            MARK_UNUSED(initial_parameters);
+            MARK_UNUSED(configuration);
+            if(!input_channels.color_channels.contains("value")) {
+                throw filter_config_exception("Unable to link input of color to rgb filter: channel mapping does not contain channel 'value' of type 'color'.");
+            }
+            this->input = input_channels.color_channels.at("value");
+        }
+
+        virtual bool receive_update_from_gui(const std::string& key, const std::string& value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(value);
+            return false;
+        }
+
+        virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
+            map.eight_bit_channels[name + ":r"] = &r;
+            map.eight_bit_channels[name + ":g"] = &g;
+            map.eight_bit_channels[name + ":b"] = &b;
+        }
+
+        virtual void update() override {
+            double H = input->hue, S = input->saturation, I = input->iluminance;
+            H = std::fmod(H, 360);
+            H = 3.14159*H / (double) 180;
+            S = S>0 ? (S<1 ? S : 1) : 0;
+            I = I>0 ? (I<1 ? I : 1) : 0;
+
+            if(H < 2.09439) {
+                r = (uint8_t) std::round(255*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
+                g = (uint8_t) std::round(255*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
+                b = (uint8_t) std::round(255*I/3*(1-S));
+            } else if(H < 4.188787) {
+                H = H - 2.09439;
+                g = (uint8_t) std::round(255*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
+                b = (uint8_t) std::round(255*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
+                r = (uint8_t) std::round(255*I/3*(1-S));
+            } else {
+                H = H - 4.188787;
+                b = (uint8_t) std::round(255*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
+                r = (uint8_t) std::round(255*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
+                g = (uint8_t) std::round(255*I/3*(1-S));
+            }
+        }
+
+        virtual void scene_activated() override {}
+    };
+
+    class filter_pixel_to_rgbw_channels : public filter {
+    private:
+        dmxfish::dmx::pixel* input = nullptr;
+        uint8_t r = 0, g = 0, b = 0, w = 0;
+    public:
+        filter_pixel_to_rgbw_channels() : filter() {}
+        virtual ~filter_pixel_to_rgbw_channels() {}
+
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+            MARK_UNUSED(initial_parameters);
+            MARK_UNUSED(configuration);
+            if(!input_channels.color_channels.contains("value")) {
+                throw filter_config_exception("Unable to link input of color to rgbw filter: channel mapping does not contain channel 'value' of type 'color'.");
+            }
+            this->input = input_channels.color_channels.at("value");
+        }
+
+        virtual bool receive_update_from_gui(const std::string& key, const std::string& value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(value);
+            return false;
+        }
+
+        virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
+            map.eight_bit_channels[name + ":r"] = &r;
+            map.eight_bit_channels[name + ":g"] = &g;
+            map.eight_bit_channels[name + ":b"] = &b;
+            map.eight_bit_channels[name + ":w"] = &w;
+        }
+
+        virtual void update() override {
+            double H = input->hue, S = input->saturation, I = input->iluminance;
+            double cos_h, cos_1047_h;
+
+            H = std::fmod(H,360);
+            H = 3.14159*H/(double)180;
+            S = S>0 ? (S<1 ? S : 1) : 0;
+            I = I>0 ? (I<1 ? I : 1) : 0;
+
+            if(H < 2.09439) {
+                cos_h = std::cos(H);
+                cos_1047_h = std::cos(1.047196667-H);
+                r = (uint8_t) std::round(S*255*I / 3*(1+cos_h/cos_1047_h));
+                g = (uint8_t) std::round(S*255*I / 3*(1+(1-cos_h/cos_1047_h)));
+                b = 0;
+                w = (uint8_t) std::round(255*(1-S)*I);
+            } else if(H < 4.188787) {
+                H = H - 2.09439;
+                cos_h = std::cos(H);
+                cos_1047_h = std::cos(1.047196667-H);
+                g = (uint8_t) std::round(S*255*I / 3*(1+cos_h/cos_1047_h));
+                b = (uint8_t) std::round(S*255*I / 3*(1+(1-cos_h/cos_1047_h)));
+                r = 0;
+                w = (uint8_t) std::round(255*(1-S)*I);
+            } else {
+                H = H - 4.188787;
+                cos_h = std::cos(H);
+                cos_1047_h = std::cos(1.047196667-H);
+                b = (uint8_t) std::round(S*255*I / 3*(1+cos_h/cos_1047_h));
+                r = (uint8_t) std::round(S*255*I / 3*(1+(1-cos_h/cos_1047_h)));
+                g = 0;
+                w = (uint8_t) std::round(255*(1-S)*I);
+            }
+        }
+
+        virtual void scene_activated() override {}
+    };
 COMPILER_RESTORE("-Weffc++")
 }

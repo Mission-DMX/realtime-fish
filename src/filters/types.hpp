@@ -17,5 +17,8 @@ namespace dmxfish::filters {
         filter_float_to_16bit = 12,
         filter_float_to_8bit = 13,
         filter_round_number = 14,
+        filter_pixel_to_rgb_channels = 15,
+        filter_pixel_to_rgbw_channels = 16,
+        filter_pixel_to_rgbwa_channels = 17,
     };
 }
