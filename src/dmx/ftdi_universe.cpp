@@ -13,7 +13,7 @@ namespace dmxfish::dmx {
 
     // TODO implement function to query avaiable devices using libusb_get_device_list(ftdi.usb_ctx, ...)
 
-    ftdi_universe::ftdi_universe(const int _id, int vendor_id, int product_id, const std::string& name, const std::string& serial) : universe(_id, universe_type::FTDI), data{}, device_handle{} {
+    ftdi_universe::ftdi_universe(const int _id, const int vendor_id, const int product_id, const std::string& name, const std::string& serial) : universe(_id, universe_type::FTDI), data{}, device_handle{} {
         data[0] = START_MSG;
         data[1] = MSG_TYPE_SEND_DMX;
         data[2] = 0x04; // LSB of 16bit 512

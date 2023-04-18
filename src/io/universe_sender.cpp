@@ -1,5 +1,6 @@
 #include "universe_sender.hpp"
 
+#include <map>
 #include <vector>
 
 #include "dmx/ftdi_universe.hpp"
@@ -9,6 +10,7 @@
 namespace dmxfish::io {
 
 static artnet_handler _artnet_handler{"0.0.0.0"}; // TODO get external interface from configuration
+static std::map<std::string, std::shared_ptr<dmxfish::dmx::ftdi_universe>> dongle_map{};
 static std::vector<std::weak_ptr<dmxfish::dmx::universe>> active_universes;
 
 bool publish_universe_update(std::shared_ptr<dmxfish::dmx::universe> universe) {
@@ -87,6 +89,13 @@ std::shared_ptr<dmxfish::dmx::universe> register_universe_from_xml(const Mission
 		const auto& artnet_definition = universe.artnet_location().get();
 		const auto address = rmrf::net::get_first_general_socketaddr(artnet_definition.ip_address(), artnet_definition.udp_port());
 		u_ptr_candidate = _artnet_handler.get_or_create_universe(universe.id(), address, artnet_definition.device_universe_id());
+	} else if(universe.ftdi_location().present()) {
+		const auto& fdev = universe.ftdi_location().get();
+		if(dongle_map.contains(fdev.device_name())) {
+			return dongle_map.at(fdev.device_name());
+		}
+		u_ptr_candidate = std::make_shared<dmxfish::dmx::ftdi_universe>(universe.id(), fdev.vendor_id(), fdev.product_id(), fdev.device_name(), fdev.serial_identifier().present() ? fdev.serial_identifier().get() : "");
+		dongle_map[fdev.device_name()] = u_ptr_candidate;
 	} else {
 		// TODO other universe types are not yet implemented
 		return nullptr;

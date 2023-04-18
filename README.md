@@ -23,3 +23,8 @@ USB dmx adapters are bad. The better ones out there (for example the entec ones)
 Even those have bad timing properties and only support a small sub set of the DMX512 specification
 and should be avoided if a proper Art-Net node (albeit the entec ones are still better than some
 crap Art-Net nodes out there) can be used.
+
+##### Warning
+Interfacing with USB devices is always a synchronous operation. If your USB adapter is using
+a low speed interface (1.0, 1.1, 2.0, 3.0) this will significantly slow down the event loop!
+

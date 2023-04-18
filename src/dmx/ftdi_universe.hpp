@@ -28,7 +28,7 @@ namespace dmxfish::dmx {
         std::array<uint8_t, 512 + 6> data;
         bool device_successfully_opened = false;
     public:
-        ftdi_universe(const int _id, int vendor_id, int product_id, const std::string& name, const std::string& serial);
+        ftdi_universe(const int _id, const int vendor_id, const int product_id, const std::string& name, const std::string& serial);
 
         ~ftdi_universe();
 
