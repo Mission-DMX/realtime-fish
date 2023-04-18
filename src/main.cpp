@@ -27,7 +27,7 @@
 
 void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxfish::io::IOManager> iom, unsigned long c_time) {
 	auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
-	msg->set_current_state(t->running?(t->is_direct_mode?(::missiondmx::fish::ipcmessages::RM_FILTER):(::missiondmx::fish::ipcmessages::RM_DIRECT)):(::missiondmx::fish::ipcmessages::RM_STOP));
+	msg->set_current_state(t->running?(t->is_direct_mode?(::missiondmx::fish::ipcmessages::RM_DIRECT):(::missiondmx::fish::ipcmessages::RM_FILTER)):(::missiondmx::fish::ipcmessages::RM_STOP));
 	msg->set_showfile_apply_state(iom->get_show_file_loading_state());
 	if (t->is_direct_mode) {
 		msg->set_current_scene(-1);
@@ -36,7 +36,7 @@ void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxf
 	} else {
 		msg->set_current_scene(-2);
 	}
-	msg->set_last_cycle_time(c_time);
+	msg->set_last_cycle_time((int32_t) c_time);
 	msg->set_last_error(iom->get_latest_error());
 	iom->push_msg_to_all_gui(*msg.get(), ::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE);
 }

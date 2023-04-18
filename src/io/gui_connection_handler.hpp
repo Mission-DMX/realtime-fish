@@ -15,7 +15,6 @@ namespace dmxfish::io {
 		private:
 			std::shared_ptr<rmrf::net::unix_socket_server> external_control_server;
 			std::list<std::shared_ptr<client_handler>> clients;
-			// std::list<client_handler> clients;
 			client_handler::parse_message_cb_t message_cb;
 		public:
 			GUI_Connection_Handler(client_handler::parse_message_cb_t);

@@ -4,8 +4,7 @@
 
 #include "lib/logging.hpp"
 
-#include "../test/test_client_side.hpp"
-// #include "../test/test_message_buffer.hpp"
+#include "../test/server_handler.hpp"
 #include "io/universe_sender.hpp"
 #include "io/iomanager.hpp"
 
@@ -21,11 +20,12 @@
 
 using namespace dmxfish::io;
 
-void parse_message_cb(uint32_t msg_type, dmxfish::test::client_side& client){
+void parse_message_cb(uint32_t msg_type, dmxfish::test::server_handler& server){
+    auto buffer = server.get_zero_copy_input_stream();
 	int count = 0;
 	int size = 0;
 	uint8_t* data;
-	while(client.Next((const void**) &data, &size)){
+	while(buffer->Next((const void**) &data, &size)){
 		count += size;
 	}
 
@@ -38,19 +38,7 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 
 
 	spdlog::set_level(spdlog::level::debug);
-	
-	size_t test = 1;
-	spdlog::debug("Test1 : {}", test);
-	test--;
-	spdlog::debug("Test2 : {}", test);
-	test--;
-	spdlog::debug("Test3 : {}", test);
-	test++;
-	spdlog::debug("Test4 : {}", test);
-	test++;
-	spdlog::debug("Test5 : {}", test);
-	
-	
+
 
 	auto u = dmxfish::io::get_temporary_universe("10.15.0.1");
 
@@ -78,7 +66,7 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 
 	}
 
-	auto client_ha = std::make_shared<dmxfish::test::client_side>(std::bind(&parse_message_cb, std::placeholders::_1, std::placeholders::_2), std::move(client));
+	auto client_ha = std::make_shared<dmxfish::test::server_handler>(std::bind(&parse_message_cb, std::placeholders::_1, std::placeholders::_2), std::move(client));
 
 
 	auto msg_universe_init = std::make_shared<missiondmx::fish::ipcmessages::Universe>();
@@ -89,14 +77,18 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 	universe_inner->set_port(6454);
 	universe_inner->set_universe_on_device(1);
 
-	client_ha->write_message(*msg_universe_init.get(), ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE);
-
-
+    client_ha->write_message(*msg_universe_init.get(), ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE);
 
 	start_time = time(NULL);
+
 	while (time(NULL) < start_time+10) {
 
 	}
+
+
+    auto msg = std::make_shared<missiondmx::fish::ipcmessages::request_dmx_data>();
+    msg->set_universe_id(1);
+    client_ha->write_message(*msg.get(), ::missiondmx::fish::ipcmessages::MSGT_REQUEST_DMX_DATA);
 
 	auto msg_universe_direct = std::make_shared<missiondmx::fish::ipcmessages::dmx_output>();
 	msg_universe_direct->set_universe_id(1);
@@ -111,7 +103,7 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 
 	}
 
-	auto msg = std::make_shared<missiondmx::fish::ipcmessages::request_dmx_data>();
+	msg = std::make_shared<missiondmx::fish::ipcmessages::request_dmx_data>();
 	msg->set_universe_id(1);
 	client_ha->write_message(*msg.get(), ::missiondmx::fish::ipcmessages::MSGT_REQUEST_DMX_DATA);
 

@@ -1,4 +1,6 @@
 #include "io/iomanager.hpp"
+#include "dmx/universe.hpp"
+#include <cmath>
 
 #include <iomanip>
 #include <chrono>
@@ -34,7 +36,6 @@ namespace dmxfish::io {
 
 
 static void get_protobuf_msg_of_universe(missiondmx::fish::ipcmessages::Universe* universe_to_edit, std::shared_ptr<dmxfish::dmx::universe> universe_to_read){
-	// auto msg_universe = std::make_shared<missiondmx::fish::ipcmessages::Universe>();
 	universe_to_edit->set_id(universe_to_read->getID());
 
 	switch (universe_to_read->getUniverseType()) {
@@ -108,6 +109,7 @@ IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_d
 		show_loading_thread(nullptr),
 		run_time_state(run_time_state_),
 		loop(nullptr),
+        loop_interrupter(),
 		gui_connections(std::make_shared<GUI_Connection_Handler>(std::bind(&dmxfish::io::IOManager::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2))),
 		latest_error{"No Error occured"}
 
@@ -149,241 +151,281 @@ void IOManager::cb_interrupt_async(::ev::async& w, int events) {
 
 void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 	::spdlog::debug("Msg came in with type : {}", msg_type);
+    auto buffer = client.get_zero_copy_input_stream();
 	switch ((::missiondmx::fish::ipcmessages::MsgType) msg_type) {
 		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_STATE:
-			// change the running mode
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::update_state>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					switch (msg->new_state()) {
-						case ::missiondmx::fish::ipcmessages::RM_FILTER:
-							{
-								// this->run_time_state->running = true;
-								this->run_time_state->is_direct_mode = false;
-								break;
-							}
-						case ::missiondmx::fish::ipcmessages::RM_DIRECT:
-							{
-								// this->run_time_state->running = true;
-								this->run_time_state->is_direct_mode = true;
-								break;
-							}
-						case ::missiondmx::fish::ipcmessages::RM_STOP:
-							{
-								this->run_time_state->running = false;
-								break;
-							}
-						}
-					return;
-				}
-				return;
-			}
+        // change the running mode
+        {
+            auto msg = missiondmx::fish::ipcmessages::update_state();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                switch (msg.new_state()) {
+                    case ::missiondmx::fish::ipcmessages::RM_FILTER:
+                    {
+                        // this->run_time_state->running = true;
+                        this->run_time_state->is_direct_mode = false;
+                        break;
+                    }
+                    case ::missiondmx::fish::ipcmessages::RM_DIRECT:
+                    {
+                        // this->run_time_state->running = true;
+                        this->run_time_state->is_direct_mode = true;
+                        break;
+                    }
+                    case ::missiondmx::fish::ipcmessages::RM_STOP:
+                    {
+                        this->run_time_state->running = false;
+                        break;
+                    }
+                    case ::missiondmx::fish::ipcmessages::RunMode_INT_MIN_SENTINEL_DO_NOT_USE_:
+                    {
+                        ::spdlog::debug("IOManager Parse Message: MSGT_UPDATE_STATE: Used RunMode_INT_MIN_SENTINEL_DO_NOT_USE_ which should not be used");
+                        break;
+                    }
+                    case ::missiondmx::fish::ipcmessages::RunMode_INT_MAX_SENTINEL_DO_NOT_USE_:
+                    {
+                        ::spdlog::debug("IOManager Parse Message: MSGT_UPDATE_STATE: Used RunMode_INT_MAX_SENTINEL_DO_NOT_USE_ which should not be used");
+                        break;
+                    }
+                    default:
+                    {
+                        ::spdlog::debug("IOManager Parse Message: MSGT_UPDATE_STATE: Used Another unknown Run Mode Message");
+                        break;
+                    }
+                    }
+                return;
+            }
+            return;
+        }
 		case ::missiondmx::fish::ipcmessages::MSGT_CURRENT_STATE_UPDATE:
-			// load showfile and scene with that Message ?
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					return;
-				}
-				return;
-			}
+        // Todo: What to do with that message? load showfile and scene with that Message ?
+        {
+            auto msg = missiondmx::fish::ipcmessages::current_state_update();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                return;
+            }
+            return;
+        }
 		case ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE:
-			// register a new universe
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::Universe>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					dmxfish::io::register_universe_from_message(*msg.get());
-					return;
-				}
-				return;
-			}
+        // register a new universe
+        {
+            auto msg = missiondmx::fish::ipcmessages::Universe();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                dmxfish::io::register_universe_from_message(msg);
+                return;
+            }
+            return;
+        }
 		case ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE_LIST:
-			// register a list of universes
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::universes_list>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					for(int i = 0 ; i < msg->list_of_universes_size(); i++){
-						dmxfish::io::register_universe_from_message(msg->list_of_universes(i));
-					}
-					return;
-				}
-				return;
-			}
+        // register a list of universes
+        {
+            auto msg = missiondmx::fish::ipcmessages::universes_list();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                for(int i = 0 ; i < msg.list_of_universes_size(); i++){
+                    dmxfish::io::register_universe_from_message(msg.list_of_universes(i));
+                }
+                return;
+            }
+            return;
+        }
 		case ::missiondmx::fish::ipcmessages::MSGT_REQUEST_UNIVERSE_LIST:
-//			 send dmx data to UI (of one or multiple universes)
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::request_universe_list>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					if(msg->universe_id()<0){
-						auto universes = dmxfish::io::get_universe_list();
-						auto msg_universes = std::make_shared<missiondmx::fish::ipcmessages::universes_list>();
-						for (std::weak_ptr<dmxfish::dmx::universe> universe : universes){
-							if (universe.use_count()>0){
-								auto universe_to_write_to = msg_universes->add_list_of_universes();
-								dmxfish::io::get_protobuf_msg_of_universe(universe_to_write_to, universe.lock());
-							}
-						}
-						client.write_message(*msg_universes.get(), ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE_LIST);
+        // send dmx data to UI (of one or multiple universes)
+        {
+            auto msg = missiondmx::fish::ipcmessages::request_universe_list();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                if(msg.universe_id()<0){
+                    auto universes = dmxfish::io::get_universe_list();
+                    auto msg_universes = missiondmx::fish::ipcmessages::universes_list();
+                    for (std::weak_ptr<dmxfish::dmx::universe> universe : universes){
+                        if (universe.use_count()>0){
+                            auto universe_to_write_to = msg_universes.add_list_of_universes();
+                            dmxfish::io::get_protobuf_msg_of_universe(universe_to_write_to, universe.lock());
+                        }
+                    }
+                    client.write_message(msg_universes, ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE_LIST);
 
-					}else{
-						auto universe = dmxfish::io::get_universe(msg->universe_id());
-						if(universe){
-							auto universe_to_edit = missiondmx::fish::ipcmessages::Universe();
-							dmxfish::io::get_protobuf_msg_of_universe(&universe_to_edit, universe);
-							client.write_message(universe_to_edit, ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE);
-						}
-						else {
-							::spdlog::debug("did not find the universe with id: {}", msg->universe_id());
-						}
-					}
-					return;
-				}
-				return;
-			}
+                }else{
+                    auto universe = dmxfish::io::get_universe(msg.universe_id());
+                    if(universe){
+                        auto universe_msg = missiondmx::fish::ipcmessages::Universe();
+                        dmxfish::io::get_protobuf_msg_of_universe(&universe_msg, universe);
+                        client.write_message(universe_msg, ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE);
+                    }
+                    else {
+                        ::spdlog::debug("did not find the universe with id: {}", msg.universe_id());
+                    }
+                }
+                return;
+            }
+            return;
+        }
 		case ::missiondmx::fish::ipcmessages::MSGT_DELETE_UNIVERSE:
-			// deletes the universe
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::delete_universe>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					dmxfish::io::unregister_universe(msg->id());
-					return;
-				}
-				return;
-			}
+        // deletes the universe
+        {
+            auto msg = missiondmx::fish::ipcmessages::delete_universe();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                dmxfish::io::unregister_universe(msg.id());
+                return;
+            }
+            return;
+        }
 		case ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE:
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::button_state_change>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					// TODO implement
-					return;
-				}
-				return;
-			}
+        {
+            auto msg = missiondmx::fish::ipcmessages::button_state_change();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                // TODO implement
+                return;
+            }
+            return;
+        }
 		case ::missiondmx::fish::ipcmessages::MSGT_FADER_POSITION:
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::fader_position>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					// TODO implement
-					return;
-				}
-				return;
-			}
+        {
+            auto msg = missiondmx::fish::ipcmessages::fader_position();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                // TODO implement
+                return;
+            }
+            return;
+        }
 		case ::missiondmx::fish::ipcmessages::MSGT_ROTARY_ENCODER_CHANGE:
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::rotary_encoder_change>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					// TODO implement
-					return;
-				}
-				return;
-			}
+        {
+            auto msg = missiondmx::fish::ipcmessages::rotary_encoder_change();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                // TODO implement
+                return;
+            }
+            return;
+        }
 		case ::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT:
-			// if running mode is direct, update given universe
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::dmx_output>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					if (this->run_time_state->is_direct_mode){
-						auto universe = dmxfish::io::get_universe(msg->universe_id());
-						if(universe){
-							for (int i = 0; i< msg->channel_data_size() && i < 512; i++){
-								(*universe)[i] = msg->channel_data(i);
-							}
-						}
-						else {
-							::spdlog::debug("did not find the universe with id: {}", msg->universe_id());
-						}
-					}
-					return;
-				}
-				::spdlog::debug("could not parse msg of type: dmx_output");
-				return;
-			}
-		case ::missiondmx::fish::ipcmessages::MSGT_REQUEST_DMX_DATA:
-			// answer the request for the dmxdata
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::request_dmx_data>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					auto universe = dmxfish::io::get_universe(msg->universe_id());
-					// send universe back to UI
-					if(universe){
-						auto msg_dmx_data = std::make_shared<missiondmx::fish::ipcmessages::dmx_output>();
-						msg_dmx_data->set_universe_id(msg->universe_id());
-						msg_dmx_data->add_channel_data(1);
-						for (int j = 0; j<512; j++){
-							msg_dmx_data->add_channel_data((*universe)[j]);
-						}
-						client.write_message(*(msg_dmx_data.get()), ::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT);
-					}
-					else {
-						const auto error_msg = "did not find the universe with id: " + std::to_string(msg->universe_id());
-						this->latest_error = error_msg;
-						::spdlog::debug(error_msg);
-					}
-					return;
-				}
-				return;
-			}
+        // if running mode is direct, update given universe
+        {
+            auto msg = missiondmx::fish::ipcmessages::dmx_output();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                if (this->run_time_state->is_direct_mode){
+                    auto universe = dmxfish::io::get_universe(msg.universe_id());
+                    if(universe){
+                        for (int i = 0; i< msg.channel_data_size() && i < DMX_UNIVERSE_SIZE; i++){
+                            (*universe)[i] = (uint8_t) std::min(msg.channel_data(i), (int32_t) std::numeric_limits<uint8_t>::max());
+                        }
+                    }
+                    else {
+                        ::spdlog::debug("did not find the universe with id: {}", msg.universe_id());
+                    }
+                }
+                return;
+            }
+            ::spdlog::debug("could not parse msg of type: dmx_output");
+            return;
+        }
+        case ::missiondmx::fish::ipcmessages::MSGT_REQUEST_DMX_DATA:
+        // answer the request for the dmxdata
+        {
+            auto msg = missiondmx::fish::ipcmessages::request_dmx_data();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                auto universe = dmxfish::io::get_universe(msg.universe_id());
+                // send universe back to UI
+                if(universe){
+                    auto msg_dmx_data = missiondmx::fish::ipcmessages::dmx_output();
+                    msg_dmx_data.set_universe_id(msg.universe_id());
+                    msg_dmx_data.add_channel_data(1);
+                    for (int j = 0; j<DMX_UNIVERSE_SIZE; j++){
+                        msg_dmx_data.add_channel_data((*universe)[j]);
+                    }
+                    client.write_message(msg_dmx_data, ::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT);
+                }
+                else {
+                    const auto error_msg = "did not find the universe with id: " + std::to_string(msg.universe_id());
+                    this->latest_error = error_msg;
+                    ::spdlog::debug(error_msg);
+                }
+                return;
+            }
+            return;
+        }
 		case ::missiondmx::fish::ipcmessages::MSGT_ENTER_SCENE:
-			{
-				auto msg = std::make_unique<missiondmx::fish::ipcmessages::enter_scene>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					if(this->active_show == nullptr) {
-						this->latest_error = "Request for scene switch couldn't be executed as there is currently no loaded scene.";
-						return;
-					} else {
-						const auto sid = msg->scene_id();
-						if(!this->active_show->set_active_scene(sid)) {
-							this->latest_error = "The requested scene id (" + std::to_string(sid) + ") was not found.";
-						}
-					}
-					return;
-				}
-				return;
-			}
+        {
+            auto msg = missiondmx::fish::ipcmessages::enter_scene();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                if(this->active_show == nullptr) {
+                    this->latest_error = "Request for scene switch couldn't be executed as there is currently no loaded scene.";
+                    return;
+                } else {
+                    const auto sid = msg.scene_id();
+                    if(!this->active_show->set_active_scene(sid)) {
+                        this->latest_error = "The requested scene id (" + std::to_string(sid) + ") was not found.";
+                    }
+                }
+                return;
+            }
+            return;
+        }
 		case ::missiondmx::fish::ipcmessages::MSGT_LOAD_SHOW_FILE:
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::load_show_file>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					using namespace missiondmx::fish::ipcmessages;
-					this->show_file_apply_state = this->active_show == nullptr ? SFAS_SHOW_LOADING : SFAS_SHOW_UPDATING;
-					this->show_loading_thread = std::make_shared<std::thread>(std::bind(&IOManager::load_show_file, this, msg));
-				}
-				return;
-			}
+        {
+            auto msg = std::make_shared<missiondmx::fish::ipcmessages::load_show_file>();
+            if (msg->ParseFromZeroCopyStream(buffer)){
+                using namespace missiondmx::fish::ipcmessages;
+                this->show_file_apply_state = this->active_show == nullptr ? SFAS_SHOW_LOADING : SFAS_SHOW_UPDATING;
+                this->show_loading_thread = std::make_shared<std::thread>(std::bind(&IOManager::load_show_file, this, msg));
+            }
+            return;
+        }
 		case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER:
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::update_parameter>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					try {
-						if(this->active_show == nullptr) {
-							this->latest_error = "Requested to update filter parameter, but no show is loaded.";
-						} else {
-							const auto scene = msg->scene_id();
-							const auto fid = msg->filter_id();
-							const auto k = msg->parameter_key();
-							const auto v = msg->parameter_value();
-							if(!this->active_show->update_filter_parameter(scene, fid, k, v)) {
-								this->latest_error = "The requested filter (" + fid + " in scene " + std::to_string(scene) + ") reported that it failed to update the parameter " + k + " to " + v + ".";
-							}
-						}
-					} catch (const std::invalid_argument& e) {
-						this->latest_error = e.what();
-					}
-				}
-				return;
-			}
+        {
+            auto msg = missiondmx::fish::ipcmessages::update_parameter();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                try {
+                    if(this->active_show == nullptr) {
+                        this->latest_error = "Requested to update filter parameter, but no show is loaded.";
+                    } else {
+                        const auto scene = msg.scene_id();
+                        const auto fid = msg.filter_id();
+                        const auto k = msg.parameter_key();
+                        const auto v = msg.parameter_value();
+                        if(!this->active_show->update_filter_parameter(scene, fid, k, v)) {
+                            this->latest_error = "The requested filter (" + fid + " in scene " + std::to_string(scene) + ") reported that it failed to update the parameter " + k + " to " + v + ".";
+                        }
+                    }
+                } catch (const std::invalid_argument& e) {
+                    this->latest_error = e.what();
+                }
+            }
+            return;
+        }
 		case ::missiondmx::fish::ipcmessages::MGST_LOG_MESSAGE:
-			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::long_log_update>();
-				if (msg->ParseFromZeroCopyStream(&client)){
-					// TODO the GUI shouldn't send us log messages. What should we do with it?
-					return;
-				}
-				return;
-			}
+        {
+            auto msg = missiondmx::fish::ipcmessages::long_log_update();
+            if (msg.ParseFromZeroCopyStream(buffer)){
+                // TODO the GUI shouldn't send us log messages. What should we do with it?
+                return;
+            }
+            return;
+        }
+        case ::missiondmx::fish::ipcmessages::MSGT_NOTHING:
+        {
+            ::spdlog::debug("IOManager Parse Message: Used MSGT_NOTHING as Msg Type");
+            break;
+        }
+        case ::missiondmx::fish::ipcmessages::MsgType_INT_MIN_SENTINEL_DO_NOT_USE_:
+        {
+            ::spdlog::debug("IOManager Parse Message: Used MsgType_INT_MIN_SENTINEL_DO_NOT_USE_ as Msg Type");
+            break;
+        }
+        case ::missiondmx::fish::ipcmessages::MsgType_INT_MAX_SENTINEL_DO_NOT_USE_:
+        {
+            ::spdlog::debug("IOManager Parse Message: Used MsgType_INT_MAX_SENTINEL_DO_NOT_USE_ as Msg Type");
+            break;
+        }
 		default:
-				::spdlog::debug("Error: Got full message: C");
-				return;
+        {
+            ::spdlog::debug("IOManager Parse Message: Used a unknown Msg Type");
+            break;
+        }
+        int count = 0;
+        int size = 0;
+        uint8_t* data;
+        while(buffer->Next((const void**) &data, &size)){
+            count += size;
+        }
+        ::spdlog::debug("Not wanted Message had type {} and size {}", msg_type, count);
 	}
 }
 

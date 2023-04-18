@@ -8,11 +8,11 @@
 #include "rmrf-net/connection_client.hpp"
 #include "google/protobuf/message_lite.h"
 
-namespace dmxfish::io {
+namespace dmxfish::test {
 
-class client_handler{
+class server_handler{
 	public:
-		typedef std::function<void(uint32_t, client_handler&)> parse_message_cb_t;
+		typedef std::function<void(uint32_t, server_handler&)> parse_message_cb_t;
 	private:
 		enum internal_state_t{
 			NEXT_MSG,
@@ -24,9 +24,9 @@ class client_handler{
 		internal_state_t internal_state;
 		uint32_t msg_type;
 		uint32_t msg_length;
-        std::shared_ptr<client_input_buffer> input_buffer;
+        std::shared_ptr<dmxfish::io::client_input_buffer> input_buffer;
 	public:
-		client_handler(parse_message_cb_t found_message_cb_, std::shared_ptr<rmrf::net::connection_client>);
+		server_handler(parse_message_cb_t found_message_cb_, std::shared_ptr<rmrf::net::connection_client>);
 		void handle_messages();
         bool is_client_alive();
         void write_message(google::protobuf::MessageLite&, uint32_t);
@@ -34,6 +34,8 @@ class client_handler{
     private:
         void incomming_data_callback(const rmrf::net::iorecord&);
         int get_length_of_varint(size_t);
+//        void WriteVarint32(uint32_t);
+
 };
 
 }
