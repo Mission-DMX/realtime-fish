@@ -92,7 +92,13 @@ bool check_version_libev()
 void IOManager::run() {
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	::spdlog::debug("Entering ev defloop");
-	this->loop->run(0);
+	while(this->running) {
+		try {
+			this->loop->run(0);
+		} catch (const std::exception& e) {
+			::spdlog::error("Event loop crashed with exception: {}. Restarting event loop.", e.what());
+		}
+	}
 	::spdlog::debug("Leaving ev defloop");
 }
 
