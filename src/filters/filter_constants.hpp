@@ -48,7 +48,7 @@ namespace dmxfish::filters {
                     this->value.hue = std::stod(_value.substr(0, first_position));
                     const auto second_position = _value.find(",", first_position + 1);
                     this->value.saturation = std::stod(_value.substr(first_position + 1, second_position - first_position - 1));
-                    this->value.value = std::stod(_value.substr(second_position + 1));
+                    this->value.iluminance = std::stod(_value.substr(second_position + 1));
                 }
             } catch (const std::invalid_argument& ex) {
                 MARK_UNUSED(ex);

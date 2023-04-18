@@ -25,10 +25,10 @@ struct rgbwau_output_pixel : public rgb_output_pixel {
 struct pixel {
 	double hue;
 	double saturation;
-	double value;
+	double iluminance;
 
-	pixel () : hue(0.), saturation(0.), value(0.) {}
-	pixel (double h, double s, double v) : hue(h), saturation(s), value(v) {}
+	pixel () : hue(0.), saturation(0.), iluminance(0.) {}
+	pixel (double h, double s, double i) : hue(h), saturation(s), iluminance(i) {}
 
 	[[nodiscard]] std::string str();
 };

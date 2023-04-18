@@ -42,6 +42,7 @@ DEPFLAGS += `${PKG_TOOL} --cflags spdlog`
 LFLAGS += `${PKG_TOOL} --libs spdlog`
 LFLAGS += `${PKG_TOOL} --libs protobuf`
 LFLAGS += `${PKG_TOOL} --libs xerces-c`
+LFLAGS += `${PKG_TOOL} --libs fmt`
 CFLAGS += `${PKG_TOOL} --cflags xerces-c`
 
 CXXFLAGS_A_PROTO := ${CXXFLAGS}
@@ -161,7 +162,7 @@ ${BINDIR}/fish: ${SRCOBJS} ${OBJDIR}/librmrfnet.a ${OBJDIR}/libproto.a ${OBJDIR}
 ${TESTDIR}/%.ldflags:
 	touch $@
 
-${TESTBINDIR}/%: ${TESTOBJDIR}/%.o ${OBJECTS} Makefile ${TESTDIR}/%.ldflags
+${TESTBINDIR}/%: ${TESTOBJDIR}/%.o ${OBJECTS} Makefile ${TESTDIR}/%.ldflags all
 	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${TESTOBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS}  $< $(shell [ -r $(patsubst ${TESTOBJDIR}/%.o,${TESTDIR}/%.ldflags,$<) ] && cat $(patsubst ${TESTOBJDIR}/%.o,${TESTDIR}/%.ldflags,$<) ) ${OBJECTS} ${LFLAGS} -o $@ && touch $@
 
 ${TESTOBJDIR}/%.o: ${TESTDIR}/%.cpp ${DEPDIR}/%.d ${DEPDIR}/test Makefile
