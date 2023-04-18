@@ -333,7 +333,7 @@ COMPILER_RESTORE("-Weffc++")
 	    return std::make_tuple(filters, boundries, pac, filter_index);
     }
 
-    [[nodiscard]] std::pair<std::string, bool> populate_scene_vector(std::vector<scene>& v, const MissionDMX::ShowFile::BordConfiguration::scene_sequence& ss, std::map<uint32_t, size_t>& scene_index_map) {
+    [[nodiscard]] std::pair<std::string, bool> populate_scene_vector(std::vector<scene>& v, const MissionDMX::ShowFile::BordConfiguration::scene_sequence& ss, std::map<int32_t, size_t>& scene_index_map) {
 		if(ss.size() == 0) {
 			return std::make_pair("There were no scenes defined. Skipping.", false);
 		}
@@ -351,7 +351,7 @@ COMPILER_RESTORE("-Weffc++")
 					std::get<3>(filter_tuple)
 				);
 				const auto last_index = v.size() - 1;
-				const uint32_t sid = (uint32_t) (stemplate.id().present() ? stemplate.id().get() : last_index);
+				const int32_t sid = (int32_t) (stemplate.id().present() ? stemplate.id().get() : last_index);
 				scene_index_map[sid] = last_index;
 			} catch (const ::dmxfish::filters::filter_config_exception& e) {
 				msg_stream << "Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
