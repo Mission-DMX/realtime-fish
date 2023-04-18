@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <map>
+#include <stdexcept>
 #include <vector>
 
 #include "filters/filter.hpp"
@@ -13,16 +15,17 @@ namespace dmxfish::execution {
 
 using scene_filter_vector_t = std::vector<std::shared_ptr<dmxfish::filters::filter>>;
 using scene_boundry_vec_t = std::vector<size_t>;
+using scene_filter_index_t = std::map<std::string, std::weak_ptr<dmxfish::filters::filter>>;
 
 class scene {
 private:
 	const scene_filter_vector_t filters;
 	const scene_boundry_vec_t dependency_boundries;
 	const std::shared_ptr<LinearAllocator> used_allocator;
-	// TODO introduce std::map<std::string, std::shared_ptr<dmxfish::filters::filter>> for gui parameter updates
+	const scene_filter_index_t filter_index;
 public:
-	scene (scene_filter_vector_t f, scene_boundry_vec_t b, std::shared_ptr<LinearAllocator> alloc)
-		: filters(std::move(f)), dependency_boundries(std::move(b)), used_allocator(alloc) {
+	scene (scene_filter_vector_t f, scene_boundry_vec_t b, std::shared_ptr<LinearAllocator> alloc, scene_filter_index_t index)
+		: filters(std::move(f)), dependency_boundries(std::move(b)), used_allocator(alloc), filter_index(index) {
 		// The vectors are initialized
 	}
 
@@ -61,6 +64,18 @@ public:
 
 	[[nodiscard]] inline size_t get_filter_count() {
 		return this->filters.size();
+	}
+
+	[[nodiscard]] inline bool update_filter_parameter(const std::string& filter_id, const std::string& key, const std::string& value) {
+		if(!this->filter_index.contains(filter_id)) {
+			throw std::invalid_argument("The requested scene does not contain the requested filter '" + filter_id + "'.");
+		}
+		const auto fptr = this->filter_index.at(filter_id).lock();
+		if(fptr) {
+			return fptr->receive_update_from_gui(key, value);
+		} else {
+			return false;
+		}
 	}
 };
 

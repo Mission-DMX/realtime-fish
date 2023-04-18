@@ -10,7 +10,6 @@
 #include "proto_src/MessageTypes.pb.h"
 #include "proto_src/Console.pb.h"
 #include "proto_src/DirectMode.pb.h"
-#include "proto_src/FilterMode.pb.h"
 #include "proto_src/RealTimeControl.pb.h"
 #include "proto_src/UniverseControl.pb.h"
 #include "google/protobuf/io/zero_copy_stream.h"
@@ -29,6 +28,7 @@
 #include "google/protobuf/io/zero_copy_stream.h"
 
 #include "io/universe_sender.hpp"
+#include "xml/show_files.hpp"
 
 namespace dmxfish::io {
 
@@ -99,22 +99,26 @@ void IOManager::run() {
 IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager) :
 		running(true),
 		iothread(nullptr),
+		show_loading_thread(nullptr),
 		run_time_state(run_time_state_),
 		loop(nullptr),
 		gui_connections(std::make_shared<GUI_Connection_Handler>(std::bind(&dmxfish::io::IOManager::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2))),
 		latest_error{"No Error occured"}
 
 {
+	this->loop_interrupter = std::make_unique<::ev::async>();
+	this->loop_interrupter->set<IOManager, &IOManager::cb_interrupt_async>(this);
 	if (is_default_manager) {
 		if(!check_version_libev())
 			throw std::runtime_error("Unable to initialize libev");
-		this->loop = std::make_shared<::ev::default_loop>();
+		this->loop = std::make_unique<::ev::default_loop>();
 	} else {
-		this->loop = std::make_shared<::ev::dynamic_loop>();
+		this->loop = std::make_unique<::ev::dynamic_loop>();
 	}
 	this->iothread = std::make_shared<std::thread>(std::bind(&IOManager::run, this));
 	const auto thread_id = std::hash<std::thread::id>{}(this->iothread->get_id());
 	::spdlog::debug("Started IO manager with loop on thread with id {}.", thread_id);
+	this->loop_interrupter->start();
 }
 
 void IOManager::start() {
@@ -122,11 +126,19 @@ void IOManager::start() {
 }
 
 IOManager::~IOManager() {
+	::spdlog::debug("Stopping IO manager");
 	this->running = false;
-	this->loop->break_loop(::ev::ALL);
+	this->loop_interrupter->send();
 	this->iothread->join();
-
+	this->loop_interrupter->stop();
 	::spdlog::debug("Stopped IO manager");
+}
+
+void IOManager::cb_interrupt_async(::ev::async& w, int events) {
+	MARK_UNUSED(w);
+	MARK_UNUSED(events);
+	::spdlog::debug("Loop interrupt triggered.");
+	this->loop->break_loop(::ev::ALL);
 }
 
 void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
@@ -236,6 +248,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::button_state_change>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					// TODO implement
 					return;
 				}
 				return;
@@ -244,6 +257,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::fader_position>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					// TODO implement
 					return;
 				}
 				return;
@@ -252,6 +266,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::rotary_encoder_change>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					// TODO implement
 					return;
 				}
 				return;
@@ -294,7 +309,9 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 						client.write_message(*(msg_dmx_data.get()), ::missiondmx::fish::ipcmessages::MSGT_DMX_OUTPUT);
 					}
 					else {
-						::spdlog::debug("did not find the universe with id: {}", msg->universe_id());
+						const auto error_msg = "did not find the universe with id: " + std::to_string(msg->universe_id());
+						this->latest_error = error_msg;
+						::spdlog::debug(error_msg);
 					}
 					return;
 				}
@@ -302,8 +319,17 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			}
 		case ::missiondmx::fish::ipcmessages::MSGT_ENTER_SCENE:
 			{
-				auto msg = std::make_shared<missiondmx::fish::ipcmessages::enter_scene>();
+				auto msg = std::make_unique<missiondmx::fish::ipcmessages::enter_scene>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					if(this->active_show == nullptr) {
+						this->latest_error = "Request for scene switch couldn't be executed as there is currently no loaded scene.";
+						return;
+					} else {
+						const auto sid = msg->scene_id();
+						if(!this->active_show->set_active_scene(sid)) {
+							this->latest_error = "The requested scene id (" + std::to_string(sid) + ") was not found.";
+						}
+					}
 					return;
 				}
 				return;
@@ -312,7 +338,9 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::load_show_file>();
 				if (msg->ParseFromZeroCopyStream(&client)){
-					return;
+					using namespace missiondmx::fish::ipcmessages;
+					this->show_file_apply_state = this->active_show == nullptr ? SFAS_SHOW_LOADING : SFAS_SHOW_UPDATING;
+					this->show_loading_thread = std::make_shared<std::thread>(std::bind(&IOManager::load_show_file, this, msg));
 				}
 				return;
 			}
@@ -320,6 +348,29 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 			{
 				auto msg = std::make_shared<missiondmx::fish::ipcmessages::update_parameter>();
 				if (msg->ParseFromZeroCopyStream(&client)){
+					try {
+						if(this->active_show == nullptr) {
+							this->latest_error = "Requested to update filter parameter, but no show is loaded.";
+						} else {
+							const auto scene = msg->scene_id();
+							const auto fid = msg->filter_id();
+							const auto k = msg->parameter_key();
+							const auto v = msg->parameter_value();
+							if(!this->active_show->update_filter_parameter(scene, fid, k, v)) {
+								this->latest_error = "The requested filter (" + fid + " in scene " + std::to_string(scene) + ") reported that it failed to update the parameter " + k + " to " + v + ".";
+							}
+						}
+					} catch (const std::invalid_argument& e) {
+						this->latest_error = e.what();
+					}
+				}
+				return;
+			}
+		case ::missiondmx::fish::ipcmessages::MGST_LOG_MESSAGE:
+			{
+				auto msg = std::make_shared<missiondmx::fish::ipcmessages::long_log_update>();
+				if (msg->ParseFromZeroCopyStream(&client)){
+					// TODO the GUI shouldn't send us log messages. What should we do with it?
 					return;
 				}
 				return;
@@ -332,5 +383,48 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 
 void IOManager::push_msg_to_all_gui(google::protobuf::MessageLite& msg, uint32_t msg_type){
 	this->gui_connections->push_msg_to_all_gui(msg, msg_type);
+}
+
+void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::load_show_file> msg) {
+	using namespace missiondmx::fish::ipcmessages;
+	std::stringstream loading_result_stream;
+	bool success = false;
+	try {
+		std::istringstream istr(msg->show_data());
+		auto candidate = MissionDMX::ShowFile::bord_configuration(istr, xml_schema::flags::dont_validate);
+		loading_result_stream << "Show XML successfully parsed." << std::endl;
+		auto show_candidate = std::make_shared<dmxfish::execution::project_configuration>(std::move(candidate), loading_result_stream);
+		if(!msg->goto_default_scene()) {
+			const auto current_scene = this->active_show->get_active_scene();
+			loading_result_stream << "Switching to last active scene " << current_scene << "." << std::endl;
+			show_candidate->set_active_scene(current_scene);
+		}
+		this->last_active_show = this->active_show;
+		this->active_show = show_candidate;
+		loading_result_stream << "Switched to new show." << std::endl;
+		success = true;
+	} catch (const xml_schema::exception& e) {
+		loading_result_stream << "\nAn error occurred while parsing the show file XML:" << std::endl;
+		loading_result_stream << e << std::endl;
+	} catch (const dmxfish::execution::project_config_exception& e) {
+		loading_result_stream << "\nAn error occurred while scheduling the filters:" << std::endl;
+		loading_result_stream << e.what() << std::endl;
+	}
+	if(!success) {
+		if (this->active_show == nullptr) {
+			this->latest_error = "An error occurred while loading the show configuration. No show file is currently loaded. Please review the detailed log message.";
+			this->show_file_apply_state = SFAS_NO_SHOW_ERROR;
+		} else {
+			this->latest_error = "An error occurred while loading the new show configuration. The last successfully loaded configuration is still active. Please review the detailed log message.";
+			this->show_file_apply_state = SFAS_SHOW_ACTIVE;
+		}
+	} else {
+		this->show_file_apply_state = SFAS_SHOW_ACTIVE;
+	}
+	long_log_update log_msg;
+	log_msg.set_level(success ? LL_INFO : LL_ERROR);
+	log_msg.set_time_stamp(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+	log_msg.set_what(loading_result_stream.str());
+	this->push_msg_to_all_gui(log_msg, MGST_LOG_MESSAGE);
 }
 }

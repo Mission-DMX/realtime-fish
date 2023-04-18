@@ -25,10 +25,10 @@
 
 
 
-void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxfish::io::IOManager> iom, int c_time) {
+void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxfish::io::IOManager> iom, unsigned long c_time) {
 	auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
 	msg->set_current_state(t->running?(t->is_direct_mode?(::missiondmx::fish::ipcmessages::RM_FILTER):(::missiondmx::fish::ipcmessages::RM_DIRECT)):(::missiondmx::fish::ipcmessages::RM_STOP));
-	msg->set_showfile_apply_state(::missiondmx::fish::ipcmessages::SFAS_INVALID);
+	msg->set_showfile_apply_state(iom->get_show_file_loading_state());
 	if (t->is_direct_mode) {
 		msg->set_current_scene(-1);
 	} else if(auto s = iom->get_active_show(); s != nullptr) {
@@ -52,7 +52,12 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmx
 		} else { // Direct mode
 			// TODO apply data from input structure on show.
 			if(auto sptr = iom->get_active_show(); sptr != nullptr) {
-				sptr->run_cycle_update();
+				try {
+					sptr->run_cycle_update();
+				} catch (const std::exception& e) {
+					iom->set_latest_error(e.what());
+					iom->mark_show_file_execution_error();
+				}
 			}
 		}
 		// TODO Release input data structure if it was locked and not copied.
@@ -64,9 +69,11 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmx
 		const auto end_time = stdc::system_clock::now().time_since_epoch();
 
 		const auto cycle_time = (end_time - start_time);
-		push_updates_to_ui(t, iom, cycle_time.count());
+		const auto cycle_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(cycle_time).count();
+		push_updates_to_ui(t, iom, cycle_time_ms);
 
-		std::this_thread::sleep_for(stdc::milliseconds(18) - cycle_time);
+		if(cycle_time_ms < 18)
+			std::this_thread::sleep_for(stdc::milliseconds(18) - cycle_time);
 	}
 }
 
@@ -81,14 +88,16 @@ int main(int argc, char* argv[], char* env[]) {
 	auto run_time_state = std::make_shared<runtime_state_t>();
 
 	stdin_watcher sin_w([run_time_state](){
-		run_time_state->running = false;
-		::spdlog::info("Stopping server from keyboard now.");
+		if(run_time_state->running) {
+			run_time_state->running = false;
+			::spdlog::info("Stopping server from keyboard now.");
+		}
 	});
 	// dmxfish::io::IOManager manager(run_time_state, true);
 	auto manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
 
 	manager->start();
-
+	::spdlog::info("Fish started. Press ENTER to close the server.");
 
 	perform_main_update(run_time_state, manager);
 

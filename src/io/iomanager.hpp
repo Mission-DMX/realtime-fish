@@ -9,18 +9,22 @@
 #include "io/gui_connection_handler.hpp"
 #include "io/client_handler.hpp"
 
+#include "proto_src/FilterMode.pb.h"
+
 namespace dmxfish::io {
 
 	class IOManager : public std::enable_shared_from_this<IOManager> {
 
 		private:
 			bool running;
-			std::shared_ptr<std::thread> iothread;
+			std::shared_ptr<std::thread> iothread, show_loading_thread;
 			std::shared_ptr<runtime_state_t> run_time_state;
-			std::shared_ptr<::ev::loop_ref> loop;
+			std::unique_ptr<::ev::loop_ref> loop;
+			std::unique_ptr<::ev::async> loop_interrupter;
 			std::shared_ptr<GUI_Connection_Handler> gui_connections;
-			std::shared_ptr<dmxfish::execution::project_configuration> active_show = nullptr;
+			std::shared_ptr<dmxfish::execution::project_configuration> active_show = nullptr, last_active_show = nullptr;
 			std::string latest_error;
+			::missiondmx::fish::ipcmessages::ShowFileApplyState show_file_apply_state = ::missiondmx::fish::ipcmessages::SFAS_INVALID;
 		public:
 			IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager = false);
 			~IOManager();
@@ -31,11 +35,25 @@ namespace dmxfish::io {
 				return this->active_show;
 			}
 
-			[[nodiscard]] inline std::string get_latest_error() {
+			[[nodiscard]] inline std::string get_latest_error() const {
 				return this->latest_error;
+			}
+
+			[[nodiscard]] inline ::missiondmx::fish::ipcmessages::ShowFileApplyState get_show_file_loading_state() const {
+				return this->show_file_apply_state;
+			}
+
+			inline void set_latest_error(std::string error) {
+				this->latest_error = error;
+			}
+
+			inline void mark_show_file_execution_error() {
+				this->show_file_apply_state = ::missiondmx::fish::ipcmessages::SFAS_ERROR_SHOW_RUNNING;
 			}
 		private:
 			void run();
+			void load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::load_show_file> msg);
 			void parse_message_cb(uint32_t, client_handler&);
+			void cb_interrupt_async(::ev::async& w, int events);
 	};
 }
