@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "dmx/ftdi_universe.hpp"
 #include "io/artnet_handler.hpp"
 #include "net/sock_address_factory.hpp"
 
@@ -11,9 +12,16 @@ static artnet_handler _artnet_handler{"0.0.0.0"}; // TODO get external interface
 static std::vector<std::weak_ptr<dmxfish::dmx::universe>> active_universes;
 
 bool publish_universe_update(std::shared_ptr<dmxfish::dmx::universe> universe) {
-	if (universe->getUniverseType() == dmxfish::dmx::universe_type::ARTNET) {
-		_artnet_handler.push_universe(*(static_cast<dmxfish::dmx::artnet_universe*>(universe.get())));
-		return true;
+	switch (universe->getUniverseType()) {
+		case dmxfish::dmx::universe_type::ARTNET:
+			_artnet_handler.push_universe(*(static_cast<dmxfish::dmx::artnet_universe*>(universe.get())));
+			return true;
+		case dmxfish::dmx::universe_type::PHYSICAL:
+			return false;
+		case dmxfish::dmx::universe_type::sACN:
+			return false;
+		case dmxfish::dmx::universe_type::FTDI:
+			return static_cast<dmxfish::dmx::ftdi_universe*>(universe.get())->send_data();
 	}
 	return false;
 }

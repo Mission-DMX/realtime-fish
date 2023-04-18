@@ -43,7 +43,11 @@ LFLAGS += `${PKG_TOOL} --libs spdlog`
 LFLAGS += `${PKG_TOOL} --libs protobuf`
 LFLAGS += `${PKG_TOOL} --libs xerces-c`
 LFLAGS += `${PKG_TOOL} --libs fmt`
+LFLAGS += `${PKG_TOOL} --libs libusb`
+LFLAGS += `${PKG_TOOL} --libs libftdi`
 CFLAGS += `${PKG_TOOL} --cflags xerces-c`
+CFLAGS += `${PKG_TOOL} --cflags libusb`
+CFLAGS += `${PKG_TOOL} --cflags libftdi`
 
 CXXFLAGS_A_PROTO := ${CXXFLAGS}
 # CXXFLAGS += -Werror

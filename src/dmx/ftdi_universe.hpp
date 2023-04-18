@@ -1,12 +1,27 @@
 #pragma once
 
 #include <array>
+#include <exception>
 #include <ftdi.h>
 #include <string>
+#include <sstream>
 
 #include "dmx/universe.hpp"
 
 namespace dmxfish::dmx {
+
+    class ftdi_exception : public std::exception {
+    private:
+        std::string cause;
+    public:
+        ftdi_exception(const std::string& failed_operation, ftdi_context& c) {
+            std::stringstream ss;
+            ss << failed_operation << " Cause: " << ftdi_get_error_string(&c);
+            cause = ss.str();
+        }
+        virtual const char* what() const throw () {return cause.c_str();}
+    };
+
     class ftdi_universe : public universe {
     private:
         ftdi_context device_handle;
@@ -29,8 +44,8 @@ namespace dmxfish::dmx {
 			return this->data.end() - 1;
 		}
 
-		void send_data();
+		bool send_data();
     private:
         bool close_device();
-    }
+    };
 }
