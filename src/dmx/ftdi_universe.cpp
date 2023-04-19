@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dmx/ftdi_universe.hpp"
+#include "lib/logging.hpp"
 
 #include <unistd.h>
 #include <sstream>
