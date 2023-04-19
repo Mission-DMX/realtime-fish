@@ -7,6 +7,8 @@
 
 #define START_MSG 0x7E
 #define MSG_TYPE_SEND_DMX 0x06
+#define MSG_TYPE_RECV_IN_DMX 0x05
+#define MSG_TYPE_SEND_DMX_PORT_2 0xA9
 #define END_MSG 0xE7
 
 namespace dmxfish::dmx {
@@ -14,10 +16,13 @@ namespace dmxfish::dmx {
     // TODO implement function to query avaiable devices using libusb_get_device_list(ftdi.usb_ctx, ...)
 
     ftdi_universe::ftdi_universe(const int _id, const int vendor_id, const int product_id, const std::string& name, const std::string& serial) : universe(_id, universe_type::FTDI), data{}, device_handle{} {
+	for(auto& x : data) {
+		x = 0;
+	}
         data[0] = START_MSG;
         data[1] = MSG_TYPE_SEND_DMX;
-        data[2] = 0x04; // LSB of 16bit 512
-        data[3] = 0x00; // MSB of 16bit 512
+        data[2] = (uint8_t) ((512 + 1) & 0xff); // LSB of 16bit 512
+        data[3] = (uint8_t) (((512 + 1) >> 8) & 0xff); // MSB of 16bit 512
         data[4] = 0x00; // Start of DMX payload
         data[512+1] = END_MSG;
 
