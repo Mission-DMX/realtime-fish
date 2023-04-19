@@ -12,6 +12,7 @@
 #include "filters/filter_conversion.hpp"
 #include "filters/filter_debug_output.hpp"
 #include "filters/filter_universe_output.hpp"
+#include "filters/filter_trigonometric.hpp"
 
 #include <iostream>
 
