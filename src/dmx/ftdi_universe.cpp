@@ -21,6 +21,8 @@ namespace dmxfish::dmx {
         data[4] = 0x00; // Start of DMX payload
         data[512+1] = END_MSG;
 
+	// TODO maybe use unique_ptr with ftdi_new and ftdi_free as default deleter
+
         // open device
         if(ftdi_init(&device_handle) < 0) {
             // TODO do something with error
