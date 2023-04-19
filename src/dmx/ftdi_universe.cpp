@@ -35,42 +35,35 @@ namespace dmxfish::dmx {
         // reset device
         if (ftdi_usb_reset(device_handle.get()) < 0) {
             throw ftdi_exception("Failed to reset USB device.", std::move(device_handle));
-            close_device();
         }
 
         // set line properties
         if (ftdi_set_line_property(device_handle.get(), BITS_8, STOP_BIT_2, NONE) < 0) {
             throw ftdi_exception("Failed to set FTDI device line mode.", std::move(device_handle));
-            close_device();
         }
 
         // set flow control
         if (ftdi_setflowctrl(device_handle.get(), SIO_DISABLE_FLOW_CTRL) < 0) {
             throw ftdi_exception("Failed to set FTDI device flow control.", std::move(device_handle));
-            close_device();
         }
 
         if (ftdi_set_baudrate(device_handle.get(), 250000) < 0) {
             throw ftdi_exception("Failed to set FTDI device baud rate.", std::move(device_handle));
-            close_device();
         }
 
         // clear RTS
         if(ftdi_setrts(device_handle.get(), 0) < 0) {
             throw ftdi_exception("Failed to clear FTDI device RTS flag.", std::move(device_handle));
-            close_device();
         }
 
         // purge buffers
 #if defined(LIBFTDI1_5)
         if (ftdi_tcioflush(device_handle.get()) < 0) {
             throw ftdi_exception("Failed to perform an TCIO flush on FTDI device.", std::move(device_handle));
-            close_device();
         }
 #else
         if (ftdi_usb_purge_buffers(device_handle.get()) < 0) {
             throw ftdi_exception("Failed to reset FTDI device buffers.", std::move(device_handle));
-            close_device();
         }
 #endif
 
