@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <sstream>
 
+#include "lib/logging.php"
+
 #define START_MSG 0x7E
 #define MSG_TYPE_SEND_DMX 0x06
 #define MSG_TYPE_RECV_IN_DMX 0x05
@@ -35,7 +37,6 @@ namespace dmxfish::dmx {
         if (ftdi_usb_open_desc(device_handle.get(), vendor_id, product_id, name.length() > 0 ? name.c_str() : nullptr, serial.length() > 0 ? serial.c_str() : nullptr) < 0) {
             throw ftdi_exception("Failed to open USB device.", std::move(device_handle));
         }
-        // TODO do we need to query the latency timer?
 
         // reset device
         if (ftdi_usb_reset(device_handle.get()) < 0) {
@@ -103,12 +104,24 @@ namespace dmxfish::dmx {
             throw ftdi_exception("Failed to configure port mode on Enttec USB DMX Pro.", std::move(device_handle));
         }
 
+	if(unsigned char latency = 0; ftdi_get_latency_timer(device_handle.get(), &latency) >= 0) {
+	    ::spdlog::info("FTDI Device latency: {}", latency);
+	}
+
         device_successfully_opened = true;
     }
 
     ftdi_universe::~ftdi_universe() {}
 
     bool ftdi_universe::send_data() {
+	std::array<unsigned char, 80> read_buf;
+	if(auto read = ftdi_read_data(device_handle.get(), read_buf.data(), read_buf.size()); read > 0) {
+		std::stringstream ss;
+		for(auto i = 0; i < read, i++){
+			ss << read_buf[i];
+		}
+		::spdlog::debug("FTDI device reported: {}", ss.str());
+	}
         //return !(ftdi_write_data(device_handle.get(), this->data.data(), (int) this->data.size()) < 0);
 	std::array<uint8_t, 10> dbg_data = {START_MSG, MSG_TYPE_SEND_DMX, ((4) & 0xff), (((4) >> 8) & 0xff), 0x00, 128, 128, 128, 128, END_MSG};
 	return ftdi_write_data(device_handle.get(), dbg_data.data(), dbg_data.size()) >= 0;
