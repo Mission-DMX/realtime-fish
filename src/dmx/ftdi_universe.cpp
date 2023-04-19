@@ -110,7 +110,7 @@ namespace dmxfish::dmx {
 
     bool ftdi_universe::send_data() {
         //return !(ftdi_write_data(device_handle.get(), this->data.data(), (int) this->data.size()) < 0);
-	std::array<uint8_t, 8> dbg_data = {START_MSG, MSG_TYPE_SEND_DMX, ((4 + 1) & 0xff), (((4 + 1) >> 8) & 0xff), 0x00, 128, 128, 128, 128, END_MSG};
+	std::array<uint8_t, 10> dbg_data = {START_MSG, MSG_TYPE_SEND_DMX, ((4 + 1) & 0xff), (((4 + 1) >> 8) & 0xff), 0x00, 128, 128, 128, 128, END_MSG};
 	return ftdi_write_data(device_handle.get(), dbg_data.data(), dbg_data.size()) >= 0;
     }
 }
