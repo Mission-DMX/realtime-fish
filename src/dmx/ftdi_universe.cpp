@@ -27,7 +27,7 @@ namespace dmxfish::dmx {
 	}
 
         // connect
-        if (ftdi_usb_open_desc(device_handle.get(), vendor_id, product_id, name.c_str(), serial.length() > 0 ? serial.c_str() : nullptr) < 0) {
+        if (ftdi_usb_open_desc(device_handle.get(), vendor_id, product_id, name.length() > 0 ? name.c_str() : nullptr, serial.length() > 0 ? serial.c_str() : nullptr) < 0) {
             throw ftdi_exception("Failed to open USB device.", std::move(device_handle));
         }
         // TODO do we need to query the latency timer?
