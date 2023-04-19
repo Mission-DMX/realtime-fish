@@ -5,6 +5,7 @@
 
 #include "dmx/ftdi_universe.hpp"
 #include "io/artnet_handler.hpp"
+#include "lib/logging.hpp"
 #include "net/sock_address_factory.hpp"
 
 namespace dmxfish::io {
@@ -86,6 +87,7 @@ std::shared_ptr<dmxfish::dmx::universe> register_universe_from_message(const mis
 		const auto u = std::make_shared<dmxfish::dmx::ftdi_universe>(u_dev.id(), usb_definition.vendor_id(), usb_definition.product_id(), usb_definition.device_name(), usb_definition.serial());
 		dongle_map[u_dev.id()] = u;
 		u_ptr_candidate = u;
+		::spdlog::debug("Created FTDI universe from protobuf.");
 		_artnet_handler.unlink_universe(u_dev.id());
 	} else {
 		// TODO local universes are not yet implemented
@@ -112,6 +114,7 @@ std::shared_ptr<dmxfish::dmx::universe> register_universe_from_xml(const Mission
 		const auto c = std::make_shared<dmxfish::dmx::ftdi_universe>(universe.id(), fdev.vendor_id(), fdev.product_id(), fdev.device_name(), fdev.serial_identifier().present() ? fdev.serial_identifier().get() : "");
 		dongle_map[universe.id()] = c;
 		u_ptr_candidate = c;
+		::spdlog::debug("Created FTDI universe from xml.");
 		_artnet_handler.unlink_universe(universe.id());
 	} else {
 		// TODO other universe types are not yet implemented
