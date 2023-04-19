@@ -52,9 +52,9 @@ namespace dmxfish::dmx {
             throw ftdi_exception("Failed to set FTDI device flow control.", std::move(device_handle));
         }
 
-        if (ftdi_set_baudrate(device_handle.get(), 250000) < 0) {
-            throw ftdi_exception("Failed to set FTDI device baud rate.", std::move(device_handle));
-        }
+        //if (ftdi_set_baudrate(device_handle.get(), 250000) < 0) {
+        //    throw ftdi_exception("Failed to set FTDI device baud rate.", std::move(device_handle));
+        //}
 
         // clear RTS
         if(ftdi_setrts(device_handle.get(), 0) < 0) {
@@ -109,6 +109,8 @@ namespace dmxfish::dmx {
     ftdi_universe::~ftdi_universe() {}
 
     bool ftdi_universe::send_data() {
-        return !(ftdi_write_data(device_handle.get(), this->data.data(), (int) this->data.size()) < 0);
+        //return !(ftdi_write_data(device_handle.get(), this->data.data(), (int) this->data.size()) < 0);
+	std::array<uint8_t, 8> dbg_data = {START_MSG, MSG_TYPE_SEND_DMX, ((4 + 1) & 0xff), (((4 + 1) >> 8) & 0xff), 0x00, 128, 128, 128, 128, END_MSG};
+	return ftdi_write_data(device_handle.get(), dbg_data.data(), dbg_data.size()) >= 0;
     }
 }
