@@ -75,6 +75,9 @@ std::shared_ptr<dmxfish::dmx::universe> register_universe_from_message(const mis
 		const auto& artnet_definition = u_dev.remote_location();
 		const auto address = rmrf::net::get_first_general_socketaddr(artnet_definition.ip_address(), artnet_definition.port());
 		u_ptr_candidate = _artnet_handler.get_or_create_universe(u_dev.id(), address, artnet_definition.universe_on_device());
+		if(dongle_map.contains(u_dev.id())) {
+			dongle_map.erase(u_dev.id());
+		}
 	} else if(u_dev.has_ftdi_dongle()) {
 		const auto& usb_definition = u_dev.ftdi_dongle();
 		if(dongle_map.contains(u_dev.id())) {
@@ -83,6 +86,7 @@ std::shared_ptr<dmxfish::dmx::universe> register_universe_from_message(const mis
 		const auto u = std::make_shared<dmxfish::dmx::ftdi_universe>(u_dev.id(), usb_definition.vendor_id(), usb_definition.product_id(), usb_definition.device_name(), usb_definition.serial());
 		dongle_map[u_dev.id()] = u;
 		u_ptr_candidate = u;
+		_artnet_handler.unlink_universe(u_dev.id());
 	} else {
 		// TODO local universes are not yet implemented
 		return nullptr;
@@ -97,6 +101,9 @@ std::shared_ptr<dmxfish::dmx::universe> register_universe_from_xml(const Mission
 		const auto& artnet_definition = universe.artnet_location().get();
 		const auto address = rmrf::net::get_first_general_socketaddr(artnet_definition.ip_address(), artnet_definition.udp_port());
 		u_ptr_candidate = _artnet_handler.get_or_create_universe(universe.id(), address, artnet_definition.device_universe_id());
+		if(dongle_map.contains(universe.id())) {
+			dongle_map.erase(universe.id());
+		}
 	} else if(universe.ftdi_location().present()) {
 		const auto& fdev = universe.ftdi_location().get();
 		if(dongle_map.contains(universe.id())) {
@@ -105,6 +112,7 @@ std::shared_ptr<dmxfish::dmx::universe> register_universe_from_xml(const Mission
 		const auto c = std::make_shared<dmxfish::dmx::ftdi_universe>(universe.id(), fdev.vendor_id(), fdev.product_id(), fdev.device_name(), fdev.serial_identifier().present() ? fdev.serial_identifier().get() : "");
 		dongle_map[universe.id()] = c;
 		u_ptr_candidate = c;
+		_artnet_handler.unlink_universe(universe.id());
 	} else {
 		// TODO other universe types are not yet implemented
 		return nullptr;
@@ -133,6 +141,9 @@ std::forward_list<std::weak_ptr<dmxfish::dmx::universe>> get_universe_list() {
 }
 
 std::shared_ptr<dmxfish::dmx::universe> get_universe(const int id) {
+	if (dongle_map.contains(id)) {
+		return dongle_map.at(id);
+	}
 	return _artnet_handler.get_universe(id);
 }
 
