@@ -102,7 +102,7 @@ namespace dmxfish::dmx {
             END_MSG
         };
         if(ftdi_write_data(device_handle.get(), set_dmx_message.data(), set_dmx_message.size()) < 0) {
-            throw ftdi_exception("Failed to configure port mode on Enttec USB DMX Pro.");
+            throw ftdi_exception("Failed to configure port mode on Enttec USB DMX Pro.", std::move(device_handle));
         }
 
         device_successfully_opened = true;
