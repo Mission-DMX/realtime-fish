@@ -20,5 +20,6 @@ namespace dmxfish::filters {
         filter_pixel_to_rgb_channels = 15,
         filter_pixel_to_rgbw_channels = 16,
         filter_pixel_to_rgbwa_channels = 17,
+	filter_floats_to_pixel = 18,
     };
 }

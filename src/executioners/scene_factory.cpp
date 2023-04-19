@@ -129,6 +129,9 @@ COMPILER_RESTORE("-Weffc++")
 				case filter_type::filter_pixel_to_rgbw_channels:
 					sum += sizeof(filter_pixel_to_rgbw_channels);
 					break;
+				case filter_type::filter_floats_to_pixel:
+					sum += sizeof(filter_floats_to_pixel);
+					break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -187,6 +190,8 @@ COMPILER_RESTORE("-Weffc++")
 				return calloc<filter_pixel_to_rgb_channels>(pac);
 			case filter_type::filter_pixel_to_rgbw_channels:
 				return calloc<filter_pixel_to_rgbw_channels>(pac);
+			case filter_type::filter_floats_to_pixel:
+				return calloc<filter_floats_to_pixel>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}
