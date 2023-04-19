@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sstream>
 
-#include "lib/logging.php"
+#include "lib/logging.hpp"
 
 #define START_MSG 0x7E
 #define MSG_TYPE_SEND_DMX 0x06
@@ -75,7 +75,7 @@ namespace dmxfish::dmx {
 
 
         // Enable device
-        std::array<uint8_t, 9> enable_device_message = {
+        std::array<unsigned char, 9> enable_device_message = {
             START_MSG,
             0x0D, // Enable Write Mode
             0x04, // max universe length LSB
@@ -91,7 +91,7 @@ namespace dmxfish::dmx {
         }
 
         // Configure DMX mode. (chip also supports MIDI but it is disabled in enttec custom firmware in order to sell a separate device)
-        std::array<uint8_t, 7> set_dmx_message = {
+        std::array<unsigned char, 7> set_dmx_message = {
             START_MSG,
             0xCB, // Port configuration message
             0x02, // length of message LSB
@@ -108,6 +108,11 @@ namespace dmxfish::dmx {
 	    ::spdlog::info("FTDI Device latency: {}", latency);
 	}
 
+	std::array<uint8_t, 5> serial_read_msg = {START_MSG, 0x0A, 0x00, 0x00, END_MSG};
+	if(ftdi_write_data(device_handle.get(), serial_read_msg.data(), serial_read_msg.size()) < 0) {
+            throw ftdi_exception("Failed to send serial number read request to Enttec USB DMX Pro.", std::move(device_handle));
+        }
+
         device_successfully_opened = true;
     }
 
@@ -117,13 +122,13 @@ namespace dmxfish::dmx {
 	std::array<unsigned char, 80> read_buf;
 	if(auto read = ftdi_read_data(device_handle.get(), read_buf.data(), read_buf.size()); read > 0) {
 		std::stringstream ss;
-		for(auto i = 0; i < read, i++){
-			ss << read_buf[i];
+		for(auto i = 0; i < read; i++){
+			ss << (int) read_buf[i] << " ";
 		}
 		::spdlog::debug("FTDI device reported: {}", ss.str());
 	}
         //return !(ftdi_write_data(device_handle.get(), this->data.data(), (int) this->data.size()) < 0);
-	std::array<uint8_t, 10> dbg_data = {START_MSG, MSG_TYPE_SEND_DMX, ((4) & 0xff), (((4) >> 8) & 0xff), 0x00, 128, 128, 128, 128, END_MSG};
+	std::array<unsigned char, 10> dbg_data = {START_MSG, MSG_TYPE_SEND_DMX, ((4) & 0xff), (((4) >> 8) & 0xff), 0x00, 128, 128, 128, 128, END_MSG};
 	return ftdi_write_data(device_handle.get(), dbg_data.data(), dbg_data.size()) >= 0;
     }
 }
