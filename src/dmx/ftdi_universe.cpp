@@ -1,7 +1,6 @@
 #pragma once
 
 #include "dmx/ftdi_universe.hpp"
-#include "lib/logging.hpp"
 
 #include <unistd.h>
 #include <sstream>
@@ -105,12 +104,6 @@ namespace dmxfish::dmx {
     ftdi_universe::~ftdi_universe() {}
 
     bool ftdi_universe::send_data() {
-        if(ftdi_write_data(device_handle.get(), this->data.data(), (int) this->data.size()) < 0) {
-		::spdlog::debug("Failed to write universe to FTDI device.");
-		return false;
-	} else {
-		::spdlog::debug("FTDI dmx data write succeeded.");
-		return true;
-	}
+        return !(ftdi_write_data(device_handle.get(), this->data.data(), (int) this->data.size()) < 0);
     }
 }
