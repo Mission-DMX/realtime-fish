@@ -21,9 +21,9 @@ namespace dmxfish::dmx {
         data[4] = 0x00; // Start of DMX payload
         data[512+1] = END_MSG;
 
-	this->device_handle = std::make_unique<ftdi_context, ftdi_deleter>(ftdi_new());
+	this->device_handle = device_ptr_t(ftdi_new());
 	if(this->device_handle == nullptr) {
-		throw std::exception("Memory allocation error while using ftdi_new.");
+		throw std::invalid_argument("Memory allocation error while using ftdi_new.");
 	}
 
         // connect
@@ -104,6 +104,6 @@ namespace dmxfish::dmx {
     ftdi_universe::~ftdi_universe() {}
 
     bool ftdi_universe::send_data() {
-        return !(ftdi_write_data(device_handle.get(), this->data.data(), this->data.size()) < 0);
+        return !(ftdi_write_data(device_handle.get(), this->data.data(), (int) this->data.size()) < 0);
     }
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include <exception>
+#include <stdexcept>
 #include <ftdi.h>
 #include <memory>
 #include <string>
@@ -11,11 +11,22 @@
 
 namespace dmxfish::dmx {
 
+    struct ftdi_deleter {
+	    void operator()(ftdi_context* p) {
+		    if (p->usb_dev != nullptr) {
+		    	ftdi_usb_close(p);
+		    }
+		    ftdi_free(p);
+	    }
+    };
+
+    using device_ptr_t = std::unique_ptr<ftdi_context, ftdi_deleter>; 
+
     class ftdi_exception : public std::exception {
     private:
         std::string cause;
     public:
-        ftdi_exception(const std::string& failed_operation, std::unique_ptr<ftdi_context> c) {
+        ftdi_exception(const std::string& failed_operation, device_ptr_t c) {
             std::stringstream ss;
             ss << failed_operation << " Cause: " << ftdi_get_error_string(c.get());
             cause = ss.str();
@@ -23,18 +34,9 @@ namespace dmxfish::dmx {
         virtual const char* what() const throw () {return cause.c_str();}
     };
 
-    struct ftdi_deleter {
-	    void operator()(ftdi_context* p) {
-		    if (p->usb_dev != nullptr) {
-		    	ftdi_usb_close(p.get());
-		    }
-		    ftdi_free(p);
-	    }
-    };
-
     class ftdi_universe : public universe {
     private:
-	    std::unique_ptr<ftdi_context, ftdi_deleter> device_handle;
+	device_ptr_t device_handle;
         std::array<uint8_t, 512 + 6> data;
         bool device_successfully_opened = false;
     public:
