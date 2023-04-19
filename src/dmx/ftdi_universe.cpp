@@ -21,57 +21,55 @@ namespace dmxfish::dmx {
         data[4] = 0x00; // Start of DMX payload
         data[512+1] = END_MSG;
 
-	// TODO maybe use unique_ptr with ftdi_new and ftdi_free as default deleter
-
-        // open device
-        if(ftdi_init(&device_handle) < 0) {
-            // TODO do something with error
-        }
+	this->device_handle = std::make_unique<ftdi_context, ftdi_deleter>(ftdi_new());
+	if(this->device_handle == nullptr) {
+		throw std::exception("Memory allocation error while using ftdi_new.");
+	}
 
         // connect
-        if (ftdi_usb_open_desc(&device_handle, vendor_id, product_id, name.c_str(), serial.length() > 0 ? serial.c_str() : nullptr) < 0) {
-            throw ftdi_exception("Failed to open USB device.", device_handle);
+        if (ftdi_usb_open_desc(device_handle.get(), vendor_id, product_id, name.c_str(), serial.length() > 0 ? serial.c_str() : nullptr) < 0) {
+            throw ftdi_exception("Failed to open USB device.", std::move(device_handle));
         }
         // TODO do we need to query the latency timer?
 
         // reset device
-        if (ftdi_usb_reset(&device_handle) < 0) {
-            throw ftdi_exception("Failed to reset USB device.", device_handle);
+        if (ftdi_usb_reset(device_handle.get()) < 0) {
+            throw ftdi_exception("Failed to reset USB device.", std::move(device_handle));
             close_device();
         }
 
         // set line properties
-        if (ftdi_set_line_property(&device_handle, BITS_8, STOP_BIT_2, NONE) < 0) {
-            throw ftdi_exception("Failed to set FTDI device line mode.", device_handle);
+        if (ftdi_set_line_property(device_handle.get(), BITS_8, STOP_BIT_2, NONE) < 0) {
+            throw ftdi_exception("Failed to set FTDI device line mode.", std::move(device_handle));
             close_device();
         }
 
         // set flow control
-        if (ftdi_setflowctrl(&device_handle, SIO_DISABLE_FLOW_CTRL) < 0) {
-            throw ftdi_exception("Failed to set FTDI device flow control.", device_handle);
+        if (ftdi_setflowctrl(device_handle.get(), SIO_DISABLE_FLOW_CTRL) < 0) {
+            throw ftdi_exception("Failed to set FTDI device flow control.", std::move(device_handle));
             close_device();
         }
 
-        if (ftdi_set_baudrate(&device_handle, 250000) < 0) {
-            throw ftdi_exception("Failed to set FTDI device baud rate.", device_handle);
+        if (ftdi_set_baudrate(device_handle.get(), 250000) < 0) {
+            throw ftdi_exception("Failed to set FTDI device baud rate.", std::move(device_handle));
             close_device();
         }
 
         // clear RTS
-        if(ftdi_setrts(&device_handle, 0) < 0) {
-            throw ftdi_exception("Failed to clear FTDI device RTS flag.", device_handle);
+        if(ftdi_setrts(device_handle.get(), 0) < 0) {
+            throw ftdi_exception("Failed to clear FTDI device RTS flag.", std::move(device_handle));
             close_device();
         }
 
         // purge buffers
 #if defined(LIBFTDI1_5)
-        if (ftdi_tcioflush(&device_handle) < 0) {
-            throw ftdi_exception("Failed to perform an TCIO flush on FTDI device.", device_handle);
+        if (ftdi_tcioflush(device_handle.get()) < 0) {
+            throw ftdi_exception("Failed to perform an TCIO flush on FTDI device.", std::move(device_handle));
             close_device();
         }
 #else
-        if (ftdi_usb_purge_buffers(&device_handle) < 0) {
-            throw ftdi_exception("Failed to reset FTDI device buffers.", device_handle);
+        if (ftdi_usb_purge_buffers(device_handle.get()) < 0) {
+            throw ftdi_exception("Failed to reset FTDI device buffers.", std::move(device_handle));
             close_device();
         }
 #endif
@@ -89,8 +87,8 @@ namespace dmxfish::dmx {
             0xC8, // documented as "WTF ?!?"
             END_MSG
         };
-        if(ftdi_write_data(&device_handle, enable_device_message.data(), enable_device_message.size()) < 0) {
-            // TODO
+        if(ftdi_write_data(device_handle.get(), enable_device_message.data(), enable_device_message.size()) < 0) {
+            throw ftdi_exception("Failed to enable write mode on Enttec USB DMX Pro.", std::move(device_handle));
         }
 
         // Configure DMX mode. (chip also supports MIDI but it is disabled in enttec custom firmware in order to sell a separate device)
@@ -103,28 +101,16 @@ namespace dmxfish::dmx {
             0x01, // configure mode of port 2 to DMX
             END_MSG
         };
-        if(ftdi_write_data(&device_handle, set_dmx_message.data(), set_dmx_message.size()) < 0) {
-            // TODO
+        if(ftdi_write_data(device_handle.get(), set_dmx_message.data(), set_dmx_message.size()) < 0) {
+            throw ftdi_exception("Failed to configure port mode on Enttec USB DMX Pro.");
         }
 
         device_successfully_opened = true;
     }
 
-    ftdi_universe::~ftdi_universe() {
-        if(device_successfully_opened) {
-            close_device();
-        }
-        ftdi_deinit(&device_handle);
-    }
+    ftdi_universe::~ftdi_universe() {}
 
     bool ftdi_universe::send_data() {
-        return !(ftdi_write_data(&device_handle, this->data.data(), this->data.size()) < 0);
-    }
-
-    bool ftdi_universe::close_device() {
-        if(ftdi_usb_close(&device_handle) < 0) {
-            // TODO log error using ftdi_get_error_string(&device_handle)
-            return false;
-        }
+        return !(ftdi_write_data(device_handle.get(), this->data.data(), this->data.size()) < 0);
     }
 }

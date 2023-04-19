@@ -3,6 +3,7 @@
 #include <array>
 #include <exception>
 #include <ftdi.h>
+#include <memory>
 #include <string>
 #include <sstream>
 
@@ -14,17 +15,26 @@ namespace dmxfish::dmx {
     private:
         std::string cause;
     public:
-        ftdi_exception(const std::string& failed_operation, ftdi_context& c) {
+        ftdi_exception(const std::string& failed_operation, std::unique_ptr<ftdi_context> c) {
             std::stringstream ss;
-            ss << failed_operation << " Cause: " << ftdi_get_error_string(&c);
+            ss << failed_operation << " Cause: " << ftdi_get_error_string(c.get());
             cause = ss.str();
         }
         virtual const char* what() const throw () {return cause.c_str();}
     };
 
+    struct ftdi_deleter {
+	    void operator()(ftdi_context* p) {
+		    if (p->usb_dev != nullptr) {
+		    	ftdi_usb_close(p.get());
+		    }
+		    ftdi_free(p);
+	    }
+    };
+
     class ftdi_universe : public universe {
     private:
-        ftdi_context device_handle;
+	    std::unique_ptr<ftdi_context, ftdi_deleter> device_handle;
         std::array<uint8_t, 512 + 6> data;
         bool device_successfully_opened = false;
     public:
@@ -45,7 +55,5 @@ namespace dmxfish::dmx {
 		}
 
 		bool send_data();
-    private:
-        bool close_device();
     };
 }
