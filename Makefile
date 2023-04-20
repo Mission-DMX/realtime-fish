@@ -130,7 +130,7 @@ test: ${TEST_TARGETS} all
 		$$a; \
 	done
 
-tools: ${BINDIR}/tools/sample_xml_generator
+tools: ${BINDIR}/tools/sample_xml_generator ${BINDIR}/tools/ftdi_test
 	echo Created tools.
 
 ${PROTO_SRCDIR}/%.pb.cc: ${PROTO_DEFDIR}/%.proto Makefile
@@ -181,6 +181,9 @@ ${BINDIR}/tools/sample_xml_generator: Makefile ${XMLTREE_DEFDIR}/ShowFile_v0.xsd
 	${MKDIR} ${@D} && ${MKDIR} tools/generator-tmp && cd tools/generator-tmp && \
 	${XSDTOOL} cxx-tree ${XSD_ARGS} --generate-serialization ../../${XMLTREE_DEFDIR}/ShowFile_v0.xsd && cd ../.. && \
 	${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/sample_xml_generator.cpp tools/generator-tmp/ShowFile_v0.xml.cpp ${LFLAGS} -o $@
+
+${BINDIR}/tools/ftdi_test: ${OBJDIR}/dmx/ftdi_universe.o
+	${MKDIR} ${@D} && ${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/ftdi_test.cpp $^ ${LFLAGS} -o $@
 
 ${DEPDIR}/test:
 	${MKDIR} ${DEPDIR}/test

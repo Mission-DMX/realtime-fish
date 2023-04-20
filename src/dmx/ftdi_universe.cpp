@@ -23,15 +23,15 @@ namespace dmxfish::dmx {
 	}
         data[0] = START_MSG;
         data[1] = MSG_TYPE_SEND_DMX;
-        data[2] = (uint8_t) ((512 + 1) & 0xff); // LSB of 16bit 512
-        data[3] = (uint8_t) (((512 + 1) >> 8) & 0xff); // MSB of 16bit 512
+        data[2] = (uint8_t) ((512) & 0xff); // LSB of 16bit 512
+        data[3] = (uint8_t) (((512) >> 8) & 0xff); // MSB of 16bit 512
         data[4] = 0x00; // Start of DMX payload
         data[512+1] = END_MSG;
 
-	this->device_handle = device_ptr_t(ftdi_new());
-	if(this->device_handle == nullptr) {
-		throw std::invalid_argument("Memory allocation error while using ftdi_new.");
-	}
+        this->device_handle = device_ptr_t(ftdi_new());
+        if(this->device_handle == nullptr) {
+            throw std::invalid_argument("Memory allocation error while using ftdi_new.");
+        }
 
         // connect
         if (ftdi_usb_open_desc(device_handle.get(), vendor_id, product_id, name.length() > 0 ? name.c_str() : nullptr, serial.length() > 0 ? serial.c_str() : nullptr) < 0) {
@@ -104,14 +104,17 @@ namespace dmxfish::dmx {
             throw ftdi_exception("Failed to configure port mode on Enttec USB DMX Pro.", std::move(device_handle));
         }
 
-	if(unsigned char latency = 0; ftdi_get_latency_timer(device_handle.get(), &latency) >= 0) {
-	    ::spdlog::info("FTDI Device latency: {}", latency);
-	}
+        if(unsigned char latency = 0; ftdi_get_latency_timer(device_handle.get(), &latency) >= 0) {
+            ::spdlog::info("FTDI Device latency: {}", latency);
+        }
 
-	std::array<uint8_t, 5> serial_read_msg = {START_MSG, 0x0A, 0x00, 0x00, END_MSG};
-	if(ftdi_write_data(device_handle.get(), serial_read_msg.data(), serial_read_msg.size()) < 0) {
+        std::array<uint8_t, 5> serial_read_msg = {START_MSG, 0x0A, 0x00, 0x00, END_MSG};
+        if(ftdi_write_data(device_handle.get(), serial_read_msg.data(), serial_read_msg.size()) < 0) {
             throw ftdi_exception("Failed to send serial number read request to Enttec USB DMX Pro.", std::move(device_handle));
         }
+
+        // TODO read back and decode serial number
+        // TODO query device configuration
 
         device_successfully_opened = true;
     }
@@ -119,16 +122,14 @@ namespace dmxfish::dmx {
     ftdi_universe::~ftdi_universe() {}
 
     bool ftdi_universe::send_data() {
-	std::array<unsigned char, 80> read_buf;
-	if(auto read = ftdi_read_data(device_handle.get(), read_buf.data(), read_buf.size()); read > 0) {
-		std::stringstream ss;
-		for(auto i = 0; i < read; i++){
-			ss << (int) read_buf[i] << " ";
-		}
-		::spdlog::debug("FTDI device reported: {}", ss.str());
-	}
-        //return !(ftdi_write_data(device_handle.get(), this->data.data(), (int) this->data.size()) < 0);
-	std::array<unsigned char, 10> dbg_data = {START_MSG, MSG_TYPE_SEND_DMX, ((4) & 0xff), (((4) >> 8) & 0xff), 0x00, 128, 128, 128, 128, END_MSG};
-	return ftdi_write_data(device_handle.get(), dbg_data.data(), dbg_data.size()) >= 0;
+        std::array<unsigned char, 80> read_buf;
+        if(auto read = ftdi_read_data(device_handle.get(), read_buf.data(), read_buf.size()); read > 0) {
+            std::stringstream ss;
+            for(auto i = 0; i < read; i++){
+                ss << (int) read_buf[i] << " ";
+            }
+            ::spdlog::debug("FTDI device reported: {}", ss.str());
+        }
+        return !(ftdi_write_data(device_handle.get(), this->data.data(), (int) this->data.size()) < 0);
     }
 }
