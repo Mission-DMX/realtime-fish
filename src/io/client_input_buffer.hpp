@@ -23,8 +23,5 @@ namespace dmxfish::io {
         void append_data(const rmrf::net::iorecord&);
         void update_limit(int limit);
         size_t get_streamsize();
-    private:
-        void BackUpLocal(int count);
-        bool SkipLocal(int count);
     };
 }
