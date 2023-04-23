@@ -390,7 +390,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
             }
             return;
         }
-		case ::missiondmx::fish::ipcmessages::MGST_LOG_MESSAGE:
+		case ::missiondmx::fish::ipcmessages::MSGT_LOG_MESSAGE:
         {
             auto msg = missiondmx::fish::ipcmessages::long_log_update();
             if (msg.ParseFromZeroCopyStream(buffer)){
@@ -473,6 +473,6 @@ void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::lo
 	log_msg.set_level(success ? LL_INFO : LL_ERROR);
 	log_msg.set_time_stamp(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count());
 	log_msg.set_what(loading_result_stream.str());
-	this->push_msg_to_all_gui(log_msg, MGST_LOG_MESSAGE);
+	this->push_msg_to_all_gui(log_msg, MSGT_LOG_MESSAGE);
 }
 }
