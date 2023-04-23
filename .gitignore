@@ -46,6 +46,7 @@ dep
 realtime-fish.mk
 realtime-fish.project
 .idea*
+cmake-build-debug/*
 *CMakeLists.txt
 lib/
 tools/generator-tmp
