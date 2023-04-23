@@ -31,6 +31,8 @@ class server_handler{
         bool is_client_alive();
         void write_message(google::protobuf::MessageLite&, uint32_t);
         google::protobuf::io::ZeroCopyInputStream* get_zero_copy_input_stream();
+        void write_message_as_record(rmrf::net::iorecord&);
+
     private:
         void incomming_data_callback(const rmrf::net::iorecord&);
         int get_length_of_varint(size_t);

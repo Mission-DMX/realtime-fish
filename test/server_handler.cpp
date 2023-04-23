@@ -99,4 +99,8 @@ namespace dmxfish::test {
     int server_handler::get_length_of_varint(size_t num){
         return num==0?1:(int)ceil(log2((double)(num+1))/7);
     }
+
+    void server_handler::write_message_as_record(rmrf::net::iorecord& iorecord){
+        this->connection_client->write_data(iorecord);
+    }
 }
