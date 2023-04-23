@@ -22,11 +22,21 @@ namespace dmxfish::filters {
         return std::tan(v*M_PI/180);
     }
 
-    template <double F>
+    double asin_deg(double v){
+        return std::asin(v*180/M_PI);
+    }
+    double acos_deg(double v){
+        return std::acos(v*180/M_PI);
+    }
+    double atan_deg(double v){
+        return std::atan(v*180/M_PI);
+    }
+
+    template <double (*F)(double)>
     class filter_trigonometric: public filter {
     private:
         double* input = nullptr;
-	    double output = 0;
+        double output = 0;
     public:
         filter_trigonometric() : filter() {}
         virtual ~filter_trigonometric() {}
@@ -51,14 +61,17 @@ namespace dmxfish::filters {
         }
 
         virtual void update() override {
-            this->output = F(*input);
+            this->output = (*input);
         }
 
         virtual void scene_activated() override {}
 
     };
 
-    using filter_trigonometric_sine = filter_trigonometric<&sin_deg>;
+    using filter_trigonometric_sine = filter_trigonometric<sin_deg>;
     using filter_trigonometric_cosine = filter_trigonometric<cos_deg>;
     using filter_trigonometric_tangent = filter_trigonometric<tan_deg>;
+    using filter_trigonometric_arcsine = filter_trigonometric<asin_deg>;
+    using filter_trigonometric_arccosine = filter_trigonometric<acos_deg>;
+    using filter_trigonometric_arctangent = filter_trigonometric<atan_deg>;
 }
