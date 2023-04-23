@@ -2,6 +2,8 @@
 
 #include "dmx/ftdi_universe.hpp"
 
+#include <chrono>
+#include <thread>
 #include <unistd.h>
 #include <sstream>
 
@@ -13,7 +15,19 @@
 #define MSG_TYPE_SEND_DMX_PORT_2 0xA9
 #define END_MSG 0xE7
 
+#include <iostream>
+
 namespace dmxfish::dmx {
+
+unsigned int bcd_lulz(unsigned char const* nybbles, size_t length)
+{
+    unsigned int result(0);
+    while (length--) {
+        result = result * 100 + (*nybbles >> 4) * 10 + (*nybbles & 15);
+        ++nybbles;
+    }
+    return result;
+}
 
     // TODO implement function to query avaiable devices using libusb_get_device_list(ftdi.usb_ctx, ...)
 
@@ -23,10 +37,10 @@ namespace dmxfish::dmx {
 	}
         data[0] = START_MSG;
         data[1] = MSG_TYPE_SEND_DMX;
-        data[2] = (uint8_t) ((512) & 0xff); // LSB of 16bit 512
-        data[3] = (uint8_t) (((512) >> 8) & 0xff); // MSB of 16bit 512
+        data[2] = 1; //(uint8_t) ((512) & 0xff); // LSB of 16bit 512
+        data[3] = 2; // (uint8_t) (((512) >> 8) & 0xff); // MSB of 16bit 512
         data[4] = 0x00; // Start of DMX payload
-        data[512+1] = END_MSG;
+        data[512+1+4] = END_MSG;
 
         this->device_handle = device_ptr_t(ftdi_new());
         if(this->device_handle == nullptr) {
@@ -114,21 +128,48 @@ namespace dmxfish::dmx {
         }
 
         // TODO read back and decode serial number
-        // TODO query device configuration
-
+	
+        // query device configuration
+	set_dmx_message[1] = 0x03;
+	set_dmx_message[5] = 0x00;
+	if(ftdi_write_data(device_handle.get(), set_dmx_message.data(), set_dmx_message.size() < 0)) {
+		throw ftdi_exception("Failed to transmit configuration request", std::move(device_handle));
+	}
         device_successfully_opened = true;
     }
 
     ftdi_universe::~ftdi_universe() {}
 
+    int ftdi_universe::decode_reply(const std::array<unsigned char, 80>& buffer, int start) {
+	    auto eof_expected = 0;
+	    switch(buffer[start + 1]) {
+		    case 10: // Serial number reply
+			    serial_number = bcd_lulz(buffer.data() + start + 4, 4);
+			    eof_expected = start + 8;
+			    ::spdlog::debug("FTDI dongle Reported serial number: {}.", this->serial_number);
+			    break;
+		default:
+			    ::spdlog::error("Unknown message label on FTDI dongle reply: {}", buffer[start + 1]);
+	    }
+	    if(buffer[eof_expected] != END_MSG) {
+		    ::spdlog::error("FTDI dongle replied with invalid length");
+	    }
+	    return eof_expected + 1;
+    }
+
     bool ftdi_universe::send_data() {
         std::array<unsigned char, 80> read_buf;
         if(auto read = ftdi_read_data(device_handle.get(), read_buf.data(), read_buf.size()); read > 0) {
+	    auto start = 0;
+            while (read_buf[start] == START_MSG) {
+                start = decode_reply(read_buf, start);
+            }
             std::stringstream ss;
-            for(auto i = 0; i < read; i++){
+            for(auto i = start; i < read; i++){
                 ss << (int) read_buf[i] << " ";
             }
-            ::spdlog::debug("FTDI device reported: {}", ss.str());
+	    if(auto s = ss.str(); s.length() > 0)
+                ::spdlog::debug("FTDI device reported: {}", s);
         }
         return !(ftdi_write_data(device_handle.get(), this->data.data(), (int) this->data.size()) < 0);
     }
