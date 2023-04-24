@@ -15,8 +15,6 @@
 #define MSG_TYPE_SEND_DMX_PORT_2 0xA9
 #define END_MSG 0xE7
 
-#include <iostream>
-
 namespace dmxfish::dmx {
 
 unsigned int bcd_lulz(unsigned char const* nybbles, size_t length)
