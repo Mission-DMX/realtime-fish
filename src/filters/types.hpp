@@ -20,6 +20,16 @@ namespace dmxfish::filters {
         filter_pixel_to_rgb_channels = 15,
         filter_pixel_to_rgbw_channels = 16,
         filter_pixel_to_rgbwa_channels = 17,
-	filter_floats_to_pixel = 18,
+        filter_floats_to_pixel = 18,
+        filter_sine = 19,
+        filter_cosine = 20,
+        filter_tangent = 21,
+        filter_arcsine = 22,
+        filter_arccosine = 23,
+        filter_arctangent = 24,
+        filter_logarithm = 25,
+        filter_exponential = 26,
+        filter_minimum = 27,
+        filter_maximum = 28,
     };
 }

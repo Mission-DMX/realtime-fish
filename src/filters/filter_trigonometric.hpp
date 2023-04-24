@@ -12,6 +12,7 @@
 
 namespace dmxfish::filters {
 
+    COMPILER_SUPRESS("-Weffc++")
     double sin_deg(double v){
         return std::sin(v*M_PI/180);
     }
@@ -23,13 +24,13 @@ namespace dmxfish::filters {
     }
 
     double asin_deg(double v){
-        return std::asin(v*180/M_PI);
+        return std::asin(v)*180/M_PI;
     }
     double acos_deg(double v){
-        return std::acos(v*180/M_PI);
+        return std::acos(v)*180/M_PI;
     }
     double atan_deg(double v){
-        return std::atan(v*180/M_PI);
+        return std::atan(v)*180/M_PI;
     }
 
     template <double (*F)(double)>
@@ -45,7 +46,7 @@ namespace dmxfish::filters {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
 	    if(!input_channels.float_channels.contains("value")) {
-		    throw filter_config_exception("Unable to link input of trigonometric_sinus filter: channel mapping does not contain channel 'value' of type 'double'.");
+		    throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'value' of type 'double'.");
 	    }
 	        this->input = input_channels.float_channels.at("value");
         }
@@ -68,10 +69,12 @@ namespace dmxfish::filters {
 
     };
 
-    using filter_trigonometric_sine = filter_trigonometric<sin_deg>;
-    using filter_trigonometric_cosine = filter_trigonometric<cos_deg>;
-    using filter_trigonometric_tangent = filter_trigonometric<tan_deg>;
-    using filter_trigonometric_arcsine = filter_trigonometric<asin_deg>;
-    using filter_trigonometric_arccosine = filter_trigonometric<acos_deg>;
-    using filter_trigonometric_arctangent = filter_trigonometric<atan_deg>;
+    using filter_sine = filter_trigonometric<sin_deg>;
+    using filter_cosine = filter_trigonometric<cos_deg>;
+    using filter_tangent = filter_trigonometric<tan_deg>;
+    using filter_arcsine = filter_trigonometric<asin_deg>;
+    using filter_arccosine = filter_trigonometric<acos_deg>;
+    using filter_arctangent = filter_trigonometric<atan_deg>;
+
+    COMPILER_RESTORE("-Weffc++")
 }
