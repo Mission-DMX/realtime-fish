@@ -1,9 +1,9 @@
 OS = $(shell uname -s)
 
 # CFLAGS += -march=native -masm=intel -pipe -fsanitize=address,signed-integer-overflow,undefined -pedantic -Wall -Wextra -Werror -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src
-CFLAGS += -march=native -masm=intel -pipe -pedantic -Wall -Wextra -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src -Isrc/allocators
+CFLAGS += -march=native -masm=intel -pipe -pedantic -Wall -Wextra -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src -Isrc/allocators
 
-CXXFLAGS += ${CFLAGS} -std=c++2a -Wuseless-cast -Weffc++ -I/usr/local/include -Wno-non-virtual-dtor
+CXXFLAGS := ${CFLAGS} -std=c++2a -Wuseless-cast -Weffc++ -I/usr/local/include -Wno-non-virtual-dtor
 DEPFLAGS = -MT $@ -MMD -MP -MF $(patsubst ${OBJDIR}/%.o,${DEPDIR}/%.d,$@) -pthread
 
 ifeq "${OS}" "Linux"
@@ -31,11 +31,8 @@ PKG_TOOL = pkg-config
 PROTO_TOOL = protoc
 XSDTOOL = xsdcxx
 
-CFLAGS_RMRF_NET += `${PKG_TOOL} --cflags libnl-3.0`
-CXXFLAGS_RMRF_NET += `${PKG_TOOL} --cflags libnl-3.0`
-
-CFLAGS_PROTO += `${PKG_TOOL} --cflags protobuf`
-CXXFLAGS_PROTO += `${PKG_TOOL} --cflags protobuf`
+CFLAGS_RMRF_NET += `${PKG_TOOL} --cflags libnl-3.0` -Wswitch-default
+CXXFLAGS_RMRF_NET += `${PKG_TOOL} --cflags libnl-3.0` -Wswitch-default
 
 DEPFLAGS += `${PKG_TOOL} --cflags spdlog`
 # LFLAGS += `${PKG_TOOL} --libs libevent`
@@ -43,9 +40,11 @@ LFLAGS += `${PKG_TOOL} --libs spdlog`
 LFLAGS += `${PKG_TOOL} --libs protobuf`
 LFLAGS += `${PKG_TOOL} --libs xerces-c`
 LFLAGS += `${PKG_TOOL} --libs fmt`
-CFLAGS += `${PKG_TOOL} --cflags xerces-c`
+CFLAGS += `${PKG_TOOL} --cflags xerces-c` -Wswitch-default
 
-CXXFLAGS_A_PROTO := ${CXXFLAGS}
+CXXFLAGS_PROTO := ${CXXFLAGS} `${PKG_TOOL} --cflags spdlog`
+
+CXXFLAGS += -Wswitch-default
 # CXXFLAGS += -Werror
 # CFLAGS += -Werror
 
@@ -133,7 +132,7 @@ ${PROTO_SRCDIR}/%.pb.cc: ${PROTO_DEFDIR}/%.proto Makefile
 	${MKDIR} ${@D} && ${PROTO_TOOL} -I=${PROTO_DEFDIR} --cpp_out=${PROTO_SRCDIR} $< && touch $@
 
 ${PROTO_OBJDIR}/%.o: ${PROTO_SRCDIR}/%.pb.cc $(PROTO_SOURCES_B)
-	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS_A_PROTO} ${DEPFLAGS_PROTO} ${CXXFLAGS_PROTO} -o $@ -c $< && touch $@
+	echo ${CXXFLAGS_PROTO} && echo ${CXXFLAGS} && ${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS_PROTO} ${DEPFLAGS_PROTO} -o $@ -c $< && touch $@
 
 ${OBJDIR}/libproto.a: ${PROTO_SRCOBJS}
 	${MKDIR} ${@D} && ar rsv $@ $^ && touch $@
