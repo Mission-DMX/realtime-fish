@@ -1,9 +1,9 @@
 OS = $(shell uname -s)
 
 # CFLAGS += -march=native -masm=intel -pipe -fsanitize=address,signed-integer-overflow,undefined -pedantic -Wall -Wextra -Werror -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src
-CFLAGS += -march=native -masm=intel -pipe -pedantic -Wall -Wextra -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src -Isrc/allocators
+CFLAGS += -march=native -masm=intel -pipe -pedantic -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-enum -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src -Isrc/allocators
 
-CXXFLAGS := ${CFLAGS} -std=c++2a -Wuseless-cast -Weffc++ -I/usr/local/include -Wno-non-virtual-dtor
+CXXFLAGS := ${CFLAGS} -std=c++2a -I/usr/local/include -Wno-non-virtual-dtor
 DEPFLAGS = -MT $@ -MMD -MP -MF $(patsubst ${OBJDIR}/%.o,${DEPDIR}/%.d,$@) -pthread
 
 ifeq "${OS}" "Linux"
@@ -31,8 +31,11 @@ PKG_TOOL = pkg-config
 PROTO_TOOL = protoc
 XSDTOOL = xsdcxx
 
-CFLAGS_RMRF_NET += `${PKG_TOOL} --cflags libnl-3.0` -Wswitch-default
-CXXFLAGS_RMRF_NET += `${PKG_TOOL} --cflags libnl-3.0` -Wswitch-default
+CXXFLAGS_RMRF_NET += `${PKG_TOOL} --cflags libnl-3.0` -Wswitch-default -Wuseless-cast
+CXXFLAGS_PROTO := ${CXXFLAGS} `${PKG_TOOL} --cflags spdlog` -Wuseless-cast -Weffc++ -Wall -Wextra -Wconversion
+SAMPLE_XML_GENERATOR_FLAGS := ${CFLAGS} ${CXXFLAGS} -Wswitch-default -Weffc++ -Wall -Wextra -Wconversion
+XMLTREE_CXXFLAGS := ${CXXFLAGS} -Wswitch-default -Weffc++ -Wall -Wextra -Wconversion
+ALLOCATOR_FLAGS := ${CXXFLAGS} -Wswitch-default -Wuseless-cast
 
 DEPFLAGS += `${PKG_TOOL} --cflags spdlog`
 # LFLAGS += `${PKG_TOOL} --libs libevent`
@@ -40,11 +43,10 @@ LFLAGS += `${PKG_TOOL} --libs spdlog`
 LFLAGS += `${PKG_TOOL} --libs protobuf`
 LFLAGS += `${PKG_TOOL} --libs xerces-c`
 LFLAGS += `${PKG_TOOL} --libs fmt`
-CFLAGS += `${PKG_TOOL} --cflags xerces-c` -Wswitch-default
 
-CXXFLAGS_PROTO := ${CXXFLAGS} `${PKG_TOOL} --cflags spdlog`
+CFLAGS += `${PKG_TOOL} --cflags xerces-c` -Wswitch-default -Wall -Wextra -Wconversion
 
-CXXFLAGS += -Wswitch-default
+CXXFLAGS += -Wswitch-default -Wuseless-cast -Weffc++ -Wall -Wextra -Wconversion
 # CXXFLAGS += -Werror
 # CFLAGS += -Werror
 
@@ -101,13 +103,15 @@ TEST_TARGETS := $(patsubst ${TESTOBJDIR}/%.o,${TESTBINDIR}/%, $(filter %_test.o,
 PROTO_SRCOBJS := $(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,$(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,${PROTO_SOURCES_B}))
 DEPFLAGS_PROTO = ${DEPFLAGS} -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
 
+ALLOCATOR_SRCDIR := ${SRCDIR}/allocators
+ALLOCATOR_OBJDIR := ${OBJDIR}/allocators
+
 XMLTREE_DEFDIR := ${LIBSRCDIR}/ProjectFile
 XMLTREE_SRCDIR := ${LIBSRCDIR}/xml_src
 XMLTREE_SCHEMAS := $(call rwildcard,${XMLTREE_DEFDIR},*.xsd)
 XMLTREE_CFILES := $(patsubst ${XMLTREE_DEFDIR}/%.xsd,${XMLTREE_SRCDIR}/%.xml.cpp,${XMLTREE_SCHEMAS})
 XMLTREE_OBJDIR := ${OBJDIR}/project_xml
 XMLTREE_SRCOBJS := $(patsubst ${XMLTREE_SRCDIR}/%.xml.cpp,${XMLTREE_OBJDIR}/%.o,$(patsubst ${XMLTREE_SRCDIR}/%.xml.cpp,${XMLTREE_OBJDIR}/%.o,${XMLTREE_CFILES}))
-XMLTREE_CXXFLAGS := ${CXXFLAGS}
 
 XSD_ARGS := --generate-doxygen --generate-polymorphic --std c++11 --hxx-suffix .xml.hpp --cxx-suffix .xml.cpp
 
@@ -132,7 +136,7 @@ ${PROTO_SRCDIR}/%.pb.cc: ${PROTO_DEFDIR}/%.proto Makefile
 	${MKDIR} ${@D} && ${PROTO_TOOL} -I=${PROTO_DEFDIR} --cpp_out=${PROTO_SRCDIR} $< && touch $@
 
 ${PROTO_OBJDIR}/%.o: ${PROTO_SRCDIR}/%.pb.cc $(PROTO_SOURCES_B)
-	echo ${CXXFLAGS_PROTO} && echo ${CXXFLAGS} && ${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS_PROTO} ${DEPFLAGS_PROTO} -o $@ -c $< && touch $@
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS_PROTO} ${DEPFLAGS_PROTO} -o $@ -c $< && touch $@
 
 ${OBJDIR}/libproto.a: ${PROTO_SRCOBJS}
 	${MKDIR} ${@D} && ar rsv $@ $^ && touch $@
@@ -151,6 +155,9 @@ ${RMRFNET_OBJDIR}/%.o: ${RMRFNET_SRCDIR}/%.cpp Makefile
 
 ${OBJDIR}/librmrfnet.a: ${RMRFNET_SRCOBJS}
 	${MKDIR} ${@D} && ar rsv $@ $^ && touch $@
+
+${ALLOCATOR_OBJDIR}/%.o: ${ALLOCATOR_SRCDIR}/%.cpp $(PROTO_SOURCES_B) $(XMLTREE_CFILES) Makefile
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${ALLOCATOR_FLAGS} ${DEPFLAGS} -o $@ -c $< && touch $@
 
 ${OBJDIR}/%.o: ${SRCDIR}/%.cpp $(PROTO_SOURCES_B) $(XMLTREE_CFILES) Makefile
 	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${DEPFLAGS} -o $@ -c $< && touch $@
@@ -175,7 +182,7 @@ ${DEPDIR}/%.d: ;
 ${BINDIR}/tools/sample_xml_generator: Makefile ${XMLTREE_DEFDIR}/ShowFile_v0.xsd
 	${MKDIR} ${@D} && ${MKDIR} tools/generator-tmp && cd tools/generator-tmp && \
 	${XSDTOOL} cxx-tree ${XSD_ARGS} --generate-serialization ../../${XMLTREE_DEFDIR}/ShowFile_v0.xsd && cd ../.. && \
-	${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/sample_xml_generator.cpp tools/generator-tmp/ShowFile_v0.xml.cpp ${LFLAGS} -o $@
+	${CXX} ${SAMPLE_XML_GENERATOR_FLAGS} -Itools ${DEPFLAGS} tools/sample_xml_generator.cpp tools/generator-tmp/ShowFile_v0.xml.cpp ${LFLAGS} -o $@
 
 ${DEPDIR}/test:
 	${MKDIR} ${DEPDIR}/test
