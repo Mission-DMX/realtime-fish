@@ -15,7 +15,8 @@ namespace dmxfish::dmx {
 	enum class universe_type : uint8_t {
 		PHYSICAL = 0,
 		ARTNET = 1,
-		sACN = 2
+		sACN = 2,
+		FTDI = 3,
 	};
 
 	class universe {
