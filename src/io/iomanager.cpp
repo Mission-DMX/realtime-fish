@@ -38,14 +38,14 @@ namespace dmxfish::io {
 
 
 static void get_protobuf_msg_of_universe(missiondmx::fish::ipcmessages::Universe* universe_to_edit, std::shared_ptr<dmxfish::dmx::universe> universe_to_read){
-	universe_to_edit->set_id(universe_to_read->getID());
+    universe_to_edit->set_id(universe_to_read->getID());
 
-	switch (universe_to_read->getUniverseType()) {
-		case dmxfish::dmx::universe_type::PHYSICAL:
-			// not finished
-			universe_to_edit->set_physical_location(1);
-			break;
-		case dmxfish::dmx::universe_type::ARTNET:{
+    switch (universe_to_read->getUniverseType()) {
+        case dmxfish::dmx::universe_type::PHYSICAL:
+            // not finished
+            universe_to_edit->set_physical_location(1);
+            break;
+        case dmxfish::dmx::universe_type::ARTNET:{
             auto universe_inner = universe_to_edit->mutable_remote_location();
             universe_inner->set_ip_address("Dummy data - we cant get real one right now");
             universe_inner->set_port(6454);
@@ -63,9 +63,17 @@ static void get_protobuf_msg_of_universe(missiondmx::fish::ipcmessages::Universe
             universe_inner->set_serial("Dummy Serial");
             break;
         }
-		default:
-			break;
-	}
+        default:
+            break;
+    }
+}
+
+static void send_log_message_to_client(const std::string& str, client_handler& client){
+    auto log_message = missiondmx::fish::ipcmessages::long_log_update();
+    log_message.set_level(missiondmx::fish::ipcmessages::LL_WARNING);
+    log_message.set_time_stamp(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    log_message.set_what(str);
+    client.write_message(log_message, ::missiondmx::fish::ipcmessages::MSGT_LOG_MESSAGE);
 }
 
 bool check_version_libev()
@@ -237,14 +245,16 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                     const auto error_msg = "Could not create the usb-dmx universe with id " + std::to_string(msg.id()) + ". Reason: " + *e.what();
                     this->latest_error = error_msg;
                     ::spdlog::debug(error_msg);
+                    send_log_message_to_client(error_msg, client);
                 } catch (const std::exception& e) {
                     const auto error_msg = "Could not create universe: with id " + std::to_string(msg.id()) + ". Reason: " + *e.what();
                     this->latest_error = error_msg;
                     ::spdlog::debug(error_msg);
+                    send_log_message_to_client(error_msg, client);
                 }
                 return;
             }
-            error_message += "Could not parse the message of type: MSGT_CURRENT_STATE_UPDATE.";
+            error_message += "Could not parse the message of type: MSGT_UNIVERSE.";
             this->latest_error = error_message;
             ::spdlog::debug(error_message);
             return;
@@ -262,15 +272,17 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                         const auto error_msg = "Could not create the usb-dmx universe with id " + std::to_string(universe_inner.id()) + ". Reason: " + *e.what();
                         this->latest_error = error_msg;
                         ::spdlog::debug(error_msg);
+                        send_log_message_to_client(error_msg, client);
                     } catch (const std::exception& e) {
                         const auto error_msg = "Could not create universe: with id " + std::to_string(universe_inner.id()) + ". Reason: " + *e.what();
                         this->latest_error = error_msg;
                         ::spdlog::debug(error_msg);
+                        send_log_message_to_client(error_msg, client);
                     }
                 }
                 return;
             }
-            error_message += "Could not parse the message of type: MSGT_CURRENT_STATE_UPDATE.";
+            error_message += "Could not parse the message of type: MSGT_UNIVERSE_LIST.";
             this->latest_error = error_message;
             ::spdlog::debug(error_message);
             return;
@@ -304,7 +316,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 }
                 return;
             }
-            error_message += "Could not parse the message of type: MSGT_CURRENT_STATE_UPDATE.";
+            error_message += "Could not parse the message of type: MSGT_REQUEST_UNIVERSE_LIST.";
             this->latest_error = error_message;
             ::spdlog::debug(error_message);
             return;
@@ -317,7 +329,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 dmxfish::io::unregister_universe(msg.id());
                 return;
             }
-            error_message += "Could not parse the message of type: MSGT_CURRENT_STATE_UPDATE.";
+            error_message += "Could not parse the message of type: MSGT_DELETE_UNIVERSE.";
             this->latest_error = error_message;
             ::spdlog::debug(error_message);
             return;
@@ -329,7 +341,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 // TODO implement
                 return;
             }
-            error_message += "Could not parse the message of type: MSGT_CURRENT_STATE_UPDATE.";
+            error_message += "Could not parse the message of type: MSGT_BUTTON_STATE_CHANGE.";
             this->latest_error = error_message;
             ::spdlog::debug(error_message);
             return;
@@ -341,7 +353,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 // TODO implement
                 return;
             }
-            error_message += "Could not parse the message of type: MSGT_CURRENT_STATE_UPDATE.";
+            error_message += "Could not parse the message of type: MSGT_FADER_POSITION.";
             this->latest_error = error_message;
             ::spdlog::debug(error_message);
             return;
@@ -353,7 +365,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 // TODO implement
                 return;
             }
-            error_message += "Could not parse the message of type: MSGT_CURRENT_STATE_UPDATE.";
+            error_message += "Could not parse the message of type: MSGT_ROTARY_ENCODER_CHANGE.";
             this->latest_error = error_message;
             ::spdlog::debug(error_message);
             return;
@@ -376,7 +388,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 }
                 return;
             }
-            error_message += "Could not parse the message of type: MSGT_CURRENT_STATE_UPDATE.";
+            error_message += "Could not parse the message of type: MSGT_DMX_OUTPUT.";
             this->latest_error = error_message;
             ::spdlog::debug(error_message);
             return;
@@ -404,7 +416,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 }
                 return;
             }
-            error_message += "Could not parse the message of type: MSGT_CURRENT_STATE_UPDATE.";
+            error_message += "Could not parse the message of type: MSGT_REQUEST_DMX_DATA.";
             this->latest_error = error_message;
             ::spdlog::debug(error_message);
             return;
@@ -424,7 +436,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 }
                 return;
             }
-            error_message += "Could not parse the message of type: MSGT_CURRENT_STATE_UPDATE.";
+            error_message += "Could not parse the message of type: MSGT_ENTER_SCENE.";
             this->latest_error = error_message;
             ::spdlog::debug(error_message);
             return;
@@ -437,7 +449,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 this->show_file_apply_state = this->active_show == nullptr ? SFAS_SHOW_LOADING : SFAS_SHOW_UPDATING;
                 this->show_loading_thread = std::make_shared<std::thread>(std::bind(&IOManager::load_show_file, this, msg));
             }
-            error_message += "Could not parse the message of type: MSGT_CURRENT_STATE_UPDATE.";
+            error_message += "Could not parse the message of type: MSGT_LOAD_SHOW_FILE.";
             this->latest_error = error_message;
             ::spdlog::debug(error_message);
             return;
@@ -462,7 +474,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                     this->latest_error = e.what();
                 }
             }
-            error_message += "Could not parse the message of type: MSGT_CURRENT_STATE_UPDATE.";
+            error_message += "Could not parse the message of type: MSGT_UPDATE_PARAMETER.";
             this->latest_error = error_message;
             ::spdlog::debug(error_message);
             return;
@@ -474,7 +486,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 // TODO the GUI shouldn't send us log messages. What should we do with it?
                 return;
             }
-            error_message += "Could not parse the message of type: MSGT_CURRENT_STATE_UPDATE.";
+            error_message += "Could not parse the message of type: MSGT_LOG_MESSAGE.";
             this->latest_error = error_message;
             ::spdlog::debug(error_message);
             return;
