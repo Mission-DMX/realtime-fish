@@ -1,6 +1,6 @@
 #include "io/client_input_buffer.hpp"
 #include "lib/logging.hpp"
-#include <sstream>
+//#include <sstream>
 
 namespace dmxfish::io {
 
@@ -21,13 +21,13 @@ namespace dmxfish::io {
         }
 
         if (this->streamsize <= 0){
-//            ::spdlog::debug("streamsize is {}", this->streamsize);
+//            ::spdlog::debug("Client input buffer: streamsize is {}", this->streamsize);
             return false;
         }
 
         if (this->actual_record == nullptr || this->local_offset >= this->actual_record->size()){
             if (this->io_buffer->empty()) {
-//                ::spdlog::debug("Message_buffer is empty but streamsize is {}", this->streamsize);
+                ::spdlog::warn("Requested data of stream, where is no data left: streamsize should be {}", this->streamsize);
                 return false;
             }
             this->actual_record = std::make_unique<rmrf::net::iorecord>(this->io_buffer->pop_front());
@@ -110,12 +110,12 @@ namespace dmxfish::io {
 
     void client_input_buffer::append_data(const rmrf::net::iorecord& data){
         this->streamsize += data.size();
-        auto strstream = std::stringstream();
-        strstream << "Got: Next:" << std::hex;
-        for(size_t i = 0; i < data.size(); i++){
-            strstream << " " << (int) *(((uint8_t*) data.ptr())+i);
-        }
-        ::spdlog::debug("{}", strstream.str());
+//        auto strstream = std::stringstream();
+//        strstream << "Got: Next:" << std::hex;
+//        for(size_t i = 0; i < data.size(); i++){
+//            strstream << " " << (int) *(((uint8_t*) data.ptr())+i);
+//        }
+//        ::spdlog::debug("{}", strstream.str());
         this->io_buffer->push_back(data);
     }
 

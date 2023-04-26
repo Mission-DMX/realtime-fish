@@ -26,7 +26,7 @@ namespace dmxfish::io {
                     this->input_buffer->update_limit(5);
                 }
                 else {
-                    ::spdlog::debug("NEXT_MSG: Not finishing byte for Varint");
+//                    ::spdlog::debug("NEXT_MSG: Not finishing byte for Varint");
                     return;
                 }
                 return handle_messages();
@@ -37,7 +37,7 @@ namespace dmxfish::io {
                     this->internal_state = READ_MSG;
                     this->input_buffer->update_limit(this->msg_length);
                 } else {
-                    ::spdlog::debug("GETLENGTH: Not finishing byte for Varint");
+//                    ::spdlog::debug("GETLENGTH: Not finishing byte for Varint");
                     return;
                 }
                 return handle_messages();
@@ -49,14 +49,14 @@ namespace dmxfish::io {
                     this->msg_type = 0;
                     this->internal_state = NEXT_MSG;
                     this->input_buffer->update_limit(5);
-                    ::spdlog::debug("ReadMSG: Stream has length after parsing {}", this->input_buffer->get_streamsize());
+//                    ::spdlog::debug("ReadMSG: Stream has length after parsing {}", this->input_buffer->get_streamsize());
                     return handle_messages();
                 }
-                ::spdlog::debug("ReadMSG: Stream was not long enough: is {}, should: {}", this->input_buffer->get_streamsize(), this->msg_length);
+//                ::spdlog::debug("ReadMSG: Stream was not long enough: is {}, should: {}", this->input_buffer->get_streamsize(), this->msg_length);
                 break;
             }
 			default:
-                ::spdlog::debug("Error: Unknown State");
+                ::spdlog::warn("Error: client_handler has reached an unknown state");
                 break;
 		}
 	}
@@ -72,29 +72,31 @@ namespace dmxfish::io {
         auto stream = dmxfish::io::client_output_buffer(buffer);
 
         if(!stream.WriteVarint32(msgtype)){
-            ::spdlog::debug("Writing Msg Type to stream failed");
+            ::spdlog::warn("Writing Msg Type to stream failed");
+            return;
         }
         if(!stream.WriteVarint32(msgsize)){
-            ::spdlog::debug("Writing Msg Size to stream failed");
+            ::spdlog::warn("Writing Msg Size to stream failed");
+            return;
         }
         if(!msg.SerializeToZeroCopyStream(&stream)){
-            ::spdlog::debug("Writing Msg to stream failed");
+            ::spdlog::warn("Writing Msg to stream failed");
+            return;
         }
         if(this->connection_client->is_client_alive()){
             try {
                 this->connection_client->write_data(rmrf::net::iorecord(buffer.data(), buffer.size()));
             } catch (const std::exception& e) {
-                const auto error_msg = "Could not send message to client: " + *e.what();
-//                this->latest_error = error_msg;
-                ::spdlog::debug(error_msg);
+                ::spdlog::warn(std::string("Could not send message to client: ") + e.what());
+                return;
             }
         } else {
-            ::spdlog::debug("Client Output Buffer: Could not send the message, because client is offline");
+            ::spdlog::info("Client Output Buffer: Could not send the message, because client is offline");
         }
 	}
 
     void client_handler::incomming_data_callback(const rmrf::net::iorecord& data){
-        ::spdlog::debug("reached callback");
+//        ::spdlog::debug("reached callback");
         this->input_buffer->append_data(data);
         this->handle_messages();
     }

@@ -14,7 +14,7 @@ namespace dmxfish::io {
     bool client_output_buffer::Next(void** data, int* size){
 
         if (this->local_offset >= this->buffer.size()){
-            ::spdlog::debug("Output buffer: iorecord was not big enough");
+            ::spdlog::info("Output buffer: iorecord was not big enough, why did this happen?");
             return false;
         }
         *data = this->buffer.data() + this->local_offset;
@@ -26,7 +26,7 @@ namespace dmxfish::io {
 
     void client_output_buffer::BackUp(int count){
         if (count < 0 || (size_t) count > this->local_offset){
-            ::spdlog::debug("OutputBuffer: Backup had wrong size");
+            ::spdlog::info("OutputBuffer: Backup had wrong size");
         }
         this->local_offset -= count;
     }

@@ -49,7 +49,8 @@ CFLAGS += `${PKG_TOOL} --cflags xerces-c`
 CFLAGS += `${PKG_TOOL} --cflags libusb`
 CFLAGS += `${PKG_TOOL} --cflags libftdi`
 
-CXXFLAGS_A_PROTO := ${CXXFLAGS}
+SUPPRESSWARN := -w
+
 # CXXFLAGS += -Werror
 # CFLAGS += -Werror
 
@@ -106,6 +107,9 @@ TEST_TARGETS := $(patsubst ${TESTOBJDIR}/%.o,${TESTBINDIR}/%, $(filter %_test.o,
 PROTO_SRCOBJS := $(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,$(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,${PROTO_SOURCES_B}))
 DEPFLAGS_PROTO = ${DEPFLAGS} -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
 
+ALLOCATOR_SRCDIR := ${SRCDIR}/allocators
+ALLOCATOR_OBJDIR := ${OBJDIR}/allocators
+
 XMLTREE_DEFDIR := ${LIBSRCDIR}/ProjectFile
 XMLTREE_SRCDIR := ${LIBSRCDIR}/xml_src
 XMLTREE_SCHEMAS := $(call rwildcard,${XMLTREE_DEFDIR},*.xsd)
@@ -137,7 +141,7 @@ ${PROTO_SRCDIR}/%.pb.cc: ${PROTO_DEFDIR}/%.proto Makefile
 	${MKDIR} ${@D} && ${PROTO_TOOL} -I=${PROTO_DEFDIR} --cpp_out=${PROTO_SRCDIR} $< && touch $@
 
 ${PROTO_OBJDIR}/%.o: ${PROTO_SRCDIR}/%.pb.cc $(PROTO_SOURCES_B)
-	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS_A_PROTO} ${DEPFLAGS_PROTO} ${CXXFLAGS_PROTO} -o $@ -c $< && touch $@
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${SUPPRESSWARN} ${CXXFLAGS} ${DEPFLAGS_PROTO} ${CXXFLAGS_PROTO} -o $@ -c $< && touch $@
 
 ${OBJDIR}/libproto.a: ${PROTO_SRCOBJS}
 	${MKDIR} ${@D} && ar rsv $@ $^ && touch $@
@@ -146,7 +150,7 @@ ${XMLTREE_SRCDIR}/%.xml.cpp: ${XMLTREE_DEFDIR}/%.xsd Makefile
 	${MKDIR} ${@D} && cd ${@D} && ${XSDTOOL} cxx-tree ${XSD_ARGS} ../../$< && cd ../.. && touch $@
 
 ${XMLTREE_OBJDIR}/%.o: ${XMLTREE_SRCDIR}/%.xml.cpp $(XMLTREE_CFILES)
-	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${XMLTREE_CXXFLAGS} -o $@ -c $< && touch $@
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${SUPPRESSWARN} ${XMLTREE_CXXFLAGS} -o $@ -c $< && touch $@
 
 ${OBJDIR}/showxml.a: ${XMLTREE_SRCOBJS}
 	${MKDIR} ${@D} && ar rsv $@ $^ && touch $@
@@ -156,6 +160,9 @@ ${RMRFNET_OBJDIR}/%.o: ${RMRFNET_SRCDIR}/%.cpp Makefile
 
 ${OBJDIR}/librmrfnet.a: ${RMRFNET_SRCOBJS}
 	${MKDIR} ${@D} && ar rsv $@ $^ && touch $@
+
+${ALLOCATOR_OBJDIR}/%.o: ${ALLOCATOR_SRCDIR}/%.cpp $(PROTO_SOURCES_B) $(XMLTREE_CFILES) Makefile
+	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${SUPPRESSWARN} ${CXXFLAGS} ${DEPFLAGS} -o $@ -c $< && touch $@
 
 ${OBJDIR}/%.o: ${SRCDIR}/%.cpp $(PROTO_SOURCES_B) $(XMLTREE_CFILES) Makefile
 	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${DEPFLAGS} -o $@ -c $< && touch $@
@@ -180,7 +187,7 @@ ${DEPDIR}/%.d: ;
 ${BINDIR}/tools/sample_xml_generator: Makefile ${XMLTREE_DEFDIR}/ShowFile_v0.xsd
 	${MKDIR} ${@D} && ${MKDIR} tools/generator-tmp && cd tools/generator-tmp && \
 	${XSDTOOL} cxx-tree ${XSD_ARGS} --generate-serialization ../../${XMLTREE_DEFDIR}/ShowFile_v0.xsd && cd ../.. && \
-	${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/sample_xml_generator.cpp tools/generator-tmp/ShowFile_v0.xml.cpp ${LFLAGS} -o $@
+	${CXX} ${SUPPRESSWARN} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/sample_xml_generator.cpp tools/generator-tmp/ShowFile_v0.xml.cpp ${LFLAGS} -o $@
 
 ${BINDIR}/tools/ftdi_test: ${OBJDIR}/dmx/ftdi_universe.o
 	${MKDIR} ${@D} && ${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/ftdi_test.cpp $^ ${LFLAGS} -o $@
