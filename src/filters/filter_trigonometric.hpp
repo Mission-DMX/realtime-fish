@@ -65,8 +65,8 @@ namespace dmxfish::filters {
             } else {
                 this->factor_inner = (double*) &this->one;
             }
-            if(input_channels.float_channels.contains("factorphase")) {
-                this->phase = input_channels.float_channels.at("factorphase");
+            if(input_channels.float_channels.contains("phase")) {
+                this->phase = input_channels.float_channels.at("phase");
             } else {
                 this->phase = (double*) &this->zero;
             }
