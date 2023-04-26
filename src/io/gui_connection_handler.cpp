@@ -44,7 +44,7 @@ void GUI_Connection_Handler::push_msg_to_all_gui(google::protobuf::MessageLite& 
 
     if(to_delete){
         clients.remove(to_delete);
-        ::spdlog::debug("GUI Connection Handler: client was removed: now {} clients are connected", this->clients.size());
+        ::spdlog::info("GUI Connection Handler: client was removed: now {} clients are connected", this->clients.size());
     }
 }
 
