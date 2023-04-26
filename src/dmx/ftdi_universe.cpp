@@ -29,7 +29,7 @@ unsigned int bcd_lulz(unsigned char const* nybbles, size_t length)
 
     // TODO implement function to query avaiable devices using libusb_get_device_list(ftdi.usb_ctx, ...)
 
-    ftdi_universe::ftdi_universe(const int _id, const int vendor_id, const int product_id, const std::string& name, const std::string& serial) : universe(_id, universe_type::FTDI), data{}, device_handle{} {
+    ftdi_universe::ftdi_universe(const int _id, const int vendor_id, const int product_id, const std::string& name, const std::string& serial) : universe(_id, universe_type::FTDI), data{}, device_handle{}, product_id(product_id), vendor_id(vendor_id) {
 	for(auto& x : data) {
 		x = 0;
 	}
@@ -170,5 +170,19 @@ unsigned int bcd_lulz(unsigned char const* nybbles, size_t length)
                 ::spdlog::debug("FTDI device reported: {}", s);
         }
         return !(ftdi_write_data(device_handle.get(), this->data.data(), (int) this->data.size()) < 0);
+    }
+
+    unsigned int ftdi_universe::get_chip_id() {
+	    unsigned int chip_id = 0;
+	    ftdi_read_chipid(device_handle.get(), &chip_id);
+	    return chip_id;
+    }
+
+    int ftdi_universe::get_vendor_id() {
+	return vendor_id;
+    }
+
+    int ftdi_universe::get_product_id() {
+	    return product_id;
     }
 }

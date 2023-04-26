@@ -40,6 +40,8 @@ namespace dmxfish::dmx {
         std::array<uint8_t, 512 + 6> data;
         bool device_successfully_opened = false;
 	int serial_number = 0;
+	int product_id;
+	int vendor_id;
     public:
         ftdi_universe(const int _id, const int vendor_id, const int product_id, const std::string& name, const std::string& serial);
 
@@ -58,6 +60,9 @@ namespace dmxfish::dmx {
 		}
 
 		bool send_data();
+		unsigned int get_chip_id();
+		int get_vendor_id();
+		int get_product_id();
     private:
 		int decode_reply(const std::array<unsigned char, 80>& buffer, int start);
     };

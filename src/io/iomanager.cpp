@@ -57,8 +57,9 @@ static void get_protobuf_msg_of_universe(missiondmx::fish::ipcmessages::Universe
             break;
         case dmxfish::dmx::universe_type::FTDI: {
             auto universe_inner = universe_to_edit->mutable_ftdi_dongle();
-            universe_inner->set_product_id(1);
-            universe_inner->set_vendor_id(1);
+	    auto ftdi_u = static_cast<dmxfish::dmx::ftdi_universe*>(universe_to_read.get());
+            universe_inner->set_product_id(ftdi_u->get_product_id());
+            universe_inner->set_vendor_id(ftdi_u->get_vendor_id());
             universe_inner->set_device_name("Hopefully Enttec USB DMX Pro");
             universe_inner->set_serial("Dummy Serial");
             break;
