@@ -243,12 +243,12 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 try {
                     dmxfish::io::register_universe_from_message(msg);
                 } catch (const dmx::ftdi_exception& e) {
-                    const auto error_msg = "Could not create the usb-dmx universe with id " + std::to_string(msg.id()) + ". Reason: " + *e.what();
+                    const auto error_msg = "Could not create the usb-dmx universe with id " + std::to_string(msg.id()) + ". Reason: " + e.what();
                     this->latest_error = error_msg;
                     ::spdlog::debug(error_msg);
                     send_log_message_to_client(error_msg, client);
                 } catch (const std::exception& e) {
-                    const auto error_msg = "Could not create universe: with id " + std::to_string(msg.id()) + ". Reason: " + *e.what();
+                    const auto error_msg = "Could not create universe: with id " + std::to_string(msg.id()) + ". Reason: " + e.what();
                     this->latest_error = error_msg;
                     ::spdlog::debug(error_msg);
                     send_log_message_to_client(error_msg, client);
