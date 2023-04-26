@@ -81,8 +81,14 @@ namespace dmxfish::io {
             ::spdlog::debug("Writing Msg to stream failed");
         }
         if(this->connection_client->is_client_alive()){
-            this->connection_client->write_data(rmrf::net::iorecord(buffer.data(), buffer.size()));
-        } else{
+            try {
+                this->connection_client->write_data(rmrf::net::iorecord(buffer.data(), buffer.size()));
+            } catch (const std::exception& e) {
+                const auto error_msg = "Could not send message to client: " + *e.what();
+//                this->latest_error = error_msg;
+                ::spdlog::debug(error_msg);
+            }
+        } else {
             ::spdlog::debug("Client Output Buffer: Could not send the message, because client is offline");
         }
 	}
