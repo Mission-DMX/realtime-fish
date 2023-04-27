@@ -1,5 +1,6 @@
 #include "control_desk/device_handle.hpp"
 
+#include <array>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -8,7 +9,8 @@
 namespace dmxfish::control_desk {
     device_handle::device_handle(const std::string& driver_file_path, const midi_device_id& mdi) :
         async{}, file_sync{}, driver_fd{open(driver_file_path.c_str(), O_RDWR | O_NONBLOCK)},
-        event_queue{}, sysex_queue{}, event_construction{}, sysex_construction{}, device_id{mdi}
+        event_queue{}, sysex_queue{}, incomming_queue{}, event_construction{63}, sysex_construction{64},
+        in_construction{}, device_id{mdi}
     {
         if(driver_fd) {
             async.set<device_handle, &device_handle::cb_async_schedule>(this);
@@ -47,8 +49,30 @@ namespace dmxfish::control_desk {
         this->async.send();
     }
 
-    void decode_incomming_event(const midi_command& c) {
-        // TODO send event to corresponding control bank
+    bool device_handle::decode_incomming_event() {
+        // TODO parse and enque event
+        midi_command c;
+        uint8_t initial_byte;
+        do {
+            initial_byte = in_construction.front();
+            in_construction.pop_front();
+        } while (initial_byte & 0x80 == 0);
+        if(in_construction.size() < 2) {
+            in_construction.push_front(initial_byte);
+            return false;
+        }
+        c.status = (midi_status) (initial_byte & 0xF0);
+        if(c.status == midi_status::SYS_EX) {
+            // TODO write Warning about dropping SYSEX
+        } else {
+            c.channel = initial_byte & 0x0F;
+            c.data_1 = in_construction.front();
+            in_construction.pop_front();
+            c.data_2 = in_construction.front();
+            in_construction.pop_front();
+            incomming_queue.push_back(c);
+        }
+        return true;
     }
 
     void device_handle::cb_async_schedule(::ev::async& w, int events) {
@@ -62,6 +86,12 @@ namespace dmxfish::control_desk {
 
         if (events & ::ev::READ) {
             // TODO read events and call the decode function on them
+            std::array<uint8_t, 48> buffer;
+            const auto read_bytes = read(w.fd, buffer.data(), buffer.size());
+            for(auto i = 0; i < read_bytes; i++) {
+                in_construction.push_back(buffer[i]);
+            }
+            while(!in_construction.empty() && this->decode_incomming_event());
         }
 
         if (events & ::ev::WRITE) {

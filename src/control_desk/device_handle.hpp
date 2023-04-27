@@ -13,7 +13,9 @@ namespace dmxfish::control_desk {
         ::ev::io file_sync;
         rmrf::net::auto_fd driver_fd;
         rmrf::net::ioqueue<rmrf::net::iorecord> event_queue, sysex_queue;
+        std::deque<midi_command> incomming_queue;
         std::vector<uint8_t> event_construction, sysex_construction;
+        std::deque<uint8_t> in_construction;
         int max_sysex_queue_length = 3;
         const midi_device_id device_id;
     public:
@@ -35,7 +37,7 @@ namespace dmxfish::control_desk {
             return this->device_id;
         }
     private:
-        void decode_incomming_event(const midi_command& c);
+        bool decode_incomming_event();
         void cb_async_schedule(::ev::async& w, int events);
         void cb_io_handler(::ev::io& w, int events);
 
