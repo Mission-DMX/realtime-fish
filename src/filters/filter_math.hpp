@@ -49,9 +49,6 @@ namespace dmxfish::filters {
 
     };
 
-    using filter_logarithm = filter_math_single<std::log>;
-    using filter_exponential = filter_math_single<std::exp>;
-
     template <typename T, T (*F)(T, T)>
     class filter_math_dual: public filter {
     private:
@@ -89,6 +86,10 @@ namespace dmxfish::filters {
         virtual void scene_activated() override {}
 
     };
+
+
+    using filter_logarithm = filter_math_single<std::log>;
+    using filter_exponential = filter_math_single<std::exp>;
 
     using filter_minimum = filter_math_dual<double, std::fmin>;
     using filter_maximum = filter_math_dual<double, std::fmax>;
