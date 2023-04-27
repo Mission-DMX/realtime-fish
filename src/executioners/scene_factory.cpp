@@ -164,6 +164,15 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_maximum:
                     sum += sizeof(filter_maximum);
                     break;
+                case filter_type::filter_square:
+                    sum += sizeof(filter_square);
+                    break;
+                case filter_type::filter_triangle:
+                    sum += sizeof(filter_triangle);
+                    break;
+                case filter_type::filter_sawtooth:
+                    sum += sizeof(filter_sawtooth);
+                    break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -244,6 +253,12 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_minimum>(pac);
             case filter_type::filter_maximum:
                 return calloc<filter_maximum>(pac);
+            case filter_type::filter_square:
+                return calloc<filter_square>(pac);
+            case filter_type::filter_triangle:
+                return calloc<filter_triangle>(pac);
+            case filter_type::filter_sawtooth:
+                return calloc<filter_sawtooth>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}

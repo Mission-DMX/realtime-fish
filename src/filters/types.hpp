@@ -31,5 +31,8 @@ namespace dmxfish::filters {
         filter_exponential = 26,
         filter_minimum = 27,
         filter_maximum = 28,
+        filter_square = 29,
+        filter_triangle = 30,
+        filter_sawtooth = 31,
     };
 }

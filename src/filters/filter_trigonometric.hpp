@@ -24,7 +24,7 @@ namespace dmxfish::filters {
         return f*std::tan(std::remainder((v+p)*m, 360.0)*M_PI/180);
     }
     double triangle(double v, double f, double m, double p){
-        return 1.0-2.0*std::abs(std::remainder((v+p-90.0)*m, 360.0)/180.0);
+        return f*(1.0-2.0*std::abs(std::remainder((v+p-90.0)*m, 360.0)/180.0));
     }
     double sawtooth(double v, double f, double m, double p){
         return f*std::remainder((v+p)*m, 360.0)/180.0;
