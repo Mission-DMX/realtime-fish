@@ -24,38 +24,38 @@ namespace dmxfish::control_desk {
     };
 
     enum class lcd_color : uint8_t {
-        black,
-	red,
-	green,
-	yellow,
-	blue,
-	magenta,
-	cyan,
-	white,
-	black_up_inverted,
-	red_up_inverted,
-	green_up_inverted,
-	yellow_up_inverted,
-	blue_up_inverted,
-	magenta_up_inverted,
-	cyan_up_inverted,
-	white_up_inverted,
-	black_down_inverted,
-	red_down_inverted,
-	green_down_inverted,
-	yellow_down_inverted,
-	blue_down_inverted,
-	magenta_down_inverted,
-	cyan_down_inverted,
-	white_down_inverted,
-	black_both_inverted,
-	red_both_inverted,
-	green_both_inverted,
-	yellow_both_inverted,
-	blue_both_inverted,
-	magenta_both_inverted,
-	cyan_both_inverted,
-	white_both_inverted
+        black = 0,
+		red = 1,
+		green = 2,
+		yellow = 3,
+		blue = 4,
+		magenta = 5,
+		cyan = 6,
+		white = 7,
+		black_up_inverted = 0 & (0b00010000),
+		red_up_inverted = 1 & (0b00010000),
+		green_up_inverted = 2 & (0b00010000),
+		yellow_up_inverted = 3 & (0b00010000),
+		blue_up_inverted = 4 & (0b00010000),
+		magenta_up_inverted = 5 & (0b00010000),
+		cyan_up_inverted = 6 & (0b00010000),
+		white_up_inverted = 7 & (0b00010000),
+		black_down_inverted = 0 & (0b00100000),
+		red_down_inverted = 1 & (0b00100000),
+		green_down_inverted = 2 & (0b00100000),
+		yellow_down_inverted = 3 & (0b00100000),
+		blue_down_inverted = 4 & (0b00100000),
+		magenta_down_inverted = 5 & (0b00100000),
+		cyan_down_inverted = 6 & (0b00100000),
+		white_down_inverted = 7 & (0b00100000),
+		black_both_inverted = 0 & (0b00110000),
+		red_both_inverted = 1 & (0b00110000),
+		green_both_inverted = 2 & (0b00110000),
+		yellow_both_inverted = 3 & (0b00110000),
+		blue_both_inverted = 4 & (0b00110000),
+		magenta_both_inverted = 5 & (0b00110000),
+		cyan_both_inverted = 6 & (0b00110000),
+		white_both_inverted = 7 & (0b00110000),
     };
 
     struct raw_column_configuration {
@@ -72,6 +72,7 @@ namespace dmxfish::control_desk {
     class bank_column {
     private:
         std::shared_ptr<device_handle> connection;
+		std::string id;
 	std::vector<std::string> display_text_up;
 	std::vector<std::string> display_text_down;
 	std::optional<dmxfish::dmx::pixel> color;
@@ -81,27 +82,27 @@ namespace dmxfish::control_desk {
 	unsigned int display_scroll_position_down = 0;
 	const bank_mode current_bank_mode = bank_mode::HSI_COLOR_MODE;
     public:
-        bank_column(std::shared_ptr<device_handle> device_connection, bank_mode mode);
-	void set_active(bool new_value);
-	inline bank_mode get_mode() const {
-            return this->current_bank_mode;
-	}
+        bank_column(std::shared_ptr<device_handle> device_connection, bank_mode mode, std::string id);
+		void set_active(bool new_value);
+		inline bank_mode get_mode() const {
+				return this->current_bank_mode;
+		}
 
-	inline std::optional<dmxfish::dmx::pixel> get_color() const {
-            return this->color;
-	}
+		inline std::optional<dmxfish::dmx::pixel> get_color() const {
+				return this->color;
+		}
 
-	inline void set_color(const dmxfish::dmx::pixel& p) {
-            if(this->current_bank_mode != bank_mode::HSI_COLOR_MODE) {
-                return;
-	    }
-	    this->color = p;
-	    // TODO set fader position, 2nd row display text and rotary encoder positions
-	}
+		inline void set_color(const dmxfish::dmx::pixel& p) {
+				if(this->current_bank_mode != bank_mode::HSI_COLOR_MODE) {
+					return;
+			}
+			this->color = p;
+			// TODO set fader position, 2nd row display text and rotary encoder positions
+		}
 
-	inline std::optional<raw_column_configuration> get_raw_configuration() const {
-            return raw_configuration;
-	}
+		inline std::optional<raw_column_configuration> get_raw_configuration() const {
+				return raw_configuration;
+		}
     };
 
 }
