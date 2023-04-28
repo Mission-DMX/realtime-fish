@@ -14,6 +14,7 @@
 #include "filters/filter_universe_output.hpp"
 #include "filters/filter_trigonometric.hpp"
 #include "filters/filter_math.hpp"
+#include "filters/filter_delay.hpp"
 
 #include <iostream>
 
