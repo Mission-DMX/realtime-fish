@@ -5,6 +5,7 @@
 namespace dmxfish::control_desk {
 
     enum class midi_status : uint8_t {
+        INVALID = 0x00,
         NOTE_OFF = 0x80,
         NOTE_ON = 0x90,
         POLYPHONIC = 0xA0,
@@ -20,6 +21,12 @@ namespace dmxfish::control_desk {
         uint8_t channel;
         uint8_t data_1;
         uint8_t data_2;
+
+        midi_command() : status{midi_status::INVALID}, channel{0}, data_1{0}, data_2{0} {}
+        midi_command(midi_status s, uint8_t c, uint8_t d1, uint8_t d2)
+            : status{s}, channel{c}, data_1{d1}, data_2{d2} {}
+        midi_command(uint8_t status_byte, uint8_t data_byte_1, uint8_t data_byte_2)
+            : status{(uint8_t) (status_byte & 0xF0)}, channel{(uint8_t) (status_byte & 0x0F)}, data_1{data_byte_1}, data_2{data_byte_2} {}
 
 
         bool encode(std::vector<uint8_t>& dv) const {

@@ -25,7 +25,6 @@ namespace dmxfish::control_desk {
     device_handle::~device_handle() {
         async.stop();
         file_sync.stop();
-        // TODO is this the correct place to set all fader positions to 0 or should it be part of the X-Touch driver.
     }
 
     void device_handle::send_command(const midi_command& c) {
@@ -50,7 +49,6 @@ namespace dmxfish::control_desk {
     }
 
     bool device_handle::decode_incomming_event() {
-        // TODO parse and enque event
         midi_command c;
         uint8_t initial_byte;
         do {
@@ -85,7 +83,6 @@ namespace dmxfish::control_desk {
         }
 
         if (events & ::ev::READ) {
-            // TODO read events and call the decode function on them
             std::array<uint8_t, 48> buffer;
             const auto read_bytes = read(w.fd, buffer.data(), buffer.size());
             for(auto i = 0; i < read_bytes; i++) {

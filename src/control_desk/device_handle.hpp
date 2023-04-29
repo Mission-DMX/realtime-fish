@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ev++.h>
+#include <optional>
 
 #include "control_desk/command.hpp"
 #include "net/async_fd.hpp"
@@ -20,6 +21,8 @@ namespace dmxfish::control_desk {
         const midi_device_id device_id;
     public:
         device_handle(const std::string& driver_file_path, const midi_device_id& mdi);
+        device_handle(const device_handle&) = delete;
+        device_handle(device_handle&&) = delete;
         ~device_handle();
         void send_command(const midi_command& c);
         void send_sysex_command(const sysex_command& sc);
@@ -33,8 +36,17 @@ namespace dmxfish::control_desk {
             return this->max_sysex_queue_length;
         }
 
-        [[nodiscard]] inline midi_device_id get_device_id() {
+        [[nodiscard]] inline midi_device_id get_device_id() const {
             return this->device_id;
+        }
+
+        [[nodiscard]] inline std::optional<midi_command> get_next_command_from_desk() {
+            if (incomming_queue.empty()) {
+                return {};
+            }
+            auto c = incomming_queue.front();
+            incomming_queue.pop_front();
+            return c;
         }
     private:
         bool decode_incomming_event();
