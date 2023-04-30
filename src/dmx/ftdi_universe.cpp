@@ -1,5 +1,3 @@
-#pragma once
-
 #include "dmx/ftdi_universe.hpp"
 
 #include <chrono>
@@ -29,7 +27,7 @@ unsigned int bcd_lulz(unsigned char const* nybbles, size_t length)
 
     // TODO implement function to query avaiable devices using libusb_get_device_list(ftdi.usb_ctx, ...)
 
-    ftdi_universe::ftdi_universe(const int _id, const int vendor_id, const int product_id, const std::string& name, const std::string& serial) : universe(_id, universe_type::FTDI), data{}, device_handle{}, product_id(product_id), vendor_id(vendor_id) {
+    ftdi_universe::ftdi_universe(const int _id, const int _vendor_id, const int _product_id, const std::string& name, const std::string& serial) : universe(_id, universe_type::FTDI), device_handle{}, data{}, product_id(_product_id), vendor_id(_vendor_id) {
 	for(auto& x : data) {
 		x = 0;
 	}

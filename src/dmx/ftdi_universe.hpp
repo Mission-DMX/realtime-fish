@@ -26,7 +26,7 @@ namespace dmxfish::dmx {
     private:
         std::string cause;
     public:
-        ftdi_exception(const std::string& failed_operation, device_ptr_t c) {
+        ftdi_exception(const std::string& failed_operation, device_ptr_t c) : cause{} {
             std::stringstream ss;
             ss << failed_operation << " Cause: " << ftdi_get_error_string(c.get());
             cause = ss.str();
