@@ -25,6 +25,9 @@ bool publish_universe_update(std::shared_ptr<dmxfish::dmx::universe> universe) {
 			return false;
 		case dmxfish::dmx::universe_type::FTDI:
 			return static_cast<dmxfish::dmx::ftdi_universe*>(universe.get())->send_data();
+		default:
+			::spdlog::error("Unable to send unknown universe type: {}.", (int) universe->getUniverseType());
+			return false;
 	}
 	return false;
 }
