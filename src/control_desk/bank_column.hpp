@@ -34,7 +34,7 @@ namespace dmxfish::control_desk {
 
     class bank_column {
     private:
-        const std::shared_ptr<device_handle> connection;
+        const std::weak_ptr<device_handle> connection;
         const std::string id;
         std::vector<std::string> display_text_up;
         std::vector<std::string> display_text_down;
@@ -55,7 +55,7 @@ namespace dmxfish::control_desk {
         uint8_t readymode_uv = 0;
         // TODO we should find a nice way to link what happens, when the select button was pressed (for example on may link an MH control (Joystick = Pan/Tilt, Arrows = Zoom/Focus))
     public:
-        bank_column(std::shared_ptr<device_handle> device_connection, bank_mode mode, std::string id);
+        bank_column(std::weak_ptr<device_handle> device_connection, bank_mode mode, std::string id);
 
         /**
          * Notify the column that it is now / no longer displayed on the control desk. In case of disabling: it will not call reset_column(). This means that if the column
