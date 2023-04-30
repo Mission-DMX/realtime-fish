@@ -5,6 +5,8 @@
 #include <unistd.h>
 
 #include "net/netio_exception.hpp"
+#include "lib/logging.hpp"
+#include "lib/macros.hpp"
 
 namespace dmxfish::control_desk {
     device_handle::device_handle(const std::string& driver_file_path, const midi_device_id& mdi) :
@@ -54,14 +56,14 @@ namespace dmxfish::control_desk {
         do {
             initial_byte = in_construction.front();
             in_construction.pop_front();
-        } while (initial_byte & 0x80 == 0);
+        } while ((initial_byte & 0x80) == 0);
         if(in_construction.size() < 2) {
             in_construction.push_front(initial_byte);
             return false;
         }
         c.status = (midi_status) (initial_byte & 0xF0);
         if(c.status == midi_status::SYS_EX) {
-            // TODO write Warning about dropping SYSEX
+            ::spdlog::warn("Received sysex MIDI command from device. This should never happen.");
         } else {
             c.channel = initial_byte & 0x0F;
             c.data_1 = in_construction.front();
@@ -74,6 +76,8 @@ namespace dmxfish::control_desk {
     }
 
     void device_handle::cb_async_schedule(::ev::async& w, int events) {
+        MARK_UNUSED(w);
+        MARK_UNUSED(events);
         set_io_flags();
     }
 

@@ -2,7 +2,8 @@
 
 namespace dmxfish::control_desk {
 
-	bank_column::bank_column(std::shared_ptr<device_handle> device_connection, bank_mode mode, std::string id) : connection(device_connection), id(id), display_text_up{}, display_text_down{}, current_bank_mode(mode) {}
+	bank_column::bank_column(std::weak_ptr<device_handle> device_connection, bank_mode mode, std::string _id) :
+		connection(device_connection), id(_id), display_text_up{}, display_text_down{}, color{}, readymode_color{}, raw_configuration{}, readymode_raw_configuration{}, current_bank_mode(mode) {}
 
 	void bank_column::set_active(bool new_value) {
 		this->active_on_device = new_value;
@@ -14,6 +15,10 @@ namespace dmxfish::control_desk {
 			// TODO disable rotary encoder leds
             // TODO clear lcd displays
 		}
+	}
+
+	void bank_column::reset_column() {
+		// TODO implement
 	}
 
 }

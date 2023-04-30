@@ -1,9 +1,14 @@
 #pragma once
 
+#include <array>
 #include <cassert>
 
 #include "control_desk/device_handle.hpp"
 #include "control_desk/enum_iterator.hpp"
+
+#define VENDOR_BEHRINGER {0, 20, 32}
+
+#define CMD_7SEG 37
 
 namespace dmxfish::control_desk {
 
@@ -196,6 +201,11 @@ namespace dmxfish::control_desk {
 
     typedef Iterator<fader, fader::FADER_CH1, fader::FADER_MAIN> xtouch_faders;
 
+    enum class encoder_change : uint8_t {
+        RE_CW_INCREASE = 65,
+        RE_CCW_DECREASE = 1,
+    };
+
     inline void xtouch_set_button_led(device_handle& d, button b, button_led_state s) {
         assert(((uint8_t) b) < 104); // Make sure we don't try to set leds for fader touch keys
         d.send_command(midi_command{midi_status::NOTE_ON, 0, (uint8_t) b, (uint8_t) s});
@@ -204,5 +214,16 @@ namespace dmxfish::control_desk {
     inline void xtouch_set_fader_position(device_handle& d, fader f, uint8_t position) {
         d.send_command(midi_command{midi_status::CONTROL_CHANGE, 0, (uint8_t) f, position});
     }
+
+    inline bool xtouch_is_column_button(button b) {
+        return ((uint8_t) b) <= (uint8_t) button::BTN_CH8_SELECT_SELECT;
+    }
+
+    inline bool xtouch_is_fader_touch(button b) {
+        auto num = (uint8_t) b;
+        return num > ((uint8_t) button::BTN_LEFT_LEFT) && num <= (uint8_t) button::FADERTOUCH_MAIN;
+    }
+
+    void xtouch_set_seg_display(device_handle& d, const std::array<char, 12>& content);
 
 }

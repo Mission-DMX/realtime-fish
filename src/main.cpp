@@ -23,7 +23,7 @@
 #include "proto_src/RealTimeControl.pb.h"
 #include "proto_src/MessageTypes.pb.h"
 
-
+#include "control_desk/desk.hpp"
 
 void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxfish::io::IOManager> iom, unsigned long c_time) {
 	auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
@@ -42,11 +42,11 @@ void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxf
 }
 
 
-void perform_main_update(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxfish::io::IOManager> iom) {
+void perform_main_update(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxfish::io::IOManager> iom, std::unique_ptr<dmxfish::control_desk::desk> control_desk) {
 	namespace stdc = std::chrono;
 	while (t->running) {
 		const auto start_time = stdc::system_clock::now().time_since_epoch();
-		// TODO Fetch FPGA input data structure from iomanager and either lock or copy it
+		control_desk->update();
 		if (t->is_direct_mode) {
 			// TODO fetch and apply updates from FPGA, also send values to GUI
 		} else { // Direct mode
@@ -60,7 +60,6 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmx
 				}
 			}
 		}
-		// TODO Release input data structure if it was locked and not copied.
 
 		dmxfish::io::push_all_registered_universes();
 
@@ -97,9 +96,13 @@ int main(int argc, char* argv[], char* env[]) {
 	auto manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
 
 	manager->start();
+
+	// TODO query attached devices and notify GUI about them
+	// TODO link control desk (make_unique)
+
 	::spdlog::info("Fish started. Press ENTER to close the server.");
 
-	perform_main_update(run_time_state, manager);
+	perform_main_update(run_time_state, manager, nullptr);
 
 	::spdlog::debug("Main End");
 }
