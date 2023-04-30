@@ -15,9 +15,45 @@ namespace dmxfish::control_desk {
                 return 0b01011000;
             case 'C':
                 return 0b00111001;
+            case 'd':
+            case 'D':
+                return 0b01011110;
+            case 'e':
+            case 'E':
+                return 0b00111001;
+            case 'f':
+            case 'F':
+                return 0b00110001;
+            case 'o':
+                return 0b01011100;
+            case 'O':
+            case '0':
+                return 0b00111111;
+            case '1':
+                return 0b00000110;
+            case '2':
+                return 0b01011011;
+            case '3':
+                return 0b01001111;
+            case '4':
+                return 0b01100110;
+            case '5':
+                return 0b01101101;
+            case '6':
+                return 0b01111100;
+            case '7':
+                return 0b00000111;
+            case '8':
+                return 0b01111111;
+            case '9':
+                return 0b01101111;
+            case '-':
+                return 0b01000000;
+            case '_':
+                return 0b00001000;
+            case ' ':
             default:
                 return 0b0;
-            // TODO complete me
         }
     }
 
