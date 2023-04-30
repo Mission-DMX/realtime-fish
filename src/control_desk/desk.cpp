@@ -42,10 +42,16 @@ namespace dmxfish::control_desk {
             }
         }
         this->reset_devices();
+        if(devices.size() == 0) {
+            ::spdlog::warn("No input devices where added to the control desk.");
+        } else {
+            ::spdlog::debug("Added {} devices to control desk.", devices.size());
+        }
     }
 
     desk::~desk() {
         this->reset_devices();
+        ::spdlog::debug("Stopping control desk handler. Reseted connected input devices.");
     }
 
     bool desk::set_active_bank_set(size_t index) {

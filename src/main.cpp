@@ -24,6 +24,7 @@
 #include "proto_src/MessageTypes.pb.h"
 
 #include "control_desk/desk.hpp"
+#include "control_desk/device_enumeration.hpp"
 
 void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxfish::io::IOManager> iom, unsigned long c_time) {
 	auto msg = std::make_shared<missiondmx::fish::ipcmessages::current_state_update>();
@@ -97,12 +98,11 @@ int main(int argc, char* argv[], char* env[]) {
 
 	manager->start();
 
-	// TODO query attached devices and notify GUI about them
-	// TODO link control desk (make_unique)
+	auto control_desk = std::make_unique<dmxfish::control_desk::desk>(dmxfish::control_desk::enumerate_control_devices());
 
 	::spdlog::info("Fish started. Press ENTER to close the server.");
 
-	perform_main_update(run_time_state, manager, nullptr);
+	perform_main_update(run_time_state, manager, std::move(control_desk));
 
 	::spdlog::debug("Main End");
 }
