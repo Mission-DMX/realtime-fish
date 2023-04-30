@@ -129,7 +129,6 @@ IOManager::IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_d
         loop_interrupter(),
 		gui_connections(std::make_shared<GUI_Connection_Handler>(std::bind(&dmxfish::io::IOManager::parse_message_cb, this, std::placeholders::_1, std::placeholders::_2))),
 		latest_error{"No Error occured"}
-
 {
 	this->loop_interrupter = std::make_unique<::ev::async>();
 	this->loop_interrupter->set<IOManager, &IOManager::cb_interrupt_async>(this);
@@ -167,7 +166,7 @@ void IOManager::cb_interrupt_async(::ev::async& w, int events) {
 }
 
 void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
-	::spdlog::debug("Msg came in with type : {}", msg_type);
+//	::spdlog::debug("Msg came in with type : {}", msg_type);
     auto buffer = client.get_zero_copy_input_stream();
     std::string error_message = "";
 	switch ((::missiondmx::fish::ipcmessages::MsgType) msg_type) {
@@ -243,12 +242,12 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 try {
                     dmxfish::io::register_universe_from_message(msg);
                 } catch (const dmx::ftdi_exception& e) {
-                    const auto error_msg = "Could not create the usb-dmx universe with id " + std::to_string(msg.id()) + ". Reason: " + *e.what();
+                    const auto error_msg = "Could not create the usb-dmx universe with id " + std::to_string(msg.id()) + ". Reason: " + e.what();
                     this->latest_error = error_msg;
                     ::spdlog::debug(error_msg);
                     send_log_message_to_client(error_msg, client);
                 } catch (const std::exception& e) {
-                    const auto error_msg = "Could not create universe: with id " + std::to_string(msg.id()) + ". Reason: " + *e.what();
+                    const auto error_msg = "Could not create universe: with id " + std::to_string(msg.id()) + ". Reason: " + e.what();
                     this->latest_error = error_msg;
                     ::spdlog::debug(error_msg);
                     send_log_message_to_client(error_msg, client);
@@ -270,12 +269,12 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                     try {
                         dmxfish::io::register_universe_from_message(universe_inner);
                     } catch (const dmx::ftdi_exception& e) {
-                        const auto error_msg = "Could not create the usb-dmx universe with id " + std::to_string(universe_inner.id()) + ". Reason: " + *e.what();
+                        const auto error_msg = "Could not create the usb-dmx universe with id " + std::to_string(universe_inner.id()) + ". Reason: " + e.what();
                         this->latest_error = error_msg;
                         ::spdlog::debug(error_msg);
                         send_log_message_to_client(error_msg, client);
                     } catch (const std::exception& e) {
-                        const auto error_msg = "Could not create universe: with id " + std::to_string(universe_inner.id()) + ". Reason: " + *e.what();
+                        const auto error_msg = "Could not create universe: with id " + std::to_string(universe_inner.id()) + ". Reason: " + e.what();
                         this->latest_error = error_msg;
                         ::spdlog::debug(error_msg);
                         send_log_message_to_client(error_msg, client);
