@@ -133,46 +133,73 @@ namespace dmxfish::control_desk {
     }
 
     void desk::process_incomming_command(const midi_command& c, size_t device_index) {
+        if(this->iomanager == nullptr) {
+            return;
+        }
         auto& d = this->devices[device_index];
         switch(d->get_device_id()) {
             case midi_device_id::X_TOUCH_EXTENSION:
             case midi_device_id::X_TOUCH:
                 // TODO route column commands
                 switch (c.status) {
-                    case midi_status::NOTE_ON:
-                        if(xtouch_is_column_button(button{c.data_1})) {
-                            // TODO route button press to corresponding column
-                        } else if(xtouch_is_fader_touch(button{c.data_1})) {
-                            if(this->iomanager != nullptr) {
-                                ::missiondmx::fish::ipcmessages::button_state_change msg;
-                                msg.set_button((unsigned int) (device_index * 256 + c.data_1));
-                                msg.set_new_state(c.data_2 > 10 ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
-                                iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
+                    case midi_status::NOTE_ON: {
+                        const button b{c.data_1};
+                        if(xtouch_is_column_button(b)) {
+                            // NOTE if we would ever support input devices with anything but 8 columns, this would be a bug.
+                            const auto column_index = (device_index * 8) + (c.data_1 - XTOUCH_FADER_INDEX_OFFSET);
+                            ::missiondmx::fish::ipcmessages::button_state_change msg;
+                            if(current_active_bank_set < bank_sets.size()) {
+                                auto& cbs = this->bank_sets[current_active_bank_set];
+                                if(cbs.active_bank < cbs.fader_banks.size()) {
+                                    auto col_ptr = cbs.fader_banks[cbs.active_bank].get(column_index);
+                                    col_ptr->process_button_press_message(b, button_change{c.data_2});
+                                    msg.set_button((unsigned int) (device_index * 256 + c.data_1));
+                                    msg.set_new_state(c.data_2 > 10 ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
+                                    iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
+                                }
                             }
+                        } else if(xtouch_is_fader_touch(b)) {
+                            ::missiondmx::fish::ipcmessages::button_state_change msg;
+                            msg.set_button((unsigned int) (device_index * 256 + c.data_1));
+                            msg.set_new_state(c.data_2 > 10 ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
+                            iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
                         } else {
                             // TODO handle bord buttons
                         }
                         break;
-                    case midi_status::CONTROL_CHANGE:
-                        // TODO handle jogwheel, faders and encoders
+                    } case midi_status::CONTROL_CHANGE:
                         if(xtouch_is_column_fader(c.data_1)) {
-                            if(this->iomanager != nullptr) {
-                                // TODO if we would ever support input devices with anything but 8 columns this would be a bug.
-                                const auto column_index = (device_index * 8) + (c.data_1 - XTOUCH_FADER_INDEX_OFFSET);
-                                ::missiondmx::fish::ipcmessages::fader_position msg;
-                                if(current_active_bank_set < bank_sets.size()) {
-                                    auto& cbs = this->bank_sets[current_active_bank_set];
-                                    if(cbs.active_bank < cbs.fader_banks.size()) {
-                                        auto col_ptr = cbs.fader_banks[cbs.active_bank].get(column_index);
-                                        auto value = (c.data_2 < 127 ? c.data_2 : 128) * (65536 / 128);
-                                        col_ptr->process_fader_change_message(value);
-                                        msg.set_column_id(col_ptr->get_id());
-                                        msg.set_position(value);
-                                        iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_FADER_POSITION);
-                                    }
+                            // NOTE if we would ever support input devices with anything but 8 columns, this would be a bug.
+                            const auto column_index = (device_index * 8) + (c.data_1 - XTOUCH_FADER_INDEX_OFFSET);
+                            ::missiondmx::fish::ipcmessages::fader_position msg;
+                            if(current_active_bank_set < bank_sets.size()) {
+                                auto& cbs = this->bank_sets[current_active_bank_set];
+                                if(cbs.active_bank < cbs.fader_banks.size()) {
+                                    auto col_ptr = cbs.fader_banks[cbs.active_bank].get(column_index);
+                                    auto value = (c.data_2 < 127 ? c.data_2 : 128) * (65536 / 128);
+                                    col_ptr->process_fader_change_message(value);
+                                    msg.set_column_id(col_ptr->get_id());
+                                    msg.set_position(value);
+                                    iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_FADER_POSITION);
+                                }
+                            }
+                        } else if(xtouch_is_column_encoder(c.data_1)) {
+                            // NOTE if we would ever support input devices with anything but 8 columns, this would be a bug.
+                            const auto column_index = (device_index * 8) + (c.data_1 - XTOUCH_ENCODER_INDEX_OFFSET);
+                            if(current_active_bank_set < bank_sets.size()) {
+                                auto& cbs = this->bank_sets[current_active_bank_set];
+                                if(cbs.active_bank < cbs.fader_banks.size()) {
+                                    ::missiondmx::fish::ipcmessages::rotary_encoder_change msg;
+                                    auto col_ptr = cbs.fader_banks[cbs.active_bank].get(column_index);
+                                    const auto change = c.data_2 == 65 ? 1 : -1;
+                                    col_ptr->process_encoder_change_message(change);
+                                    msg.set_column_id(col_ptr->get_id());
+                                    msg.set_amount(change);
+                                    iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_ROTARY_ENCODER_CHANGE);
                                 }
                             }
                         }
+                        // TODO handle jogwheel, foot switches
                         break;
                     case midi_status::INVALID:
                     case midi_status::NOTE_OFF:

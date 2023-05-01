@@ -120,10 +120,12 @@ namespace dmxfish::control_desk {
 
 		void process_fader_change_message(unsigned int position_request);
         void process_encoder_change_message(int change_request);
+        void process_button_press_message(button b, button_change c);
     private:
         void update_display_text();
         void update_physical_fader_position();
         void update_encoder_leds();
+        void update_button_leds();
     };
 
 }

@@ -85,7 +85,14 @@ namespace dmxfish::control_desk {
 		update_encoder_leds();
 	}
 
+	void bank_column::process_button_press_message(button b, button_change c) {
+		// TODO implement
+	}
+
 	void bank_column::update_display_text() {
+		if(!active_on_device) {
+			return;
+		}
 		// TODO set lower display line if not in direct input mode
 	}
 
@@ -103,6 +110,16 @@ namespace dmxfish::control_desk {
 	}
 
 	void bank_column::update_encoder_leds() {
+		if(!active_on_device) {
+			return;
+		}
+		// TODO implement
+	}
+
+	void bank_column::update_button_leds() {
+		if(!active_on_device) {
+			return;
+		}
 		// TODO implement
 	}
 

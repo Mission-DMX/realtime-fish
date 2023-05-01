@@ -10,6 +10,7 @@
 
 #define CMD_7SEG 37
 #define XTOUCH_FADER_INDEX_OFFSET 70
+#define XTOUCH_ENCODER_INDEX_OFFSET 80
 
 namespace dmxfish::control_desk {
 
@@ -52,6 +53,11 @@ namespace dmxfish::control_desk {
         magenta_both_inverted = 5 & (0b00110000),
         cyan_both_inverted = 6 & (0b00110000),
         white_both_inverted = 7 & (0b00110000),
+    };
+
+    enum class button_change : uint8_t {
+        PRESS = 127,
+        RELEASE = 0,
     };
 
     /**
@@ -228,6 +234,10 @@ namespace dmxfish::control_desk {
 
     [[nodiscard]] inline bool xtouch_is_column_fader(uint8_t c) {
         return (c >= XTOUCH_FADER_INDEX_OFFSET) && (c < XTOUCH_FADER_INDEX_OFFSET + 8);
+    }
+
+    [[nodiscard]] inline bool xtouch_is_column_encoder(uint8_t c) {
+        return (c >= XTOUCH_ENCODER_INDEX_OFFSET) && (c < XTOUCH_ENCODER_INDEX_OFFSET + 8);
     }
 
     void xtouch_set_seg_display(device_handle& d, const std::array<char, 12>& content);
