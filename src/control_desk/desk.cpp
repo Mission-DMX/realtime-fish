@@ -132,7 +132,7 @@ namespace dmxfish::control_desk {
         }
     }
 
-    void desk::process_incomming_command(midi_command& c, size_t device_index) {
+    void desk::process_incomming_command(const midi_command& c, size_t device_index) {
         auto& d = this->devices[device_index];
         switch(d->get_device_id()) {
             case midi_device_id::X_TOUCH_EXTENSION:
@@ -145,7 +145,7 @@ namespace dmxfish::control_desk {
                         } else if(xtouch_is_fader_touch(button{c.data_1})) {
                             if(this->iomanager != nullptr) {
                                 ::missiondmx::fish::ipcmessages::button_state_change msg;
-                                msg.set_button(device_index * 256 + c.data_1);
+                                msg.set_button((unsigned int) (device_index * 256 + c.data_1));
                                 msg.set_new_state(c.data_2 > 10 ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
                                 iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
                             }
@@ -155,6 +155,25 @@ namespace dmxfish::control_desk {
                         break;
                     case midi_status::CONTROL_CHANGE:
                         // TODO handle jogwheel, faders and encoders
+                        if(xtouch_is_column_fader(c.data_1)) {
+                            if(this->iomanager != nullptr) {
+                                // TODO if we would ever support input devices with anything but 8 columns this would be a bug.
+                                const auto column_index = (device_index * 8) + (c.data_1 - XTOUCH_FADER_INDEX_OFFSET);
+                                ::missiondmx::fish::ipcmessages::fader_position msg;
+                                if(current_active_bank_set < bank_sets.size()) {
+                                    auto& cbs = this->bank_sets[current_active_bank_set];
+                                    if(cbs.active_bank < cbs.fader_banks.size()) {
+                                        auto col_ptr = cbs.fader_banks[cbs.active_bank].get(column_index);
+                                        auto value = (c.data_2 < 127 ? c.data_2 : 128) * (65536 / 128);
+                                        col_ptr->process_fader_change_message(value);
+                                        msg.set_column_id(col_ptr->get_id());
+                                        msg.set_position(value);
+                                        iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_FADER_POSITION);
+                                    }
+                                }
+                            }
+                        }
+                        break;
                     case midi_status::INVALID:
                     case midi_status::NOTE_OFF:
                     case midi_status::POLYPHONIC:
@@ -174,7 +193,7 @@ namespace dmxfish::control_desk {
     }
 
     void desk::update() {
-        for (auto i = 0; i < this->devices.size(); i++) {
+        for (size_t i = 0; i < this->devices.size(); i++) {
             auto& d = this->devices[i];
             auto c = d->get_next_command_from_desk();
             while(c) {
@@ -255,7 +274,7 @@ namespace dmxfish::control_desk {
                 }
                 auto& selected_device = devices[device_index];
                 const auto& id = col_definition.column_id();
-                auto col_ptr = current_bank.emplace_back(selected_device, deduce_bank_mode(col_definition), id, col_index_on_device);
+                auto col_ptr = current_bank.emplace_back(selected_device, deduce_bank_mode(col_definition), id, (uint8_t) col_index_on_device);
                 bs.columns_map[id] = col_ptr;
                 col_index_on_device++;
             }
@@ -304,6 +323,8 @@ namespace dmxfish::control_desk {
             case missiondmx::fish::ipcmessages::BS_SET_LED_NOT_ACTIVE:
             case missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED:
             case missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED:
+            case missiondmx::fish::ipcmessages::ButtonState_INT_MIN_SENTINEL_DO_NOT_USE_:
+            case missiondmx::fish::ipcmessages::ButtonState_INT_MAX_SENTINEL_DO_NOT_USE_:
             default:
                 s = button_led_state::off;
                 break;

@@ -50,6 +50,10 @@ namespace dmxfish::control_desk {
             columns.push_back(ptr);
             return ptr;
         }
+
+        inline std::shared_ptr<bank_column> get(size_t pos) {
+            return columns[pos];
+        }
     };
 
     class desk {
@@ -115,7 +119,7 @@ namespace dmxfish::control_desk {
     private:
         void reset_devices();
         void remove_bank_set(size_t i);
-        void process_incomming_command(midi_command& c, size_t device_index);
+        void process_incomming_command(const midi_command& c, size_t device_index);
     };
 
 }

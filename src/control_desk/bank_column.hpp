@@ -78,11 +78,11 @@ namespace dmxfish::control_desk {
          */
         void reset_column();
 
-        inline bank_mode get_mode() const {
+        [[nodiscard]] inline bank_mode get_mode() const {
             return this->current_bank_mode;
         }
 
-        inline dmxfish::dmx::pixel get_color() const {
+        [[nodiscard]] inline dmxfish::dmx::pixel get_color() const {
             return this->color;
         }
 
@@ -94,7 +94,7 @@ namespace dmxfish::control_desk {
             // TODO set fader position, 2nd row display text and rotary encoder positions
         }
 
-        inline raw_column_configuration get_raw_configuration() const {
+        [[nodiscard]] inline raw_column_configuration get_raw_configuration() const {
                 return raw_configuration;
         }
 
@@ -102,7 +102,7 @@ namespace dmxfish::control_desk {
 			this->amber = new_value;
 		}
 
-		inline uint8_t get_amber_value() {
+		[[nodiscard]] inline uint8_t get_amber_value() const {
 			return this->amber;
 		}
 
@@ -110,9 +110,13 @@ namespace dmxfish::control_desk {
 			this->uv = new_value;
 		}
 
-		inline uint8_t get_uv_value() {
+		[[nodiscard]] inline uint8_t get_uv_value() const {
 			return this->uv;
 		}
+
+		[[nodiscard]] inline std::string get_id() const {
+            return this->id;
+        }
 
 		void process_fader_change_message(unsigned int position_request);
         void process_encoder_change_message(int change_request);

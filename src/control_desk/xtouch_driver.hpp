@@ -226,6 +226,10 @@ namespace dmxfish::control_desk {
         return num > ((uint8_t) button::BTN_LEFT_LEFT) && num <= (uint8_t) button::FADERTOUCH_MAIN;
     }
 
+    [[nodiscard]] inline bool xtouch_is_column_fader(uint8_t c) {
+        return (c >= XTOUCH_FADER_INDEX_OFFSET) && (c < XTOUCH_FADER_INDEX_OFFSET + 8);
+    }
+
     void xtouch_set_seg_display(device_handle& d, const std::array<char, 12>& content);
 
 }
