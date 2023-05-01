@@ -46,8 +46,8 @@ namespace dmxfish::filters {
     template <double (*F)(double, double, double, double, double)>
     class filter_trigonometric: public filter {
     private:
-        const double one = 1;
-        const double zero = 0;
+        static constexpr double one = 1;
+        static constexpr double zero = 0;
         double* input = nullptr;
         double* factor_outer = nullptr;
         double* factor_inner = nullptr;
@@ -108,9 +108,9 @@ namespace dmxfish::filters {
     template <double (*F)(double, double, double, double, double, double)>
     class filter_five_params: public filter {
     private:
-        const double one = 1;
-        const double zero = 0;
-        const double half_circle = 180;
+        static constexpr double one = 1;
+        static constexpr double zero = 0;
+        static constexpr double half_circle = 180;
         double* input = nullptr;
         double* factor_outer = nullptr;
         double* factor_inner = nullptr;

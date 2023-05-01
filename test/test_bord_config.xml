@@ -64,14 +64,28 @@
     <p1:filter id="arctangent" type="24">
       <p1:channellink input_channel_id="value" output_channel_id="const_float_2:value"/>
     </p1:filter>
-    <p1:filter id="square" type="29">
+    <p1:filter id="square" type="25">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
     </p1:filter>
-    <p1:filter id="triangle" type="30">
+    <p1:filter id="triangle" type="26">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
     </p1:filter>
-    <p1:filter id="sawtooth" type="30">
+    <p1:filter id="sawtooth" type="27">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+    </p1:filter>
+    <p1:filter id="logarithm" type="28">
+      <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+    </p1:filter>
+    <p1:filter id="exponential" type="29">
+      <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+    </p1:filter>
+    <p1:filter id="min" type="30">
+      <p1:channellink input_channel_id="param1" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="param2" output_channel_id="const_float_2:value"/>
+    </p1:filter>
+    <p1:filter id="max" type="31">
+      <p1:channellink input_channel_id="param1" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="param2" output_channel_id="const_float_2:value"/>
     </p1:filter>
   </p1:scene>
   <p1:scene human_readable_name="A minimal example scene. It does not contain any filters." id="1"/>
