@@ -338,7 +338,13 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
         {
             auto msg = missiondmx::fish::ipcmessages::button_state_change();
             if (msg.ParseFromZeroCopyStream(buffer)){
-                // TODO implement
+                if(control_desk_handle) {
+                    try {
+                        control_desk_handle->update_button_leds_from_protobuf(msg);
+                    } catch(const std::exception& e) {
+                        this->latest_error = e.what();
+                    }
+                }
                 return;
             }
             error_message += "Could not parse the message of type: MSGT_BUTTON_STATE_CHANGE.";
@@ -350,7 +356,13 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
         {
             auto msg = missiondmx::fish::ipcmessages::fader_position();
             if (msg.ParseFromZeroCopyStream(buffer)){
-                // TODO implement
+                if(control_desk_handle) {
+                    try {
+                        control_desk_handle->update_fader_position_from_protobuf(msg);
+                    } catch(const std::exception& e) {
+                        this->latest_error = e.what();
+                    }
+                }
                 return;
             }
             error_message += "Could not parse the message of type: MSGT_FADER_POSITION.";
@@ -362,7 +374,13 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
         {
             auto msg = missiondmx::fish::ipcmessages::rotary_encoder_change();
             if (msg.ParseFromZeroCopyStream(buffer)){
-                // TODO implement
+                if(control_desk_handle) {
+                    try {
+                        control_desk_handle->update_encoder_state_from_protobuf(msg);
+                    } catch(const std::exception& e) {
+                        this->latest_error = e.what();
+                    }
+                }
                 return;
             }
             error_message += "Could not parse the message of type: MSGT_ROTARY_ENCODER_CHANGE.";

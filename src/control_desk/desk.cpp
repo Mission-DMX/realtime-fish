@@ -246,12 +246,63 @@ namespace dmxfish::control_desk {
                 }
                 auto& selected_device = devices[device_index];
                 const auto& id = col_definition.column_id();
-                auto col_ptr = current_bank.emplace_back(selected_device, deduce_bank_mode(col_definition), id);
+                auto col_ptr = current_bank.emplace_back(selected_device, deduce_bank_mode(col_definition), id, col_index_on_device);
                 bs.columns_map[id] = col_ptr;
                 col_index_on_device++;
             }
         }
         // ready set does not need to be populated as they are not in ready state by default
         bs.active_bank = definition.default_active_fader_bank();
+    }
+
+    void desk::update_fader_position_from_protobuf(const ::missiondmx::fish::ipcmessages::fader_position& msg) {
+        if(!(current_active_bank_set < bank_sets.size())) {
+            return;
+        }
+        auto& bs = bank_sets[current_active_bank_set];
+        const auto& cid = msg.column_id();
+        if(!bs.columns_map.contains(cid)) {
+            return;
+        }
+        bs.columns_map.at(cid)->process_fader_change_message(msg.position());
+    }
+
+    void desk::update_encoder_state_from_protobuf(const ::missiondmx::fish::ipcmessages::rotary_encoder_change& msg) {
+        if(!(current_active_bank_set < bank_sets.size())) {
+            return;
+        }
+        auto& bs = bank_sets[current_active_bank_set];
+        const auto& cid = msg.column_id();
+        if(!bs.columns_map.contains(cid)) {
+            return;
+        }
+        bs.columns_map.at(cid)->process_encoder_change_message(msg.amount());
+    }
+
+    void desk::update_button_leds_from_protobuf(const missiondmx::fish::ipcmessages::button_state_change& msg) {
+        if(msg.button() < 0 || msg.button() > xtouch_biggest_led_index) {
+            return;
+        }
+        button b = button{(uint8_t) msg.button()};
+        button_led_state s;
+        switch(msg.new_state()) {
+            case missiondmx::fish::ipcmessages::BS_ACTIVE:
+                s = button_led_state::on;
+                break;
+            case missiondmx::fish::ipcmessages::BS_SET_LED_BLINKING:
+                s = button_led_state::flash;
+                break;
+            case missiondmx::fish::ipcmessages::BS_SET_LED_NOT_ACTIVE:
+            case missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED:
+            case missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED:
+            default:
+                s = button_led_state::off;
+                break;
+        }
+        // TODO specify which device by calculating modulo of msg instead of rejecting it.
+        for(auto& d : devices) {
+            xtouch_set_button_led(*d, b, s);
+            d->schedule_transmission();
+        }
     }
 }

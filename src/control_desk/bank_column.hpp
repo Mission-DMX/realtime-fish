@@ -34,6 +34,13 @@ namespace dmxfish::control_desk {
 
     class bank_column {
     private:
+        enum class rotary_encoder_assignment : uint8_t {
+            HUE,
+            SATURATION,
+            AMBER,
+            UV
+        };
+    private:
         const std::weak_ptr<device_handle> connection;
         const std::string id;
         std::vector<std::string> display_text_up;
@@ -44,18 +51,21 @@ namespace dmxfish::control_desk {
         raw_column_configuration readymode_raw_configuration;
         bool active_on_device = false;
         bool select_active = false;
+        bool readymode_active = false;
 
         unsigned int display_scroll_position_up = 0;
         unsigned int display_scroll_position_down = 0;
 
         const bank_mode current_bank_mode = bank_mode::HSI_COLOR_MODE;
+        rotary_encoder_assignment current_re_assignment = rotary_encoder_assignment::HUE;
+        const uint8_t fader_index;
         uint8_t amber = 0;
         uint8_t readymode_amber = 0;
         uint8_t uv = 0;
         uint8_t readymode_uv = 0;
         // TODO we should find a nice way to link what happens, when the select button was pressed (for example on may link an MH control (Joystick = Pan/Tilt, Arrows = Zoom/Focus))
     public:
-        bank_column(std::weak_ptr<device_handle> device_connection, bank_mode mode, std::string id);
+        bank_column(std::weak_ptr<device_handle> device_connection, bank_mode mode, std::string id, uint8_t column_index);
 
         /**
          * Notify the column that it is now / no longer displayed on the control desk. In case of disabling: it will not call reset_column(). This means that if the column
@@ -103,6 +113,13 @@ namespace dmxfish::control_desk {
 		inline uint8_t get_uv_value() {
 			return this->uv;
 		}
+
+		void process_fader_change_message(unsigned int position_request);
+        void process_encoder_change_message(int change_request);
+    private:
+        void update_display_text();
+        void update_physical_fader_position();
+        void update_encoder_leds();
     };
 
 }

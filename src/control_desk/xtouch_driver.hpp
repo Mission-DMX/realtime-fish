@@ -9,6 +9,7 @@
 #define VENDOR_BEHRINGER {0, 20, 32}
 
 #define CMD_7SEG 37
+#define XTOUCH_FADER_INDEX_OFFSET 70
 
 namespace dmxfish::control_desk {
 
@@ -186,6 +187,7 @@ namespace dmxfish::control_desk {
 
     typedef Iterator<button, button{0}, button{103}> xtouch_buttons;
     typedef Iterator<button, button::BTN_CH1_ENCODER_ROTARYMODE, button::BTN_CH8_SELECT_SELECT> xtouch_extender_buttons;
+    static constexpr uint8_t xtouch_biggest_led_index = (uint8_t) button{103};
 
     enum class fader : uint8_t {
         FADER_CH1 = 70,

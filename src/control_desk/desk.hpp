@@ -41,8 +41,8 @@ namespace dmxfish::control_desk {
             columns.reserve(amount);
         }
 
-        inline std::shared_ptr<bank_column> emplace_back(std::weak_ptr<device_handle> device_connection, bank_mode mode, const std::string& id) {
-            auto ptr = std::make_shared<bank_column>(device_connection, mode, id);
+        inline std::shared_ptr<bank_column> emplace_back(std::weak_ptr<device_handle> device_connection, bank_mode mode, const std::string& id, uint8_t fader_index) {
+            auto ptr = std::make_shared<bank_column>(device_connection, mode, id, fader_index);
             columns.push_back(ptr);
             return ptr;
         }
@@ -98,6 +98,10 @@ namespace dmxfish::control_desk {
         bool set_active_fader_bank_on_current_set(size_t index);
 
         void add_bank_set_from_protobuf_msg(const ::missiondmx::fish::ipcmessages::add_fader_bank_set& definition);
+
+        void update_fader_position_from_protobuf(const ::missiondmx::fish::ipcmessages::fader_position& msg);
+        void update_encoder_state_from_protobuf(const ::missiondmx::fish::ipcmessages::rotary_encoder_change& msg);
+        void update_button_leds_from_protobuf(const missiondmx::fish::ipcmessages::button_state_change& msg);
 
     private:
         void reset_devices();
