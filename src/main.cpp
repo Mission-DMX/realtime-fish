@@ -45,9 +45,10 @@ void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxf
 
 void perform_main_update(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmxfish::io::IOManager> iom, std::unique_ptr<dmxfish::control_desk::desk> control_desk) {
 	namespace stdc = std::chrono;
+	iom->set_control_desk_handle(std::move(control_desk));
 	while (t->running) {
 		const auto start_time = stdc::system_clock::now().time_since_epoch();
-		control_desk->update();
+		iom->update_control_desk();
 		if (t->is_direct_mode) {
 			// TODO fetch and apply updates from FPGA, also send values to GUI
 		} else { // Direct mode
@@ -75,6 +76,7 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmx
 		if(cycle_time_ms < 18)
 			std::this_thread::sleep_for(stdc::milliseconds(18) - cycle_time);
 	}
+	iom->set_control_desk_handle(nullptr);
 }
 
 int main(int argc, char* argv[], char* env[]) {

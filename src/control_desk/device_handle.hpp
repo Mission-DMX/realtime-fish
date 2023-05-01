@@ -48,6 +48,11 @@ namespace dmxfish::control_desk {
             incomming_queue.pop_front();
             return c;
         }
+
+        [[nodiscard]] inline unsigned int get_number_of_supported_columns() {
+            // All devices that are already supported have 8 columns.
+            return 8;
+        }
     private:
         bool decode_incomming_event();
         void cb_async_schedule(::ev::async& w, int events);

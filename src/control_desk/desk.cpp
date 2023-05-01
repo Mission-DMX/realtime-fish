@@ -147,6 +147,13 @@ namespace dmxfish::control_desk {
                         break;
                     case midi_status::CONTROL_CHANGE:
                         // TODO handle jogwheel, faders and encoders
+                    case midi_status::INVALID:
+                    case midi_status::NOTE_OFF:
+                    case midi_status::POLYPHONIC:
+                    case midi_status::PROG_CHANGE:
+                    case midi_status::MONOPHONIC:
+                    case midi_status::PITCH_BEND:
+                    case midi_status::SYS_EX:
                     default:
                         ::spdlog::error("unexpected MIDI command status: {}.", (int) c.status);
                 }
@@ -158,7 +165,7 @@ namespace dmxfish::control_desk {
     }
 
     void desk::update() {
-        for (int i = 0; i < this->devices.size(); i++) {
+        for (auto i = 0; i < this->devices.size(); i++) {
             auto& d = this->devices[i];
             auto c = d->get_next_command_from_desk();
             while(c) {
@@ -204,5 +211,47 @@ namespace dmxfish::control_desk {
         // call erase on the last element
         bank_sets.pop_back();
         // We do not call d->schedule_transmission(); here as there might be further removal operations and we'd be updating the desk 20ms later anyway.
+    }
+
+    [[nodiscard]] inline bank_mode deduce_bank_mode(const ::missiondmx::fish::ipcmessages::fader_column& bank_definition) {
+        if(bank_definition.has_plain_color())
+            return bank_mode::HSI_COLOR_MODE;
+        if(bank_definition.has_color_with_uv())
+            return bank_mode::HSI_WITH_UV_MODE;
+        if(bank_definition.has_raw_data())
+            return bank_mode::DIRECT_INPUT_MODE;
+        return bank_mode::HSI_WITHAMBER_AND_UV_MODE; // Should not happen with current buffer version
+    }
+
+    void desk::add_bank_set_from_protobuf_msg(const ::missiondmx::fish::ipcmessages::add_fader_bank_set& definition) {
+        bank_sets.emplace_back();
+        const auto new_bank_index = bank_sets.size() - 1;
+        bankset_to_index_map[definition.bank_id()] = new_bank_index;
+        auto& bs = bank_sets[new_bank_index];
+        bs.fader_banks.reserve(definition.banks_size());
+        for (auto& bank_definition : definition.banks()) {
+            bs.fader_banks.emplace_back();
+            auto& current_bank = bs.fader_banks[bs.fader_banks.size() - 1];
+            current_bank.reserve(bank_definition.cols_size());
+            size_t device_index = 0;
+            unsigned int col_index_on_device = 0;
+            for(auto& col_definition : bank_definition.cols()) {
+                if(device_index == devices.size()) {
+                    // We have too many columns to represent with our devices.
+                    break;
+                }
+                if(col_index_on_device == devices[device_index]->get_number_of_supported_columns()) {
+                    device_index++;
+                    col_index_on_device = 0;
+                }
+                auto& selected_device = devices[device_index];
+                const auto& id = col_definition.column_id();
+                auto col_ptr = current_bank.emplace_back(selected_device, deduce_bank_mode(col_definition), id);
+                bs.columns_map[id] = col_ptr;
+                col_index_on_device++;
+            }
+        }
+        // ready set does not need to be populated as they are not in ready state by default
+        bs.active_bank = definition.default_active_fader_bank();
     }
 }

@@ -448,6 +448,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 using namespace missiondmx::fish::ipcmessages;
                 this->show_file_apply_state = this->active_show == nullptr ? SFAS_SHOW_LOADING : SFAS_SHOW_UPDATING;
                 this->show_loading_thread = std::make_shared<std::thread>(std::bind(&IOManager::load_show_file, this, msg));
+                return;
             }
             error_message += "Could not parse the message of type: MSGT_LOAD_SHOW_FILE.";
             this->latest_error = error_message;
@@ -473,6 +474,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 } catch (const std::invalid_argument& e) {
                     this->latest_error = e.what();
                 }
+                return;
             }
             error_message += "Could not parse the message of type: MSGT_UPDATE_PARAMETER.";
             this->latest_error = error_message;
@@ -506,6 +508,36 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
             error_message += "IOManager Parse Message: Used MsgType_INT_MAX_SENTINEL_DO_NOT_USE_ as Msg Type. ";
             break;
         }
+        case ::missiondmx::fish::ipcmessages::MSGT_REMOVE_FADER_BANK_SET:
+            try {
+                missiondmx::fish::ipcmessages::remove_fader_bank_set msg;
+                if(!msg.ParseFromZeroCopyStream(buffer)) {
+                    error_message += "Failed to decode MSGT_REMOVE_FADER_BANK_SET message.";
+                }
+                if(control_desk_handle) {
+                    control_desk_handle->remove_bank_set(msg.bank_id());
+                } else {
+                    error_message += "No control desk handle has been currently set.";
+                }
+            } catch (const std::exception& e) {
+                this->latest_error = e.what();
+            }
+            break;
+        case ::missiondmx::fish::ipcmessages::MSGT_ADD_FADER_BANK_SET:
+            try {
+                missiondmx::fish::ipcmessages::add_fader_bank_set msg;
+                if(!msg.ParseFromZeroCopyStream(buffer)) {
+                    error_message += "Failed to decode MSGT_ADD_FADER_BANK_SET message.";
+                }
+                if(control_desk_handle) {
+                    control_desk_handle->add_bank_set_from_protobuf_msg(msg);
+                } else {
+                    error_message += "No control desk handle has been currently set.";
+                }
+            } catch (const std::exception& e) {
+                this->latest_error = e.what();
+            }
+            break;
 		default:
         {
             error_message += "IOManager Parse Message: Used a unknown Msg Type. ";

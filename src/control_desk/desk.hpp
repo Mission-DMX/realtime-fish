@@ -12,6 +12,8 @@
 #include "control_desk/command.hpp"
 #include "control_desk/device_handle.hpp"
 
+#include "proto_src/Console.pb.h"
+
 namespace dmxfish::control_desk {
 
     class bank {
@@ -34,6 +36,16 @@ namespace dmxfish::control_desk {
         inline size_t size() {
             return this->columns.size();
         }
+
+        inline void reserve(int amount) {
+            columns.reserve(amount);
+        }
+
+        inline std::shared_ptr<bank_column> emplace_back(std::weak_ptr<device_handle> device_connection, bank_mode mode, const std::string& id) {
+            auto ptr = std::make_shared<bank_column>(device_connection, mode, id);
+            columns.push_back(ptr);
+            return ptr;
+        }
     };
 
     class desk {
@@ -44,7 +56,7 @@ namespace dmxfish::control_desk {
             std::unordered_set<std::string> columns_in_ready_state;
             size_t active_bank = 0;
 
-            bank_set() = default;
+            bank_set() : fader_banks{}, columns_map{}, columns_in_ready_state{} {};
             ~bank_set() = default;
         };
     private:
@@ -85,7 +97,7 @@ namespace dmxfish::control_desk {
 
         bool set_active_fader_bank_on_current_set(size_t index);
 
-        // TODO add method to add fader bank sets
+        void add_bank_set_from_protobuf_msg(const ::missiondmx::fish::ipcmessages::add_fader_bank_set& definition);
 
     private:
         void reset_devices();
