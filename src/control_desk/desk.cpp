@@ -1,6 +1,9 @@
 #include "control_desk/desk.hpp"
 #include "control_desk/xtouch_driver.hpp"
 
+#include "proto_src/MessageTypes.pb.h"
+
+#include "io/iomanager.hpp"
 #include "lib/logging.hpp"
 
 namespace dmxfish::control_desk {
@@ -140,7 +143,12 @@ namespace dmxfish::control_desk {
                         if(xtouch_is_column_button(button{c.data_1})) {
                             // TODO route button press to corresponding column
                         } else if(xtouch_is_fader_touch(button{c.data_1})) {
-                            // TODO notify GUI about fader touch
+                            if(this->iomanager != nullptr) {
+                                ::missiondmx::fish::ipcmessages::button_state_change msg;
+                                msg.set_button(device_index * 256 + c.data_1);
+                                msg.set_new_state(c.data_2 > 10 ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
+                                iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
+                            }
                         } else {
                             // TODO handle bord buttons
                         }
@@ -162,6 +170,7 @@ namespace dmxfish::control_desk {
                 ::spdlog::error("control desk device ID {} not yet implemented for input processing.", (int) d->get_device_id());
                 break;
         }
+        d->schedule_transmission();
     }
 
     void desk::update() {

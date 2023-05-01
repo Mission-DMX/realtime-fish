@@ -38,16 +38,20 @@ namespace dmxfish::control_desk {
     }
 
     void device_handle::schedule_transmission() {
+        bool packets_constructed = false;
         if(!event_construction.empty()) {
             this->event_queue.push_back(rmrf::net::iorecord{event_construction.data(), event_construction.size()});
             event_construction.clear();
+            packets_constructed = true;
         }
         if(!sysex_construction.empty()) {
             // TODO erase first element from ioqueue if required
             this->sysex_queue.push_back(rmrf::net::iorecord{sysex_construction.data(), sysex_construction.size()});
             sysex_construction.clear();
+            packets_constructed = true;
         }
-        this->async.send();
+        if(packets_constructed)
+            this->async.send();
     }
 
     bool device_handle::decode_incomming_event() {

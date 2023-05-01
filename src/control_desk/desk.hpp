@@ -14,6 +14,10 @@
 
 #include "proto_src/Console.pb.h"
 
+namespace dmxfish::io {
+class IOManager;
+}
+
 namespace dmxfish::control_desk {
 
     class bank {
@@ -60,6 +64,7 @@ namespace dmxfish::control_desk {
             ~bank_set() = default;
         };
     private:
+        std::shared_ptr<dmxfish::io::IOManager> iomanager = nullptr;
         std::vector<std::shared_ptr<device_handle>> devices;
         std::vector<bank_set> bank_sets;
         std::map<std::string, size_t> bankset_to_index_map;
@@ -68,6 +73,10 @@ namespace dmxfish::control_desk {
     public:
         desk(std::list<std::pair<std::string, midi_device_id>> input_devices);
         ~desk();
+
+        inline void set_iomanager(std::shared_ptr<dmxfish::io::IOManager> iom) {
+            this->iomanager = iom;
+        }
 
         /**
          * This method performs the updates of all HMI input devices

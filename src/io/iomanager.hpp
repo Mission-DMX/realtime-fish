@@ -55,6 +55,9 @@ namespace dmxfish::io {
 
 			inline void set_control_desk_handle(std::unique_ptr<dmxfish::control_desk::desk> handle) {
 				this->control_desk_handle = std::move(handle);
+				if(this->control_desk_handle != nullptr) {
+					this->control_desk_handle->set_iomanager(this->shared_from_this());
+				}
 			}
 
 			inline void update_control_desk() {
