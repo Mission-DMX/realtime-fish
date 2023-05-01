@@ -14,23 +14,23 @@
 namespace dmxfish::filters {
 
     COMPILER_SUPRESS("-Weffc++")
-    double sin_deg(double v, double f, double m, double p){
-        return f*std::sin(std::remainder((v+p)*m, 360.0)*M_PI/180);
+    double sin_deg(double v, double f, double m, double p, double o){
+        return f*std::sin(std::remainder((v+p)*m, 360.0)*M_PI/180) + o;
     }
-    double cos_deg(double v, double f, double m, double p){
-        return f*std::cos(std::remainder((v+p)*m, 360.0)*M_PI/180);
+    double cos_deg(double v, double f, double m, double p, double o){
+        return f*std::cos(std::remainder((v+p)*m, 360.0)*M_PI/180) + o;
     }
-    double tan_deg(double v, double f, double m, double p){
-        return f*std::tan(std::remainder((v+p)*m, 360.0)*M_PI/180);
+    double tan_deg(double v, double f, double m, double p, double o){
+        return f*std::tan(std::remainder((v+p)*m, 360.0)*M_PI/180) + o;
     }
-    double triangle(double v, double f, double m, double p){
-        return f*(1.0-2.0*std::abs(std::remainder((v+p-90.0)*m, 360.0)/180.0));
+    double triangle(double v, double f, double m, double p, double o){
+        return f*(1.0-2.0*std::abs(std::remainder((v+p-90.0)*m, 360.0)/180.0)) + o;
     }
-    double sawtooth(double v, double f, double m, double p){
-        return f*std::remainder((v+p)*m, 360.0)/180.0;
+    double sawtooth(double v, double f, double m, double p, double o){
+        return f*std::remainder((v+p)*m, 360.0)/180.0 + o;
     }
-    double square(double v, double f, double m, double p, double l){
-        return f*(2.0*(std::remainder((v+p)*m, 360.0) > (l-180.0))-1);
+    double square(double v, double f, double m, double p, double o, double l){
+        return f*(2.0*(std::remainder((v+p)*m, 360.0) > (l-180.0))-1) + o;
     }
 
     double asin_deg(double v){
@@ -43,7 +43,7 @@ namespace dmxfish::filters {
         return std::atan(v)*180/M_PI;
     }
 
-    template <double (*F)(double, double, double, double)>
+    template <double (*F)(double, double, double, double, double)>
     class filter_trigonometric: public filter {
     private:
         const double one = 1;
@@ -52,6 +52,7 @@ namespace dmxfish::filters {
         double* factor_outer = nullptr;
         double* factor_inner = nullptr;
         double* phase = nullptr;
+        double* offset = nullptr;
         double output = 0;
     public:
         filter_trigonometric() : filter() {}
@@ -79,6 +80,11 @@ namespace dmxfish::filters {
             } else {
                 this->phase = (double*) &this->zero;
             }
+            if(input_channels.float_channels.contains("offset")) {
+                this->offset = input_channels.float_channels.at("offset");
+            } else {
+                this->offset = (double*) &this->zero;
+            }
         }
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
@@ -92,14 +98,14 @@ namespace dmxfish::filters {
         }
 
         virtual void update() override {
-            this->output = F(*input, *factor_outer, *factor_inner, *phase);
+            this->output = F(*input, *factor_outer, *factor_inner, *phase, *offset);
         }
 
         virtual void scene_activated() override {}
 
     };
 
-    template <double (*F)(double, double, double, double, double)>
+    template <double (*F)(double, double, double, double, double, double)>
     class filter_five_params: public filter {
     private:
         const double one = 1;
@@ -109,6 +115,7 @@ namespace dmxfish::filters {
         double* factor_outer = nullptr;
         double* factor_inner = nullptr;
         double* phase = nullptr;
+        double* offset = nullptr;
         double* length = nullptr;
         double output = 0;
     public:
@@ -137,6 +144,11 @@ namespace dmxfish::filters {
             } else {
                 this->phase = (double*) &this->zero;
             }
+            if(input_channels.float_channels.contains("offset")) {
+                this->offset = input_channels.float_channels.at("offset");
+            } else {
+                this->offset = (double*) &this->zero;
+            }
             if(input_channels.float_channels.contains("length")) {
                 this->length = input_channels.float_channels.at("length");
             } else {
@@ -155,7 +167,7 @@ namespace dmxfish::filters {
         }
 
         virtual void update() override {
-            this->output = F(*input, *factor_outer, *factor_inner, *phase, *length);
+            this->output = F(*input, *factor_outer, *factor_inner, *phase, *offset, *length);
         }
 
         virtual void scene_activated() override {}
