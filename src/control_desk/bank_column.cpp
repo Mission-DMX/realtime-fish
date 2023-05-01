@@ -86,7 +86,19 @@ namespace dmxfish::control_desk {
 	}
 
 	void bank_column::process_button_press_message(button b, button_change c) {
-		// TODO implement
+		switch(c) {
+			case button_change::PRESS:
+				// TODO implement
+				::spdlog::error("Handling PRESS of button {} not yet implemented in column handler.", (uint8_t) b);
+				break;
+			case button_change::RELEASE:
+				// TODO implement
+				::spdlog::error("Handling RELEASE of button {} not yet implemented in column handler.", (uint8_t) b);
+				break;
+			default:
+				::spdlog::error("Unexpected button action state ({}) in column handler.", (uint8_t) c);
+				break;
+		}
 	}
 
 	void bank_column::update_display_text() {

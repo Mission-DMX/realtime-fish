@@ -140,7 +140,6 @@ namespace dmxfish::control_desk {
         switch(d->get_device_id()) {
             case midi_device_id::X_TOUCH_EXTENSION:
             case midi_device_id::X_TOUCH:
-                // TODO route column commands
                 switch (c.status) {
                     case midi_status::NOTE_ON: {
                         const button b{c.data_1};
@@ -164,7 +163,7 @@ namespace dmxfish::control_desk {
                             msg.set_new_state(c.data_2 > 10 ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
                             iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
                         } else {
-                            // TODO handle bord buttons
+                            this->handle_bord_buttons(b, button_change{c.data_2});
                         }
                         break;
                     } case midi_status::CONTROL_CHANGE:
@@ -198,8 +197,10 @@ namespace dmxfish::control_desk {
                                     iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_ROTARY_ENCODER_CHANGE);
                                 }
                             }
+                        } else {
+                            // TODO handle jogwheel
+                            // TODO foot switches
                         }
-                        // TODO handle jogwheel, foot switches
                         break;
                     case midi_status::INVALID:
                     case midi_status::NOTE_OFF:
@@ -217,6 +218,11 @@ namespace dmxfish::control_desk {
                 break;
         }
         d->schedule_transmission();
+    }
+
+    void desk::handle_bord_buttons(button b, button_change c) {
+        ::spdlog::error("Handling button {} not yet implemented in input desk handler.", (uint8_t) b);
+        // TODO implement
     }
 
     void desk::update() {

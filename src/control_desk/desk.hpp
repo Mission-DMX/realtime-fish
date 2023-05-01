@@ -123,6 +123,7 @@ namespace dmxfish::control_desk {
         void reset_devices();
         void remove_bank_set(size_t i);
         void process_incomming_command(const midi_command& c, size_t device_index);
+        void handle_bord_buttons(button b, button_change c);
     };
 
 }
