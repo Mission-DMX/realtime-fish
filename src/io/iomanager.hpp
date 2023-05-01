@@ -10,7 +10,10 @@
 #include "io/client_handler.hpp"
 #include "control_desk/desk.hpp"
 
+#include "lib/macros.hpp"
+COMPILER_SUPRESS("-Wuseless-cast")
 #include "proto_src/FilterMode.pb.h"
+COMPILER_RESTORE("-Wuseless-cast")
 
 namespace dmxfish::io {
 

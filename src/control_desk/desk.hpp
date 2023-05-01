@@ -12,7 +12,10 @@
 #include "control_desk/command.hpp"
 #include "control_desk/device_handle.hpp"
 
+#include "lib/macros.hpp"
+COMPILER_SUPRESS("-Wuseless-cast")
 #include "proto_src/Console.pb.h"
+COMPILER_RESTORE("-Wuseless-cast")
 
 namespace dmxfish::io {
 class IOManager;

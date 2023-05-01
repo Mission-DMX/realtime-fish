@@ -10,24 +10,19 @@
 
 #include "lib/logging.hpp"
 
-#include "proto_src/MessageTypes.pb.h"
-#include "proto_src/Console.pb.h"
-#include "proto_src/DirectMode.pb.h"
-#include "proto_src/RealTimeControl.pb.h"
-#include "proto_src/UniverseControl.pb.h"
-#include "google/protobuf/io/zero_copy_stream.h"
-
 #include "lib/macros.hpp"
 #include "net/sock_address_factory.hpp"
 #include <netdb.h>
 
 
+COMPILER_SUPRESS("-Wuseless-cast")
 #include "proto_src/MessageTypes.pb.h"
 #include "proto_src/Console.pb.h"
 #include "proto_src/DirectMode.pb.h"
 #include "proto_src/FilterMode.pb.h"
 #include "proto_src/RealTimeControl.pb.h"
 #include "proto_src/UniverseControl.pb.h"
+COMPILER_RESTORE("-Wuseless-cast")
 #include "google/protobuf/io/zero_copy_stream.h"
 
 #include "io/universe_sender.hpp"

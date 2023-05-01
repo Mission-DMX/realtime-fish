@@ -19,9 +19,11 @@
 #include "rmrf-net/tcp_client.hpp"
 #include "stdin_watcher.hpp"
 
-
+#include "lib/macros.hpp"
+COMPILER_SUPRESS("-Wuseless-cast")
 #include "proto_src/RealTimeControl.pb.h"
 #include "proto_src/MessageTypes.pb.h"
+COMPILER_RESTORE("-Wuseless-cast")
 
 #include "control_desk/desk.hpp"
 #include "control_desk/device_enumeration.hpp"
