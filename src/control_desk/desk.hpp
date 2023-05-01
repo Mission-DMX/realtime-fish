@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <map>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -49,7 +50,7 @@ namespace dmxfish::control_desk {
     private:
         std::vector<std::shared_ptr<device_handle>> devices;
         std::vector<bank_set> bank_sets;
-        std::unordered_map<std::string, size_t> bankset_to_index_map;
+        std::map<std::string, size_t> bankset_to_index_map;
         size_t max_number_of_colums = 0;
         size_t current_active_bank_set = 0;
     public:

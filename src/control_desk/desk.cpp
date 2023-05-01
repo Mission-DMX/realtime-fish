@@ -170,9 +170,39 @@ namespace dmxfish::control_desk {
     }
 
     void desk::remove_bank_set(size_t i) {
-        // TODO swap set with last one if it isn't the last one (by copying the last one to the one being removed)
-        // TODO if a swap occured, update the id to index map
-        // TODO if the swapped set was the active one, call set_active_bank_set with the new index
-        // TODO call erase on the last element
+        if(const auto s = bank_sets.size(); i + 1 > s) {
+            ::spdlog::error("Tried to remove fader bank set {}. The container contains only {} elements though.", i, s);
+            return;
+        } else if(i + 1 == s) {
+            if (i == current_active_bank_set) {
+                if (s > 1) {
+                    // if we're erasing the active one and we're not the last one, call set_active_bank_set with i - 1
+                    set_active_bank_set(i - 1);
+                } else {
+                    // otherwise call deactivate on the current bank set
+                    auto& bs = bank_sets[i];
+                    if(bs.active_bank < bs.fader_banks.size()) {
+                        bs.fader_banks[bs.active_bank].deactivate(0);
+                    }
+                }
+            }
+        } else {
+            // swap set with last one if it isn't the last one (by copying the last one to the one being removed)
+            this->bank_sets[i] = this->bank_sets[s - 1];
+            // update the id of the last element in index map
+            for(const auto& [k, v] : bankset_to_index_map) {
+                if(v == s - 1) {
+                    bankset_to_index_map[k] = i;
+                    break;
+                }
+            }
+            // if the swapped set was the active one, call set_active_bank_set with the new index
+            if (current_active_bank_set == s - 1) {
+                set_active_bank_set(i);
+            }
+        }
+        // call erase on the last element
+        bank_sets.pop_back();
+        // We do not call d->schedule_transmission(); here as there might be further removal operations and we'd be updating the desk 20ms later anyway.
     }
 }
