@@ -69,15 +69,23 @@ namespace dmxfish::filters {
         }
 
         virtual void update() override {
-            if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
-                this->value.hue = *value.hue * (this->last_update + this->delay < std::chrono::system_clock::now());
-                this->value.saturation = *value.saturation * (this->last_update + this->delay < std::chrono::system_clock::now());
-                this->value.iluminance = *value.iluminance * (this->last_update + this->delay < std::chrono::system_clock::now());
-                this->last_update = std::chrono::system_clock::now() * (*value.iluminance <= 0) + (*value.iluminance > 0) * this->last_update;
-            } else {
-                this->output = *value * (this->last_update + this->delay < std::chrono::system_clock::now());
-                this->last_update = std::chrono::system_clock::now() * (*value <= 0) + (*value > 0) * this->last_update;
-            }
+            std::chrono::time_point<std::chrono::system_clock> now = std::chrono ::system_clock::now();
+            bool timeout = now < (this->last_update + this->delay);
+//            if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
+//                this->value.hue = *value.hue * (this->last_update + this->delay < now);
+//                this->value.saturation = *value.saturation * (this->last_update + this->delay < now);
+//                this->value.iluminance = *value.iluminance * (this->last_update + this->delay < now);
+//                this->last_update = std::chrono::system_clock::now() * (*value.iluminance <= 0) + (*value.iluminance > 0) * this->last_update;
+//            } else {
+
+                this->output = *value * !timeout + this->output * timeout;
+                // does not work, because a timepoint is not scalable
+                this->last_update = now * (*value <= 0 && !timeout) + this->last_update * (!(*value <= 0) || timeout);
+                // is something possible like that? can the compiler make it more efficient (because of branch prediction)
+                last_update = (*value <= 0 && !timeout)?now:last_update;
+                // or should i use here also double as timestamp, or something like this answer: https://stackoverflow.com/questions/52202803/multiply-stdchrono-timepoint-by-a-scalar
+//            }
+
         }
 
         virtual void scene_activated() override {}
