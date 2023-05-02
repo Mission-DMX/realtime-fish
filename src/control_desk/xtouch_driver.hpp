@@ -8,7 +8,8 @@
 
 #define VENDOR_BEHRINGER {0, 20, 32}
 
-#define CMD_7SEG 37
+#define CMD_7SEG 0x37
+#define CMD_LCD 0x4C
 #define XTOUCH_FADER_INDEX_OFFSET 70
 #define XTOUCH_ENCODER_INDEX_OFFSET 80
 
@@ -241,5 +242,6 @@ namespace dmxfish::control_desk {
     }
 
     void xtouch_set_seg_display(device_handle& d, const std::array<char, 12>& content);
+    void xtouch_set_lcd_display(device_handle& d, uint8_t display_index, lcd_color color, const std::array<char, 14> content);
 
 }

@@ -71,4 +71,18 @@ namespace dmxfish::control_desk {
         d.send_sysex_command(cmd);
     }
 
+    void xtouch_set_lcd_display(device_handle& d, uint8_t display_index, lcd_color color, const std::array<char, 14> content) {
+        sysex_command cmd;
+        cmd.vendor = VENDOR_BEHRINGER;
+        cmd.sysex_data.reserve(4 + 14);
+        cmd.sysex_data.push_back((uint8_t) d.get_device_id());
+        cmd.sysex_data.push_back(CMD_LCD);
+        cmd.sysex_data.push_back(display_index);
+        cmd.sysex_data.push_back((uint8_t) color);
+        for(const auto c : content) {
+            cmd.sysex_data.push_back(c);
+        }
+	d.send_sysex_command(cmd);
+    }
+
 }
