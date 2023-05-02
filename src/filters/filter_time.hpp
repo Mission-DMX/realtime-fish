@@ -116,12 +116,14 @@ namespace dmxfish::filters {
         }
 
         virtual void update() override {
-            bool timeout = *time < (*time + this->delay);
-//            this->output = *value * !timeout + this->output * timeout;
-//            this->last_update = *time * (*value <= 0 && !timeout) + this->last_update * (!(*value <= 0) || timeout);
-            if (F(*value) && !timeout) {
-                this->output = *value;
-                this->last_update = *time;
+            bool timeout = *time < (last_update + delay);
+            if (F(*value)) {
+                output = *value;
+                last_update = *time;
+            } else {
+                if (!timeout){
+                    output = *value;
+                }
             }
         }
 
