@@ -65,7 +65,7 @@ namespace dmxfish::filters {
                 throw filter_config_exception("Unable to setup delay filter: configuration does not contain a value for 'delay'");
             }
             try {
-                this->delay = std::stod(configuration.at("delay"));
+                this->delay = std::stod(configuration.at("delay"))*1000;
             } catch (const std::invalid_argument& ex) {
                 MARK_UNUSED(ex);
                 throw filter_config_exception("Unable to setup delay filter: could not parse the 'delay' as double");
