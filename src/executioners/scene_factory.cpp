@@ -12,6 +12,9 @@
 #include "filters/filter_conversion.hpp"
 #include "filters/filter_debug_output.hpp"
 #include "filters/filter_universe_output.hpp"
+#include "filters/filter_trigonometric.hpp"
+#include "filters/filter_math.hpp"
+#include "filters/filter_time.hpp"
 
 #include <iostream>
 
@@ -126,9 +129,72 @@ COMPILER_RESTORE("-Weffc++")
 				case filter_type::filter_pixel_to_rgb_channels:
 					sum += sizeof(filter_pixel_to_rgb_channels);
 					break;
-				case filter_type::filter_pixel_to_rgbw_channels:
-					sum += sizeof(filter_pixel_to_rgbw_channels);
-					break;
+                case filter_type::filter_pixel_to_rgbw_channels:
+                    sum += sizeof(filter_pixel_to_rgbw_channels);
+                    break;
+                case filter_type::filter_floats_to_pixel:
+                    sum += sizeof(filter_floats_to_pixel);
+                    break;
+                case filter_type::filter_sine:
+                    sum += sizeof(filter_sine);
+                    break;
+                case filter_type::filter_cosine:
+                    sum += sizeof(filter_cosine);
+                    break;
+                case filter_type::filter_tangent:
+                    sum += sizeof(filter_tangent);
+                    break;
+                case filter_type::filter_arcsine:
+                    sum += sizeof(filter_arcsine);
+                    break;
+                case filter_type::filter_arccosine:
+                    sum += sizeof(filter_arccosine);
+                    break;
+                case filter_type::filter_arctangent:
+                    sum += sizeof(filter_arctangent);
+                    break;
+                case filter_type::filter_logarithm:
+                    sum += sizeof(filter_logarithm);
+                    break;
+                case filter_type::filter_exponential:
+                    sum += sizeof(filter_exponential);
+                    break;
+                case filter_type::filter_minimum:
+                    sum += sizeof(filter_minimum);
+                    break;
+                case filter_type::filter_maximum:
+                    sum += sizeof(filter_maximum);
+                    break;
+                case filter_type::filter_square:
+                    sum += sizeof(filter_square);
+                    break;
+                case filter_type::filter_triangle:
+                    sum += sizeof(filter_triangle);
+                    break;
+                case filter_type::filter_sawtooth:
+                    sum += sizeof(filter_sawtooth);
+                    break;
+                case filter_type::filter_time:
+                    sum += sizeof(filter_time);
+                    break;
+                case filter_type::delay_switch_on_8bit:
+                    sum += sizeof(delay_switch_on_8bit);
+                    break;
+                case filter_type::delay_switch_on_16bit:
+                    sum += sizeof(delay_switch_on_16bit);
+                    break;
+                case filter_type::delay_switch_on_float:
+                    sum += sizeof(delay_switch_on_float);
+                    break;
+                case filter_type::delay_switch_off_8bit:
+                    sum += sizeof(delay_switch_off_8bit);
+                    break;
+                case filter_type::delay_switch_off_16bit:
+                    sum += sizeof(delay_switch_off_16bit);
+                    break;
+                case filter_type::delay_switch_off_float:
+                    sum += sizeof(delay_switch_off_float);
+                    break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -187,6 +253,48 @@ COMPILER_RESTORE("-Weffc++")
 				return calloc<filter_pixel_to_rgb_channels>(pac);
 			case filter_type::filter_pixel_to_rgbw_channels:
 				return calloc<filter_pixel_to_rgbw_channels>(pac);
+            case filter_type::filter_floats_to_pixel:
+                return calloc<filter_floats_to_pixel>(pac);
+            case filter_type::filter_sine:
+                return calloc<filter_sine>(pac);
+            case filter_type::filter_cosine:
+                return calloc<filter_cosine>(pac);
+            case filter_type::filter_tangent:
+                return calloc<filter_tangent>(pac);
+            case filter_type::filter_arcsine:
+                return calloc<filter_arcsine>(pac);
+            case filter_type::filter_arccosine:
+                return calloc<filter_arccosine>(pac);
+            case filter_type::filter_arctangent:
+                return calloc<filter_arctangent>(pac);
+            case filter_type::filter_logarithm:
+                return calloc<filter_logarithm>(pac);
+            case filter_type::filter_exponential:
+                return calloc<filter_exponential>(pac);
+            case filter_type::filter_minimum:
+                return calloc<filter_minimum>(pac);
+            case filter_type::filter_maximum:
+                return calloc<filter_maximum>(pac);
+            case filter_type::filter_square:
+                return calloc<filter_square>(pac);
+            case filter_type::filter_triangle:
+                return calloc<filter_triangle>(pac);
+            case filter_type::filter_sawtooth:
+                return calloc<filter_sawtooth>(pac);
+            case filter_type::filter_time:
+                return calloc<filter_time>(pac);
+            case filter_type::delay_switch_on_8bit:
+                return calloc<delay_switch_on_8bit>(pac);
+            case filter_type::delay_switch_on_16bit:
+                return calloc<delay_switch_on_16bit>(pac);
+            case filter_type::delay_switch_on_float:
+                return calloc<delay_switch_on_float>(pac);
+            case filter_type::delay_switch_off_8bit:
+                return calloc<delay_switch_off_8bit>(pac);
+            case filter_type::delay_switch_off_16bit:
+                return calloc<delay_switch_off_16bit>(pac);
+            case filter_type::delay_switch_off_float:
+                return calloc<delay_switch_off_float>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}

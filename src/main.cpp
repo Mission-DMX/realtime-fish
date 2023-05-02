@@ -5,6 +5,7 @@
 #include "lib/logging.hpp"
 #include "lib/macros.hpp"
 
+#include "global_vars.hpp"
 #include "io/iomanager.hpp"
 
 #include "rmrf-net/client_factory.hpp"
@@ -85,6 +86,7 @@ int main(int argc, char* argv[], char* env[]) {
 	MARK_UNUSED(env);
 
 	spdlog::set_level(spdlog::level::debug);
+    reset_start_time();
 	auto run_time_state = std::make_shared<runtime_state_t>();
 
 	stdin_watcher sin_w([run_time_state](){
