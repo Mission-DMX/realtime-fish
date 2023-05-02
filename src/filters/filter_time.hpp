@@ -41,21 +41,19 @@ namespace dmxfish::filters {
 
         virtual void update() override {
             this->now = (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()-get_start_time())).count();
-//            auto a = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()-get_start_time());
-//            auto b = a.count();
-//            this->now = b;
         }
 
         virtual void scene_activated() override {}
 
     };
 
-    template <typename T>
+    template <typename T, bool(*F)(T)>
     class filter_delay: public filter {
     private:
         T* value = nullptr;
-        std::chrono::duration<double> delay;
-        std::chrono::time_point<std::chrono::system_clock> last_update;
+        double* time = nullptr;
+        double delay;
+        double last_update;
         T output = 0;
     public:
         filter_delay() : filter() {}
@@ -67,31 +65,35 @@ namespace dmxfish::filters {
                 throw filter_config_exception("Unable to setup delay filter: configuration does not contain a value for 'delay'");
             }
             try {
-                this->delay = std::chrono::duration<double>(std::stod(configuration.at("delay")));
+                this->delay = std::stod(configuration.at("delay"));
             } catch (const std::invalid_argument& ex) {
                 MARK_UNUSED(ex);
-                throw filter_config_exception("Unable to setup delay filter: could not parse the 'delay'");
+                throw filter_config_exception("Unable to setup delay filter: could not parse the 'delay' as double");
             }
+            if(!input_channels.float_channels.contains("time")) {
+                throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'time' of type 'double'. Should come from the only time node.");
+            }
+            this->time = input_channels.float_channels.at("time");
             if constexpr (std::is_same<T, uint8_t>::value) {
                 if(!input_channels.eight_bit_channels.contains("value")) {
                     throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value' of type 'uint8_t'.");
                 }
-                this->input = input_channels.eight_bit_channels.at("value");
+                this->value = input_channels.eight_bit_channels.at("value");
             } else if constexpr (std::is_same<T, uint16_t>::value) {
                 if(!input_channels.sixteen_bit_channels.contains("value")) {
                     throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value' of type 'uint16_t'.");
                 }
-                this->input = input_channels.sixteen_bit_channels.at("value");
+                this->value = input_channels.sixteen_bit_channels.at("value");
             } else if constexpr (std::is_same<T, double>::value) {
                 if(!input_channels.float_channels.contains("value")) {
                     throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value' of type 'double'.");
                 }
-                this->input = input_channels.float_channels.at("value");
+                this->value = input_channels.float_channels.at("value");
             } else {
                 if(!input_channels.color_channels.contains("value")) {
                     throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value' of type 'hsv_pixel'.");
                 }
-                this->input = input_channels.color_channels.at("value");
+                this->value = input_channels.color_channels.at("value");
             }
         }
 
@@ -102,37 +104,38 @@ namespace dmxfish::filters {
         }
 
         virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
-            map.float_channels[name + ":value"] = &output;
+            if constexpr (std::is_same<T, uint8_t>::value) {
+                map.eight_bit_channels[name + ":value"] = &output;
+            } else if constexpr (std::is_same<T, uint16_t>::value) {
+                map.sixteen_bit_channels[name + ":value"] = &output;
+            } else if constexpr (std::is_same<T, double>::value) {
+                map.float_channels[name + ":value"] = &output;
+            } else {
+                map.color_channels[name + ":value"] = &output;
+            }
         }
 
         virtual void update() override {
-            std::chrono::time_point<std::chrono::system_clock> now = std::chrono ::system_clock::now();
-            bool timeout = now < (this->last_update + this->delay);
-//            if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
-//                this->value.hue = *value.hue * (this->last_update + this->delay < now);
-//                this->value.saturation = *value.saturation * (this->last_update + this->delay < now);
-//                this->value.iluminance = *value.iluminance * (this->last_update + this->delay < now);
-//                this->last_update = std::chrono::system_clock::now() * (*value.iluminance <= 0) + (*value.iluminance > 0) * this->last_update;
-//            } else {
-
-                this->output = *value * !timeout + this->output * timeout;
-                // does not work, because a timepoint is not scalable
-                this->last_update = now * (*value <= 0 && !timeout) + this->last_update * (!(*value <= 0) || timeout);
-                // is something possible like that? can the compiler make it more efficient (because of branch prediction)
-                last_update = (*value <= 0 && !timeout)?now:last_update;
-                // or should i use here also double as timestamp, or something like this answer: https://stackoverflow.com/questions/52202803/multiply-stdchrono-timepoint-by-a-scalar
-//            }
-
+            bool timeout = *time < (*time + this->delay);
+//            this->output = *value * !timeout + this->output * timeout;
+//            this->last_update = *time * (*value <= 0 && !timeout) + this->last_update * (!(*value <= 0) || timeout);
+            if (F(*value) && !timeout) {
+                this->output = *value;
+                this->last_update = *time;
+            }
         }
 
         virtual void scene_activated() override {}
 
     };
 
-    using delay_switch_on_8bit = filter_delay<uint8_t>;
-    using delay_switch_on_16bit = filter_delay<uint16_t>;
-    using delay_switch_on_float = filter_delay<double>;
-    using delay_switch_on_pixel = filter_delay<dmxfish::dmx::pixel>;
+    using delay_switch_on_8bit = filter_delay<uint8_t, [](uint8_t a) { return a <= 0; }>;
+    using delay_switch_on_16bit = filter_delay<uint16_t, [](uint16_t a) { return a <= 0; }>;
+    using delay_switch_on_float = filter_delay<double, [](double a) { return a <= 0.0; }>;
+
+    using delay_switch_off_8bit = filter_delay<uint8_t, [](uint8_t a) { return (a > 0); }>;
+    using delay_switch_off_16bit = filter_delay<uint16_t, [](uint16_t a) { return (a > 0); }>;
+    using delay_switch_off_float = filter_delay<double, [](double a) { return (a > 0.0); }>;
 
     COMPILER_RESTORE("-Weffc++")
 

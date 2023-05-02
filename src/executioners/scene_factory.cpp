@@ -177,6 +177,24 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_time:
                     sum += sizeof(filter_time);
                     break;
+                case filter_type::delay_switch_on_8bit:
+                    sum += sizeof(delay_switch_on_8bit);
+                    break;
+                case filter_type::delay_switch_on_16bit:
+                    sum += sizeof(delay_switch_on_16bit);
+                    break;
+                case filter_type::delay_switch_on_float:
+                    sum += sizeof(delay_switch_on_float);
+                    break;
+                case filter_type::delay_switch_off_8bit:
+                    sum += sizeof(delay_switch_off_8bit);
+                    break;
+                case filter_type::delay_switch_off_16bit:
+                    sum += sizeof(delay_switch_off_16bit);
+                    break;
+                case filter_type::delay_switch_off_float:
+                    sum += sizeof(delay_switch_off_float);
+                    break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -265,6 +283,18 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_sawtooth>(pac);
             case filter_type::filter_time:
                 return calloc<filter_time>(pac);
+            case filter_type::delay_switch_on_8bit:
+                return calloc<delay_switch_on_8bit>(pac);
+            case filter_type::delay_switch_on_16bit:
+                return calloc<delay_switch_on_16bit>(pac);
+            case filter_type::delay_switch_on_float:
+                return calloc<delay_switch_on_float>(pac);
+            case filter_type::delay_switch_off_8bit:
+                return calloc<delay_switch_off_8bit>(pac);
+            case filter_type::delay_switch_off_16bit:
+                return calloc<delay_switch_off_16bit>(pac);
+            case filter_type::delay_switch_off_float:
+                return calloc<delay_switch_off_float>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}

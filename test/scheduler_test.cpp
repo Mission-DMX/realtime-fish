@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(scheduler_test) {
 
 		BOOST_CHECK_EQUAL(v.size(), 2);
 		if(v.size() == 2) {
-			BOOST_CHECK_EQUAL(v[0].get_filter_count(), 27);
+			BOOST_CHECK_EQUAL(v[0].get_filter_count(), 33);
 			BOOST_CHECK_EQUAL(v[1].get_filter_count(), 0);
 			v[0].on_start();
 			v[0].invoke_filters();

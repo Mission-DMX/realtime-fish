@@ -35,5 +35,11 @@ namespace dmxfish::filters {
         filter_minimum = 30,
         filter_maximum = 31,
         filter_time = 32,
+        delay_switch_on_8bit = 33,
+        delay_switch_on_16bit = 34,
+        delay_switch_on_float = 35,
+        delay_switch_off_8bit = 36,
+        delay_switch_off_16bit = 37,
+        delay_switch_off_float = 38,
     };
 }
