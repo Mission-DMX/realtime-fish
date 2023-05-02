@@ -105,7 +105,32 @@ namespace dmxfish::control_desk {
 		if(!active_on_device) {
 			return;
 		}
+		if(connection.expired()) {
+			return;
+		}
+		std::array<char, 14> content;
+		auto text_index = 0;
+		const auto& up_text = display_text_up[text_index];
+		if(text_index < display_text_up.size()) {
+			for(auto i = 0; i < 7; i++){
+				const auto tpos = i + display_scroll_position_up;
+				if(tpos >= up_text.length()) {
+					content[i] = up_text.at(tpos);
+				} else {
+					content[i] = ' ';
+				}
+			}
+		} else {
+			std::array<char, 7> no_data = {'N', 'o', ' ', 'D', 'a', 't', 'a'};
+			for(auto i = 0; i < 7; i++){
+				content[i] = no_data[i];
+			}
+		}
 		// TODO set lower display line if not in direct input mode
+		for(auto i = 7; i < 14; i++) {
+			content[i] = '-';
+		}
+		xtouch_set_lcd_display(*(connection.lock()), fader_index + XTOUCH_DISPLAY_INDEX_OFFFSET, lcd_color::green, content);
 	}
 
 	void bank_column::update_physical_fader_position() {
