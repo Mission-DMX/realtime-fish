@@ -75,6 +75,7 @@ namespace dmxfish::control_desk {
             if(cbs.active_bank < cbs.fader_banks.size()) {
                 cbs.fader_banks[cbs.active_bank].activate();
             }
+	    // TODO display bank set id on 7seg for a short period of time
             for(auto d : devices) {
                 d->schedule_transmission();
             }
@@ -118,6 +119,10 @@ namespace dmxfish::control_desk {
                         const std::array<char, 12> empty_7seg_data = {'-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'};
                         xtouch_set_seg_display(*d, empty_7seg_data);
                     }
+		    for(auto i = (uint8_t) fader::FADER_CH1; i <= (uint8_t) fader::FADER_MAIN; i++) {
+			    // TODO clean up code (or implement also for xtouch ext.)
+			    xtouch_set_fader_position(*d, fader{i}, 0);
+		    }
                     break;
                 case midi_device_id::X_TOUCH_EXTENSION:
                     for(auto b : xtouch_extender_buttons()) {
@@ -314,6 +319,10 @@ namespace dmxfish::control_desk {
         }
         // ready set does not need to be populated as they are not in ready state by default
         bs.active_bank = definition.default_active_fader_bank();
+	if(bank_sets.size() == 1) {
+		// Enable first bank if it's the only one
+		this->set_active_bank_set(0);
+	}
     }
 
     void desk::update_fader_position_from_protobuf(const ::missiondmx::fish::ipcmessages::fader_position& msg) {

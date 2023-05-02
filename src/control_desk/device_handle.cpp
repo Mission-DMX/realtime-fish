@@ -86,7 +86,7 @@ namespace dmxfish::control_desk {
     }
 
     void device_handle::cb_io_handler(::ev::io& w, int events) {
-        if(events & ::ev::READ) {
+        if(events & ::ev::ERROR) {
             throw rmrf::net::netio_exception("MIDI client error. libev: state=" + std::to_string(events));
         }
 

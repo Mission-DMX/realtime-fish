@@ -61,10 +61,10 @@ namespace dmxfish::control_desk {
         void set_io_flags() {
             auto flags = 0;
             flags |= ::ev::READ;
-            if(!event_construction.empty()) {
+            if(!event_queue.empty()) {
                 flags |= ::ev::WRITE;
             }
-            if(!sysex_construction.empty()) {
+            if(!sysex_queue.empty()) {
                 flags |= ::ev::WRITE;
             }
             this->file_sync.set(flags);

@@ -15,6 +15,7 @@ namespace dmxfish::control_desk {
 			// TODO implement activation
 			// TODO set encoder in relative mode
 			// absolute mode for amber and uv will be emulated
+			update_display_text();
 		} else {
 			// TODO reset faders to 0
             // TODO set side leds to 0
