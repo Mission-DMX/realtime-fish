@@ -311,7 +311,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                         client.write_message(universe_msg, ::missiondmx::fish::ipcmessages::MSGT_UNIVERSE);
                     }
                     else {
-                        ::spdlog::info("did not find the universe with id: {}", msg.universe_id());
+                        ::spdlog::warn("did not find the universe with id: {}", msg.universe_id());
                     }
                 }
                 return;
