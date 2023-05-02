@@ -8,7 +8,7 @@
 
 namespace dmxfish::control_desk {
 
-    bank::bank() : columns{} {
+    bank::bank(std::function<void(std::string const&, bool)> handler) : columns{}, set_ready_state_handler{std::move(handler)} {
 
     }
 
@@ -226,7 +226,23 @@ namespace dmxfish::control_desk {
     }
 
     void desk::handle_bord_buttons(button b, button_change c) {
-        ::spdlog::error("Handling button {} not yet implemented in input desk handler.", (uint8_t) b);
+        if(b == button::BTN_EQ_COMMITRDY) {
+            if(c != button_change::PRESS) {
+                return;
+            }
+            if(!(current_active_bank_set < bank_sets.size())) {
+                return;
+            }
+            for(auto& bs = bank_sets[current_active_bank_set]; auto& column_id : bs.columns_in_ready_state) {
+                if(bs.columns_map.contains(column_id)) {
+                    bs.columns_map.at(column_id)->commit_from_readymode();
+                } else {
+                    ::spdlog::error("Error in commiting desk ready state: Column id {} in ready set but not in index map.", column_id);
+                }
+            }
+        } else {
+            ::spdlog::error("Handling button {} not yet implemented in input desk handler.", (uint8_t) b);
+        }
         // TODO implement
     }
 
@@ -286,7 +302,7 @@ namespace dmxfish::control_desk {
             return bank_mode::HSI_WITH_UV_MODE;
         if(bank_definition.has_raw_data())
             return bank_mode::DIRECT_INPUT_MODE;
-        return bank_mode::HSI_WITHAMBER_AND_UV_MODE; // Should not happen with current buffer version
+        return bank_mode::HSI_WITH_AMBER_AND_UV_MODE; // Should not happen with current buffer version
     }
 
     void desk::add_bank_set_from_protobuf_msg(const ::missiondmx::fish::ipcmessages::add_fader_bank_set& definition) {
@@ -296,7 +312,8 @@ namespace dmxfish::control_desk {
         auto& bs = bank_sets[new_bank_index];
         bs.fader_banks.reserve(definition.banks_size());
         for (auto& bank_definition : definition.banks()) {
-            bs.fader_banks.emplace_back();
+            using namespace std::placeholders;
+            bs.fader_banks.emplace_back(std::bind(&desk::handle_ready_state_update_from_bank, this, _1, _2));
             auto& current_bank = bs.fader_banks[bs.fader_banks.size() - 1];
             current_bank.reserve(bank_definition.cols_size());
             size_t device_index = 0;
@@ -375,6 +392,24 @@ namespace dmxfish::control_desk {
         for(auto& d : devices) {
             xtouch_set_button_led(*d, b, s);
             d->schedule_transmission();
+        }
+    }
+
+    void desk::handle_ready_state_update_from_bank(const std::string& column_id, bool new_state) {
+        if(!(current_active_bank_set < bank_sets.size())) {
+            return;
+        }
+        auto& rset = bank_sets[current_active_bank_set].columns_in_ready_state;
+        if(new_state) {
+            rset.insert(column_id);
+        } else {
+            rset.erase(column_id);
+        }
+        for(auto btn_state = rset.empty() ? button_led_state::off : button_led_state::flash ; auto& d_ptr : devices) {
+            if(d_ptr->get_device_id() == midi_device_id::X_TOUCH) {
+                xtouch_set_button_led(*d_ptr, button::BTN_EQ_COMMITRDY, btn_state);
+                d_ptr->schedule_transmission();
+            }
         }
     }
 }

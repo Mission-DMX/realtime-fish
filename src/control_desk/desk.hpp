@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <list>
 #include <map>
 #include <memory>
@@ -26,8 +27,9 @@ namespace dmxfish::control_desk {
     class bank {
     private:
         std::vector<std::shared_ptr<bank_column>> columns;
+        const std::function<void(std::string const&, bool)> set_ready_state_handler;
     public:
-        bank();
+        bank(std::function<void(std::string const&, bool)> set_ready_state_handler);
         ~bank() = default;
 
         /**
@@ -49,7 +51,7 @@ namespace dmxfish::control_desk {
         }
 
         inline std::shared_ptr<bank_column> emplace_back(std::weak_ptr<device_handle> device_connection, bank_mode mode, const std::string& id, uint8_t fader_index) {
-            auto ptr = std::make_shared<bank_column>(device_connection, mode, id, fader_index);
+            auto ptr = std::make_shared<bank_column>(device_connection, set_ready_state_handler, mode, id, fader_index);
             columns.push_back(ptr);
             return ptr;
         }
@@ -124,6 +126,7 @@ namespace dmxfish::control_desk {
         void remove_bank_set(size_t i);
         void process_incomming_command(const midi_command& c, size_t device_index);
         void handle_bord_buttons(button b, button_change c);
+        void handle_ready_state_update_from_bank(const std::string& column_id, bool new_state);
     };
 
 }
