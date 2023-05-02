@@ -14,7 +14,7 @@
 #include "filters/filter_universe_output.hpp"
 #include "filters/filter_trigonometric.hpp"
 #include "filters/filter_math.hpp"
-#include "filters/filter_delay.hpp"
+#include "filters/filter_time.hpp"
 
 #include <iostream>
 
@@ -174,6 +174,9 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_sawtooth:
                     sum += sizeof(filter_sawtooth);
                     break;
+                case filter_type::filter_time:
+                    sum += sizeof(filter_time);
+                    break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -260,6 +263,8 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_triangle>(pac);
             case filter_type::filter_sawtooth:
                 return calloc<filter_sawtooth>(pac);
+            case filter_type::filter_time:
+                return calloc<filter_time>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}

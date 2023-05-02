@@ -34,5 +34,6 @@ namespace dmxfish::filters {
         filter_exponential = 29,
         filter_minimum = 30,
         filter_maximum = 31,
+        filter_time = 32,
     };
 }

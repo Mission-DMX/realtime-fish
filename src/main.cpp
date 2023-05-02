@@ -5,6 +5,7 @@
 #include "lib/logging.hpp"
 #include "lib/macros.hpp"
 
+//#include "global_vars.hpp"
 #include "io/iomanager.hpp"
 
 #include "rmrf-net/client_factory.hpp"

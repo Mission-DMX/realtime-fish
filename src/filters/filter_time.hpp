@@ -9,10 +9,47 @@
 #include "filters/filter.hpp"
 #include "lib/macros.hpp"
 
+#include "global_vars.hpp"
+
 
 namespace dmxfish::filters {
 
     COMPILER_SUPRESS("-Weffc++")
+
+    class filter_time: public filter {
+    private:
+        double now = 0;
+    public:
+        filter_time() : filter() {}
+        virtual ~filter_time() {}
+
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+            MARK_UNUSED(configuration);
+            MARK_UNUSED(initial_parameters);
+            MARK_UNUSED(input_channels);
+        }
+
+        virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(_value);
+            return false;
+        }
+
+        virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
+            map.float_channels[name + ":value"] = &now;
+        }
+
+        virtual void update() override {
+            this->now = (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()-get_start_time())).count();
+//            auto a = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()-get_start_time());
+//            auto b = a.count();
+//            this->now = b;
+        }
+
+        virtual void scene_activated() override {}
+
+    };
+
     template <typename T>
     class filter_delay: public filter {
     private:
