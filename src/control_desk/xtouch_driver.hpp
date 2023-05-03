@@ -157,13 +157,13 @@ namespace dmxfish::control_desk {
         BTN_CANCEL_CANCEL = 78, // Cancle the setting of a filter configuration
         BTN_ENTER_ENTER = 79, // Submit the change of a filter configuration
 
-        BTN_MARKER = 80,
-        BTN_NUDGE = 81,
-        BTN_CYCLE = 82,
-        BTN_DROP = 83,
-        BTN_REPLACE = 84,
-        BTN_CLICK = 85,
-        BTN_SOLO = 86,
+        BTN_MARKER_GOBO = 80, // When channel selected edit gobo of channel, when no channel selected edit default/global gobo; when continiously pressed: use jogwheel to change gobo
+        BTN_NUDGE_STROBO = 81, // When channel selected edit strobe of connected fixture, when no channel selected edit global strobe frequency; when continiously pressed: use jogwheel to change strobe settings
+        BTN_CYCLE_SHUTTER = 82, // When channel selected edit shutter of connected fixture, when no channel selected edit global shutter value; continiously pressed: use jogwheel
+        BTN_DROP_COLOR = 83, // Use color picker to edit color of fixture (if input selected) or global color. Jogwheel might be used for precise editing if button is continiously pressed
+        BTN_REPLACE_TEMPERATURE = 84, // Edit color temperature of single or global color, jogwheel might be used as well
+        BTN_CLICK_IMAGE = 85, // Select image send to shader or pixel mapper of selected column
+        BTN_SOLO_SPEED = 86, // Select speed pattern of corresponding fixture
 
         // These buttons are useful for editing / playing Cues ans well as MIDI sequencing, button leds shall be lit, when the functionality is avaiable
         BTN_REV_LASTCUE = 87, // (⏪) Go to previous Cue
