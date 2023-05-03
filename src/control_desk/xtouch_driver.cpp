@@ -60,7 +60,6 @@ namespace dmxfish::control_desk {
     void xtouch_set_seg_display(device_handle& d, const std::array<char, 12>& content) {
         sysex_command cmd;
         cmd.vendor = VENDOR_BEHRINGER;
-        cmd.sysex_data.push_back((uint8_t) d.get_device_id());
         cmd.sysex_data.push_back(CMD_7SEG);
         for(auto c : content) {
             cmd.sysex_data.push_back(xtouch_translate_char_to_seg_data(c));
@@ -75,7 +74,6 @@ namespace dmxfish::control_desk {
         sysex_command cmd;
         cmd.vendor = VENDOR_BEHRINGER;
         cmd.sysex_data.reserve(4 + 14);
-        cmd.sysex_data.push_back((uint8_t) d.get_device_id());
         cmd.sysex_data.push_back(CMD_LCD);
         cmd.sysex_data.push_back(display_index);
         cmd.sysex_data.push_back((uint8_t) color);

@@ -45,6 +45,15 @@ namespace dmxfish::control_desk {
             }
         }
         this->reset_devices();
+	for(auto& d : devices) {
+            if(d->get_device_id() == midi_device_id::X_TOUCH) {
+                std::array<char, 14> initial_lcd_text = {'M', 'i', 's', 's', 'i', 'o', 'n', 'V', 'e', 'r', 's', 'i', 'o', 'n'};
+                xtouch_set_lcd_display(*d, 0, lcd_color::white_up_inverted, initial_lcd_text);
+                initial_lcd_text = {' ', 'D', 'M', 'X', ' ', ' ', ' ', ' ', '1', '.', '0', '.', '0', ' '};
+                xtouch_set_lcd_display(*d, 1, lcd_color::white_up_inverted, initial_lcd_text);
+	        d->schedule_transmission();
+	    }
+	}
         if(devices.size() == 0) {
             ::spdlog::warn("No input devices where added to the control desk.");
         } else {
@@ -129,6 +138,10 @@ namespace dmxfish::control_desk {
                     {
                         const std::array<char, 12> empty_7seg_data = {'-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'};
                         xtouch_set_seg_display(*d, empty_7seg_data);
+			const std::array<char, 14> empty_lcd_data{' '};
+			for(uint8_t i = 0; i < XTOUCH_COLUMN_COUNT; i++) {
+                            xtouch_set_lcd_display(*d, i, lcd_color{i}, empty_lcd_data);
+			}
                     }
 		    for(auto i = (uint8_t) fader::FADER_CH1; i <= (uint8_t) fader::FADER_MAIN; i++) {
 			    // TODO clean up code (or implement also for xtouch ext.)
@@ -212,7 +225,9 @@ namespace dmxfish::control_desk {
                                     msg.set_amount(change);
                                     iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_ROTARY_ENCODER_CHANGE);
                                 }
-                            }
+                            } else {
+                                ::spdlog::warn("Received Column encoder change fro {} to {} but no bank set is active.", c.data_1 - XTOUCH_ENCODER_INDEX_OFFSET, c.data_2);
+			    }
                         } else {
                             // TODO handle jogwheel
                             // TODO foot switches

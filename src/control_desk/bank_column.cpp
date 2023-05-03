@@ -27,7 +27,18 @@ namespace dmxfish::control_desk {
 	}
 
 	void bank_column::reset_column() {
-		// TODO implement
+		if(connection.expired()) {
+			return;
+		}
+		auto d_ptr = connection.lock();
+		const std::array<char, 14> empty_lcd_data{' '};
+		xtouch_set_lcd_display(*d_ptr, this->fader_index, lcd_color::black, empty_lcd_data);
+		xtouch_set_fader_position(*d_ptr, fader{(uint8_t) fader::FADER_CH1 + this->fader_index}, 0);
+		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_REC_READY + this->fader_index * XTOUCH_COLUMN_COUNT}, button_led_state::off);
+		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_SOLO_FIND + this->fader_index * XTOUCH_COLUMN_COUNT}, button_led_state::off);
+		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_MUTE_BLACK + this->fader_index * XTOUCH_COLUMN_COUNT}, button_led_state::off);
+		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_SELECT_SELECT + this->fader_index * XTOUCH_COLUMN_COUNT}, button_led_state::off);
+		xtouch_set_ring_led(*d_ptr, encoder{(uint8_t) encoder::ENC_CH1 + this->fader_index}, 128);
 	}
 
 	void bank_column::process_fader_change_message(unsigned int position_request) {

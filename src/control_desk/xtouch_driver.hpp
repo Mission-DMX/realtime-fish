@@ -34,30 +34,30 @@ namespace dmxfish::control_desk {
         magenta = 5,
         cyan = 6,
         white = 7,
-        black_up_inverted = 0 & (0b00010000),
-        red_up_inverted = 1 & (0b00010000),
-        green_up_inverted = 2 & (0b00010000),
-        yellow_up_inverted = 3 & (0b00010000),
-        blue_up_inverted = 4 & (0b00010000),
-        magenta_up_inverted = 5 & (0b00010000),
-        cyan_up_inverted = 6 & (0b00010000),
-        white_up_inverted = 7 & (0b00010000),
-        black_down_inverted = 0 & (0b00100000),
-        red_down_inverted = 1 & (0b00100000),
-        green_down_inverted = 2 & (0b00100000),
-        yellow_down_inverted = 3 & (0b00100000),
-        blue_down_inverted = 4 & (0b00100000),
-        magenta_down_inverted = 5 & (0b00100000),
-        cyan_down_inverted = 6 & (0b00100000),
-        white_down_inverted = 7 & (0b00100000),
-        black_both_inverted = 0 & (0b00110000),
-        red_both_inverted = 1 & (0b00110000),
-        green_both_inverted = 2 & (0b00110000),
-        yellow_both_inverted = 3 & (0b00110000),
-        blue_both_inverted = 4 & (0b00110000),
-        magenta_both_inverted = 5 & (0b00110000),
-        cyan_both_inverted = 6 & (0b00110000),
-        white_both_inverted = 7 & (0b00110000),
+        black_up_inverted = 0 | (0b00010000),
+        red_up_inverted = 1 | (0b00010000),
+        green_up_inverted = 2 | (0b00010000),
+        yellow_up_inverted = 3 | (0b00010000),
+        blue_up_inverted = 4 | (0b00010000),
+        magenta_up_inverted = 5 | (0b00010000),
+        cyan_up_inverted = 6 | (0b00010000),
+        white_up_inverted = 7 | (0b00010000),
+        black_down_inverted = 0 | (0b00100000),
+        red_down_inverted = 1 | (0b00100000),
+        green_down_inverted = 2 | (0b00100000),
+        yellow_down_inverted = 3 | (0b00100000),
+        blue_down_inverted = 4 | (0b00100000),
+        magenta_down_inverted = 5 | (0b00100000),
+        cyan_down_inverted = 6 | (0b00100000),
+        white_down_inverted = 7 | (0b00100000),
+        black_both_inverted = 0 | (0b00110000),
+        red_both_inverted = 1 | (0b00110000),
+        green_both_inverted = 2 | (0b00110000),
+        yellow_both_inverted = 3 | (0b00110000),
+        blue_both_inverted = 4 | (0b00110000),
+        magenta_both_inverted = 5 | (0b00110000),
+        cyan_both_inverted = 6 | (0b00110000),
+        white_both_inverted = 7 | (0b00110000),
     };
 
     enum class button_change : uint8_t {
@@ -246,6 +246,21 @@ namespace dmxfish::control_desk {
 
     void xtouch_set_seg_display(device_handle& d, const std::array<char, 12>& content);
     void xtouch_set_lcd_display(device_handle& d, uint8_t display_index, lcd_color color, const std::array<char, 14> content);
+
+    enum class encoder : uint8_t {
+        ENC_CH1 = 80,
+	ENC_CH2 = 81,
+	ENC_CH3 = 82,
+	ENC_CH4 = 83,
+	ENC_CH5 = 84,
+	ENC_CH6 = 85,
+	ENC_CH7 = 86,
+	ENC_CH8 = 87,
+    };
+
+    inline void xtouch_set_ring_led(device_handle& d, encoder enc, uint8_t value) {
+	d.send_command(midi_command{midi_status::CONTROL_CHANGE, 0, (uint8_t) enc, value});
+    }
 
     // TODO implement level leds as indicator for third channel value
 
