@@ -617,6 +617,7 @@ void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::lo
 
 void IOManager::handle_queued_io() {
 	// TODO run io loop iteration or wait until 2 have passed.
+	std::this_thread::sleep_for(std::chrono::milliseconds(100)); // TODO fixme
 }
 
 }
