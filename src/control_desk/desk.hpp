@@ -27,6 +27,10 @@ namespace dmxfish::control_desk {
     class bank {
     private:
         std::vector<std::shared_ptr<bank_column>> columns;
+	// If this turns out to be a performance issue we may switch to
+	// not storing this function pointer here again and use direct
+	// objects in the vector from bank_set again. This would require
+	// changing the factory though.
         const std::function<void(std::string const&, bool)> set_ready_state_handler;
     public:
         bank(std::function<void(std::string const&, bool)> set_ready_state_handler);
@@ -114,6 +118,7 @@ namespace dmxfish::control_desk {
         }
 
         bool set_active_fader_bank_on_current_set(size_t index);
+	[[nodiscard]] size_t get_active_fader_bank_on_current_set();
 
         void add_bank_set_from_protobuf_msg(const ::missiondmx::fish::ipcmessages::add_fader_bank_set& definition);
 

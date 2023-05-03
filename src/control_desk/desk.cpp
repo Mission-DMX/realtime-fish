@@ -86,20 +86,30 @@ namespace dmxfish::control_desk {
     }
 
     bool desk::set_active_fader_bank_on_current_set(size_t index) {
-        if(current_active_bank_set < bank_sets.size()) {
+        if(!(current_active_bank_set < bank_sets.size())) {
             return false;
         }
         auto& cbs = bank_sets[current_active_bank_set];
-        if(index < cbs.fader_banks.size()) {
+        if(index >= cbs.fader_banks.size()) {
             return false;
         }
         cbs.fader_banks[cbs.active_bank]->deactivate(cbs.fader_banks[index]->size());
         cbs.active_bank = index;
         cbs.fader_banks[cbs.active_bank]->activate();
         for(auto d : devices) {
+	    xtouch_set_button_led(*d, button::BTN_FADERBANKPREV_FADERBANKPREV, index == 0 ? button_led_state::off : button_led_state::on);
+            xtouch_set_button_led(*d, button::BTN_FADERBANKNEXT_FADERBANKNEXT, index + 1 == cbs.fader_banks.size() ? button_led_state::off : button_led_state::on);
             d->schedule_transmission();
         }
         return true;
+    }
+
+    size_t desk::get_active_fader_bank_on_current_set() {
+	if(!(current_active_bank_set < bank_sets.size())) {
+            return 0;
+        }
+        auto& cbs = bank_sets[current_active_bank_set];
+	return cbs.active_bank;
     }
 
     void desk::reset_devices() {
@@ -240,7 +250,13 @@ namespace dmxfish::control_desk {
                     ::spdlog::error("Error in commiting desk ready state: Column id {} in ready set but not in index map.", column_id);
                 }
             }
-        } else {
+        } else if(b == button::BTN_FADERBANKPREV_FADERBANKPREV) {
+		const auto current_bank = this->get_active_fader_bank_on_current_set();
+		this->set_active_fader_bank_on_current_set(current_bank - 1); // Bounds check is performed by setter.
+	} else if(b == button::BTN_FADERBANKNEXT_FADERBANKNEXT) {
+		const auto current_bank = this->get_active_fader_bank_on_current_set();
+		this->set_active_fader_bank_on_current_set(current_bank + 1);
+	} else {
             ::spdlog::error("Handling button {} not yet implemented in input desk handler.", (uint8_t) b);
         }
         // TODO implement
