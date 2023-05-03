@@ -62,10 +62,10 @@ namespace dmxfish::control_desk {
             auto& cbs = bank_sets[current_active_bank_set];
             size_t size_of_bank_on_new_set = 0;
             if(auto& nbs = bank_sets[index]; nbs.active_bank < nbs.fader_banks.size()) {
-                size_of_bank_on_new_set = nbs.fader_banks[nbs.active_bank].size();
+                size_of_bank_on_new_set = nbs.fader_banks[nbs.active_bank]->size();
             }
             if(cbs.active_bank < cbs.fader_banks.size()) {
-                cbs.fader_banks[cbs.active_bank].deactivate(size_of_bank_on_new_set);
+                cbs.fader_banks[cbs.active_bank]->deactivate(size_of_bank_on_new_set);
             }
             current_active_bank_set = index;
             cbs = bank_sets[current_active_bank_set];
@@ -73,7 +73,7 @@ namespace dmxfish::control_desk {
                 cbs.active_bank = 0;
             }
             if(cbs.active_bank < cbs.fader_banks.size()) {
-                cbs.fader_banks[cbs.active_bank].activate();
+                cbs.fader_banks[cbs.active_bank]->activate();
             }
 	    // TODO display bank set id on 7seg for a short period of time
             for(auto d : devices) {
@@ -93,9 +93,9 @@ namespace dmxfish::control_desk {
         if(index < cbs.fader_banks.size()) {
             return false;
         }
-        cbs.fader_banks[cbs.active_bank].deactivate(cbs.fader_banks[index].size());
+        cbs.fader_banks[cbs.active_bank]->deactivate(cbs.fader_banks[index]->size());
         cbs.active_bank = index;
-        cbs.fader_banks[cbs.active_bank].activate();
+        cbs.fader_banks[cbs.active_bank]->activate();
         for(auto d : devices) {
             d->schedule_transmission();
         }
@@ -106,7 +106,7 @@ namespace dmxfish::control_desk {
         if(current_active_bank_set < bank_sets.size()) {
             auto& cbs = this->bank_sets[current_active_bank_set];
             if(cbs.active_bank < cbs.fader_banks.size()) {
-                cbs.fader_banks[cbs.active_bank].deactivate(0);
+                cbs.fader_banks[cbs.active_bank]->deactivate(0);
             }
         }
         for(auto d : this->devices) {
@@ -155,7 +155,7 @@ namespace dmxfish::control_desk {
                             if(current_active_bank_set < bank_sets.size()) {
                                 auto& cbs = this->bank_sets[current_active_bank_set];
                                 if(cbs.active_bank < cbs.fader_banks.size()) {
-                                    auto col_ptr = cbs.fader_banks[cbs.active_bank].get(column_index);
+                                    auto col_ptr = cbs.fader_banks[cbs.active_bank]->get(column_index);
                                     col_ptr->process_button_press_message(b, button_change{c.data_2});
                                     msg.set_button((unsigned int) (device_index * 256 + c.data_1));
                                     msg.set_new_state(c.data_2 > 10 ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
@@ -179,7 +179,7 @@ namespace dmxfish::control_desk {
                             if(current_active_bank_set < bank_sets.size()) {
                                 auto& cbs = this->bank_sets[current_active_bank_set];
                                 if(cbs.active_bank < cbs.fader_banks.size()) {
-                                    auto col_ptr = cbs.fader_banks[cbs.active_bank].get(column_index);
+                                    auto col_ptr = cbs.fader_banks[cbs.active_bank]->get(column_index);
                                     auto value = (c.data_2 < 127 ? c.data_2 : 128) * (65536 / 128);
                                     col_ptr->process_fader_change_message(value);
                                     msg.set_column_id(col_ptr->get_id());
@@ -194,7 +194,7 @@ namespace dmxfish::control_desk {
                                 auto& cbs = this->bank_sets[current_active_bank_set];
                                 if(cbs.active_bank < cbs.fader_banks.size()) {
                                     ::missiondmx::fish::ipcmessages::rotary_encoder_change msg;
-                                    auto col_ptr = cbs.fader_banks[cbs.active_bank].get(column_index);
+                                    auto col_ptr = cbs.fader_banks[cbs.active_bank]->get(column_index);
                                     const auto change = c.data_2 == 65 ? 1 : -1;
                                     col_ptr->process_encoder_change_message(change);
                                     msg.set_column_id(col_ptr->get_id());
@@ -271,7 +271,7 @@ namespace dmxfish::control_desk {
                     // otherwise call deactivate on the current bank set
                     auto& bs = bank_sets[i];
                     if(bs.active_bank < bs.fader_banks.size()) {
-                        bs.fader_banks[bs.active_bank].deactivate(0);
+                        bs.fader_banks[bs.active_bank]->deactivate(0);
                     }
                 }
             }
@@ -313,9 +313,8 @@ namespace dmxfish::control_desk {
         bs.fader_banks.reserve(definition.banks_size());
         for (auto& bank_definition : definition.banks()) {
             using namespace std::placeholders;
-            bs.fader_banks.emplace_back(std::bind(&desk::handle_ready_state_update_from_bank, this, _1, _2));
-            auto& current_bank = bs.fader_banks[bs.fader_banks.size() - 1];
-            current_bank.reserve(bank_definition.cols_size());
+            bs.fader_banks.push_back(std::make_shared<bank>(std::bind(&desk::handle_ready_state_update_from_bank, this, _1, _2)));
+            bs.fader_banks[bs.fader_banks.size() - 1]->reserve(bank_definition.cols_size());
             size_t device_index = 0;
             unsigned int col_index_on_device = 0;
             for(auto& col_definition : bank_definition.cols()) {
@@ -329,7 +328,7 @@ namespace dmxfish::control_desk {
                 }
                 auto& selected_device = devices[device_index];
                 const auto& id = col_definition.column_id();
-                auto col_ptr = current_bank.emplace_back(selected_device, deduce_bank_mode(col_definition), id, (uint8_t) col_index_on_device);
+                auto col_ptr = bs.fader_banks[bs.fader_banks.size() - 1]->emplace_back(selected_device, deduce_bank_mode(col_definition), id, (uint8_t) col_index_on_device);
                 bs.columns_map[id] = col_ptr;
                 col_index_on_device++;
             }
