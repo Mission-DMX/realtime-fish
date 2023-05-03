@@ -54,6 +54,7 @@ namespace dmxfish::control_desk {
 
     desk::~desk() {
         this->reset_devices();
+	this->iomanager->handle_queued_io();
         ::spdlog::debug("Stopping control desk handler. Reseted connected input devices.");
     }
 

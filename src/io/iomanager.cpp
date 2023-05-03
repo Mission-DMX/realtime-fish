@@ -614,4 +614,9 @@ void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::lo
 	log_msg.set_what(loading_result_stream.str());
 	this->push_msg_to_all_gui(log_msg, MSGT_LOG_MESSAGE);
 }
+
+void IOManager::handle_queued_io() {
+	// TODO run io loop iteration or wait until 2 have passed.
+}
+
 }

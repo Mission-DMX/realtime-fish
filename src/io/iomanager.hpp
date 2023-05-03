@@ -68,6 +68,7 @@ namespace dmxfish::io {
 					control_desk_handle->update();
 				}
 			}
+			void handle_queued_io();
 		private:
 			void run();
 			void load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::load_show_file> msg);
