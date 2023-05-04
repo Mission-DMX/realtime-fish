@@ -59,6 +59,8 @@ namespace dmxfish::control_desk {
 
         unsigned int display_scroll_position_up = 0;
         unsigned int display_scroll_position_down = 0;
+        unsigned int display_text_index_up = 0;
+        unsigned int display_text_index_down = 0;
 
         const bank_mode current_bank_mode = bank_mode::HSI_COLOR_MODE;
         rotary_encoder_assignment current_re_assignment = rotary_encoder_assignment::HUE;
@@ -131,11 +133,13 @@ namespace dmxfish::control_desk {
         void process_encoder_change_message(int change_request);
         void process_button_press_message(button b, button_change c);
         void commit_from_readymode();
+        void set_display_text(const std::string& text, bool up);
     private:
         void update_display_text();
         void update_physical_fader_position();
         void update_encoder_leds();
         void update_button_leds();
+        void update_side_leds();
         void notify_bank_about_ready_mode();
     };
 

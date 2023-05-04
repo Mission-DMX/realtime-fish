@@ -1,5 +1,7 @@
 #include "control_desk/bank_column.hpp"
 
+#include <sstream>
+
 #include "control_desk/desk.hpp"
 #include "control_desk/xtouch_driver.hpp"
 
@@ -9,20 +11,20 @@ namespace dmxfish::control_desk {
 
 	bank_column::bank_column(std::weak_ptr<device_handle> device_connection, std::function<void(std::string const&, bool)> _desk_ready_update, bank_mode mode, std::string _id, uint8_t column_index) :
 		connection(device_connection), desk_ready_update(_desk_ready_update), id(_id), display_text_up{}, display_text_down{}, color{}, readymode_color{}, raw_configuration{},
-		readymode_raw_configuration{}, current_bank_mode(mode), fader_index(column_index + XTOUCH_FADER_INDEX_OFFSET) {}
+		readymode_raw_configuration{}, current_bank_mode(mode), fader_index(column_index + XTOUCH_FADER_INDEX_OFFSET) {
+			display_text_up.emplace_back("");
+			display_text_down.emplace_back("");
+		}
 
 	void bank_column::set_active(bool new_value) {
 		this->active_on_device = new_value;
 		if(new_value) {
-			// TODO implement activation
-			// TODO set encoder in relative mode
 			// absolute mode for amber and uv will be emulated
 			update_display_text();
-		} else {
-			// TODO reset faders to 0
-            // TODO set side leds to 0
-			// TODO disable rotary encoder leds
-            // TODO clear lcd displays
+			update_physical_fader_position();
+			update_encoder_leds();
+			update_button_leds();
+			update_side_leds();
 		}
 	}
 
@@ -39,6 +41,7 @@ namespace dmxfish::control_desk {
 		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_MUTE_BLACK + this->fader_index * XTOUCH_COLUMN_COUNT}, button_led_state::off);
 		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_SELECT_SELECT + this->fader_index * XTOUCH_COLUMN_COUNT}, button_led_state::off);
 		xtouch_set_ring_led(*d_ptr, encoder{(uint8_t) encoder::ENC_CH1 + this->fader_index}, 128);
+		xtouch_set_meter_leds(*d_ptr, led_bar{(uint8_t) led_bar::BAR_CH1 + this->fader_index}, 0);
 	}
 
 	void bank_column::process_fader_change_message(unsigned int position_request) {
@@ -164,26 +167,97 @@ namespace dmxfish::control_desk {
 			return;
 		}
 		std::array<char, 14> content;
-		auto text_index = 0;
-		const auto& up_text = display_text_up[text_index];
-		if(text_index < display_text_up.size()) {
-			for(auto i = 0; i < 7; i++){
-				const auto tpos = i + display_scroll_position_up;
-				if(tpos >= up_text.length()) {
-					content[i] = up_text.at(tpos);
-				} else {
-					content[i] = ' ';
+		{
+			const auto& up_text = display_text_up[display_text_index_up];
+			if(display_text_index_up < display_text_up.size()) {
+				for(auto i = 0; i < 7; i++){
+					const auto tpos = i + display_scroll_position_up;
+					if(tpos < up_text.length()) {
+						content[i] = up_text.at(tpos);
+					} else {
+						content[i] = ' ';
+					}
+				}
+			} else {
+				std::array<char, 7> no_data = {'N', 'o', ' ', 'D', 'a', 't', 'a'};
+				for(auto i = 0; i < 7; i++){
+					content[i] = no_data[i];
 				}
 			}
-		} else {
-			std::array<char, 7> no_data = {'N', 'o', ' ', 'D', 'a', 't', 'a'};
-			for(auto i = 0; i < 7; i++){
-				content[i] = no_data[i];
-			}
 		}
-		// TODO set lower display line if not in direct input mode
-		for(auto i = 7; i < 14; i++) {
-			content[i] = '-';
+		switch(current_bank_mode) {
+			case bank_mode::HSI_COLOR_MODE:
+			case bank_mode::HSI_WITH_AMBER_MODE:
+			case bank_mode::HSI_WITH_UV_MODE:
+			case bank_mode::HSI_WITH_AMBER_AND_UV_MODE:
+				switch(this->current_re_assignment) {
+					case rotary_encoder_assignment::HUE:
+						content[7] = 'H';
+						content[8] = 'u';
+						content[9] = 'e';
+						content[10] = ' ';
+						content[11] = ' ';
+						content[12] = ' ';
+						content[13] = ' ';
+						break;
+					case rotary_encoder_assignment::SATURATION:
+						content[7] = 'S';
+						content[8] = 'a';
+						content[9] = 't';
+						content[10] = 'u';
+						content[11] = 'r';
+						content[12] = 'e';
+						content[13] = ' ';
+						break;
+					case rotary_encoder_assignment::AMBER:
+						content[7] = 'A';
+						content[8] = 'm';
+						content[9] = 'b';
+						content[10] = 'e';
+						content[11] = 'r';
+						content[12] = ' ';
+						content[13] = ' ';
+						break;
+					case rotary_encoder_assignment::UV:
+						content[7] = 'U';
+						content[8] = 'V';
+						content[9] = ' ';
+						content[10] = ' ';
+						content[11] = ' ';
+						content[12] = ' ';
+						content[13] = ' ';
+						break;
+					default:
+						content[7] = 'U';
+						content[8] = 'n';
+						content[9] = 'k';
+						content[10] = 'n';
+						content[11] = 'o';
+						content[12] = 'w';
+						content[13] = 'n';
+						break;
+				};
+				break;
+			case bank_mode::DIRECT_INPUT_MODE:
+				if(display_text_index_down < display_text_down.size()) {
+					if(display_text_down[display_text_index_down].length() > 0) {
+						const auto& down_text = display_text_down[display_text_index_down];
+						for(auto i = 7; i < 14; i++) {
+							const auto tpos = i + display_scroll_position_down;
+							if(tpos < down_text.length()) {
+								content[i] = down_text.at(tpos);
+							} else {
+								content[i] = ' ';
+							}
+						}
+						break;
+					}
+				}
+				[[fallthrough]];
+			default:
+				for(auto i = 7; i < 14; i++) {
+					content[i] = '-';
+				}
 		}
 		xtouch_set_lcd_display(*(connection.lock()), fader_index + XTOUCH_DISPLAY_INDEX_OFFFSET, lcd_color::green, content);
 	}
@@ -198,12 +272,14 @@ namespace dmxfish::control_desk {
 		if(connection.expired()) {
 			return;
 		}
-		// TODO replace with driver method xtouch_set_fader_position
-		connection.lock()->send_command(midi_command{midi_status::CONTROL_CHANGE, 0, fader_index, (raw_configuration.fader_position * 128) / 65536});
+		xtouch_set_fader_position(*connection.lock(), fader{fader_index}, (raw_configuration.fader_position * 128) / 65536);
 	}
 
 	void bank_column::update_encoder_leds() {
 		if(!active_on_device) {
+			return;
+		}
+		if(connection.expired()) {
 			return;
 		}
 		// TODO implement
@@ -226,6 +302,16 @@ namespace dmxfish::control_desk {
 							  this->readymode_active ? button_led_state::on : button_led_state::off);
 	}
 
+	void bank_column::update_side_leds() {
+		if(!active_on_device) {
+			return;
+		}
+		if(connection.expired()) {
+			return;
+		}
+		// TODO implement
+	}
+
 	void bank_column::commit_from_readymode() {
 		this->color = this->readymode_color;
 		this->raw_configuration = this->readymode_raw_configuration;
@@ -239,6 +325,37 @@ namespace dmxfish::control_desk {
 
 	void bank_column::notify_bank_about_ready_mode() {
 		this->desk_ready_update(this->get_id(), this->readymode_active);
+	}
+
+	void bank_column::set_display_text(const std::string& text, bool up) {
+		auto& selected_text_vector = up ? this->display_text_up : this->display_text_down;
+		selected_text_vector.clear();
+		std::stringstream ss;
+		size_t length = 0;
+		for(const char c : text) {
+			if (c == '\n' || c == '\r') {
+				if (length > 0) {
+					selected_text_vector.emplace_back(ss.str());
+					ss.clear();
+					length = 0;
+				} else if(c == '\t') {
+					ss << ' ';
+					length++;
+				} else {
+					ss << c;
+					length++;
+				}
+			}
+		}
+		selected_text_vector.emplace_back(ss.str());
+		if (up) {
+			display_scroll_position_up = 0;
+			display_text_index_up = 0;
+		} else {
+			display_scroll_position_down = 0;
+			display_text_index_down = 0;
+		}
+		update_display_text();
 	}
 
 }

@@ -69,7 +69,7 @@ namespace dmxfish::control_desk {
      * This enum defines the button IDs. The first part of the specific name defines the original meaning, the second one our labeling. For example BTN_CH1_MUTE_BLACK
      * defines the button on channel 1 that once was labeled MUTE but is now labeled BLACK.
      */
-    enum class button : uint8_t { // TODO fill in correct values as soon as X-Touch arrived
+    enum class button : uint8_t {
         BTN_CH1_ENCODER_ROTARYMODE = 0, // Switches rotary encoder between Hue, Saturation and (if applicable) UV and (if applicable) Amber, Second row of LCD displays mode and setting
         BTN_CH2_ENCODER_ROTARYMODE = 1,
         BTN_CH3_ENCODER_ROTARYMODE = 2,
@@ -249,19 +249,32 @@ namespace dmxfish::control_desk {
 
     enum class encoder : uint8_t {
         ENC_CH1 = 80,
-	ENC_CH2 = 81,
-	ENC_CH3 = 82,
-	ENC_CH4 = 83,
-	ENC_CH5 = 84,
-	ENC_CH6 = 85,
-	ENC_CH7 = 86,
-	ENC_CH8 = 87,
+        ENC_CH2 = 81,
+        ENC_CH3 = 82,
+        ENC_CH4 = 83,
+        ENC_CH5 = 84,
+        ENC_CH6 = 85,
+        ENC_CH7 = 86,
+        ENC_CH8 = 87,
     };
 
     inline void xtouch_set_ring_led(device_handle& d, encoder enc, uint8_t value) {
-	d.send_command(midi_command{midi_status::CONTROL_CHANGE, 0, (uint8_t) enc, value});
+        d.send_command(midi_command{midi_status::CONTROL_CHANGE, 0, (uint8_t) enc, value});
     }
 
-    // TODO implement level leds as indicator for third channel value
+    enum class led_bar : uint8_t {
+        BAR_CH1 = 90,
+        BAR_CH2 = 91,
+        BAR_CH3 = 92,
+        BAR_CH4 = 93,
+        BAR_CH5 = 94,
+        BAR_CH6 = 95,
+        BAR_CH7 = 96,
+        BAR_CH8 = 97,
+    };
+
+    inline void xtouch_set_meter_leds(device_handle& d, led_bar l, uint8_t value) {
+        d.send_command(midi_command{midi_status::CONTROL_CHANGE, 0, (uint8_t) l, value});
+    }
 
 }
