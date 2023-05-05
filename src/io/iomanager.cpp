@@ -551,6 +551,36 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 this->latest_error = e.what();
             }
             break;
+        case ::missiondmx::fish::ipcmessages::MSGT_DESK_UPDATE:
+            try {
+                missiondmx::fish::ipcmessages::desk_update msg;
+                if(!msg.ParseFromZeroCopyStream(buffer)) {
+                    error_message += "Failed to decode MSGT_DESK_UPDATE message.";
+                }
+                if(control_desk_handle) {
+                    control_desk_handle->process_desk_update_message(msg);
+                } else {
+                    error_message += "No control desk handle has been currently set.";
+                }
+            } catch (const std::exception& e) {
+                this->latest_error = e.what();
+            }
+            break;
+        case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_COLUMN:
+            try {
+                missiondmx::fish::ipcmessages::fader_column msg;
+                if(!msg.ParseFromZeroCopyStream(buffer)) {
+                    error_message += "Failed to decode MSGT_UPDATE_COLUMN message.";
+                }
+                if(control_desk_handle) {
+                    control_desk_handle->update_column_from_message(msg);
+                } else {
+                    error_message += "No control desk handle has been currently set.";
+                }
+            } catch (const std::exception& e) {
+                this->latest_error = e.what();
+            }
+            break;
 		default:
         {
             error_message += "IOManager Parse Message: Used a unknown Msg Type. ";

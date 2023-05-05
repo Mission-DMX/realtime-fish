@@ -259,7 +259,7 @@ namespace dmxfish::control_desk {
 					content[i] = '-';
 				}
 		}
-		xtouch_set_lcd_display(*(connection.lock()), fader_index + XTOUCH_DISPLAY_INDEX_OFFFSET, lcd_color::green, content);
+		xtouch_set_lcd_display(*(connection.lock()), fader_index + XTOUCH_DISPLAY_INDEX_OFFFSET, display_color, content);
 	}
 
 	void bank_column::update_physical_fader_position() {

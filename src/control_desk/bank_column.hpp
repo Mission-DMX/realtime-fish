@@ -56,7 +56,6 @@ namespace dmxfish::control_desk {
         bool select_active = false;
         bool readymode_active = false;
         bool black_active = false;
-
         unsigned int display_scroll_position_up = 0;
         unsigned int display_scroll_position_down = 0;
         unsigned int display_text_index_up = 0;
@@ -64,6 +63,7 @@ namespace dmxfish::control_desk {
 
         const bank_mode current_bank_mode = bank_mode::HSI_COLOR_MODE;
         rotary_encoder_assignment current_re_assignment = rotary_encoder_assignment::HUE;
+        lcd_color display_color = lcd_color::green;
         const uint8_t fader_index;
         uint8_t amber = 0;
         uint8_t readymode_amber = 0;
@@ -98,11 +98,19 @@ namespace dmxfish::control_desk {
                 return;
             }
             this->color = p;
-            // TODO set fader position, 2nd row display text and rotary encoder positions
+            update_physical_fader_position();
+            update_encoder_leds();
+            update_side_leds();
         }
 
         [[nodiscard]] inline raw_column_configuration get_raw_configuration() const {
                 return raw_configuration;
+        }
+
+        inline void set_raw_configuration(raw_column_configuration c) {
+            this->raw_configuration = c;
+            update_physical_fader_position();
+            update_encoder_leds();
         }
 
         inline void set_amber_value(uint8_t new_value) {
@@ -127,6 +135,10 @@ namespace dmxfish::control_desk {
 
         [[nodiscard]] inline bool is_column_blacked_out() const {
             return this->black_active;
+        }
+
+        inline void set_display_color(lcd_color c) {
+            display_color = c;
         }
 
 		void process_fader_change_message(unsigned int position_request);

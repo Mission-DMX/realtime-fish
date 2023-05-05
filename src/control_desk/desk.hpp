@@ -81,8 +81,12 @@ namespace dmxfish::control_desk {
         std::vector<std::shared_ptr<device_handle>> devices;
         std::vector<bank_set> bank_sets;
         std::map<std::string, size_t> bankset_to_index_map;
+        std::string selected_column_id = "";
+        std::string find_enabled_on_column_id = "";
         size_t max_number_of_colums = 0;
         size_t current_active_bank_set = 0;
+        int jogwheel_change = 0;
+        bool update_message_required = false;
     public:
         desk(std::list<std::pair<std::string, midi_device_id>> input_devices);
         ~desk();
@@ -102,6 +106,7 @@ namespace dmxfish::control_desk {
             if(!bankset_to_index_map.contains(id)) {
                 return false;
             }
+            update_message_required = true;
             return set_active_bank_set(bankset_to_index_map.at(id));
         }
 
@@ -121,11 +126,13 @@ namespace dmxfish::control_desk {
 	[[nodiscard]] size_t get_active_fader_bank_on_current_set();
 
         void add_bank_set_from_protobuf_msg(const ::missiondmx::fish::ipcmessages::add_fader_bank_set& definition);
+        void process_desk_update_message(const ::missiondmx::fish::ipcmessages::desk_update& msg);
+        void update_column_from_message(const ::missiondmx::fish::ipcmessages::fader_column& msg);
 
         void update_fader_position_from_protobuf(const ::missiondmx::fish::ipcmessages::fader_position& msg);
         void update_encoder_state_from_protobuf(const ::missiondmx::fish::ipcmessages::rotary_encoder_change& msg);
         void update_button_leds_from_protobuf(const missiondmx::fish::ipcmessages::button_state_change& msg);
-
+        void set_seven_seg_display_data(const std::string& data);
     private:
         void reset_devices();
         void remove_bank_set(size_t i);

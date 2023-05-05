@@ -10,6 +10,7 @@
 
 #define CMD_7SEG 0x37
 #define CMD_LCD 0x4C
+#define CMD_JOGWHEEL 88
 
 #define XTOUCH_COLUMN_COUNT 8
 
