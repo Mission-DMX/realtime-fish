@@ -181,14 +181,14 @@ namespace dmxfish::control_desk {
                                 if(cbs.active_bank < cbs.fader_banks.size()) {
                                     auto col_ptr = cbs.fader_banks[cbs.active_bank]->get(column_index);
                                     col_ptr->process_button_press_message(b, button_change{c.data_2});
-                                    msg.set_button((unsigned int) (device_index * 256 + c.data_1));
+                                    msg.set_button(missiondmx::fish::ipcmessages::ButtonCode{(unsigned int) (device_index * 256 + c.data_1)});
                                     msg.set_new_state(c.data_2 > 10 ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
                                     iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
                                 }
                             }
                         } else if(xtouch_is_fader_touch(b)) {
                             ::missiondmx::fish::ipcmessages::button_state_change msg;
-                            msg.set_button((unsigned int) (device_index * 256 + c.data_1));
+                            msg.set_button(missiondmx::fish::ipcmessages::ButtonCode{(unsigned int) (device_index * 256 + c.data_1)});
                             msg.set_new_state(c.data_2 > 10 ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
                             iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
                         } else {
@@ -267,15 +267,17 @@ namespace dmxfish::control_desk {
                 }
             }
         } else if(b == button::BTN_FADERBANKPREV_FADERBANKPREV) {
-		const auto current_bank = this->get_active_fader_bank_on_current_set();
-		this->set_active_fader_bank_on_current_set(current_bank - 1); // Bounds check is performed by setter.
-	} else if(b == button::BTN_FADERBANKNEXT_FADERBANKNEXT) {
-		const auto current_bank = this->get_active_fader_bank_on_current_set();
-		this->set_active_fader_bank_on_current_set(current_bank + 1);
-	} else {
+            const auto current_bank = this->get_active_fader_bank_on_current_set();
+            this->set_active_fader_bank_on_current_set(current_bank - 1); // Bounds check is performed by setter.
+        } else if(b == button::BTN_FADERBANKNEXT_FADERBANKNEXT) {
+            const auto current_bank = this->get_active_fader_bank_on_current_set();
+            this->set_active_fader_bank_on_current_set(current_bank + 1);
+        } else if(b == button::BTN_SEND_OOPS) {
+            // TODO implement
+        } else {
             ::spdlog::error("Handling button {} not yet implemented in input desk handler.", (uint8_t) b);
+            // TODO send button event to GUI
         }
-        // TODO implement
     }
 
     void desk::update() {
@@ -361,6 +363,7 @@ namespace dmxfish::control_desk {
                 auto& selected_device = devices[device_index];
                 const auto& id = col_definition.column_id();
                 auto col_ptr = bs.fader_banks[bs.fader_banks.size() - 1]->emplace_back(selected_device, deduce_bank_mode(col_definition), id, (uint8_t) col_index_on_device);
+                // TODO configure column from definition message
                 bs.columns_map[id] = col_ptr;
                 col_index_on_device++;
             }
