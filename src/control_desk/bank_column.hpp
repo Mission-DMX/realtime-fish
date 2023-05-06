@@ -43,24 +43,6 @@ namespace dmxfish::control_desk {
             UV
         };
     private:
-        const std::weak_ptr<device_handle> connection;
-        const std::function<void(std::string const&, bool)> desk_ready_update;
-        const std::string id;
-        std::vector<std::string> display_text_up;
-        std::vector<std::string> display_text_down;
-        dmxfish::dmx::pixel color;
-        dmxfish::dmx::pixel readymode_color;
-        raw_column_configuration raw_configuration;
-        raw_column_configuration readymode_raw_configuration;
-        bool active_on_device = false;
-        bool select_active = false;
-        bool readymode_active = false;
-        bool black_active = false;
-        unsigned int display_scroll_position_up = 0;
-        unsigned int display_scroll_position_down = 0;
-        unsigned int display_text_index_up = 0;
-        unsigned int display_text_index_down = 0;
-
         const bank_mode current_bank_mode = bank_mode::HSI_COLOR_MODE;
         rotary_encoder_assignment current_re_assignment = rotary_encoder_assignment::HUE;
         lcd_color display_color = lcd_color::green;
@@ -69,6 +51,24 @@ namespace dmxfish::control_desk {
         uint8_t readymode_amber = 0;
         uint8_t uv = 0;
         uint8_t readymode_uv = 0;
+        bool active_on_device = false;
+        bool select_active = false;
+        bool readymode_active = false;
+        bool black_active = false;
+        dmxfish::dmx::pixel color;
+        dmxfish::dmx::pixel readymode_color;
+        raw_column_configuration raw_configuration;
+        raw_column_configuration readymode_raw_configuration;
+
+        const std::weak_ptr<device_handle> connection;
+        const std::function<void(std::string const&, bool)> desk_ready_update;
+        const std::string id;
+        std::vector<std::string> display_text_up;
+        std::vector<std::string> display_text_down;
+        unsigned int display_scroll_position_up = 0;
+        unsigned int display_scroll_position_down = 0;
+        unsigned int display_text_index_up = 0;
+        unsigned int display_text_index_down = 0;
         // TODO we should find a nice way to link what happens, when the select button was pressed (for example on may link an MH control (Joystick = Pan/Tilt, Arrows = Zoom/Focus))
         // TODO should we introduce a message that sends the column id for it?
     public:
