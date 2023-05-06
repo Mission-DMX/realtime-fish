@@ -49,7 +49,6 @@ namespace dmxfish::io {
                     this->msg_type = 0;
                     this->internal_state = NEXT_MSG;
                     this->input_buffer->update_limit(5);
-//                    ::spdlog::debug("ReadMSG: Stream has length after parsing {}", this->input_buffer->get_streamsize());
                     return handle_messages();
                 }
 //                ::spdlog::debug("ReadMSG: Stream was not long enough: is {}, should: {}", this->input_buffer->get_streamsize(), this->msg_length);

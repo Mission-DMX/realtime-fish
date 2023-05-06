@@ -24,27 +24,27 @@ COMPILER_SUPRESS("-Weffc++")
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
-	    if(!input_channels.sixteen_bit_channels.contains("value")) {
-		    throw filter_config_exception("Unable to link input of 16 bit splitting filter: channel mapping does not contain channel 'value' of type 'uint16_t'.");
-	    }
-	    this->input = input_channels.sixteen_bit_channels.at("value");
+            if(!input_channels.sixteen_bit_channels.contains("value")) {
+                throw filter_config_exception("Unable to link input of 16 bit splitting filter: channel mapping does not contain channel 'value' of type 'uint16_t'.");
+            }
+            this->input = input_channels.sixteen_bit_channels.at("value");
         }
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
-		MARK_UNUSED(key);
-		MARK_UNUSED(_value);
-		return false;
+            MARK_UNUSED(key);
+            MARK_UNUSED(_value);
+            return false;
         }
 
         virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
-		map.eight_bit_channels[name + ":value_lower"] = &lower_output;
-		map.eight_bit_channels[name + ":value_upper"] = &upper_output;
+            map.eight_bit_channels[name + ":value_lower"] = &lower_output;
+            map.eight_bit_channels[name + ":value_upper"] = &upper_output;
         }
 
         virtual void update() override {
-		this->lower_output = (uint8_t) (*input & (0x00FF));
-		this->upper_output = (uint8_t) ((*input & (0xFF00)) >> 8);
-	}
+            this->lower_output = (uint8_t) (*input & (0x00FF));
+            this->upper_output = (uint8_t) ((*input & (0xFF00)) >> 8);
+	    }
 
         virtual void scene_activated() override {}
 
@@ -61,25 +61,25 @@ COMPILER_SUPRESS("-Weffc++")
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
-	    if(!input_channels.sixteen_bit_channels.contains("value")) {
-		    throw filter_config_exception("Unable to link input of bool conversion filter: channel mapping does not contain channel 'value' of type 'uint16_t'.");
-	    }
-	    this->input = input_channels.sixteen_bit_channels.at("value");
+            if(!input_channels.sixteen_bit_channels.contains("value")) {
+                throw filter_config_exception("Unable to link input of bool conversion filter: channel mapping does not contain channel 'value' of type 'uint16_t'.");
+            }
+            this->input = input_channels.sixteen_bit_channels.at("value");
         }
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
-		MARK_UNUSED(key);
-		MARK_UNUSED(_value);
-		return false;
+            MARK_UNUSED(key);
+            MARK_UNUSED(_value);
+            return false;
         }
 
         virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
-		map.eight_bit_channels[name + ":value"] = &output;
+            map.eight_bit_channels[name + ":value"] = &output;
         }
 
         virtual void update() override {
-		this->output = *input > 0 ? 1 : 0;
-	}
+            this->output = *input > 0 ? 1 : 0;
+        }
 
         virtual void scene_activated() override {}
 
@@ -98,29 +98,29 @@ COMPILER_SUPRESS("-Weffc++")
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
-	    if(!input_channels.float_channels.contains("factor1") ||
-			    !input_channels.float_channels.contains("factor2") ||
-			    !input_channels.float_channels.contains("summand")) {
-		    throw filter_config_exception("Unable to link input of multiply add filter: channel mapping does not contain required channels.");
-	    }
-	    this->input_factor_1 = input_channels.float_channels.at("factor1");
-	    this->input_factor_2 = input_channels.float_channels.at("factor2");
-	    this->input_summand = input_channels.float_channels.at("summand");
+            if(!input_channels.float_channels.contains("factor1") ||
+                    !input_channels.float_channels.contains("factor2") ||
+                    !input_channels.float_channels.contains("summand")) {
+                throw filter_config_exception("Unable to link input of multiply add filter: channel mapping does not contain required channels.");
+            }
+            this->input_factor_1 = input_channels.float_channels.at("factor1");
+            this->input_factor_2 = input_channels.float_channels.at("factor2");
+            this->input_summand = input_channels.float_channels.at("summand");
         }
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
-		MARK_UNUSED(key);
-		MARK_UNUSED(_value);
-		return false;
+            MARK_UNUSED(key);
+            MARK_UNUSED(_value);
+            return false;
         }
 
         virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
-		map.float_channels[name + ":value"] = &output;
+		    map.float_channels[name + ":value"] = &output;
         }
 
         virtual void update() override {
-		this->output = (*input_factor_1 * *input_factor_2) + *input_summand;
-	}
+            this->output = (*input_factor_1 * *input_factor_2) + *input_summand;
+        }
 
         virtual void scene_activated() override {}
 
@@ -302,6 +302,44 @@ COMPILER_SUPRESS("-Weffc++")
         }
 
         virtual void scene_activated() override {}
+    };
+
+    class filter_floats_to_pixel : public filter {
+    private:
+	    dmxfish::dmx::pixel output;
+	    double* h = nullptr;
+	    double* s = nullptr;
+	    double* i = nullptr;
+    public:
+	    filter_floats_to_pixel(): filter(), output{} {}
+	    virtual ~filter_floats_to_pixel() {}
+
+            virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+            MARK_UNUSED(initial_parameters);
+            MARK_UNUSED(configuration);
+            if(!input_channels.float_channels.contains("h") || !input_channels.float_channels.contains("s") || !input_channels.float_channels.contains("i")) {
+                throw filter_config_exception("Unable to link input of float to color filter: channel mapping does not contain input channels.");
+            }
+            this->h = input_channels.float_channels.at("h");
+	    this->s = input_channels.float_channels.at("s");
+	    this->i = input_channels.float_channels.at("i");
+        }
+
+	virtual bool receive_update_from_gui(const std::string& key, const std::string& value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(value);
+            return false;
+        }
+
+	virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
+            map.color_channels[name + ":value"] = &output;
+        }
+
+	virtual void update() override {
+		this->output = dmxfish::dmx::pixel(*this->h, *this->s, *this->i);
+	}
+
+	virtual void scene_activated() override {}
     };
 COMPILER_RESTORE("-Weffc++")
 }
