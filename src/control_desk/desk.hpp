@@ -68,12 +68,13 @@ namespace dmxfish::control_desk {
     class desk {
     private:
         struct bank_set {
+            size_t active_bank = 0;
             std::vector<std::shared_ptr<bank>> fader_banks;
             std::unordered_map<std::string, std::shared_ptr<bank_column>> columns_map;
             std::unordered_set<std::string> columns_in_ready_state;
-            size_t active_bank = 0;
+            std::string id;
 
-            bank_set() : fader_banks{}, columns_map{}, columns_in_ready_state{} {};
+            bank_set(const std::string& _id) : fader_banks{}, columns_map{}, columns_in_ready_state{}, id{_id} {};
             ~bank_set() = default;
         };
     private:

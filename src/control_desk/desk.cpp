@@ -309,7 +309,7 @@ namespace dmxfish::control_desk {
             jogwheel_change = 0;
             if(current_active_bank_set < bank_sets.size()) {
                 msg.set_selected_bank(bank_sets[current_active_bank_set].active_bank);
-                msg.set_selected_bank_set(""); // TODO implement
+                msg.set_selected_bank_set(bank_sets[current_active_bank_set].id);
             } else {
                 msg.set_selected_bank(0);
                 msg.set_selected_bank_set("");
@@ -397,7 +397,7 @@ namespace dmxfish::control_desk {
     }
 
     void desk::add_bank_set_from_protobuf_msg(const ::missiondmx::fish::ipcmessages::add_fader_bank_set& definition) {
-        bank_sets.emplace_back();
+        bank_sets.emplace_back(definition.bank_id());
         const auto new_bank_index = bank_sets.size() - 1;
         bankset_to_index_map[definition.bank_id()] = new_bank_index;
         auto& bs = bank_sets[new_bank_index];
