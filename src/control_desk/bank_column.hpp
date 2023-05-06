@@ -57,6 +57,7 @@ namespace dmxfish::control_desk {
         bool black_active = false;
         dmxfish::dmx::pixel color;
         dmxfish::dmx::pixel readymode_color;
+
         raw_column_configuration raw_configuration;
         raw_column_configuration readymode_raw_configuration;
 
@@ -90,7 +91,11 @@ namespace dmxfish::control_desk {
         }
 
         [[nodiscard]] inline dmxfish::dmx::pixel get_color() const {
-            return this->color;
+            if(black_active) {
+                return dmxfish::dmx::pixel{this->color.hue, this->color.saturation, 0.0};
+            } else {
+                return this->color;
+            }
         }
 
         inline void set_color(const dmxfish::dmx::pixel& p) {
@@ -118,16 +123,24 @@ namespace dmxfish::control_desk {
 		}
 
 		[[nodiscard]] inline uint8_t get_amber_value() const {
-			return this->amber;
+            if(black_active) {
+                return 0;
+            } else {
+                return this->amber;
+            }
 		}
 
 		inline void set_uv_value(uint8_t new_value) {
 			this->uv = new_value;
 		}
 
-		[[nodiscard]] inline uint8_t get_uv_value() const {
-			return this->uv;
-		}
+        [[nodiscard]] inline uint8_t get_uv_value() const {
+            if(black_active) {
+                return 0;
+            } else {
+                return this->uv;
+            }
+        }
 
 		[[nodiscard]] inline std::string get_id() const {
             return this->id;
