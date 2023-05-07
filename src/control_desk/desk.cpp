@@ -5,6 +5,7 @@
 
 #include "io/iomanager.hpp"
 #include "lib/logging.hpp"
+#include "main.hpp"
 
 namespace dmxfish::control_desk {
 
@@ -63,7 +64,7 @@ namespace dmxfish::control_desk {
 
     desk::~desk() {
         this->reset_devices();
-	this->iomanager->handle_queued_io();
+	get_iomanager_instance()->handle_queued_io();
         ::spdlog::debug("Stopping control desk handler. Reseted connected input devices.");
     }
 
@@ -167,7 +168,8 @@ namespace dmxfish::control_desk {
     }
 
     void desk::process_incomming_command(const midi_command& c, size_t device_index) {
-        if(this->iomanager == nullptr) {
+        auto iom = get_iomanager_instance();
+        if(iom == nullptr) {
             return;
         }
         auto& d = this->devices[device_index];
@@ -188,14 +190,14 @@ namespace dmxfish::control_desk {
                                     col_ptr->process_button_press_message(b, button_change{c.data_2});
                                     msg.set_button(missiondmx::fish::ipcmessages::ButtonCode{(unsigned int) (device_index * 256 + c.data_1)});
                                     msg.set_new_state(c.data_2 > 10 ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
-                                    iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
+                                    iom->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
                                 }
                             }
                         } else if(xtouch_is_fader_touch(b)) {
                             ::missiondmx::fish::ipcmessages::button_state_change msg;
                             msg.set_button(missiondmx::fish::ipcmessages::ButtonCode{(unsigned int) (device_index * 256 + c.data_1)});
                             msg.set_new_state(c.data_2 > 10 ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
-                            iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
+                            iom->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
                         } else {
                             this->handle_bord_buttons(b, button_change{c.data_2});
                         }
@@ -213,7 +215,7 @@ namespace dmxfish::control_desk {
                                     col_ptr->process_fader_change_message(value);
                                     msg.set_column_id(col_ptr->get_id());
                                     msg.set_position(value);
-                                    iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_FADER_POSITION);
+                                    iom->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_FADER_POSITION);
                                 }
                             }
                         } else if(xtouch_is_column_encoder(c.data_1)) {
@@ -228,7 +230,7 @@ namespace dmxfish::control_desk {
                                     col_ptr->process_encoder_change_message(change);
                                     msg.set_column_id(col_ptr->get_id());
                                     msg.set_amount(change);
-                                    iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_ROTARY_ENCODER_CHANGE);
+                                    iom->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_ROTARY_ENCODER_CHANGE);
                                 }
                             } else {
                                 ::spdlog::warn("Received Column encoder change fro {} to {} but no bank set is active.", c.data_1 - XTOUCH_ENCODER_INDEX_OFFSET, c.data_2);
@@ -286,7 +288,7 @@ namespace dmxfish::control_desk {
             ::missiondmx::fish::ipcmessages::button_state_change msg;
             msg.set_button(missiondmx::fish::ipcmessages::ButtonCode{(unsigned int) (b)});
             msg.set_new_state(c == button_change::PRESS ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
-            iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
+            get_iomanager_instance()->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_BUTTON_STATE_CHANGE);
         }
     }
 
@@ -315,7 +317,7 @@ namespace dmxfish::control_desk {
                 msg.set_selected_bank_set("");
             }
             msg.set_seven_seg_display_data("");
-            iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_DESK_UPDATE);
+            get_iomanager_instance()->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_DESK_UPDATE);
         }
     }
 
@@ -532,6 +534,22 @@ namespace dmxfish::control_desk {
                 xtouch_set_button_led(*d_ptr, button::BTN_EQ_COMMITRDY, btn_state);
                 d_ptr->schedule_transmission();
             }
+        }
+    }
+
+    std::shared_ptr<bank_column> desk::find_column(const std::string& set_id, const std::string& column_id) {
+        if(!bankset_to_index_map.contains(set_id)) {
+            return nullptr;
+        }
+        if(auto set_index = bankset_to_index_map.at(set_id); set_index < bank_sets.size()) {
+            auto& set = bank_sets[set_index];
+            if(set.columns_map.contains(column_id)) {
+                return set.columns_map.at(column_id);
+            } else {
+                return nullptr;
+            }
+        } else {
+            return nullptr;
         }
     }
 }

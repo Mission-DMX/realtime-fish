@@ -58,9 +58,6 @@ namespace dmxfish::io {
 
 			inline void set_control_desk_handle(std::unique_ptr<dmxfish::control_desk::desk> handle) {
 				this->control_desk_handle = std::move(handle);
-				if(this->control_desk_handle != nullptr) {
-					this->control_desk_handle->set_iomanager(this->shared_from_this());
-				}
 			}
 
 			inline void update_control_desk() {
@@ -68,6 +65,14 @@ namespace dmxfish::io {
 					control_desk_handle->update();
 				}
 			}
+
+			inline std::shared_ptr<dmxfish::control_desk::bank_column> access_desk_column(const std::string& set_id, const std::string& column_id) {
+				if (!control_desk_handle) {
+					return nullptr;
+				}
+				return control_desk_handle->find_column(set_id, column_id);
+			}
+
 			void handle_queued_io();
 		private:
 			void run();

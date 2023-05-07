@@ -78,7 +78,6 @@ namespace dmxfish::control_desk {
             ~bank_set() = default;
         };
     private:
-        std::shared_ptr<dmxfish::io::IOManager> iomanager = nullptr;
         std::vector<std::shared_ptr<device_handle>> devices;
         std::vector<bank_set> bank_sets;
         std::map<std::string, size_t> bankset_to_index_map;
@@ -91,10 +90,6 @@ namespace dmxfish::control_desk {
     public:
         desk(std::list<std::pair<std::string, midi_device_id>> input_devices);
         ~desk();
-
-        inline void set_iomanager(std::shared_ptr<dmxfish::io::IOManager> iom) {
-            this->iomanager = iom;
-        }
 
         /**
          * This method performs the updates of all HMI input devices
@@ -134,6 +129,7 @@ namespace dmxfish::control_desk {
         void update_encoder_state_from_protobuf(const ::missiondmx::fish::ipcmessages::rotary_encoder_change& msg);
         void update_button_leds_from_protobuf(const missiondmx::fish::ipcmessages::button_state_change& msg);
         void set_seven_seg_display_data(const std::string& data);
+        std::shared_ptr<bank_column> find_column(const std::string& set_id, const std::string& column_id);
     private:
         void reset_devices();
         void remove_bank_set(size_t i);
