@@ -5,6 +5,7 @@
  */
 
 #include <memory>
+#include <sstream>
 
 #include "dmx/pixel.hpp"
 #include "filters/filter.hpp"
@@ -35,7 +36,16 @@ namespace dmxfish::filters {
             if(!configuration.contains("set_id")){
                 throw filter_config_exception("Unable to set value of fader input filter: configuration does not contain set_id parameter");
             }
-            input_col = get_iomanager_instance()->access_desk_column(configuration.at("set_id"), configuration.at("column_id"));
+            const auto& set_id = configuration.at("set_id");
+            const auto& column_id = configuration.at("column_id");
+            if(auto candidate = get_iomanager_instance()->access_desk_column(set_id, column_id); candidate) {
+                input_col = candidate;
+                update();
+            } else {
+                std::stringstream ss;
+                ss << "The requested column '" << column_id << "' in the '" << set_id << "' set does not seam to exist.";
+                throw filter_config_exception(ss.str());
+            }
         }
 
         virtual  bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
