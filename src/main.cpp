@@ -1,5 +1,8 @@
 #include <chrono>
+#include <cstdlib>
 #include <memory>
+#include <signal.h>
+#include <unistd.h>
 #include <thread>
 
 #include "lib/logging.hpp"
@@ -78,6 +81,27 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t, std::shared_ptr<dmx
 	}
 }
 
+static std::shared_ptr<runtime_state_t> run_time_state = nullptr;
+
+void setup_sigint_handler() {
+    struct sigaction sigIntHandler;
+    sigIntHandler.sa_handler = [](int signal){
+        if (signal != SIGINT) {
+            return;
+        }
+        if(run_time_state->running) {
+            run_time_state->running = false;
+            ::spdlog::info("Stopping server gently now. Press CRTL-C again to force kill the server (Warning: this would interrupt the cleanup and should be used as a last resort).");
+        } else {
+            ::spdlog::error("Force stopping the server now! No further resource cleanup is performed!");
+            exit(SIGINT);
+        }
+    };
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, NULL);
+}
+
 int main(int argc, char* argv[], char* env[]) {
 
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -87,14 +111,17 @@ int main(int argc, char* argv[], char* env[]) {
 
 	spdlog::set_level(spdlog::level::debug);
     reset_start_time();
-	auto run_time_state = std::make_shared<runtime_state_t>();
+	run_time_state = std::make_shared<runtime_state_t>();
 
-	stdin_watcher sin_w([run_time_state](){
+	stdin_watcher sin_w([](){
 		if(run_time_state->running) {
 			run_time_state->running = false;
 			::spdlog::info("Stopping server from keyboard now.");
 		}
 	});
+
+	setup_sigint_handler();
+
 	// dmxfish::io::IOManager manager(run_time_state, true);
 	auto manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
 
