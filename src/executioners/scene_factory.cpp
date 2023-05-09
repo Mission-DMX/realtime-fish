@@ -2,10 +2,13 @@
 
 #include <deque>
 #include <map>
+#include <mutex>
 #include <set>
 #include <sstream>
 #include <utility>
 #include <vector>
+
+#include "executioners/threadpool.hpp"
 
 #include "filters/types.hpp"
 #include "filters/filter_constants.hpp"
@@ -446,31 +449,45 @@ COMPILER_RESTORE("-Weffc++")
 			return std::make_pair("There were no scenes defined. Skipping.", false);
 		}
         v.reserve(ss.size());
-		std::stringstream msg_stream;
-		bool worked = true;
+		std::stringstream global_msg_stream;
+		std::shared_ptr<bool> worked = std::make_shared<bool>(true);
+
+		threadpool tp;
+		std::mutex msg_stream_mutex{}, v_mutex{};
 
 		for(auto& stemplate : ss) {
-			// TODO make parallel
-			try {
-				auto filter_tuple = compute_filter(stemplate, msg_stream);
-				v.emplace_back(std::move(std::get<0>(filter_tuple)),
-					std::move(std::get<1>(filter_tuple)),
-					std::get<2>(filter_tuple),
-					std::get<3>(filter_tuple)
-				);
-				const auto last_index = v.size() - 1;
-				const int32_t sid = (int32_t) (stemplate.id().present() ? stemplate.id().get() : last_index);
-				scene_index_map[sid] = last_index;
-			} catch (const ::dmxfish::filters::filter_config_exception& e) {
-				msg_stream << "Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
-				worked = false;
-			} catch (const scheduling_exception& e) {
-				msg_stream << "Failed to schedule filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
-				worked = false;
-			}
+			tp.enque([&global_msg_stream, &v, &scene_index_map, &msg_stream_mutex, &v_mutex, stemplate, worked](){
+				std::stringstream msg_stream;
+				try {
+					auto filter_tuple = compute_filter(stemplate, msg_stream);
+					scene s{std::move(std::get<0>(filter_tuple)),
+							std::move(std::get<1>(filter_tuple)),
+							std::get<2>(filter_tuple),
+							std::get<3>(filter_tuple)
+						};
+					{
+						std::lock_guard lock(v_mutex);
+						v.push_back(std::move(s));
+						const auto last_index = v.size() - 1;
+						const int32_t sid = (int32_t) (stemplate.id().present() ? stemplate.id().get() : last_index);
+						scene_index_map[sid] = last_index;
+					}
+				} catch (const ::dmxfish::filters::filter_config_exception& e) {
+					msg_stream << "Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
+					*worked = false;
+				} catch (const scheduling_exception& e) {
+					msg_stream << "Failed to schedule filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
+					*worked = false;
+				}
+				{
+					std::lock_guard lock(msg_stream_mutex);
+					global_msg_stream << msg_stream.str();
+				}
+			});
 		}
-		msg_stream << "Done." << std::endl;
-		return std::make_pair(msg_stream.str(), worked);
+		tp.join();
+		global_msg_stream << "Done." << std::endl;
+		return std::make_pair(global_msg_stream.str(), *worked);
     }
 
 }
