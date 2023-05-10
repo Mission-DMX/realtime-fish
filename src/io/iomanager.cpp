@@ -633,12 +633,15 @@ void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::lo
 		if (this->active_show == nullptr) {
 			this->latest_error = "An error occurred while loading the show configuration. No show file is currently loaded. Please review the detailed log message.";
 			this->show_file_apply_state = SFAS_NO_SHOW_ERROR;
+			::spdlog::error("Failed to load show file: No show currently running. Check GUI for log.");
 		} else {
 			this->latest_error = "An error occurred while loading the new show configuration. The last successfully loaded configuration is still active. Please review the detailed log message.";
 			this->show_file_apply_state = SFAS_SHOW_ACTIVE;
+			::spdlog::error(this->latest_error);
 		}
 	} else {
 		this->show_file_apply_state = SFAS_SHOW_ACTIVE;
+		::spdlog::info("Successfully loaded show file");
 	}
 	long_log_update log_msg;
 	log_msg.set_level(success ? LL_INFO : LL_ERROR);
