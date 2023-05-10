@@ -15,6 +15,7 @@
 #include "filters/filter_trigonometric.hpp"
 #include "filters/filter_math.hpp"
 #include "filters/filter_time.hpp"
+#include "filters/filter_cue.hpp"
 
 #include <iostream>
 

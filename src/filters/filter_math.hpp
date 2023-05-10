@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * The filters calculate trigonometric functions
+ * The filters calculate basic math functions
  */
 
 #include <cmath>
@@ -26,7 +26,7 @@ namespace dmxfish::filters {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.float_channels.contains("value")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'value' of type 'double'.");
+                throw filter_config_exception("Unable to link input of math filter: channel mapping does not contain channel 'value' of type 'double'.");
             }
             this->input = input_channels.float_channels.at("value");
         }
