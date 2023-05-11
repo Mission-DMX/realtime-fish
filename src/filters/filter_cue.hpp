@@ -18,6 +18,7 @@ namespace dmxfish::filters {
 
     class filter_cue: public filter {
     private:
+
         uint8_t* running_state = nullptr;
         double* time = nullptr;
         double start_time = 0;
@@ -29,16 +30,11 @@ namespace dmxfish::filters {
         std::vector<double> float_channels;
         std::vector<dmxfish::dmx::pixel> color_channels;
 
-//        std::vector<std::vector<uint8_t>> eight_bit_frames;
-//        std::vector<std::vector<uint16_t>> sixteen_bit_frames;
-//        std::vector<std::vector<double>> float_frames;
-//        std::vector<std::vector<dmxfish::dmx::pixel>> color_frames;
         std::vector<uint8_t> eight_bit_frames;
         std::vector<uint16_t> sixteen_bit_frames;
         std::vector<double> float_frames;
         std::vector<dmxfish::dmx::pixel> color_frames;
 
-//        std::vector<std::string> channel_type;
 
         std::vector<std::string> channel_names_eight;
         std::vector<std::string> channel_names_sixteen;
@@ -63,6 +59,15 @@ namespace dmxfish::filters {
             std::string mapping = configuration.at("mapping");
             size_t start_pos = 0;
             auto next_pos = mapping.find(";");
+            int i = std::count(mapping.begin(), mapping.end(), ':');
+            channel_names_eight.reserve(i);
+            channel_names_sixteen.reserve(i);
+            channel_names_float.reserve(i);
+            channel_names_color.reserve(i);
+            eight_bit_channels.reserve(i);
+            sixteen_bit_channels.reserve(i);
+            float_channels.reserve(i);
+            color_channels.reserve(i);
             while(true){
                 const auto sign = mapping.find(":", start_pos);
                 std::string channel_type = mapping.substr(sign+1, next_pos-sign-1);
@@ -70,24 +75,20 @@ namespace dmxfish::filters {
                 if (channel_type.compare("8bit") == 0){
                     channel_names_eight.push_back(channel_name);
                     eight_bit_channels.push_back(0);
-//                    eight_bit_frames.push_back(std::vector<uint8_t>);
                 } else if(channel_type.compare("16bit") == 0){
                     channel_names_sixteen.push_back(channel_name);
                     sixteen_bit_channels.push_back(0);
-//                    sixteen_bit_frames.push_back(std::vector<uint16_t>);
                 } else if(channel_type.compare("float") == 0){
                     channel_names_float.push_back(channel_name);
                     float_channels.push_back(0);
-//                    float_frames.push_back(std::vector<double>);
                 } else if(channel_type.compare("color") == 0){
                     channel_names_color.push_back(channel_name);
                     color_channels.push_back(dmxfish::dmx::pixel());
-//                    color_frames.push_back(std::vector<dmxfish::dmx::pixel>);
                 } else {
                     throw filter_config_exception(std::string("can not recognise channel type: ") + mapping.substr(sign, next_pos-sign));
                 }
 
-                if (next_pos >= mapping.size()){
+                if (next_pos >= mapping.length()){
                     break;
                 }
                 start_pos = next_pos + 1;
@@ -109,38 +110,7 @@ namespace dmxfish::filters {
                 auto next_pos_frame = frame_channels.find("|");
                 try {
                     timestamps.push_back(std::stod(timestamp));
-                    size_t i = 0;
-                    while(true) {
-                        if (i < eight_bit_channels.size()){
-                            eight_bit_frames.push_back(std::stoi(frame_channels.substr(start_pos_frame, next_pos_frame-start_pos_frame)));
-                        }
-                        else if (i < eight_bit_channels.size() + sixteen_bit_channels.size()){
-                            sixteen_bit_frames.push_back(std::stoi(frame_channels.substr(start_pos_frame, next_pos_frame-start_pos_frame)));
-                        }
-                        else if (i < eight_bit_channels.size() + sixteen_bit_channels.size() + float_channels.size()){
-                            float_frames.push_back(std::stod(frame_channels.substr(start_pos_frame, next_pos_frame-start_pos_frame)));
-                        }
-                        else if (i < eight_bit_channels.size() + sixteen_bit_channels.size() + float_channels.size() + color_channels.size()){
-                            const auto first_position = frame_channels.find(",", start_pos_frame);
-                            double hue = std::stod(frame_channels.substr(start_pos_frame, first_position-start_pos_frame));
-                            const auto second_position = frame_channels.find(",", first_position + 1);
-                            double saturation = std::stod(frame_channels.substr(first_position + 1, second_position - first_position - 1));
-                            double iluminance = std::stod(frame_channels.substr(second_position + 1, next_pos_frame - second_position - 1));
-                            color_frames.push_back(dmxfish::dmx::pixel(hue, saturation, iluminance));
-                        } else {
-                            throw filter_config_exception("cue filter: too many channels for a frame");
-                        }
-                        i++;
 
-                        if (next_pos_frame >= frame_channels.size()) {
-                            if (i < eight_bit_channels.size() + sixteen_bit_channels.size() + float_channels.size() + color_channels.size()){
-                                throw filter_config_exception("cue filter: too less channels for a frame");
-                            }
-                            break;
-                        }
-                        start_pos_frame = next_pos_frame + 1;
-                        next_pos_frame = mapping.find("|", start_pos_frame);
-                    }
                 } catch (const std::invalid_argument& ex) {
                     MARK_UNUSED(ex);
                     throw filter_config_exception("cue filter: cant parse timestamp");
@@ -148,11 +118,57 @@ namespace dmxfish::filters {
                     MARK_UNUSED(ex);
                     throw filter_config_exception("cue filter: cant parse timestamp ");
                 }
-                if (next_pos_channel >= frames.size()){
+                size_t i = 0;
+                while(true) {
+                    try {
+                        if (i < eight_bit_channels.size()) {
+                            eight_bit_frames.push_back(std::stoi(
+                                    frame_channels.substr(start_pos_frame, next_pos_frame - start_pos_frame)));
+                        } else if (i < eight_bit_channels.size() + sixteen_bit_channels.size()) {
+                            sixteen_bit_frames.push_back(std::stoi(
+                                    frame_channels.substr(start_pos_frame, next_pos_frame - start_pos_frame)));
+                        } else if (i <
+                                   eight_bit_channels.size() + sixteen_bit_channels.size() + float_channels.size()) {
+                            float_frames.push_back(std::stod(
+                                    frame_channels.substr(start_pos_frame, next_pos_frame - start_pos_frame)));
+                        } else if (i < eight_bit_channels.size() + sixteen_bit_channels.size() + float_channels.size() +
+                                       color_channels.size()) {
+                            const auto first_position = frame_channels.find(",", start_pos_frame);
+                            double hue = std::stod(
+                                    frame_channels.substr(start_pos_frame, first_position - start_pos_frame));
+                            const auto second_position = frame_channels.find(",", first_position + 1);
+                            double saturation = std::stod(
+                                    frame_channels.substr(first_position + 1, second_position - first_position - 1));
+                            double iluminance = std::stod(
+                                    frame_channels.substr(second_position + 1, next_pos_frame - second_position - 1));
+                            color_frames.push_back(dmxfish::dmx::pixel(hue, saturation, iluminance));
+                        } else {
+                            throw filter_config_exception("cue filter: too many channels for a frame");
+                        }
+                    }
+                    catch (const std::invalid_argument& ex) {
+                        MARK_UNUSED(ex);
+                        throw filter_config_exception("cue filter: can not parse the value");
+                    } catch (const std::out_of_range& ex) {
+                        MARK_UNUSED(ex);
+                        throw filter_config_exception("cue filter: can not parse the value ");
+                    }
+                    i++;
+
+                    if (next_pos_frame >= frame_channels.length()) {
+                        if (i < eight_bit_channels.size() + sixteen_bit_channels.size() + float_channels.size() + color_channels.size()){
+                            throw filter_config_exception("cue filter: too less channels for a frame");
+                        }
+                        break;
+                    }
+                    start_pos_frame = next_pos_frame + 1;
+                    next_pos_frame = frame_channels.find("|", start_pos_frame);
+                }
+                if (next_pos_channel >= frames.length()){
                     break;
                 }
                 start_pos_channel = next_pos_channel + 1;
-                next_pos_channel = mapping.find(";", start_pos_channel);
+                next_pos_channel = frames.find(";", start_pos_channel);
             }
         }
 
@@ -163,7 +179,18 @@ namespace dmxfish::filters {
         }
 
         virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
-//            map.float_channels[name + ":value"] = &output;
+            for(int i = 0; i<eight_bit_channels.size(); i++){
+                map.eight_bit_channels[name + ":" + channel_names_eight.at(i)] = &eight_bit_channels.at(i);
+            }
+            for(int i = 0; i<sixteen_bit_channels.size(); i++){
+                map.sixteen_bit_channels[name + ":" + channel_names_sixteen.at(i)] = &sixteen_bit_channels.at(i);
+            }
+            for(int i = 0; i<float_channels.size(); i++){
+                map.float_channels[name + ":" + channel_names_float.at(i)] = &float_channels.at(i);
+            }
+            for(int i = 0; i<color_channels.size(); i++){
+                map.color_channels[name + ":" + channel_names_color.at(i)] = &color_channels.at(i);
+            }
         }
 
         virtual void update() override {
