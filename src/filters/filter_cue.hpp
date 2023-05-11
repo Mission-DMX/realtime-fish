@@ -29,6 +29,41 @@ namespace dmxfish::filters {
 
     class filter_cue: public filter {
     private:
+        enum transition_t{
+            EDGE,
+            LINEAR,
+            SIGMOIDAL,
+            EASE_IN,
+            EASE_OUT
+        };
+        enum handling_at_the_end{
+            HOLD,
+            START_AGAIN,
+            NEXT_CUE
+        };
+        enum handling_at_restart{
+            NOTHING,
+            RESTART
+        };
+//        enum run_state{
+//            PLAY = 1,
+//            PAUSE = 2,
+//            STOP = 0,
+//            TO_NEXT_FRAME = 3
+//        };
+//        enum channel_t{
+//            EIGHT_Bit,
+//            SIXTEEN_BIT,
+//            FLOAT,
+//            COLOR
+//        };
+
+        template <typename T>
+        struct KeyFrame{
+            T value;
+            transition_t transition;
+//            KeyFrame(T val, transition_t trans) : value(val), transition(trans) {}
+        };
 
         uint8_t* running_state = nullptr;
         double* time = nullptr;
@@ -41,11 +76,10 @@ namespace dmxfish::filters {
         std::vector<double> float_channels;
         std::vector<dmxfish::dmx::pixel> color_channels;
 
-        std::vector<uint8_t> eight_bit_frames;
-        std::vector<uint16_t> sixteen_bit_frames;
-        std::vector<double> float_frames;
-        std::vector<dmxfish::dmx::pixel> color_frames;
-
+        std::vector<KeyFrame<uint8_t>> eight_bit_frames;
+        std::vector<KeyFrame<uint16_t>> sixteen_bit_frames;
+        std::vector<KeyFrame<double>> float_frames;
+        std::vector<KeyFrame<dmxfish::dmx::pixel>> color_frames;
 
         std::vector<std::string> channel_names_eight;
         std::vector<std::string> channel_names_sixteen;
@@ -141,16 +175,36 @@ namespace dmxfish::filters {
                 size_t i = 0;
                 while(true) {
                     try {
+                        const auto sign_transition = frame_channels.find("@", start_pos_frame);
+                        std::string tran = frame_channels.substr(sign_transition+1, next_pos_frame-sign_transition-1);
+                        transition_t transition;
+                        if(tran.compare("lin")==0){
+                            transition = LINEAR;
+                        } else if(tran.compare("edge")==0){
+                            transition = EDGE;
+                        } else if(tran.compare("sigm")==0){
+                            transition = SIGMOIDAL;
+                        } else if(tran.compare("e_in")==0){
+                            transition = EASE_IN;
+                        } else if(tran.compare("e_out")==0){
+                            transition = EASE_OUT;
+                        } else {
+                            throw filter_config_exception("cue filter: could not resolve transition type");
+                        }
+
                         if (i < eight_bit_channels.size()) {
-                            eight_bit_frames.push_back(std::stoi(
-                                    frame_channels.substr(start_pos_frame, next_pos_frame - start_pos_frame)));
+                            eight_bit_frames.push_back(KeyFrame<uint8_t>(std::stoi(
+                                        frame_channels.substr(start_pos_frame, next_pos_frame - start_pos_frame)),
+                                    transition));
                         } else if (i < eight_bit_channels.size() + sixteen_bit_channels.size()) {
-                            sixteen_bit_frames.push_back(std::stoi(
-                                    frame_channels.substr(start_pos_frame, next_pos_frame - start_pos_frame)));
+                            sixteen_bit_frames.push_back(KeyFrame<uint16_t>(std::stoi(
+                                        frame_channels.substr(start_pos_frame, next_pos_frame - start_pos_frame)),
+                                     transition));
                         } else if (i <
                                    eight_bit_channels.size() + sixteen_bit_channels.size() + float_channels.size()) {
-                            float_frames.push_back(std::stod(
-                                    frame_channels.substr(start_pos_frame, next_pos_frame - start_pos_frame)));
+                            float_frames.push_back(KeyFrame<double>(std::stod(
+                                        frame_channels.substr(start_pos_frame, next_pos_frame - start_pos_frame)),
+                                    transition));
                         } else if (i < eight_bit_channels.size() + sixteen_bit_channels.size() + float_channels.size() +
                                        color_channels.size()) {
                             const auto first_position = frame_channels.find(",", start_pos_frame);
@@ -161,7 +215,8 @@ namespace dmxfish::filters {
                                     frame_channels.substr(first_position + 1, second_position - first_position - 1));
                             double iluminance = std::stod(
                                     frame_channels.substr(second_position + 1, next_pos_frame - second_position - 1));
-                            color_frames.push_back(dmxfish::dmx::pixel(hue, saturation, iluminance));
+                            color_frames.push_back(KeyFrame<dmxfish::dmx::pixel>(dmxfish::dmx::pixel(hue, saturation, iluminance),
+                                                   transition));
                         } else {
                             throw filter_config_exception("cue filter: too many channels for a frame");
                         }
