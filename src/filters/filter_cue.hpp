@@ -12,6 +12,17 @@
 #include "dmx/pixel.hpp"
 
 
+int count_occurence_of(std::string& base_string, std::string pattern){
+    int occurrences = 0;
+    std::string::size_type start = 0;
+
+    while ((start = base_string.find(pattern, start)) != std::string::npos) {
+        ++occurrences;
+        start += pattern.length();
+    }
+    return occurrences;
+}
+
 namespace dmxfish::filters {
     COMPILER_SUPRESS("-Weffc++")
 
@@ -59,15 +70,18 @@ namespace dmxfish::filters {
             std::string mapping = configuration.at("mapping");
             size_t start_pos = 0;
             auto next_pos = mapping.find(";");
-            int i = std::count(mapping.begin(), mapping.end(), ':');
-            channel_names_eight.reserve(i);
-            channel_names_sixteen.reserve(i);
-            channel_names_float.reserve(i);
-            channel_names_color.reserve(i);
-            eight_bit_channels.reserve(i);
-            sixteen_bit_channels.reserve(i);
-            float_channels.reserve(i);
-            color_channels.reserve(i);
+            int count_channel_type = count_occurence_of(mapping, "8bit");
+            channel_names_eight.reserve(count_channel_type);
+            eight_bit_channels.reserve(count_channel_type);
+            count_channel_type = count_occurence_of(mapping, "16bit");
+            channel_names_sixteen.reserve(count_channel_type);
+            sixteen_bit_channels.reserve(count_channel_type);
+            count_channel_type = count_occurence_of(mapping, "float");
+            channel_names_float.reserve(count_channel_type);
+            float_channels.reserve(count_channel_type);
+            count_channel_type = count_occurence_of(mapping, "color");
+            channel_names_color.reserve(count_channel_type);
+            color_channels.reserve(count_channel_type);
             while(true){
                 const auto sign = mapping.find(":", start_pos);
                 std::string channel_type = mapping.substr(sign+1, next_pos-sign-1);
@@ -100,6 +114,12 @@ namespace dmxfish::filters {
             }
 
             std::string frames = configuration.at("frames");
+
+            int frames_count = std::count(frames.begin(), frames.end(), ':');
+            eight_bit_frames.reserve(frames_count*eight_bit_channels.size());
+            sixteen_bit_frames.reserve(frames_count*sixteen_bit_channels.size());
+            float_frames.reserve(frames_count*float_channels.size());
+            color_frames.reserve(frames_count*color_channels.size());
             size_t start_pos_channel = 0;
             auto next_pos_channel = frames.find(";");
             while(true){
