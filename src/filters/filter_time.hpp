@@ -27,6 +27,7 @@ namespace dmxfish::filters {
             MARK_UNUSED(configuration);
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(input_channels);
+            this->now = (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()-get_start_time())).count();
         }
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
