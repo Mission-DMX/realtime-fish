@@ -107,6 +107,16 @@ namespace dmxfish::filters {
         filter_cue() : filter() {}
         virtual ~filter_cue() {}
 
+
+        inline void do_with_substr(std::string& str, void(&f)(filter_cue&)){
+            f(*this);
+        }
+
+        inline static void test_f(filter_cue& myself){
+            int i = 1;
+            myself.cues.at(0).eight_bit_frames.push_back(KeyFrame<uint8_t>(3, LINEAR));
+        }
+
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             if(!input_channels.float_channels.contains("time")) {
                 throw filter_config_exception("Unable to link input of cue filter: channel mapping does not contain channel 'time' of type 'double'");
@@ -167,14 +177,28 @@ namespace dmxfish::filters {
                 next_pos = mapping.find(";", start_pos);
             }
 
-            if(!initial_parameters.contains("frames")){
-                throw filter_config_exception("cue filter: unable to setup the frames");
+            if(!initial_parameters.contains("end_handling")){
+                throw filter_config_exception("cue filter: unable to setup the end_handling of the whole cuelist");
             }
 
-            std::string frames = configuration.at("frames");
+            if(configuration.at("frames").compare("hold") == 0){
+                this->handle_end = HOLD;
+            } else if(configuration.at("frames").compare("start_again") == 0){
+                this->handle_end = START_AGAIN;
+            } else {
+                throw filter_config_exception("cue filter: could not parse the handling at the end of the cuelist");
+            }
 
+            if(!initial_parameters.contains("cuelist")){
+                throw filter_config_exception("cue filter: unable to setup the cuelist");
+            }
+
+            std::string frames = configuration.at("cuelist");
+
+            do_with_substr(frames, test_f);
 //            int frames_count = std::count(frames.begin(), frames.end(), ':');
-//            eight_bit_frames.reserve(frames_count*eight_bit_channels.size());
+//            eight_bit_frames.reserve(
+//             _count*eight_bit_channels.size());
 //            sixteen_bit_frames.reserve(frames_count*sixteen_bit_channels.size());
 //            float_frames.reserve(frames_count*float_channels.size());
 //            color_frames.reserve(frames_count*color_channels.size());
@@ -398,7 +422,6 @@ namespace dmxfish::filters {
                 return true;
             }
             if (key.compare("next_cue") == 0){
-                // Todo handling next cue not implemented yet
                 uint16_t next;
                 try {
                     next = (uint16_t) std::stoi(_value);
@@ -434,14 +457,19 @@ namespace dmxfish::filters {
         }
 
         template <typename T>
-        T calc_transition(double rel_time, transition_t transition, T start_value, T end_value){
+        void calc_transition(double rel_time, transition_t transition, T start_value, T end_value, size_t ind){
             switch (transition) {
                 case EDGE:
-                    if (rel_time<0.5){
-                        return start_value;
-                    } else{
-                        return end_value;
+                    if constexpr (std::is_same<T, uint8_t>::value){
+                        eight_bit_channels.at(ind) = (rel_time<0.5)?start_value:end_value;
+                    } else if constexpr (std::is_same<T, uint16_t>::value){
+                        sixteen_bit_channels.at(ind) = (rel_time<0.5)?start_value:end_value;
+                    } else if constexpr (std::is_same<T, double>::value){
+                        float_channels.at(ind) = (rel_time<0.5)?start_value:end_value;
+                    } else if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value){
+                        color_channels.at(ind) = (rel_time<0.5)?start_value:end_value;
                     }
+                    return;
                 case LINEAR:
                     break;
                 case SIGMOIDAL:
@@ -458,13 +486,13 @@ namespace dmxfish::filters {
                     break;
             }
             if constexpr (std::is_same<T, uint8_t>::value){
-                return (uint8_t) std::round((end_value - start_value) * rel_time + start_value);
+                eight_bit_channels.at(ind) = (uint8_t) std::round((end_value - start_value) * rel_time + start_value);
             } else if constexpr (std::is_same<T, uint16_t>::value){
-                return (uint16_t) std::round((end_value - start_value) * rel_time + start_value);
+                sixteen_bit_channels.at(ind) = (uint16_t) std::round((end_value - start_value) * rel_time + start_value);
             } else if constexpr (std::is_same<T, double>::value){
-                return (end_value - start_value) * rel_time + start_value;
+                float_channels.at(ind) = (end_value - start_value) * rel_time + start_value;
             } else if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value){
-                return dmxfish::dmx::pixel((end_value.hue - start_value.hue) * rel_time + start_value.hue, (end_value.saturation - start_value.saturation) * rel_time + start_value.saturation, (end_value.iluminance - start_value.iluminance) * rel_time + start_value.iluminance);
+                color_channels.at(ind) = dmxfish::dmx::pixel((end_value.hue - start_value.hue) * rel_time + start_value.hue, (end_value.saturation - start_value.saturation) * rel_time + start_value.saturation, (end_value.iluminance - start_value.iluminance) * rel_time + start_value.iluminance);
             }
         }
 
@@ -552,19 +580,19 @@ namespace dmxfish::filters {
 
             for(size_t i = 0; i < eight_bit_channels.size(); i++){
                 size_t frame_index = frame*eight_bit_channels.size()+i;
-                eight_bit_channels.at(i) = calc_transition<uint8_t>(rel_time, cues.at(active_cue).eight_bit_frames.at(frame_index).transition, last_eight_bit_channels.at(i), cues.at(active_cue).eight_bit_frames.at(frame_index).value);
+                calc_transition<uint8_t>(rel_time, cues.at(active_cue).eight_bit_frames.at(frame_index).transition, last_eight_bit_channels.at(i), cues.at(active_cue).eight_bit_frames.at(frame_index).value, i);
             }
             for(size_t i = 0; i < sixteen_bit_channels.size(); i++){
                 size_t frame_index = frame*sixteen_bit_channels.size()+i;
-                sixteen_bit_channels.at(i) = calc_transition<uint16_t>(rel_time, cues.at(active_cue).sixteen_bit_frames.at(frame_index).transition, last_sixteen_bit_channels.at(i), cues.at(active_cue).sixteen_bit_frames.at(frame_index).value);
+                calc_transition<uint16_t>(rel_time, cues.at(active_cue).sixteen_bit_frames.at(frame_index).transition, last_sixteen_bit_channels.at(i), cues.at(active_cue).sixteen_bit_frames.at(frame_index).value, i);
             }
             for(size_t i = 0; i < float_channels.size(); i++){
                 size_t frame_index = frame*float_channels.size()+i;
-                float_channels.at(i) = calc_transition<double>(rel_time, cues.at(active_cue).float_frames.at(frame_index).transition, last_float_channels.at(i), cues.at(active_cue).float_frames.at(frame_index).value);
+                calc_transition<double>(rel_time, cues.at(active_cue).float_frames.at(frame_index).transition, last_float_channels.at(i), cues.at(active_cue).float_frames.at(frame_index).value, i);
             }
             for(size_t i = 0; i < color_channels.size(); i++){
                 size_t frame_index = frame*color_channels.size()+i;
-                color_channels.at(i) = calc_transition<dmxfish::dmx::pixel>(rel_time, cues.at(active_cue).color_frames.at(frame_index).transition, last_color_channels.at(i), cues.at(active_cue).color_frames.at(frame_index).value);
+                calc_transition<dmxfish::dmx::pixel>(rel_time, cues.at(active_cue).color_frames.at(frame_index).transition, last_color_channels.at(i), cues.at(active_cue).color_frames.at(frame_index).value, i);
             }
         }
 
