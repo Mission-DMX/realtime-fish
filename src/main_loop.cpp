@@ -96,14 +96,10 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t, std::unique_ptr<dmx
 	manager->set_control_desk_handle(nullptr);
 }
 
-int main_loop(int argc, char* argv[], char* env[]) {
+int main_loop() {
 
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
-	MARK_UNUSED(argc);
-	MARK_UNUSED(argv);
-	MARK_UNUSED(env);
 
-	spdlog::set_level(spdlog::level::debug);
     reset_start_time();
 	auto run_time_state = std::make_shared<runtime_state_t>();
 
@@ -113,9 +109,8 @@ int main_loop(int argc, char* argv[], char* env[]) {
 			::spdlog::info("Stopping server from keyboard now.");
 		}
 	});
-	// dmxfish::io::IOManager manager(run_time_state, true);
-	manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
 
+	manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
 	manager->start();
 
 	auto control_desk = std::make_unique<dmxfish::control_desk::desk>(dmxfish::control_desk::enumerate_control_devices());
@@ -124,8 +119,8 @@ int main_loop(int argc, char* argv[], char* env[]) {
 
 	perform_main_update(run_time_state, std::move(control_desk));
 	manager = nullptr;
-
-	::spdlog::debug("Main End");
+	run_time_state = nullptr;
+	return 0;
 }
 
 std::shared_ptr<dmxfish::io::IOManager> get_iomanager_instance() {
