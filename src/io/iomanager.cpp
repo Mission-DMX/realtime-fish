@@ -460,6 +460,9 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
             if (msg->ParseFromZeroCopyStream(buffer)){
                 using namespace missiondmx::fish::ipcmessages;
                 this->show_file_apply_state = this->active_show == nullptr ? SFAS_SHOW_LOADING : SFAS_SHOW_UPDATING;
+                if(this->show_loading_thread) {
+                    this->show_loading_thread->join();
+                }
                 this->show_loading_thread = std::make_shared<std::thread>(std::bind(&IOManager::load_show_file, this, msg));
                 return;
             }
