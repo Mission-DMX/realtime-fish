@@ -140,6 +140,7 @@ namespace dmxfish::control_desk {
         void process_incomming_command(const midi_command& c, size_t device_index);
         void handle_bord_buttons(button b, button_change c);
         void handle_ready_state_update_from_bank(const std::string& column_id, bool new_state);
+	void update_fader_bank_leds();
     };
 
 }

@@ -89,14 +89,25 @@ namespace dmxfish::control_desk {
                 cbs.fader_banks[cbs.active_bank]->activate();
             }
             // TODO display bank set id on 7seg for a short period of time
-            for(auto d : devices) {
-                d->schedule_transmission();
-            }
+            update_fader_bank_leds();
             update_message_required = true;
 	    bank_set_modification_happened = false;
             return true;
         } else {
             return false;
+        }
+    }
+
+    void desk::update_fader_bank_leds() {
+	if(!(current_active_bank_set < bank_sets.size())) {
+            return;
+        }
+	const auto& cbs = bank_sets[current_active_bank_set];
+	const auto index = cbs.active_bank;
+	for(auto d : devices) {
+	    xtouch_set_button_led(*d, button::BTN_FADERBANKPREV_FADERBANKPREV, index == 0 ? button_led_state::off : button_led_state::on);
+            xtouch_set_button_led(*d, button::BTN_FADERBANKNEXT_FADERBANKNEXT, index + 1 == cbs.fader_banks.size() ? button_led_state::off : button_led_state::on);
+            d->schedule_transmission();
         }
     }
 
@@ -106,6 +117,7 @@ namespace dmxfish::control_desk {
         }
         auto& cbs = bank_sets[current_active_bank_set];
         if(index >= cbs.fader_banks.size()) {
+	    ::spdlog::warn("Not changing active bank on set: index out of range.");
             return false;
         }
         if(index == cbs.active_bank && !bank_set_modification_happened) {
@@ -115,11 +127,7 @@ namespace dmxfish::control_desk {
         cbs.fader_banks[cbs.active_bank]->deactivate(cbs.fader_banks[index]->size());
         cbs.active_bank = index;
         cbs.fader_banks[cbs.active_bank]->activate();
-        for(auto d : devices) {
-	    xtouch_set_button_led(*d, button::BTN_FADERBANKPREV_FADERBANKPREV, index == 0 ? button_led_state::off : button_led_state::on);
-            xtouch_set_button_led(*d, button::BTN_FADERBANKNEXT_FADERBANKNEXT, index + 1 == cbs.fader_banks.size() ? button_led_state::off : button_led_state::on);
-            d->schedule_transmission();
-        }
+        update_fader_bank_leds();
         update_message_required = true;
         return true;
     }
@@ -433,6 +441,7 @@ namespace dmxfish::control_desk {
             for(auto& col_definition : bank_definition.cols()) {
                 if(device_index == devices.size()) {
                     // We have too many columns to represent with our devices.
+		    ::spdlog::error("Skipping further columns in bank {}.", bs.fader_banks.size() - 1);
                     break;
                 }
                 if(col_index_on_device == devices[device_index]->get_number_of_supported_columns()) {
@@ -452,8 +461,9 @@ namespace dmxfish::control_desk {
         if(bank_sets.size() == 1) {
             // Enable first bank if it's the only one
             this->set_active_bank_set(0);
-        }
-	std::cout << "Added bank set. #Sets=" << this->bank_sets.size() << " Active: " << this->current_active_bank_set << " with " << this->bank_sets[current_active_bank_set].fader_banks.size() << " banks." << std::endl;
+        } else {
+	    update_fader_bank_leds();
+	}
     }
 
     void desk::update_column_from_message(const ::missiondmx::fish::ipcmessages::fader_column& msg) {

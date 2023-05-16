@@ -36,7 +36,6 @@ namespace dmxfish::control_desk {
 		const std::array<char, 14> empty_lcd_data{' '};
 		xtouch_set_lcd_display(*d_ptr, this->fader_index, lcd_color::black, empty_lcd_data);
 		xtouch_set_fader_position(*d_ptr, fader{(uint8_t) fader::FADER_CH1 + this->fader_index}, 0);
-		::spdlog::debug("Resetting column {}", this->fader_index);
 		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_REC_READY + this->fader_index}, button_led_state::off);
 		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_SOLO_FIND + this->fader_index}, button_led_state::off);
 		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_MUTE_BLACK + this->fader_index}, button_led_state::off);
@@ -283,7 +282,16 @@ namespace dmxfish::control_desk {
 		if(connection.expired()) {
 			return;
 		}
-		// TODO implement
+		const encoder e{fader_index + XTOUCH_ENCODER_INDEX_OFFSET};
+		if(current_bank_mode == bank_mode::DIRECT_INPUT_MODE) {
+			xtouch_set_ring_led(*connection.lock(), e, (raw_configuration.rotary_position * 128) / 65536);
+		} else {
+			if(readymode_active)
+			    xtouch_set_ring_led(*connection.lock(), e, (uint8_t) (this->readymode_color.hue * 128));
+			else
+			    xtouch_set_ring_led(*connection.lock(), e, (uint8_t) (this->color.hue * 128));
+		}
+		// TODO implement remaining led indicators
 	}
 
 	void bank_column::update_button_leds() {
@@ -299,8 +307,8 @@ namespace dmxfish::control_desk {
 		// TODO implement find
 		xtouch_set_button_led(*dev_ptr, button{offset + (uint8_t) button::BTN_CH1_MUTE_BLACK}, black_active ? button_led_state::flash : button_led_state::off);
 		xtouch_set_button_led(*dev_ptr,
-							  button{offset + (uint8_t) button::BTN_CH1_REC_READY},
-							  this->readymode_active ? button_led_state::on : button_led_state::off);
+		  button{offset + (uint8_t) button::BTN_CH1_REC_READY},
+		  this->readymode_active ? button_led_state::on : button_led_state::off);
 	}
 
 	void bank_column::update_side_leds() {
@@ -339,13 +347,13 @@ namespace dmxfish::control_desk {
 					selected_text_vector.emplace_back(ss.str());
 					ss.clear();
 					length = 0;
-				} else if(c == '\t') {
-					ss << ' ';
-					length++;
-				} else {
-					ss << c;
-					length++;
 				}
+			} else if(c == '\t') {
+				ss << ' ';
+				length++;
+			} else {
+				ss << c;
+				length++;
 			}
 		}
 		selected_text_vector.emplace_back(ss.str());
