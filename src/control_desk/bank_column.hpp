@@ -43,7 +43,7 @@ namespace dmxfish::control_desk {
             UV
         };
     private:
-        const bank_mode current_bank_mode = bank_mode::HSI_COLOR_MODE;
+        const bank_mode current_bank_mode;
         rotary_encoder_assignment current_re_assignment = rotary_encoder_assignment::HUE;
         lcd_color display_color = lcd_color::green;
         const uint8_t fader_index;

@@ -61,7 +61,10 @@ namespace dmxfish::control_desk {
         }
 
         inline std::shared_ptr<bank_column> get(size_t pos) {
-            return columns[pos];
+	    if(pos < this->columns.size())
+                return columns[pos];
+	    else
+		return nullptr;
         }
     };
 
@@ -87,6 +90,7 @@ namespace dmxfish::control_desk {
         size_t current_active_bank_set = 0;
         int jogwheel_change = 0;
         bool update_message_required = false;
+	bool bank_set_modification_happened = false;
     public:
         desk(std::list<std::pair<std::string, midi_device_id>> input_devices);
         ~desk();

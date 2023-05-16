@@ -7,6 +7,8 @@
 #include "lib/logging.hpp"
 #include "main.hpp"
 
+#include <iostream>
+
 namespace dmxfish::control_desk {
 
     bank::bank(std::function<void(std::string const&, bool)> handler) : columns{}, set_ready_state_handler{std::move(handler)} {
@@ -69,7 +71,7 @@ namespace dmxfish::control_desk {
     }
 
     bool desk::set_active_bank_set(size_t index) {
-        if(index < bank_sets.size() && index != current_active_bank_set) {
+        if(index < bank_sets.size() && (index != current_active_bank_set || bank_set_modification_happened)) {
             auto& cbs = bank_sets[current_active_bank_set];
             size_t size_of_bank_on_new_set = 0;
             if(auto& nbs = bank_sets[index]; nbs.active_bank < nbs.fader_banks.size()) {
@@ -91,6 +93,7 @@ namespace dmxfish::control_desk {
                 d->schedule_transmission();
             }
             update_message_required = true;
+	    bank_set_modification_happened = false;
             return true;
         } else {
             return false;
@@ -105,7 +108,8 @@ namespace dmxfish::control_desk {
         if(index >= cbs.fader_banks.size()) {
             return false;
         }
-        if(index == cbs.active_bank) {
+        if(index == cbs.active_bank && !bank_set_modification_happened) {
+	    ::spdlog::warn("Not changing active bank on set: already active.");
             return false;
         }
         cbs.fader_banks[cbs.active_bank]->deactivate(cbs.fader_banks[index]->size());
@@ -181,12 +185,17 @@ namespace dmxfish::control_desk {
                         const button b{c.data_1};
                         if(xtouch_is_column_button(b)) {
                             // NOTE if we would ever support input devices with anything but 8 columns, this would be a bug.
-                            const auto column_index = (device_index * 8) + (c.data_1 - XTOUCH_FADER_INDEX_OFFSET);
+			    ::spdlog::debug("Button press: {}", (uint8_t) c.data_1);
+                            const auto column_index = (device_index * 8) + c.data_1;
                             ::missiondmx::fish::ipcmessages::button_state_change msg;
                             if(current_active_bank_set < bank_sets.size()) {
                                 auto& cbs = this->bank_sets[current_active_bank_set];
                                 if(cbs.active_bank < cbs.fader_banks.size()) {
                                     auto col_ptr = cbs.fader_banks[cbs.active_bank]->get(column_index);
+				    if(!col_ptr) {
+					::spdlog::warn("Pressed button for column {} but it is not utilized.", column_index);
+					return;
+				    }
                                     col_ptr->process_button_press_message(b, button_change{c.data_2});
                                     msg.set_button(missiondmx::fish::ipcmessages::ButtonCode{(unsigned int) (device_index * 256 + c.data_1)});
                                     msg.set_new_state(c.data_2 > 10 ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
@@ -211,6 +220,10 @@ namespace dmxfish::control_desk {
                                 auto& cbs = this->bank_sets[current_active_bank_set];
                                 if(cbs.active_bank < cbs.fader_banks.size()) {
                                     auto col_ptr = cbs.fader_banks[cbs.active_bank]->get(column_index);
+				    if(!col_ptr) {
+					::spdlog::warn("Fader {} moved but column is not utilized.", column_index);
+					return;
+				    }
                                     auto value = (c.data_2 < 127 ? c.data_2 : 128) * (65536 / 128);
                                     col_ptr->process_fader_change_message(value);
                                     msg.set_column_id(col_ptr->get_id());
@@ -226,6 +239,10 @@ namespace dmxfish::control_desk {
                                 if(cbs.active_bank < cbs.fader_banks.size()) {
                                     ::missiondmx::fish::ipcmessages::rotary_encoder_change msg;
                                     auto col_ptr = cbs.fader_banks[cbs.active_bank]->get(column_index);
+				    if (!col_ptr) {
+					::spdlog::warn("Encoder {} used but column is not utilized.", column_index);
+					return;
+				    }
                                     const auto change = c.data_2 == 65 ? 1 : -1;
                                     col_ptr->process_encoder_change_message(change);
                                     msg.set_column_id(col_ptr->get_id());
@@ -241,6 +258,7 @@ namespace dmxfish::control_desk {
                                 update_message_required = true;
                             }
                             // TODO foot switches
+			    // TODO handle main fader
                         }
                         break;
                     case midi_status::INVALID:
@@ -352,6 +370,7 @@ namespace dmxfish::control_desk {
     }
 
     void desk::remove_bank_set(size_t i) {
+	bank_set_modification_happened = true;
         if(const auto s = bank_sets.size(); i + 1 > s) {
             ::spdlog::error("Tried to remove fader bank set {}. The container contains only {} elements though.", i, s);
             return;
@@ -399,6 +418,7 @@ namespace dmxfish::control_desk {
     }
 
     void desk::add_bank_set_from_protobuf_msg(const ::missiondmx::fish::ipcmessages::add_fader_bank_set& definition) {
+	bank_set_modification_happened = true;
         bank_sets.emplace_back(definition.bank_id());
         const auto new_bank_index = bank_sets.size() - 1;
         bankset_to_index_map[definition.bank_id()] = new_bank_index;
@@ -433,6 +453,7 @@ namespace dmxfish::control_desk {
             // Enable first bank if it's the only one
             this->set_active_bank_set(0);
         }
+	std::cout << "Added bank set. #Sets=" << this->bank_sets.size() << " Active: " << this->current_active_bank_set << " with " << this->bank_sets[current_active_bank_set].fader_banks.size() << " banks." << std::endl;
     }
 
     void desk::update_column_from_message(const ::missiondmx::fish::ipcmessages::fader_column& msg) {

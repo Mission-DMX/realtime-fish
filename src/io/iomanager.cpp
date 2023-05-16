@@ -29,6 +29,8 @@ COMPILER_RESTORE("-Wuseless-cast")
 #include "dmx/ftdi_universe.hpp"
 #include "xml/show_files.hpp"
 
+#include <iostream>
+
 namespace dmxfish::io {
 
 
@@ -655,6 +657,7 @@ void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::lo
 	log_msg.set_time_stamp(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count());
 	log_msg.set_what(loading_result_stream.str());
 	this->push_msg_to_all_gui(log_msg, MSGT_LOG_MESSAGE);
+	std::cout << loading_result_stream.str() << std::endl;
 }
 
 void IOManager::handle_queued_io() {

@@ -11,7 +11,7 @@ namespace dmxfish::control_desk {
 
 	bank_column::bank_column(std::weak_ptr<device_handle> device_connection, std::function<void(std::string const&, bool)> _desk_ready_update, bank_mode mode, std::string _id, uint8_t column_index) :
 		connection(device_connection), desk_ready_update(_desk_ready_update), id(_id), display_text_up{}, display_text_down{}, color{}, readymode_color{}, raw_configuration{},
-		readymode_raw_configuration{}, current_bank_mode(mode), fader_index(column_index + XTOUCH_FADER_INDEX_OFFSET) {
+		readymode_raw_configuration{}, current_bank_mode(mode), fader_index(column_index) {
 			display_text_up.emplace_back("");
 			display_text_down.emplace_back("");
 		}
@@ -36,10 +36,11 @@ namespace dmxfish::control_desk {
 		const std::array<char, 14> empty_lcd_data{' '};
 		xtouch_set_lcd_display(*d_ptr, this->fader_index, lcd_color::black, empty_lcd_data);
 		xtouch_set_fader_position(*d_ptr, fader{(uint8_t) fader::FADER_CH1 + this->fader_index}, 0);
-		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_REC_READY + this->fader_index * XTOUCH_COLUMN_COUNT}, button_led_state::off);
-		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_SOLO_FIND + this->fader_index * XTOUCH_COLUMN_COUNT}, button_led_state::off);
-		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_MUTE_BLACK + this->fader_index * XTOUCH_COLUMN_COUNT}, button_led_state::off);
-		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_SELECT_SELECT + this->fader_index * XTOUCH_COLUMN_COUNT}, button_led_state::off);
+		::spdlog::debug("Resetting column {}", this->fader_index);
+		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_REC_READY + this->fader_index}, button_led_state::off);
+		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_SOLO_FIND + this->fader_index}, button_led_state::off);
+		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_MUTE_BLACK + this->fader_index}, button_led_state::off);
+		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_SELECT_SELECT + this->fader_index}, button_led_state::off);
 		xtouch_set_ring_led(*d_ptr, encoder{(uint8_t) encoder::ENC_CH1 + this->fader_index}, 128);
 		xtouch_set_meter_leds(*d_ptr, led_bar{(uint8_t) led_bar::BAR_CH1 + this->fader_index}, 0);
 	}
@@ -272,7 +273,7 @@ namespace dmxfish::control_desk {
 		if(connection.expired()) {
 			return;
 		}
-		xtouch_set_fader_position(*connection.lock(), fader{fader_index}, (raw_configuration.fader_position * 128) / 65536);
+		xtouch_set_fader_position(*connection.lock(), fader{fader_index + XTOUCH_FADER_INDEX_OFFSET}, (raw_configuration.fader_position * 128) / 65536);
 	}
 
 	void bank_column::update_encoder_leds() {
@@ -350,10 +351,10 @@ namespace dmxfish::control_desk {
 		selected_text_vector.emplace_back(ss.str());
 		if (up) {
 			display_scroll_position_up = 0;
-			display_text_index_up = 0;
+			display_text_index_up = selected_text_vector.size() - 1; // TODO later implement scrolling
 		} else {
 			display_scroll_position_down = 0;
-			display_text_index_down = 0;
+			display_text_index_down = selected_text_vector.size() - 1; // TODO later implement scrolling;
 		}
 		update_display_text();
 	}
