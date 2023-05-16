@@ -52,31 +52,21 @@ void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, unsigned long c_time
 void perform_main_update(std::shared_ptr<runtime_state_t> t, std::unique_ptr<dmxfish::control_desk::desk> control_desk) {
 	namespace stdc = std::chrono;
 	manager->set_control_desk_handle(std::move(control_desk));
-	auto i = 0;
 	while (t->running) {
 		const auto start_time = stdc::system_clock::now().time_since_epoch();
 		manager->update_control_desk();
-		i++;
 		if (t->is_direct_mode) {
 			// TODO fetch and apply updates from FPGA, also send values to GUI
-			if(i % 1000 == 0) {
-				::spdlog::debug("Direct mode");
-			}
 		} else {
 			// TODO apply data from input structure on show.
 			if(auto sptr = manager->get_active_show(); sptr != nullptr) {
 				try {
 					sptr->run_cycle_update();
-					if(i % 1000 == 0)
-						::spdlog::debug("Exec scene: {}", sptr->get_active_scene());
 				} catch (const std::exception& e) {
 					manager->set_latest_error(e.what());
 					manager->mark_show_file_execution_error();
 					::spdlog::error("Show file eval failed: {}", e.what());
 				}
-			} else {
-				if(i % 1000 == 0)
-				::spdlog::warn("Show is null");
 			}
 		}
 
