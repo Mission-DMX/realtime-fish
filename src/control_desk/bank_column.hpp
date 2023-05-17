@@ -161,7 +161,7 @@ namespace dmxfish::control_desk {
         void set_display_text(const std::string& text, bool up);
     private:
         void update_display_text();
-        void update_physical_fader_position();
+        void update_physical_fader_position(bool from_activate = false);
         void update_encoder_leds();
         void update_button_leds();
         void update_side_leds();

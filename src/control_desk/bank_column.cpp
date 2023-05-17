@@ -21,7 +21,7 @@ namespace dmxfish::control_desk {
 		if(new_value) {
 			// absolute mode for amber and uv will be emulated
 			update_display_text();
-			update_physical_fader_position();
+			update_physical_fader_position(true);
 			update_encoder_leds();
 			update_button_leds();
 			update_side_leds();
@@ -64,40 +64,43 @@ namespace dmxfish::control_desk {
 
 	void bank_column::process_encoder_change_message(int change_request) {
 		raw_configuration.rotary_position += (int16_t) change_request;
+		auto& selected_color = readymode_active ? readymode_color : color;
+		auto& selected_amber = readymode_active ? readymode_amber : amber;
+		auto& selected_uv = readymode_active ? readymode_uv : uv;
 		if(current_bank_mode != bank_mode::DIRECT_INPUT_MODE) {
 			switch(current_re_assignment) {
 				case rotary_encoder_assignment::HUE:
-					this->color.hue += (1.0/128.0) * (double) change_request;
-					if(this->color.hue > 1.0) {
-						this->color.hue = 0.0 + (this->color.hue - 1.0);
-					} else if(this->color.hue < 0.0) {
-						this->color.hue = 1.0 + this->color.hue;
+					selected_color.hue += (1.0/128.0) * (double) change_request;
+					if(selected_color.hue > 1.0) {
+						selected_color.hue = 0.0 + (selected_color.hue - 1.0);
+					} else if(selected_color.hue < 0.0) {
+						selected_color.hue = 1.0 + selected_color.hue;
 					}
 					break;
 				case rotary_encoder_assignment::SATURATION:
-					this->color.saturation += (1.0/128.0) * (double) change_request;
-					if(this->color.saturation > 1) {
-						this->color.saturation = 1.0;
-					} else if(this->color.saturation < 0) {
-						this->color.saturation = 0.0;
+					selected_color.saturation += (1.0/128.0) * (double) change_request;
+					if(selected_color.saturation > 1) {
+						selected_color.saturation = 1.0;
+					} else if(selected_color.saturation < 0) {
+						selected_color.saturation = 0.0;
 					}
 					break;
 				case rotary_encoder_assignment::AMBER:
-					if(this->amber + change_request > 255) {
-						this->amber = 255;
-					} else if(this->amber + change_request < 0) {
-						this->amber = 0;
+					if(selected_amber + change_request > 255) {
+						selected_amber = 255;
+					} else if(selected_amber + change_request < 0) {
+						selected_amber = 0;
 					} else {
-						this->amber += (uint8_t) change_request;
+						selected_amber += (uint8_t) change_request;
 					}
 					break;
 				case rotary_encoder_assignment::UV:
-					if(this->uv + change_request > 255) {
-						this->uv = 255;
-					} else if(this->uv + change_request < 0) {
-						this->uv = 0;
+					if(selected_uv + change_request > 255) {
+						selected_uv = 255;
+					} else if(selected_uv + change_request < 0) {
+						selected_uv = 0;
 					} else {
-						this->uv += (uint8_t) change_request;
+						selected_uv += (uint8_t) change_request;
 					}
 					break;
 				default:
@@ -134,7 +137,6 @@ namespace dmxfish::control_desk {
 					}
 					update_display_text();
 				} else if(b_base == button::BTN_CH1_REC_READY) {
-					::spdlog::debug("Switching ready mode");
 					this->readymode_active = !this->readymode_active;
 					if(this->readymode_active) {
 						this->readymode_color = this->color;
@@ -143,10 +145,14 @@ namespace dmxfish::control_desk {
 						this->readymode_uv = this->uv;
 						update_button_leds();
 						notify_bank_about_ready_mode();
+						update_display_text();
+						update_encoder_leds();
 					} else {
 						update_button_leds();
 						update_physical_fader_position();
 						notify_bank_about_ready_mode();
+						update_display_text();
+						update_encoder_leds();
 					}
 				} else if(b_base == button::BTN_CH1_SOLO_FIND) {
 					// TODO implement
@@ -275,17 +281,17 @@ namespace dmxfish::control_desk {
 		xtouch_set_lcd_display(*(connection.lock()), fader_index + XTOUCH_DISPLAY_INDEX_OFFFSET, display_color, content);
 	}
 
-	void bank_column::update_physical_fader_position() {
+	void bank_column::update_physical_fader_position(bool from_activate) {
 		if(!active_on_device) {
 			return;
 		}
-		if(readymode_active) {
+		if(readymode_active && !from_activate) {
 			return;
 		}
 		if(connection.expired()) {
 			return;
 		}
-		xtouch_set_fader_position(*connection.lock(), fader{fader_index + XTOUCH_FADER_INDEX_OFFSET}, (raw_configuration.fader_position * 128) / 65536);
+		xtouch_set_fader_position(*connection.lock(), fader{fader_index + XTOUCH_FADER_INDEX_OFFSET}, ((readymode_active ? readymode_raw_configuration.fader_position : raw_configuration.fader_position) * 128) / 65536);
 	}
 
 	void bank_column::update_encoder_leds() {
@@ -341,12 +347,12 @@ namespace dmxfish::control_desk {
 		this->amber = this->readymode_amber;
 		this->uv = this->readymode_uv;
 		update_button_leds();
-		notify_bank_about_ready_mode();
-		// TODO notify GUI about new values
+		update_display_text();
 	}
 
 	void bank_column::notify_bank_about_ready_mode() {
 		this->desk_ready_update(this->get_id(), this->readymode_active);
+		// TODO notify GUI about new values
 	}
 
 	void bank_column::set_display_text(const std::string& text, bool up) {

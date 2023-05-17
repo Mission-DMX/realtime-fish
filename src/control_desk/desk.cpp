@@ -286,22 +286,31 @@ namespace dmxfish::control_desk {
         d->schedule_transmission();
     }
 
+    void desk::commit_readymode() {
+        if(!(current_active_bank_set < bank_sets.size())) {
+            return;
+        }
+        auto& bs = bank_sets[current_active_bank_set];
+        for(auto& column_id : bs.columns_in_ready_state) {
+            if(bs.columns_map.contains(column_id)) {
+                bs.columns_map.at(column_id)->commit_from_readymode();
+            } else {
+                ::spdlog::error("Error in commiting desk ready state: Column id {} in ready set but not in index map.", column_id);
+            }
+        }
+	bs.columns_in_ready_state.clear();
+	for (auto d_ptr : devices) {
+	    if(d_ptr->get_device_id() == midi_device_id::X_TOUCH)
+                xtouch_set_button_led(*d_ptr, button::BTN_EQ_COMMITRDY, button_led_state::off);
+	}
+    }
+
     void desk::handle_bord_buttons(button b, button_change c) {
         if(b == button::BTN_EQ_COMMITRDY) {
             if(c != button_change::PRESS) {
                 return;
             }
-            if(!(current_active_bank_set < bank_sets.size())) {
-                return;
-            }
-            for(auto& bs = bank_sets[current_active_bank_set]; auto& column_id : bs.columns_in_ready_state) {
-		::spdlog::debug("Commiting column {}", column_id);
-                if(bs.columns_map.contains(column_id)) {
-                    bs.columns_map.at(column_id)->commit_from_readymode();
-                } else {
-                    ::spdlog::error("Error in commiting desk ready state: Column id {} in ready set but not in index map.", column_id);
-                }
-            }
+            commit_readymode();
         } else if(b == button::BTN_FADERBANKPREV_FADERBANKPREV) {
             const auto current_bank = this->get_active_fader_bank_on_current_set();
             this->set_active_fader_bank_on_current_set(current_bank - 1); // Bounds check is performed by setter.
