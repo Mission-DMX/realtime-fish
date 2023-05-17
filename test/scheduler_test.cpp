@@ -19,6 +19,13 @@ inline bool ends_with(std::string const & value, std::string const & ending) {
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
+BOOST_AUTO_TEST_CASE(color_filter_test) {
+	std::vector<dmxfish::execution::scene> v;
+	std::map<int32_t, size_t> scene_index_map;
+	auto bc = MissionDMX::ShowFile::bord_configuration("./test/test_color_conv2.xml", xml_schema::flags::dont_validate);
+	BOOST_CHECK_EQUAL(v.size(), 1);
+}
+
 BOOST_AUTO_TEST_CASE(scheduler_test) {
 	spdlog::set_level(spdlog::level::debug);
 	try {
