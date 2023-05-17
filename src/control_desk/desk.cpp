@@ -312,9 +312,15 @@ namespace dmxfish::control_desk {
             }
             commit_readymode();
         } else if(b == button::BTN_FADERBANKPREV_FADERBANKPREV) {
+	    if(c != button_change::PRESS) {
+		return;
+	    }
             const auto current_bank = this->get_active_fader_bank_on_current_set();
             this->set_active_fader_bank_on_current_set(current_bank - 1); // Bounds check is performed by setter.
         } else if(b == button::BTN_FADERBANKNEXT_FADERBANKNEXT) {
+	    if (c != button_change::PRESS) {
+		return;
+	    }
             const auto current_bank = this->get_active_fader_bank_on_current_set();
             this->set_active_fader_bank_on_current_set(current_bank + 1);
         } else if(b == button::BTN_SEND_OOPS) {
