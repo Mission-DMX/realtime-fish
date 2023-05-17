@@ -55,6 +55,7 @@ namespace dmxfish::control_desk {
         bool select_active = false;
         bool readymode_active = false;
         bool black_active = false;
+        bool flash_active = false;
         dmxfish::dmx::pixel color;
         dmxfish::dmx::pixel readymode_color;
 
@@ -93,6 +94,8 @@ namespace dmxfish::control_desk {
         [[nodiscard]] inline dmxfish::dmx::pixel get_color() const {
             if(black_active) {
                 return dmxfish::dmx::pixel{this->color.hue, this->color.saturation, 0.0};
+            } else if(flash_active) {
+                return dmxfish::dmx::pixel{this->color.hue, this->color.saturation, 1.0};
             } else {
                 return this->color;
             }
@@ -152,6 +155,10 @@ namespace dmxfish::control_desk {
 
         inline void set_display_color(lcd_color c) {
             display_color = c;
+        }
+
+        [[nodiscard]] inline bool is_flash_active() const {
+            return this->flash_active;
         }
 
 		void process_fader_change_message(unsigned int position_request);

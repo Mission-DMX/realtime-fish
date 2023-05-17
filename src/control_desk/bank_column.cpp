@@ -37,7 +37,7 @@ namespace dmxfish::control_desk {
 		xtouch_set_lcd_display(*d_ptr, this->fader_index, lcd_color::black, empty_lcd_data);
 		xtouch_set_fader_position(*d_ptr, fader{(uint8_t) fader::FADER_CH1 + this->fader_index}, 0);
 		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_REC_READY + this->fader_index}, button_led_state::off);
-		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_SOLO_FIND + this->fader_index}, button_led_state::off);
+		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_SOLO_FLASH + this->fader_index}, button_led_state::off);
 		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_MUTE_BLACK + this->fader_index}, button_led_state::off);
 		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_SELECT_SELECT + this->fader_index}, button_led_state::off);
 		xtouch_set_ring_led(*d_ptr, encoder{(uint8_t) encoder::ENC_CH1 + this->fader_index}, 128);
@@ -147,15 +147,18 @@ namespace dmxfish::control_desk {
 						notify_bank_about_ready_mode();
 						update_display_text();
 						update_encoder_leds();
+						update_side_leds();
 					} else {
 						update_button_leds();
 						update_physical_fader_position();
 						notify_bank_about_ready_mode();
 						update_display_text();
 						update_encoder_leds();
+						update_side_leds();
 					}
-				} else if(b_base == button::BTN_CH1_SOLO_FIND) {
-					// TODO implement
+				} else if(b_base == button::BTN_CH1_SOLO_FLASH) {
+					this->flash_active = true;
+					update_button_leds();
 				} else if(b_base == button::BTN_CH1_MUTE_BLACK) {
 					this->black_active = !this->black_active;
 					update_button_leds();
@@ -166,8 +169,10 @@ namespace dmxfish::control_desk {
 				}
 				break;
 			case button_change::RELEASE:
-				// TODO implement
-				::spdlog::error("Handling RELEASE of button {} not yet implemented in column handler.", (uint8_t) b);
+				if (b_base == button::BTN_CH1_SOLO_FLASH) {
+					this->flash_active = false;
+					update_button_leds();
+				}
 				break;
 			default:
 				::spdlog::error("Unexpected button action state ({}) in column handler.", (uint8_t) c);
@@ -310,7 +315,6 @@ namespace dmxfish::control_desk {
 			else
 			    xtouch_set_ring_led(*connection.lock(), e, (uint8_t) (this->color.hue * 128));
 		}
-		// TODO implement remaining led indicators
 	}
 
 	void bank_column::update_button_leds() {
@@ -323,7 +327,7 @@ namespace dmxfish::control_desk {
 		auto dev_ptr = connection.lock();
 		const auto offset = fader_index;
 		// TODO implement select
-		// TODO implement find
+		xtouch_set_button_led(*dev_ptr, button{offset + (uint8_t) button::BTN_CH1_SOLO_FLASH}, flash_active ? button_led_state::on : button_led_state::off);
 		xtouch_set_button_led(*dev_ptr, button{offset + (uint8_t) button::BTN_CH1_MUTE_BLACK}, black_active ? button_led_state::flash : button_led_state::off);
 		xtouch_set_button_led(*dev_ptr,
 		  button{offset + (uint8_t) button::BTN_CH1_REC_READY},
@@ -337,7 +341,10 @@ namespace dmxfish::control_desk {
 		if(connection.expired()) {
 			return;
 		}
-		// TODO implement
+		if(current_bank_mode == bank_mode::DIRECT_INPUT_MODE) {
+			return;
+		}
+		xtouch_set_meter_leds(*connection.lock(), led_bar{(uint8_t) led_bar::BAR_CH1 + fader_index}, (uint8_t) ((readymode_active ? readymode_color.saturation : color.saturation) * 128));
 	}
 
 	void bank_column::commit_from_readymode() {
@@ -348,6 +355,7 @@ namespace dmxfish::control_desk {
 		this->uv = this->readymode_uv;
 		update_button_leds();
 		update_display_text();
+		update_side_leds();
 	}
 
 	void bank_column::notify_bank_about_ready_mode() {

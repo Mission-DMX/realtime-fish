@@ -87,14 +87,14 @@ namespace dmxfish::control_desk {
         BTN_CH6_REC_READY = 13,
         BTN_CH7_REC_READY = 14,
         BTN_CH8_REC_READY = 15,
-        BTN_CH1_SOLO_FIND = 16, // When in quick console mode: let the ficture strobe in order to find the linked lamp
-        BTN_CH2_SOLO_FIND = 17, // When in show mode with displayed show UI: open an advanced color picker on the touch screen
-        BTN_CH3_SOLO_FIND = 18, // When show editor is displayed: jump to and highlight input filter
-        BTN_CH4_SOLO_FIND = 19,
-        BTN_CH5_SOLO_FIND = 20,
-        BTN_CH6_SOLO_FIND = 21,
-        BTN_CH7_SOLO_FIND = 22,
-        BTN_CH8_SOLO_FIND = 23,
+        BTN_CH1_SOLO_FLASH = 16, // Output 100% intensity as long as button is pressed
+        BTN_CH2_SOLO_FLASH = 17,
+        BTN_CH3_SOLO_FLASH = 18,
+        BTN_CH4_SOLO_FLASH = 19,
+        BTN_CH5_SOLO_FLASH = 20,
+        BTN_CH6_SOLO_FLASH = 21,
+        BTN_CH7_SOLO_FLASH = 22,
+        BTN_CH8_SOLO_FLASH = 23,
         BTN_CH1_MUTE_BLACK = 24, // Make the brightness output of this lamp zero; button led should be blinking if enabled
         BTN_CH2_MUTE_BLACK = 25,
         BTN_CH3_MUTE_BLACK = 26,
@@ -118,7 +118,9 @@ namespace dmxfish::control_desk {
         BTN_PLUGIN_PATCH = 44, // Open the patching menu and review current transmitted values
         BTN_INST_UNIVERSES = 45, // Edit the connected universes
 
-        BTN_NAMEVALUE = 46,
+        BTN_NAMEVALUE_FIND = 46, // When in quick console mode: let the ficture strobe in order to find the linked lamp
+        // When in show mode with displayed show UI: open an advanced color picker on the touch screen
+        // When show editor is displayed: jump to and highlight input filter
         BTN_BEATS = 47,
         BTN_GLOBALVIEW = 48,
         BTN_MIDITRACKS = 49,
