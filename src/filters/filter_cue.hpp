@@ -3,8 +3,9 @@
 /*
  * The filters hold a cue sequence
  */
-#include <vector>
 
+#include <vector>
+#include <functional>
 #include "filters/filter.hpp"
 
 
@@ -104,6 +105,26 @@ namespace dmxfish::filters {
         std::vector<std::string> channel_names_sixteen;
         std::vector<std::string> channel_names_float;
         std::vector<std::string> channel_names_color;
+
+
+        inline bool do_with_substr(const std::string& str, size_t start, const size_t end, const char sep, size_t min_loops, const std::function<bool(const std::string&, size_t, size_t, size_t)> func);
+
+        bool handle_frame(size_t cue, const std::string& str, size_t start, size_t end, size_t nr_channel);
+
+        bool handle_timestamps(size_t cue, const std::string& str, size_t start, size_t end, size_t nr_timestamp);
+
+        bool handle_cue_conf(size_t cue, const std::string& str, size_t start, size_t end, size_t number);
+
+        bool handle_cue(const std::string& str, size_t start, size_t end, size_t cue);
+
+        template <typename T>
+        void calc_transition(double rel_time, transition_t transition, T start_value, T end_value, size_t ind);
+
+        void update_hold_values();
+
+        void calc_values();
+
+
     public:
         filter_cue() : filter() {}
         virtual ~filter_cue() {}
