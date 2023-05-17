@@ -193,8 +193,7 @@ namespace dmxfish::control_desk {
                         const button b{c.data_1};
                         if(xtouch_is_column_button(b)) {
                             // NOTE if we would ever support input devices with anything but 8 columns, this would be a bug.
-			    ::spdlog::debug("Button press: {}", (uint8_t) c.data_1);
-                            const auto column_index = (device_index * 8) + c.data_1;
+                            const auto column_index = (device_index * 8) + (c.data_1 % XTOUCH_COLUMN_COUNT);
                             ::missiondmx::fish::ipcmessages::button_state_change msg;
                             if(current_active_bank_set < bank_sets.size()) {
                                 auto& cbs = this->bank_sets[current_active_bank_set];
@@ -296,6 +295,7 @@ namespace dmxfish::control_desk {
                 return;
             }
             for(auto& bs = bank_sets[current_active_bank_set]; auto& column_id : bs.columns_in_ready_state) {
+		::spdlog::debug("Commiting column {}", column_id);
                 if(bs.columns_map.contains(column_id)) {
                     bs.columns_map.at(column_id)->commit_from_readymode();
                 } else {

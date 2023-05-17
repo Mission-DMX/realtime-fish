@@ -48,9 +48,16 @@ namespace dmxfish::control_desk {
 		if(position_request > 65535) {
 			position_request = 65535;
 		}
-		raw_configuration.fader_position = (uint16_t) position_request;
-		if(current_bank_mode != bank_mode::DIRECT_INPUT_MODE) {
-			this->color.iluminance = raw_configuration.fader_position / 65535.0;
+		if(readymode_active) {
+                    readymode_raw_configuration.fader_position = (uint16_t) position_request;
+		    if(current_bank_mode != bank_mode::DIRECT_INPUT_MODE) {
+		        this->readymode_color.iluminance = raw_configuration.fader_position / 65535.0;
+		    }
+		} else {
+		    raw_configuration.fader_position = (uint16_t) position_request;
+		    if(current_bank_mode != bank_mode::DIRECT_INPUT_MODE) {
+		        this->color.iluminance = raw_configuration.fader_position / 65535.0;
+		    }
 		}
 		update_physical_fader_position();
 	}
@@ -103,7 +110,8 @@ namespace dmxfish::control_desk {
 	}
 
 	void bank_column::process_button_press_message(button b, button_change c) {
-		const auto b_base = button{((uint8_t) b) / XTOUCH_COLUMN_COUNT};
+		const auto b_base = button{((uint8_t) (((uint8_t) b) / XTOUCH_COLUMN_COUNT)) * XTOUCH_COLUMN_COUNT};
+		::spdlog::debug("Column {} received button base {}.", this->fader_index, (uint8_t) b_base);
 		switch(c) {
 			case button_change::PRESS:
 				if(b_base == button::BTN_CH1_ENCODER_ROTARYMODE) {
@@ -126,6 +134,7 @@ namespace dmxfish::control_desk {
 					}
 					update_display_text();
 				} else if(b_base == button::BTN_CH1_REC_READY) {
+					::spdlog::debug("Switching ready mode");
 					this->readymode_active = !this->readymode_active;
 					if(this->readymode_active) {
 						this->readymode_color = this->color;
@@ -143,6 +152,7 @@ namespace dmxfish::control_desk {
 					// TODO implement
 				} else if(b_base == button::BTN_CH1_MUTE_BLACK) {
 					this->black_active = !this->black_active;
+					update_button_leds();
 				} else if(b_base == button::BTN_CH1_SELECT_SELECT) {
 					// TODO implement
 				} else {
@@ -259,6 +269,9 @@ namespace dmxfish::control_desk {
 					content[i] = '-';
 				}
 		}
+		if(this->readymode_active) {
+			content[13] = '*';
+		}
 		xtouch_set_lcd_display(*(connection.lock()), fader_index + XTOUCH_DISPLAY_INDEX_OFFFSET, display_color, content);
 	}
 
@@ -302,7 +315,7 @@ namespace dmxfish::control_desk {
 			return;
 		}
 		auto dev_ptr = connection.lock();
-		auto offset = fader_index * XTOUCH_COLUMN_COUNT;
+		const auto offset = fader_index;
 		// TODO implement select
 		// TODO implement find
 		xtouch_set_button_led(*dev_ptr, button{offset + (uint8_t) button::BTN_CH1_MUTE_BLACK}, black_active ? button_led_state::flash : button_led_state::off);
