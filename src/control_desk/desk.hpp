@@ -91,6 +91,8 @@ namespace dmxfish::control_desk {
         int jogwheel_change = 0;
         bool update_message_required = false;
 	bool bank_set_modification_happened = false;
+	bool global_dark = false;
+	uint16_t global_illumination = 0;
     public:
         desk(std::list<std::pair<std::string, midi_device_id>> input_devices);
         ~desk();
@@ -120,6 +122,14 @@ namespace dmxfish::control_desk {
 
         inline size_t get_active_bank_set() {
             return current_active_bank_set;
+        }
+
+        [[nodiscard]] inline bool is_global_black_enabled() {
+            return global_dark;
+        }
+
+        [[nodiscard]] inline uint8_t get_global_illumination() {
+            return global_dark ? 0 : global_illumination;
         }
 
         bool set_active_fader_bank_on_current_set(size_t index);

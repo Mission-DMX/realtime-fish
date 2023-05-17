@@ -29,8 +29,6 @@ COMPILER_RESTORE("-Wuseless-cast")
 #include "dmx/ftdi_universe.hpp"
 #include "xml/show_files.hpp"
 
-#include <iostream>
-
 namespace dmxfish::io {
 
 

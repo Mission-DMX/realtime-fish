@@ -263,9 +263,10 @@ namespace dmxfish::control_desk {
                             if(c.data_1 == CMD_JOGWHEEL) {
                                 jogwheel_change += c.data_2 > 60 ? 1 : -1;
                                 update_message_required = true;
-                            }
+                            } else if(c.data_1 == (uint8_t) fader::FADER_MAIN) {
+				this->global_illumination = (uint16_t) c.data_2;
+			    }
                             // TODO foot switches
-			    // TODO handle main fader
                         }
                         break;
                     case midi_status::INVALID:
@@ -325,7 +326,15 @@ namespace dmxfish::control_desk {
             this->set_active_fader_bank_on_current_set(current_bank + 1);
         } else if(b == button::BTN_SEND_OOPS) {
             // TODO implement
-        } else {
+        } else if(b == button::BTN_FLIP_MAINDARK) {
+            if (c != button_change::PRESS) {
+		return;
+            }
+            this->global_dark = !this->global_dark;
+	    for(auto d_ptr : devices) {
+                xtouch_set_button_led(*d_ptr, button::BTN_FLIP_MAINDARK, global_dark ? button_led_state::flash : button_led_state::off);
+            }
+	} else {
             ::missiondmx::fish::ipcmessages::button_state_change msg;
             msg.set_button(missiondmx::fish::ipcmessages::ButtonCode{(unsigned int) (b)});
             msg.set_new_state(c == button_change::PRESS ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
