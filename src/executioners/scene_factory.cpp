@@ -11,6 +11,7 @@
 #include "filters/filter_constants.hpp"
 #include "filters/filter_conversion.hpp"
 #include "filters/filter_debug_output.hpp"
+#include "filters/filter_fader.hpp"
 #include "filters/filter_universe_output.hpp"
 #include "filters/filter_trigonometric.hpp"
 #include "filters/filter_math.hpp"
@@ -196,6 +197,21 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::delay_switch_off_float:
                     sum += sizeof(delay_switch_off_float);
                     break;
+				case filter_type::filter_fader_column_raw:
+					sum += sizeof(filter_fader_column_raw);
+					break;
+				case filter_type::filter_fader_column_hsi:
+					sum += sizeof(filter_fader_column_hsi);
+					break;
+				case filter_type::filter_fader_column_hsia:
+					sum += sizeof(filter_fader_column_hsia);
+					break;
+				case filter_type::filter_fader_column_hsiu:
+					sum += sizeof(filter_fader_column_hsiu);
+					break;
+				case filter_type::filter_fader_column_hsiau:
+					sum += sizeof(filter_fader_column_hsiau);
+					break;
                 case filter_type::filter_cue:
                     sum += sizeof(filter_cue);
                     break;
@@ -299,6 +315,16 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<delay_switch_off_16bit>(pac);
             case filter_type::delay_switch_off_float:
                 return calloc<delay_switch_off_float>(pac);
+			case filter_type::filter_fader_column_raw:
+				return calloc<filter_fader_column_raw>(pac);
+			case filter_type::filter_fader_column_hsi:
+				return calloc<filter_fader_column_hsi>(pac);
+			case filter_type::filter_fader_column_hsia:
+				return calloc<filter_fader_column_hsia>(pac);
+			case filter_type::filter_fader_column_hsiu:
+				return calloc<filter_fader_column_hsiu>(pac);
+			case filter_type::filter_fader_column_hsiau:
+				return calloc<filter_fader_column_hsiau>(pac);
             case filter_type::filter_cue:
                 return calloc<filter_cue>(pac);
 			default:
@@ -423,14 +449,12 @@ COMPILER_RESTORE("-Weffc++")
 
 	inline void connect_filters(scene_filter_vector_t& fv, std::map<size_t, filter_info>& filter_info_map) {
 		dmxfish::filters::channel_mapping cm;
-		// TODO connect input data structure
 		for(size_t i = 0; i < fv.size(); i++) {
 			auto& finfo = filter_info_map[i];
 			fv[i]->get_output_channels(cm, finfo.name);
 			auto input_channels = construct_channel_input_mapping(cm, finfo);
 			fv[i]->setup_filter(finfo.configuration, finfo.initial_parameters, input_channels);
 		}
-		// TODO link to universes
 	}
 
     [[nodiscard]] inline std::tuple<scene_filter_vector_t, scene_boundry_vec_t, std::shared_ptr<ZeroDeletingLinearAllocator>, scene_filter_index_t> compute_filter(const ::MissionDMX::ShowFile::Scene& s, std::stringstream& msg_stream) {

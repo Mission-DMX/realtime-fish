@@ -5,7 +5,10 @@
 
 #include "dmx/universe.hpp"
 
+#include "lib/macros.hpp"
+COMPILER_SUPRESS("-Wuseless-cast")
 #include "proto_src/UniverseControl.pb.h"
+COMPILER_RESTORE("-Wuseless-cast")
 
 #include "xml/show_files.hpp"
 

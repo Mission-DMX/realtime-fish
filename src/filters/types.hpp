@@ -41,6 +41,11 @@ namespace dmxfish::filters {
         delay_switch_off_8bit = 36,
         delay_switch_off_16bit = 37,
         delay_switch_off_float = 38,
-        filter_cue = 44,
+        filter_fader_column_raw = 39,
+        filter_fader_column_hsi = 40,
+        filter_fader_column_hsia = 41,
+        filter_fader_column_hsiu = 42,
+        filter_fader_column_hsiau = 43,
+        filter_cue = 44
     };
 }

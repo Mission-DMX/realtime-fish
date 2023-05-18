@@ -21,7 +21,6 @@ project_configuration::project_configuration(std::unique_ptr<MissionDMX::ShowFil
 	if(!scene_loading_result.second) {
 		throw project_config_exception("Scheduling failed. Please review log.");
 	}
-	// FIXME input and output structures are not linked in scenes yet.
 
 	if(const auto as = show_file_dom->default_active_scene(); as.present()) {
 		this->default_active_scene = as.get();

@@ -15,6 +15,10 @@ The part of the software that translates the users wishes to DMX in real time.
 2. Perform a recursive clone of this repository.
 3. Call `gmake` on the root directory of this repo.
 
+## Using the Behringer X-Touch (Extender) as Input
+Please attach the devices using USB and boot them up in `CtrlRel` Mode with `USB` as their
+interface protocol.
+
 ## USB DMX adapter support
 Interfacing with Usb DMX dongles is implemented for FTDI based devices. The corresponding
 universe type is called `ftdi_universe`.
