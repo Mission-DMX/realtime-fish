@@ -179,7 +179,7 @@ namespace dmxfish::filters {
             case LINEAR:
                 break;
             case SIGMOIDAL:
-                rel_time = 1.0 - 1.0 / (1 + std::exp(rel_time * 12 - 6));
+                rel_time = 1.0 / (1 + std::exp(6 - rel_time * 12));
                 break;
             case EASE_IN:
                 rel_time = rel_time * rel_time;
