@@ -196,6 +196,9 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::delay_switch_off_float:
                     sum += sizeof(delay_switch_off_float);
                     break;
+                case filter_type::filter_cue:
+                    sum += sizeof(filter_cue);
+                    break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -296,6 +299,8 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<delay_switch_off_16bit>(pac);
             case filter_type::delay_switch_off_float:
                 return calloc<delay_switch_off_float>(pac);
+            case filter_type::filter_cue:
+                return calloc<filter_cue>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}
