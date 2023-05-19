@@ -537,6 +537,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 } else {
                     error_message += "No control desk handle has been currently set.";
                 }
+                return;
             } catch (const std::exception& e) {
                 this->latest_error = e.what();
             }
@@ -549,9 +550,11 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 }
                 if(control_desk_handle) {
                     control_desk_handle->add_bank_set_from_protobuf_msg(msg);
+
                 } else {
                     error_message += "No control desk handle has been currently set.";
                 }
+                return;
             } catch (const std::exception& e) {
                 this->latest_error = e.what();
             }
@@ -567,6 +570,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 } else {
                     error_message += "No control desk handle has been currently set.";
                 }
+                return;
             } catch (const std::exception& e) {
                 this->latest_error = e.what();
             }
@@ -582,6 +586,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 } else {
                     error_message += "No control desk handle has been currently set.";
                 }
+                return;
             } catch (const std::exception& e) {
                 this->latest_error = e.what();
             }
