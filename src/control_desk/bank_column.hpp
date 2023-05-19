@@ -64,6 +64,7 @@ namespace dmxfish::control_desk {
 
         const std::weak_ptr<device_handle> connection;
         const std::function<void(std::string const&, bool)> desk_ready_update;
+        const std::function<void(std::string const&, bool)> select_state_handler;
         const std::string id;
         std::vector<std::string> display_text_up;
         std::vector<std::string> display_text_down;
@@ -71,10 +72,8 @@ namespace dmxfish::control_desk {
         unsigned int display_scroll_position_down = 0;
         unsigned int display_text_index_up = 0;
         unsigned int display_text_index_down = 0;
-        // TODO we should find a nice way to link what happens, when the select button was pressed (for example on may link an MH control (Joystick = Pan/Tilt, Arrows = Zoom/Focus))
-        // TODO should we introduce a message that sends the column id for it?
     public:
-        bank_column(std::weak_ptr<device_handle> device_connection, std::function<void(std::string const&, bool)> _desk_ready_update, bank_mode mode, std::string id, uint8_t column_index);
+        bank_column(std::weak_ptr<device_handle> device_connection, std::function<void(std::string const&, bool)> _desk_ready_update, std::function<void(std::string const&, bool)> _select_state_handler, bank_mode mode, std::string id, uint8_t column_index);
 
         /**
          * Notify the column that it is now / no longer displayed on the control desk. In case of disabling: it will not call reset_column(). This means that if the column
@@ -159,6 +158,15 @@ namespace dmxfish::control_desk {
 
         [[nodiscard]] inline bool is_flash_active() const {
             return this->flash_active;
+        }
+
+        [[nodiscard]] inline bool is_select_active() const {
+            return this->select_active;
+        }
+
+        inline void set_select_button_active(bool state) {
+            this->select_active = state;
+            this->update_button_leds();
         }
 
 		void process_fader_change_message(unsigned int position_request);
