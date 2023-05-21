@@ -110,6 +110,7 @@ namespace dmxfish::control_desk {
 		}
 		update_display_text();
 		update_encoder_leds();
+		update_side_leds();
 	}
 
 	void bank_column::process_button_press_message(button b, button_change c) {
@@ -342,7 +343,7 @@ namespace dmxfish::control_desk {
 		if(current_bank_mode == bank_mode::DIRECT_INPUT_MODE) {
 			return;
 		}
-		xtouch_set_meter_leds(*connection.lock(), led_bar{(uint8_t) led_bar::BAR_CH1 + fader_index}, (uint8_t) ((readymode_active ? readymode_color.saturation : color.saturation) * 128));
+		xtouch_set_meter_leds(*connection.lock(), led_bar{(uint8_t) led_bar::BAR_CH1 + fader_index}, (uint8_t) ((readymode_active ? readymode_color.saturation : color.saturation) * 126 + 1));
 	}
 
 	void bank_column::commit_from_readymode() {

@@ -335,6 +335,8 @@ namespace dmxfish::control_desk {
 	    for(auto d_ptr : devices) {
                 xtouch_set_button_led(*d_ptr, button::BTN_FLIP_MAINDARK, global_dark ? button_led_state::flash : button_led_state::off);
             }
+        } else if(b == button::BTN_SEND_OOPS) {
+            get_iomanager_instance()->rollback();
 	} else {
             ::missiondmx::fish::ipcmessages::button_state_change msg;
             msg.set_button(missiondmx::fish::ipcmessages::ButtonCode{(unsigned int) (b)});
