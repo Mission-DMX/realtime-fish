@@ -230,7 +230,7 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::calc_values() {
-        if (*time > cues.at(active_cue).timestamps.at(frame) + start_time) { // Next Frame?
+        if (*time >= cues.at(active_cue).timestamps.at(frame) + start_time) { // Next Frame?
             if (!already_updated_last) {
                 for (size_t i = 0; i < eight_bit_channels.size(); i++) {
                     last_eight_bit_channels.at(i) = cues.at(active_cue).eight_bit_frames.at(
@@ -254,8 +254,6 @@ namespace dmxfish::filters {
             if (frame < cues.at(active_cue).timestamps.size() - 1) { // Not the last Frame of the cue?
                 frame++;
             } else { // last frame of cue
-//                    switch (running_state) {
-//                        case PLAY:
                 if (stop_at_cue_end) {
                     update_hold_values();
                     return;
@@ -293,27 +291,15 @@ namespace dmxfish::filters {
                         ::spdlog::warn("should not have reached default end_handling at the end of the cue");
                         return;
                 }
+
                 if (next_cue < cues.size()) { // if next cue is set, start this cue
                     active_cue = next_cue;
                     next_cue = 0xffff;
                 }
                 start_time = *time;
                 frame = 0;
-                return; // ?
-//                            break;
-//                        case STOP:
-//                            ::spdlog::warn("should not have reached STOP running mode when calculating values");
-//                            return;
-//                        case PAUSE:
-//                            ::spdlog::warn("should not have reached PAUSE running mode when calculating values");
-//                            return;
-//                        default:
-//                            ::spdlog::warn("should not have reached default running mode when calculating values");
-//                            return;
-//                    }
             }
         }
-
         already_updated_last = false;
 
         double rel_time =
@@ -321,31 +307,23 @@ namespace dmxfish::filters {
 
         for (size_t i = 0; i < eight_bit_channels.size(); i++) {
             size_t frame_index = frame * eight_bit_channels.size() + i;
-            calc_transition<uint8_t>(rel_time, cues.at(active_cue).eight_bit_frames.at(
-                                             eight_bit_channels.size() * active_cue + frame_index).transition, last_eight_bit_channels.at(i),
-                                     cues.at(active_cue).eight_bit_frames.at(
-                                             eight_bit_channels.size() * active_cue + frame_index).value, i);
+            calc_transition<uint8_t>(rel_time, cues.at(active_cue).eight_bit_frames.at(frame_index).transition, last_eight_bit_channels.at(i),
+                                     cues.at(active_cue).eight_bit_frames.at(frame_index).value, i);
         }
         for (size_t i = 0; i < sixteen_bit_channels.size(); i++) {
             size_t frame_index = frame * sixteen_bit_channels.size() + i;
-            calc_transition<uint16_t>(rel_time, cues.at(active_cue).sixteen_bit_frames.at(
-                                              sixteen_bit_channels.size() * active_cue + frame_index).transition, last_sixteen_bit_channels.at(i),
-                                      cues.at(active_cue).sixteen_bit_frames.at(
-                                              sixteen_bit_channels.size() * active_cue + frame_index).value, i);
+            calc_transition<uint16_t>(rel_time, cues.at(active_cue).sixteen_bit_frames.at(frame_index).transition, last_sixteen_bit_channels.at(i),
+                                      cues.at(active_cue).sixteen_bit_frames.at(frame_index).value, i);
         }
         for (size_t i = 0; i < float_channels.size(); i++) {
             size_t frame_index = frame * float_channels.size() + i;
-            calc_transition<double>(rel_time, cues.at(active_cue).float_frames.at(
-                                            float_channels.size() * active_cue + frame_index).transition, last_float_channels.at(i),
-                                    cues.at(active_cue).float_frames.at(
-                                            float_channels.size() * active_cue + frame_index).value, i);
+            calc_transition<double>(rel_time, cues.at(active_cue).float_frames.at(frame_index).transition, last_float_channels.at(i),
+                                    cues.at(active_cue).float_frames.at(frame_index).value, i);
         }
         for (size_t i = 0; i < color_channels.size(); i++) {
             size_t frame_index = frame * color_channels.size() + i;
-            calc_transition<dmxfish::dmx::pixel>(rel_time, cues.at(active_cue).color_frames.at(
-                                                         color_channels.size() * active_cue + frame_index).transition, last_color_channels.at(i),
-                                                 cues.at(active_cue).color_frames.at(
-                                                         color_channels.size() * active_cue + frame_index).value, i);
+            calc_transition<dmxfish::dmx::pixel>(rel_time, cues.at(active_cue).color_frames.at(frame_index).transition, last_color_channels.at(i),
+                                                 cues.at(active_cue).color_frames.at(frame_index).value, i);
         }
     }
 
@@ -457,12 +435,10 @@ namespace dmxfish::filters {
         }
 
 
-        this->
-                handle_end = HOLD;
+        this->handle_end = HOLD;
         if (configuration.contains("end_handling")) {
             if (!configuration.at("end_handling").compare("start_again")) {
-                this->
-                        handle_end = START_AGAIN;
+                this->handle_end = START_AGAIN;
             }
         }
 
@@ -499,9 +475,7 @@ namespace dmxfish::filters {
                         frame = 0;
                         break;
                     case PLAY:
-                        switch (cues.
-                                        at(active_cue)
-                                .restart_handling) {
+                        switch (cues.at(active_cue).restart_handling) {
                             case DO_NOTHING:
                                 break;
                             case START_FROM_BEGIN:
