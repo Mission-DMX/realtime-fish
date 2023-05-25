@@ -62,18 +62,18 @@ namespace dmxfish::filters {
             switch (channel.at(nr_channel).channel_type) {
                 case EIGHT_BIT:
                     cues.at(cue).eight_bit_frames.push_back(
-                            KeyFrame<uint8_t>(std::stoi(str.substr(start, sep - start)), tr));
+                            key_frame<uint8_t>(std::stoi(str.substr(start, sep - start)), tr));
                     break;
                 case SIXTEEN_BIT:
                     cues.at(cue).sixteen_bit_frames.push_back(
-                            KeyFrame<uint16_t>(std::stoi(str.substr(start, sep - start)), tr));
+                            key_frame<uint16_t>(std::stoi(str.substr(start, sep - start)), tr));
                     break;
                 case FLOAT:
                     cues.at(cue).float_frames.push_back(
-                            KeyFrame<double>(std::stod(str.substr(start, sep - start)), tr));
+                            key_frame<double>(std::stod(str.substr(start, sep - start)), tr));
                     break;
                 case COLOR:
-                    cues.at(cue).color_frames.push_back(KeyFrame<dmxfish::dmx::pixel>(dmxfish::dmx::pixel(), tr));
+                    cues.at(cue).color_frames.push_back(key_frame<dmxfish::dmx::pixel>(dmxfish::dmx::pixel(), tr));
                     const auto first_position = str.find(',', start);
                     cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.hue = std::stod(
                             str.substr(start, first_position - start));
@@ -131,7 +131,7 @@ namespace dmxfish::filters {
     }
 
     bool filter_cue::handle_cue(const std::string &str, size_t start, size_t end, size_t cue) {
-        cues.push_back(Cue());
+        cues.push_back(cue_st());
         cues.at(cue).end_handling = NEXT_CUE;
         cues.at(cue).restart_handling = DO_NOTHING;
         const size_t end_conf = str.find('#', start);
@@ -248,9 +248,10 @@ namespace dmxfish::filters {
                     last_color_channels.at(i) = cues.at(active_cue).color_frames.at(
                             color_channels.size() * frame + i).value;
                 }
-                last_timestamp = *time;
                 already_updated_last = true;
             }
+            last_timestamp = *time;
+//            ::spdlog::debug("1: {}", last_timestamp);
             if (frame < cues.at(active_cue).timestamps.size() - 1) { // Not the last Frame of the cue?
                 frame++;
             } else { // last frame of cue
@@ -259,6 +260,8 @@ namespace dmxfish::filters {
                         break;
                     case HOLD:
                         update_hold_values();
+                        pause_time = *time;
+                        running_state = PAUSE;
                         return;
                     case NEXT_CUE:
                         if (active_cue < cues.size() - 1) { // Not last cue?
@@ -335,6 +338,8 @@ namespace dmxfish::filters {
             calc_transition<dmxfish::dmx::pixel>(rel_time, cues.at(active_cue).color_frames.at(frame_index).transition, last_color_channels.at(i),
                                                  cues.at(active_cue).color_frames.at(frame_index).value, i);
         }
+
+//        ::spdlog::debug("calcv: rel: {}, *time: {}, starttime: {}, last_timestamp: {}, act: {}, last:{}, target: {}", rel_time, *time, start_time, last_timestamp, eight_bit_channels.at(0), last_eight_bit_channels.at(0), cues.at(active_cue).eight_bit_frames.at(frame).value);
     }
 
 
@@ -345,8 +350,7 @@ namespace dmxfish::filters {
             throw filter_config_exception(
                     "Unable to link input of cue filter: channel mapping does not contain channel 'time' of type 'double'");
         }
-        this->
-                time = input_channels.float_channels.at("time");
+        this->time = input_channels.float_channels.at("time");
 
         if (!configuration.contains("mapping")) {
             throw filter_config_exception("cue filter: unable to setup the mapping");
@@ -356,88 +360,50 @@ namespace dmxfish::filters {
         size_t start_pos = 0;
         auto next_pos = mapping.find(";");
         int count_channel_type = count_occurence_of(mapping, ":8bit", 0, mapping.size());
-        channel_names_eight.
-                reserve(count_channel_type);
-        eight_bit_channels.
-                reserve(count_channel_type);
-        last_eight_bit_channels.
-                reserve(count_channel_type);
+        channel_names_eight.reserve(count_channel_type);
+        eight_bit_channels.reserve(count_channel_type);
+        last_eight_bit_channels.reserve(count_channel_type);
         count_channel_type = count_occurence_of(mapping, ":16bit", 0, mapping.size());
-        channel_names_sixteen.
-                reserve(count_channel_type);
-        sixteen_bit_channels.
-                reserve(count_channel_type);
-        last_sixteen_bit_channels.
-                reserve(count_channel_type);
+        channel_names_sixteen.reserve(count_channel_type);
+        sixteen_bit_channels.reserve(count_channel_type);
+        last_sixteen_bit_channels.reserve(count_channel_type);
         count_channel_type = count_occurence_of(mapping, ":float", 0, mapping.size());
-        channel_names_float.
-                reserve(count_channel_type);
-        float_channels.
-                reserve(count_channel_type);
-        last_float_channels.
-                reserve(count_channel_type);
+        channel_names_float.reserve(count_channel_type);
+        float_channels.reserve(count_channel_type);
+        last_float_channels.reserve(count_channel_type);
         count_channel_type = count_occurence_of(mapping, ":color", 0, mapping.size());
-        channel_names_color.
-                reserve(count_channel_type);
-        color_channels.
-                reserve(count_channel_type);
-        last_color_channels.
-                reserve(count_channel_type);
+        channel_names_color.reserve(count_channel_type);
+        color_channels.reserve(count_channel_type);
+        last_color_channels.reserve(count_channel_type);
         while (true) {
             const auto sign = mapping.find(":", start_pos);
             std::string channel_type = mapping.substr(sign + 1, next_pos - sign - 1);
             std::string channel_name = mapping.substr(start_pos, sign - start_pos);
             if (!channel_type.compare("8bit")) {
-                channel.
-                        push_back(Channel(EIGHT_BIT, eight_bit_channels.size())
-                );
-                channel_names_eight.
-                        push_back(channel_name);
+                channel.push_back(channel_str(EIGHT_BIT, eight_bit_channels.size()));
+                channel_names_eight.push_back(channel_name);
                 eight_bit_channels.push_back(0);
                 last_eight_bit_channels.push_back(0);
             } else if (!channel_type.compare("16bit")) {
-                channel.
-                        push_back(Channel(SIXTEEN_BIT, sixteen_bit_channels.size())
-                );
-                channel_names_sixteen.
-                        push_back(channel_name);
+                channel.push_back(channel_str(SIXTEEN_BIT, sixteen_bit_channels.size()));
+                channel_names_sixteen.push_back(channel_name);
                 sixteen_bit_channels.push_back(0);
                 last_sixteen_bit_channels.push_back(0);
             } else if (!channel_type.compare("float")) {
-                channel.
-                        push_back(Channel(FLOAT, float_channels.size())
-                );
-                channel_names_float.
-                        push_back(channel_name);
+                channel.push_back(channel_str(FLOAT, float_channels.size()));
+                channel_names_float.push_back(channel_name);
                 float_channels.push_back(0);
                 last_float_channels.push_back(0);
             } else if (!channel_type.compare("color")) {
-                channel.
-                        push_back(Channel(COLOR, color_channels.size())
-                );
-                channel_names_color.
-                        push_back(channel_name);
-                color_channels.
-
-                        push_back(dmxfish::dmx::pixel());
-
-                last_color_channels.
-
-                        push_back(dmxfish::dmx::pixel());
-
+                channel.push_back(channel_str(COLOR, color_channels.size()));
+                channel_names_color.push_back(channel_name);
+                color_channels.push_back(dmxfish::dmx::pixel());
+                last_color_channels.push_back(dmxfish::dmx::pixel());
             } else {
-                throw
-                        filter_config_exception(std::string("can not recognise channel type: ")
-                                                + mapping.
-                                substr(sign, next_pos
-                                             - sign));
+                throw filter_config_exception(std::string("can not recognise channel type: ") + mapping.substr(sign, next_pos - sign));
             }
 
-            if (next_pos >= mapping.
-
-                    length()
-
-                    ) {
+            if (next_pos >= mapping.length()) {
                 break;
             }
             start_pos = next_pos + 1;
@@ -457,16 +423,8 @@ namespace dmxfish::filters {
         }
 
         const std::string frames = configuration.at("cuelist");
-        cues.
-                reserve(count_occurence_of(frames, "$", 0, frames.size())
-                        + 1);
-        if (!
-                do_with_substr(frames,
-                               0, frames.
-
-                                length(),
-
-                               '$', 1,
+        cues.reserve(count_occurence_of(frames, "$", 0, frames.size()) + 1);
+        if (!do_with_substr(frames, 0, frames.length(), '$', 1,
                                std::bind(&dmxfish::filters::filter_cue::handle_cue,
                                          this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
                                          std::placeholders::_4))) {
@@ -482,6 +440,8 @@ namespace dmxfish::filters {
                         active_cue = 0;
                         start_time = *time;
                         last_timestamp = *time;
+
+//                        ::spdlog::debug("2: {}", last_timestamp);
                         frame = 0;
                         break;
                     case PLAY:
@@ -491,6 +451,7 @@ namespace dmxfish::filters {
                             case START_FROM_BEGIN:
                                 start_time = *time;
                                 last_timestamp = *time;
+//                                ::spdlog::debug("3: {}", last_timestamp);
                                 frame = 0;
                                 break;
                             default:
@@ -500,6 +461,7 @@ namespace dmxfish::filters {
                     case PAUSE:
                         start_time = start_time + (*time - pause_time);
                         last_timestamp = last_timestamp + (*time - pause_time);
+//                        ::spdlog::debug("4: {}", last_timestamp);
 //                            return true;
                         break;
                     default:
@@ -511,7 +473,8 @@ namespace dmxfish::filters {
                         cue_end_handling_real = cues.at(active_cue).end_handling;
                         break;
                     case HOLD:
-                        last_timestamp = *time;
+//                        last_timestamp = *time;
+//                        ::spdlog::debug("5: {}", last_timestamp);
                         cue_end_handling_real = NEXT_CUE;
                         break;
                     case NEXT_CUE:
@@ -584,57 +547,29 @@ namespace dmxfish::filters {
                 MARK_UNUSED(ex);
                 return false;
             }
-            if (next > cues.
-
-                    size()
-
-                    ) {
+            if (next > cues.size()) {
                 return false;
             }
             start_time = *time;
             frame = 0;
             active_cue = next;
-            for (
-                    size_t i = 0;
-                    i < eight_bit_channels.
-
-                            size();
-
-                    i++) {
+            for (size_t i = 0; i < eight_bit_channels.size();i++) {
                 last_eight_bit_channels.
                         at(i) = eight_bit_channels.at(i);
             }
-            for (
-                    size_t i = 0;
-                    i < sixteen_bit_channels.
-
-                            size();
-
-                    i++) {
+            for (size_t i = 0; i < sixteen_bit_channels.size(); i++) {
                 last_sixteen_bit_channels.
                         at(i) = sixteen_bit_channels.at(i);
             }
-            for (
-                    size_t i = 0;
-                    i < float_channels.
-
-                            size();
-
-                    i++) {
+            for (size_t i = 0; i < float_channels.size(); i++) {
                 last_float_channels.
                         at(i) = float_channels.at(i);
             }
-            for (
-                    size_t i = 0;
-                    i < color_channels.
-
-                            size();
-
-                    i++) {
-                last_color_channels.
-                        at(i) = color_channels.at(i);
+            for (size_t i = 0; i < color_channels.size(); i++) {
+                last_color_channels.at(i) = color_channels.at(i);
             }
             last_timestamp = *time;
+//            ::spdlog::debug("6: {}", last_timestamp);
             return true;
         }
         if (!key.compare("next_cue")) {

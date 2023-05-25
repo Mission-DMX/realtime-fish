@@ -45,27 +45,27 @@ namespace dmxfish::filters {
 
 
         template <typename T>
-        struct KeyFrame{
+        struct key_frame{
             T value;
             transition_t transition;
-            KeyFrame(T val, transition_t tr): value(val), transition(tr) {}
+            key_frame(T val, transition_t tr): value(val), transition(tr) {}
         };
 
-        struct Cue{
+        struct cue_st{
             std::vector<double> timestamps;
-            std::vector<KeyFrame<uint8_t>> eight_bit_frames;
-            std::vector<KeyFrame<uint16_t>> sixteen_bit_frames;
-            std::vector<KeyFrame<double>> float_frames;
-            std::vector<KeyFrame<dmxfish::dmx::pixel>> color_frames;
+            std::vector<key_frame<uint8_t>> eight_bit_frames;
+            std::vector<key_frame<uint16_t>> sixteen_bit_frames;
+            std::vector<key_frame<double>> float_frames;
+            std::vector<key_frame<dmxfish::dmx::pixel>> color_frames;
             handling_at_the_end end_handling;
             handling_at_restart restart_handling;
         };
 
-        struct Channel{
+        struct channel_str{
 //            std::string name;
             channel_t channel_type;
             size_t index;
-            Channel(channel_t ch_t,  size_t i) : channel_type(ch_t), index(i) {}
+            channel_str(channel_t ch_t,  size_t i) : channel_type(ch_t), index(i) {}
         };
 
         double* time = nullptr;
@@ -82,10 +82,10 @@ namespace dmxfish::filters {
         handling_at_the_end handle_end = HOLD;
         run_state running_state = STOP;
 
-        std::vector<Channel> channel;
+        std::vector<channel_str> channel;
 
         // containing the cues, incl, frames and transition types
-        std::vector<Cue> cues;
+        std::vector<cue_st> cues;
 
         // values for the output
         std::vector<uint8_t> eight_bit_channels;
