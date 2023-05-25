@@ -122,6 +122,8 @@ namespace dmxfish::filters {
 
         void update_hold_values();
 
+        void update_last_values();
+
         void calc_values();
 
 
