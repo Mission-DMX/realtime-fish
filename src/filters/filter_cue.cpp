@@ -254,11 +254,7 @@ namespace dmxfish::filters {
             if (frame < cues.at(active_cue).timestamps.size() - 1) { // Not the last Frame of the cue?
                 frame++;
             } else { // last frame of cue
-                if (stop_at_cue_end) {
-                    update_hold_values();
-                    return;
-                }
-                switch (cues.at(active_cue).end_handling) { // end of cue handling
+                switch (cue_end_handling_real) { // end of cue handling
                     case START_AGAIN:
                         break;
                     case HOLD:
@@ -291,13 +287,27 @@ namespace dmxfish::filters {
                         ::spdlog::warn("should not have reached default end_handling at the end of the cue");
                         return;
                 }
-
                 if (next_cue < cues.size()) { // if next cue is set, start this cue
                     active_cue = next_cue;
                     next_cue = 0xffff;
                 }
                 start_time = *time;
                 frame = 0;
+
+                switch (cues.at(active_cue).end_handling) { // next
+                    case START_AGAIN:
+                        cue_end_handling_real = START_AGAIN;
+                        break;
+                    case HOLD:
+                        cue_end_handling_real = HOLD;
+                        break;
+                    case NEXT_CUE:
+                        cue_end_handling_real = NEXT_CUE;
+                        break;
+                    default:
+                        ::spdlog::warn("should not have reached default end_handling at the end of the cue");
+                        return;
+                }
             }
         }
         already_updated_last = false;
@@ -496,6 +506,18 @@ namespace dmxfish::filters {
                         return false;
                 }
                 running_state = PLAY;
+                switch (cue_end_handling_real){
+                    case START_AGAIN:
+                        cue_end_handling_real = cues.at(active_cue).end_handling;
+                        break;
+                    case HOLD:
+                        last_timestamp = *time;
+                        cue_end_handling_real = NEXT_CUE;
+                        break;
+                    case NEXT_CUE:
+                        cue_end_handling_real = cues.at(active_cue).end_handling;
+                        break;
+                }
                 return true;
             }
             if (!_value.compare("pause")) {
@@ -528,9 +550,7 @@ namespace dmxfish::filters {
                     default:
                         return false;
                 }
-                switch (cues.
-                                at(active_cue)
-                        .restart_handling) {
+                switch (cues.at(active_cue).restart_handling) {
                     case DO_NOTHING:
                         break;
                     case START_FROM_BEGIN:
@@ -540,11 +560,11 @@ namespace dmxfish::filters {
                     default:
                         return false;
                 }
-                stop_at_cue_end = true;
+                cue_end_handling_real = NEXT_CUE;
                 running_state = PLAY;
                 return true;
             }
-            if (_value.compare("stop") == 0) {
+            if (!_value.compare("stop")) {
                 running_state = STOP;
                 return true;
             }

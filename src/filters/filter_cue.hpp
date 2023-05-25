@@ -77,7 +77,7 @@ namespace dmxfish::filters {
         uint16_t active_cue = 0;
 
         uint16_t next_cue = 0xffff;
-        bool stop_at_cue_end = false;
+        handling_at_the_end cue_end_handling_real = START_AGAIN;
 
         handling_at_the_end handle_end = HOLD;
         run_state running_state = STOP;

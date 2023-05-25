@@ -453,13 +453,15 @@ BOOST_AUTO_TEST_CASE(twocuestwoframeshold) {
         const std::string name = "t";
         for (int i = 0; i < 16000; i = i + 100){
             time_s = (double) i;
-            fil.update();
+
+
             if (i == 1000 || i == 7000) {
                 const std::string key = "run_mode";
                 const std::string _value = "play";
                 fil.receive_update_from_gui(key, _value);
             }
 
+            fil.update();
             fil.get_output_channels(map, name);
             for (auto it = map.eight_bit_channels.begin();
                  it != map.eight_bit_channels.end(); ++it) {
