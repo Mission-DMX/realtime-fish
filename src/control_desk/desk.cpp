@@ -11,7 +11,8 @@
 
 namespace dmxfish::control_desk {
 
-    bank::bank(std::function<void(std::string const&, bool)> handler) : columns{}, set_ready_state_handler{std::move(handler)} {
+    bank::bank(std::function<void(std::string const&, bool)> rdy_handler, std::function<void(std::string const&, bool)> select_handler) :
+        columns{}, set_ready_state_handler{std::move(rdy_handler)}, select_state_handler{std::move(select_handler)} {
 
     }
 
@@ -334,6 +335,8 @@ namespace dmxfish::control_desk {
 	    for(auto d_ptr : devices) {
                 xtouch_set_button_led(*d_ptr, button::BTN_FLIP_MAINDARK, global_dark ? button_led_state::flash : button_led_state::off);
             }
+        } else if(b == button::BTN_SEND_OOPS) {
+            get_iomanager_instance()->rollback();
 	} else {
             ::missiondmx::fish::ipcmessages::button_state_change msg;
             msg.set_button(missiondmx::fish::ipcmessages::ButtonCode{(unsigned int) (b)});
@@ -375,8 +378,8 @@ namespace dmxfish::control_desk {
         set_seven_seg_display_data(msg.seven_seg_display_data());
         set_active_bank_set(msg.selected_bank_set());
         set_active_fader_bank_on_current_set(msg.selected_bank());
-        if(msg.selected_column_id().length() > 0) {
-            // TODO implement
+        if(msg.selected_column_id() != this->selected_column_id) {
+            handle_select_state_update_from_bank(msg.selected_column_id(), true);
         }
         if(msg.find_active_on_column_id().length() > 0) {
             // TODO implement
@@ -458,7 +461,10 @@ namespace dmxfish::control_desk {
         bs.fader_banks.reserve(definition.banks_size());
         for (auto& bank_definition : definition.banks()) {
             using namespace std::placeholders;
-            bs.fader_banks.push_back(std::make_shared<bank>(std::bind(&desk::handle_ready_state_update_from_bank, this, _1, _2)));
+            bs.fader_banks.push_back(std::make_shared<bank>(
+                std::bind(&desk::handle_ready_state_update_from_bank, this, _1, _2),
+                std::bind(&desk::handle_select_state_update_from_bank, this, _1, _2)
+            ));
             bs.fader_banks[bs.fader_banks.size() - 1]->reserve(bank_definition.cols_size());
             size_t device_index = 0;
             unsigned int col_index_on_device = 0;
@@ -590,6 +596,30 @@ namespace dmxfish::control_desk {
                 d_ptr->schedule_transmission();
             }
         }
+    }
+
+    void desk::handle_select_state_update_from_bank(const std::string& column_id, bool new_state) {
+        if(!(current_active_bank_set < bank_sets.size())) {
+            return;
+        }
+        const auto& cbs = bank_sets[current_active_bank_set];
+        if(cbs.columns_map.contains(selected_column_id)) {
+            const auto& old_column = cbs.columns_map.at(selected_column_id);
+            old_column->set_select_button_active(false);
+        }
+        if(cbs.columns_map.contains(column_id)) {
+            selected_column_id = column_id;
+        } else {
+            selected_column_id = "";
+            return;
+        }
+        if(new_state) {
+            if(selected_column_id.length() > 0) {
+                const auto& old_column = cbs.columns_map.at(selected_column_id);
+                old_column->set_select_button_active(true);
+            }
+        }
+        update_message_required = true;
     }
 
     std::shared_ptr<bank_column> desk::find_column(const std::string& set_id, const std::string& column_id) {

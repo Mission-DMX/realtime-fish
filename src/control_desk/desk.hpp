@@ -32,8 +32,9 @@ namespace dmxfish::control_desk {
 	// objects in the vector from bank_set again. This would require
 	// changing the factory though.
         const std::function<void(std::string const&, bool)> set_ready_state_handler;
+        const std::function<void(std::string const&, bool)> select_state_handler;
     public:
-        bank(std::function<void(std::string const&, bool)> set_ready_state_handler);
+        bank(std::function<void(std::string const&, bool)> _set_ready_state_handler, std::function<void(std::string const&, bool)> _select_state_handler);
         ~bank() = default;
 
         /**
@@ -55,16 +56,16 @@ namespace dmxfish::control_desk {
         }
 
         inline std::shared_ptr<bank_column> emplace_back(std::weak_ptr<device_handle> device_connection, bank_mode mode, const std::string& id, uint8_t fader_index) {
-            auto ptr = std::make_shared<bank_column>(device_connection, set_ready_state_handler, mode, id, fader_index);
+            auto ptr = std::make_shared<bank_column>(device_connection, set_ready_state_handler, select_state_handler, mode, id, fader_index);
             columns.push_back(ptr);
             return ptr;
         }
 
         inline std::shared_ptr<bank_column> get(size_t pos) {
-	    if(pos < this->columns.size())
-                return columns[pos];
-	    else
-		return nullptr;
+        if(pos < this->columns.size())
+            return columns[pos];
+        else
+            return nullptr;
         }
     };
 
@@ -90,9 +91,9 @@ namespace dmxfish::control_desk {
         size_t current_active_bank_set = 0;
         int jogwheel_change = 0;
         bool update_message_required = false;
-	bool bank_set_modification_happened = false;
-	bool global_dark = false;
-	uint16_t global_illumination = 0;
+        bool bank_set_modification_happened = false;
+        bool global_dark = false;
+        uint16_t global_illumination = 0;
     public:
         desk(std::list<std::pair<std::string, midi_device_id>> input_devices);
         ~desk();
@@ -133,7 +134,7 @@ namespace dmxfish::control_desk {
         }
 
         bool set_active_fader_bank_on_current_set(size_t index);
-	[[nodiscard]] size_t get_active_fader_bank_on_current_set();
+        [[nodiscard]] size_t get_active_fader_bank_on_current_set();
 
         void add_bank_set_from_protobuf_msg(const ::missiondmx::fish::ipcmessages::add_fader_bank_set& definition);
         void process_desk_update_message(const ::missiondmx::fish::ipcmessages::desk_update& msg);
@@ -150,8 +151,9 @@ namespace dmxfish::control_desk {
         void process_incomming_command(const midi_command& c, size_t device_index);
         void handle_bord_buttons(button b, button_change c);
         void handle_ready_state_update_from_bank(const std::string& column_id, bool new_state);
-	void update_fader_bank_leds();
-	void commit_readymode();
+        void handle_select_state_update_from_bank(const std::string& column_id, bool new_state);
+        void update_fader_bank_leds();
+        void commit_readymode();
     };
 
 }
