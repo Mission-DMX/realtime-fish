@@ -25,7 +25,8 @@ namespace dmxfish::filters {
         enum handling_at_the_end{
             HOLD,
             START_AGAIN,
-            NEXT_CUE
+            NEXT_CUE,
+            HOLDING
         };
         enum handling_at_restart{
             DO_NOTHING,
