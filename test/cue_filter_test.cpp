@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(onechanneltwoframes) {
         const std::string name = "t";
         for (int i = 0; i < 6000; i = i + 100){
             time_s = (double) i;
-            if (i == 1000) {
+            if (i == 1000 || i == 3000) {
                 const std::string key = "run_mode";
                 const std::string _value = "play";
                 fil.receive_update_from_gui(key, _value);
