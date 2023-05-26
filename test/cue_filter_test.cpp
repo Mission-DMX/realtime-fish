@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(testpause) {
 
         channel_mapping map = channel_mapping ();
         const std::string name = "t";
-        for (int i = 0; i < 6000; i = i + 100){
+        for (int i = 0; i < 8000; i = i + 100){
             time_s = (double) i;
             fil.update();
 
@@ -602,7 +602,6 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue) {
 
 BOOST_AUTO_TEST_CASE(test_to_next_cue_twice) {
         spdlog::set_level(spdlog::level::debug);
-        ::spdlog::debug("ToNextCueTest");
         dmxfish::filters::filter_cue fil = filter_cue ();
 
         double time_s = 0;
@@ -623,7 +622,7 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue_twice) {
 
         channel_mapping map = channel_mapping ();
         const std::string name = "t";
-        for (int i = 0; i < 24000; i = i + 100){
+        for (int i = 0; i < 29000; i = i + 100){
             time_s = (double) i;
 
             if (i == 1000) {
@@ -635,6 +634,18 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue_twice) {
             if (i == 6000) {
                 const std::string key = "run_mode";
                 const std::string _value = "to_next_cue";
+                fil.receive_update_from_gui(key, _value);
+            }
+
+            if (i == 13000) {
+                const std::string key = "run_mode";
+                const std::string _value = "to_next_cue";
+                fil.receive_update_from_gui(key, _value);
+            }
+
+            if (i == 19000) {
+                const std::string key = "run_mode";
+                const std::string _value = "play";
                 fil.receive_update_from_gui(key, _value);
             }
 
@@ -655,18 +666,22 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue_twice) {
                     tester = std::round((double) 50 + 50 * (time_s-6000)/3000);
                 } else if (time_s < 12000){
                     tester = std::round((double) 100 + 150 * (time_s-9000)/3000);
-                } else if (time_s < 14000){
-                    tester = std::round((double) 250 - 50 * (time_s-12000)/2000);
-                } else if (time_s < 16000){
-                    tester = std::round((double) 200 - 150 * (time_s-14000)/2000);
+                } else if (time_s < 13000){
+                    tester = std::round((double) 250);
+                } else if (time_s < 15000){
+                    tester = std::round((double) 250 - 50 * (time_s-13000)/2000);
+                } else if (time_s < 17000){
+                    tester = std::round((double) 200 - 150 * (time_s-15000)/2000);
                 } else if (time_s < 19000){
-                    tester = std::round((double) 50 + 50 * (time_s-16000)/3000);
+                    tester = std::round((double) 50);
                 } else if (time_s < 22000){
-                    tester = std::round((double) 100 + 150 * (time_s-19000)/3000);
-                } else if (time_s < 24000){
-                    tester = std::round((double) 250 - 50 * (time_s-22000)/2000);
-                } else if (time_s < 26000){
-                    tester = std::round((double) 200 - 150 * (time_s-24000)/2000);
+                    tester = std::round((double) 50 + 50 * (time_s-19000)/3000);
+                } else if (time_s < 25000){
+                    tester = std::round((double) 100 + 150 * (time_s-22000)/3000);
+                } else if (time_s < 27000){
+                    tester = std::round((double) 250 - 50 * (time_s-25000)/2000);
+                } else if (time_s < 29000){
+                    tester = std::round((double) 200 - 150 * (time_s-27000)/2000);
 //                } else {
 //                    tester = 250;
                 }

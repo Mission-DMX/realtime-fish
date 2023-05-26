@@ -272,13 +272,14 @@ namespace dmxfish::filters {
             if (frame < cues.at(active_cue).timestamps.size() - 1) { // Not the last Frame of the cue?
                 frame++;
             } else { // last frame of cue
+//                ::spdlog::debug("now the val is: {} at {}", cue_end_handling_real, *time);
                 switch (cue_end_handling_real) { // end of cue handling
                     case START_AGAIN:
                         break;
                     case HOLD:
                         update_hold_values();
-//                        pause_time = *time;
-//                        running_state = PAUSE;
+                        pause_time = *time;
+                        running_state = PAUSE;
                         cue_end_handling_real = HOLDING;
                         return;
                     case HOLDING:
@@ -317,6 +318,7 @@ namespace dmxfish::filters {
                 start_time = *time;
                 frame = 0;
                 cue_end_handling_real = cues.at(active_cue).end_handling;
+//                ::spdlog::debug("Test 1 : {} at {}", cue_end_handling_real, *time);
             }
         }
         already_updated_last = false;
@@ -440,17 +442,17 @@ namespace dmxfish::filters {
 
     bool filter_cue::receive_update_from_gui(const std::string &key, const std::string &_value) {
         if (!key.compare("run_mode")) {
-            if (!_value.compare("play")) {
-                if (cue_end_handling_real == HOLDING){
-                    if (cues.at(active_cue).end_handling == HOLD) {
-                        cue_end_handling_real = NEXT_CUE;
-                    } else {
-                        cue_end_handling_real = cues.at(active_cue).end_handling;
-                    }
-                    return true;
-                } else {
-                    cue_end_handling_real = cues.at(active_cue).end_handling;
-                }
+            if (!_value.compare("play") || !_value.compare("to_next_cue")) {
+//                if (cue_end_handling_real == HOLDING){
+//                    if (cues.at(active_cue).end_handling == HOLD) {
+//                        cue_end_handling_real = NEXT_CUE;
+//                    } else {
+//                        cue_end_handling_real = cues.at(active_cue).end_handling;
+//                    }
+//                    return true;
+//                } else {
+//                    cue_end_handling_real = cues.at(active_cue).end_handling;
+//                }
                 switch (running_state) {
                     case STOP:
                         active_cue = 0;
@@ -475,12 +477,30 @@ namespace dmxfish::filters {
                     case PAUSE:
                         start_time = start_time + (*time - pause_time);
                         last_timestamp = last_timestamp + (*time - pause_time);
+                        if(*time >= cues.at(active_cue).timestamps.at(cues.at(active_cue).timestamps.size() - 1) + start_time){
+                            if (cues.at(active_cue).end_handling == NEXT_CUE || cues.at(active_cue).end_handling == HOLD){
+                                if(active_cue < cues.size()-1){
+                                    active_cue++;
+                                } else {
+                                    active_cue = 0;
+                                }
+                            }
+//                            ::spdlog::debug("updated starttime at {}" , *time);
+                            start_time = *time;
+                            last_timestamp = *time;
+                            frame = 0;
+                        }
 //                            return true;
                         break;
                     default:
                         return false;
                 }
                 running_state = PLAY;
+                cue_end_handling_real = cues.at(active_cue).end_handling;
+                if (!_value.compare("to_next_cue")) {
+                    cue_end_handling_real = HOLD;
+//                    ::spdlog::debug("Test 2 : {}", cue_end_handling_real);
+                }
                 return true;
             }
             if (!_value.compare("pause")) {
@@ -498,43 +518,45 @@ namespace dmxfish::filters {
                 pause_time = *time;
                 return true;
             }
-            if (!_value.compare("to_next_cue")) {
-                if (cue_end_handling_real == HOLDING) {
-                    cue_end_handling_real = NEXT_CUE;
-                    return true;
-                }
-                switch (running_state) {
-                    case STOP:
-                        active_cue = 0;
-                        start_time = *time;
-                        last_timestamp = *time;
-                        frame = 0;
-                        break;
-                    case PLAY:
-                        switch (cues.at(active_cue).restart_handling) {
-                            case DO_NOTHING:
-                                break;
-                            case START_FROM_BEGIN:
-                                update_last_values();
-                                start_time = *time;
-                                last_timestamp = *time;
-                                frame = 0;
-                                break;
-                            default:
-                                return false;
-                        }
-                        break;
-                    case PAUSE:
-                        start_time = start_time + (*time - pause_time);
-                        last_timestamp = last_timestamp + (*time - pause_time);
-                        break;
-                    default:
-                        return false;
-                }
-                running_state = PLAY;
-                cue_end_handling_real = HOLD;
-                return true;
-            }
+//            if (!_value.compare("to_next_cue")) {
+//                if (cue_end_handling_real == HOLDING) {
+//                    ::spdlog::debug("Holding released at {} ", *time);
+////                    cue_end_handling_real = HOLD;
+////                    return true;
+//                }
+//                switch (running_state) {
+//                    case STOP:
+//                        active_cue = 0;
+//                        start_time = *time;
+//                        last_timestamp = *time;
+//                        frame = 0;
+//                        break;
+//                    case PLAY:
+//                        switch (cues.at(active_cue).restart_handling) {
+//                            case DO_NOTHING:
+//                                break;
+//                            case START_FROM_BEGIN:
+//                                update_last_values();
+//                                start_time = *time;
+//                                last_timestamp = *time;
+//                                frame = 0;
+//                                break;
+//                            default:
+//                                return false;
+//                        }
+//                        break;
+//                    case PAUSE:
+//                        start_time = start_time + (*time - pause_time);
+//                        last_timestamp = last_timestamp + (*time - pause_time);
+//                        break;
+//                    default:
+//                        return false;
+//                }
+//                running_state = PLAY;
+//                cue_end_handling_real = HOLD;
+//                ::spdlog::debug("to next cue at {} with {}", *time, cue_end_handling_real);
+//                return true;
+//            }
             if (!_value.compare("stop")) {
                 running_state = STOP;
                 return true;
