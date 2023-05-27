@@ -45,6 +45,7 @@ namespace dmxfish::filters {
         filter_fader_column_hsi = 40,
         filter_fader_column_hsia = 41,
         filter_fader_column_hsiu = 42,
-        filter_fader_column_hsiau = 43
+        filter_fader_column_hsiau = 43,
+        filter_cue = 44
     };
 }

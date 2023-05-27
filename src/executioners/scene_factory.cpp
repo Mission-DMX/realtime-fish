@@ -16,6 +16,7 @@
 #include "filters/filter_trigonometric.hpp"
 #include "filters/filter_math.hpp"
 #include "filters/filter_time.hpp"
+#include "filters/filter_cue.hpp"
 
 #include <iostream>
 
@@ -211,6 +212,9 @@ COMPILER_RESTORE("-Weffc++")
 				case filter_type::filter_fader_column_hsiau:
 					sum += sizeof(filter_fader_column_hsiau);
 					break;
+                case filter_type::filter_cue:
+                    sum += sizeof(filter_cue);
+                    break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -321,6 +325,8 @@ COMPILER_RESTORE("-Weffc++")
 				return calloc<filter_fader_column_hsiu>(pac);
 			case filter_type::filter_fader_column_hsiau:
 				return calloc<filter_fader_column_hsiau>(pac);
+            case filter_type::filter_cue:
+                return calloc<filter_cue>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}
