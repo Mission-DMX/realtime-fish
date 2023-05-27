@@ -108,6 +108,7 @@ namespace dmxfish::control_desk {
             update_physical_fader_position();
             update_encoder_leds();
             update_side_leds();
+	    send_col_update_to_fish();
         }
 
         [[nodiscard]] inline raw_column_configuration get_raw_configuration() const {
@@ -118,10 +119,12 @@ namespace dmxfish::control_desk {
             this->raw_configuration = c;
             update_physical_fader_position();
             update_encoder_leds();
+	    send_col_update_to_fish();
         }
 
         inline void set_amber_value(uint8_t new_value) {
 			this->amber = new_value;
+			send_col_update_to_fish();
 		}
 
 		[[nodiscard]] inline uint8_t get_amber_value() const {
@@ -134,6 +137,7 @@ namespace dmxfish::control_desk {
 
 		inline void set_uv_value(uint8_t new_value) {
 			this->uv = new_value;
+			send_col_update_to_fish();
 		}
 
         [[nodiscard]] inline uint8_t get_uv_value() const {
@@ -181,6 +185,7 @@ namespace dmxfish::control_desk {
         void update_button_leds();
         void update_side_leds();
         void notify_bank_about_ready_mode();
+	void send_col_update_to_fish();
     };
 
 }
