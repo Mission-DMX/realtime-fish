@@ -77,11 +77,11 @@ namespace dmxfish::control_desk {
 		if(current_bank_mode != bank_mode::DIRECT_INPUT_MODE) {
 			switch(current_re_assignment) {
 				case rotary_encoder_assignment::HUE:
-					selected_color.hue += (1.0/128.0) * (double) change_request;
-					if(selected_color.hue > 1.0) {
+					selected_color.hue += 15 * (double) change_request;
+					if(selected_color.hue > 360.0) {
 						selected_color.hue = 0.0 + (selected_color.hue - 1.0);
 					} else if(selected_color.hue < 0.0) {
-						selected_color.hue = 1.0 + selected_color.hue;
+						selected_color.hue = 360.0 + selected_color.hue;
 					}
 					break;
 				case rotary_encoder_assignment::SATURATION:
@@ -320,9 +320,9 @@ namespace dmxfish::control_desk {
 			xtouch_set_ring_led(*connection.lock(), e, (raw_configuration.rotary_position * 128) / 65536);
 		} else {
 			if(readymode_active)
-			    xtouch_set_ring_led(*connection.lock(), e, (uint8_t) (this->readymode_color.hue * 128));
+			    xtouch_set_ring_led(*connection.lock(), e, (uint8_t) ((this->readymode_color.hue / 360.0) * 128));
 			else
-			    xtouch_set_ring_led(*connection.lock(), e, (uint8_t) (this->color.hue * 128));
+			    xtouch_set_ring_led(*connection.lock(), e, (uint8_t) ((this->color.hue / 360.0) * 128));
 		}
 	}
 
