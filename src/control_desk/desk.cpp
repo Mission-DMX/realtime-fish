@@ -608,7 +608,7 @@ namespace dmxfish::control_desk {
             const auto& old_column = cbs.columns_map.at(selected_column_id);
             old_column->set_select_button_active(false);
         }
-        if(cbs.columns_map.contains(column_id)) {
+        if(cbs.columns_map.contains(column_id) && new_state) {
             selected_column_id = column_id;
         } else {
             selected_column_id = "";
