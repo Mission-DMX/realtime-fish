@@ -6,6 +6,8 @@
 #include "filters/filter.hpp"
 #include "lib/macros.hpp"
 
+#include "lib/logging.hpp"
+
 namespace dmxfish::filters {
 
     COMPILER_SUPRESS("-Weffc++")
@@ -28,6 +30,11 @@ namespace dmxfish::filters {
                 throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain channel 'time' of type 'double'. Should come from the only time node.");
             }
             this->time = input_channels.float_channels.at("time");
+
+            if(!input_channels.float_channels.contains("switch_time")) {
+                throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain channel 'switch_time' of type 'double'.");
+            }
+            this->switch_time = input_channels.float_channels.at("switch_time");
             
             if (!configuration.contains("nr_outputs")){
                 throw filter_config_exception("Unable to setup shift filter: configuration does not contain a value for 'nr_outputs'");
@@ -112,12 +119,22 @@ namespace dmxfish::filters {
         }
 
         virtual void update() override {
-            if (last_update + *switch_time >= *time){
-                for(int i = values.size() - 1; i > 0; i--){
-                    values.at(i) = values.at(i-1);
+            if constexpr (std::is_same<T, uint8_t>::value)
+            {
+                for (int i = 0; i < values.size(); i++) {
+                    ::spdlog::debug("test {}: {}", i, values.at(i));
                 }
-                values.at(0) = *input;
-                last_update = last_update + *switch_time;
+            }
+            ::spdlog::debug("last: {}, sw: {}, ac: {}", last_update, *switch_time, *time);
+            if (last_update + *switch_time < *time){
+                if constexpr (std::is_same<T, uint8_t>::value) {
+
+                    for(int i = values.size() - 1; i > 0; i--){
+                        values.at(i) = values.at(i-1);
+                    }
+                    values.at(0) = *input;
+                    last_update = last_update + *switch_time;
+                }
             }
         }
 
