@@ -612,7 +612,6 @@ namespace dmxfish::control_desk {
             selected_column_id = column_id;
         } else {
             selected_column_id = "";
-            return;
         }
         if(new_state) {
             if(selected_column_id.length() > 0) {
