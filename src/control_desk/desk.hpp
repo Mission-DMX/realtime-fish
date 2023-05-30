@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <limits>
 #include <list>
 #include <map>
 #include <memory>
@@ -81,6 +82,8 @@ namespace dmxfish::control_desk {
             bank_set(const std::string& _id) : fader_banks{}, columns_map{}, columns_in_ready_state{}, id{_id} {};
             ~bank_set() = default;
         };
+    public:
+        const static constexpr size_t size_t_max{std::numeric_limits<size_t>::max()};
     private:
         std::vector<std::shared_ptr<device_handle>> devices;
         std::vector<bank_set> bank_sets;
@@ -138,7 +141,7 @@ namespace dmxfish::control_desk {
 
         void add_bank_set_from_protobuf_msg(const ::missiondmx::fish::ipcmessages::add_fader_bank_set& definition);
         void process_desk_update_message(const ::missiondmx::fish::ipcmessages::desk_update& msg);
-        void update_column_from_message(const ::missiondmx::fish::ipcmessages::fader_column& msg);
+        void update_column_from_message(const ::missiondmx::fish::ipcmessages::fader_column& msg, size_t bank_set_index = size_t_max);
 
         void update_fader_position_from_protobuf(const ::missiondmx::fish::ipcmessages::fader_position& msg);
         void update_encoder_state_from_protobuf(const ::missiondmx::fish::ipcmessages::rotary_encoder_change& msg);

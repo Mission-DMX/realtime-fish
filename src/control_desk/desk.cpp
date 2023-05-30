@@ -122,7 +122,7 @@ namespace dmxfish::control_desk {
             return false;
         }
         if(index == cbs.active_bank && !bank_set_modification_happened) {
-	    ::spdlog::warn("Not changing active bank on set: already active.");
+	    //::spdlog::warn("Not changing active bank on set: already active.");
             return false;
         }
         cbs.fader_banks[cbs.active_bank]->deactivate(cbs.fader_banks[index]->size());
@@ -483,7 +483,7 @@ namespace dmxfish::control_desk {
                 auto col_ptr = bs.fader_banks[bs.fader_banks.size() - 1]->emplace_back(selected_device, deduce_bank_mode(col_definition), id, (uint8_t) col_index_on_device);
                 bs.columns_map[id] = col_ptr;
                 col_index_on_device++;
-                update_column_from_message(col_definition);
+                update_column_from_message(col_definition, new_bank_index);
             }
         }
         // ready set does not need to be populated as they are not in ready state by default
@@ -496,11 +496,12 @@ namespace dmxfish::control_desk {
 	}
     }
 
-    void desk::update_column_from_message(const ::missiondmx::fish::ipcmessages::fader_column& msg) {
-        if(!(current_active_bank_set < bank_sets.size())) {
+    void desk::update_column_from_message(const ::missiondmx::fish::ipcmessages::fader_column& msg, size_t bank_set_index) {
+	auto active_bs_index = bank_set_index == size_t_max ? current_active_bank_set : bank_set_index;
+        if(!(active_bs_index < bank_sets.size())) {
             return;
         }
-        auto& cbs = bank_sets[current_active_bank_set];
+        auto& cbs = bank_sets[active_bs_index];
         const auto& column_id = msg.column_id();
         if(!cbs.columns_map.contains(column_id)) {
             return;
@@ -607,11 +608,10 @@ namespace dmxfish::control_desk {
             const auto& old_column = cbs.columns_map.at(selected_column_id);
             old_column->set_select_button_active(false);
         }
-        if(cbs.columns_map.contains(column_id)) {
+        if(cbs.columns_map.contains(column_id) && new_state) {
             selected_column_id = column_id;
         } else {
             selected_column_id = "";
-            return;
         }
         if(new_state) {
             if(selected_column_id.length() > 0) {
