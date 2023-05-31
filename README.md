@@ -12,6 +12,7 @@ The part of the software that translates the users wishes to DMX in real time.
 	* libxerces-c-dev
 	* libusb-dev
 	* libftdi-dev
+	* pkg-config
 2. Perform a recursive clone of this repository.
 3. Call `gmake` on the root directory of this repo. Tip: issue `make -j<ncores> BUILD_MODE=Release`
 if you're building a release.
