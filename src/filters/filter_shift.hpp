@@ -92,49 +92,31 @@ namespace dmxfish::filters {
 
         virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
             if constexpr (std::is_same<T, uint8_t>::value) {
-                int i = 1;
-                for(auto out : values) {
-                    map.eight_bit_channels[name + ":output_" + std::to_string(i)] = &out;
-                    i++;
+                for(int i = 0; i < values.size(); i++) {
+                    map.eight_bit_channels[name + ":output_" + std::to_string(i+1)] = &values.at(i);
                 }
             } else if constexpr (std::is_same<T, uint16_t>::value) {
-                int i = 1;
-                for(auto out : values) {
-                    map.sixteen_bit_channels[name + ":output_" + std::to_string(i)] = &out;
-                    i++;
+                for(int i = 0; i < values.size(); i++) {
+                    map.sixteen_bit_channels[name + ":output_" + std::to_string(i+1)] = &values.at(i);
                 }
             } else if constexpr (std::is_same<T, double>::value) {
-                int i = 1;
-                for(auto out : values) {
-                    map.float_channels[name + ":output_" + std::to_string(i)] = &out;
-                    i++;
+                for(int i = 0; i < values.size(); i++) {
+                    map.float_channels[name + ":output_" + std::to_string(i+1)] = &values.at(i);
                 }
             } else {
-                int i = 1;
-                for(auto out : values) {
-                    map.color_channels[name + ":output_" + std::to_string(i)] = &out;
-                    i++;
+                for(int i = 0; i < values.size(); i++) {
+                    map.color_channels[name + ":output_" + std::to_string(i+1)] = &values.at(i);
                 }
             }
         }
 
         virtual void update() override {
-            if constexpr (std::is_same<T, uint8_t>::value)
-            {
-                for (int i = 0; i < values.size(); i++) {
-                    ::spdlog::debug("test {}: {}", i, values.at(i));
+            if (last_update + *switch_time <= *time){
+                for(int i = values.size() - 1; i > 0; i--){
+                    values.at(i) = values.at(i-1);
                 }
-            }
-            ::spdlog::debug("last: {}, sw: {}, ac: {}", last_update, *switch_time, *time);
-            if (last_update + *switch_time < *time){
-                if constexpr (std::is_same<T, uint8_t>::value) {
-
-                    for(int i = values.size() - 1; i > 0; i--){
-                        values.at(i) = values.at(i-1);
-                    }
-                    values.at(0) = *input;
-                    last_update = last_update + *switch_time;
-                }
+                values.at(0) = *input;
+                last_update = last_update + *switch_time;
             }
         }
 

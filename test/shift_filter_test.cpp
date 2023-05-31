@@ -34,9 +34,21 @@ BOOST_AUTO_TEST_CASE(testshift) {
     const std::string name = "t";
     for (int i = 0; i < 100; i++){
         time_s = (double) i;
-//        if (i == 1) {
-//
-//        }
+        if (i == 40) {
+            in_channel = 200;
+        }
+        if (i == 45) {
+            in_channel = 250;
+        }
+        if (i == 50) {
+            in_channel = 150;
+        }
+        if (i == 55) {
+            switch_time = 20;
+        }
+        if (i == 80) {
+            in_channel = 10;
+        }
         uint8_t tester1;
         uint8_t tester2;
         uint8_t tester3;
@@ -56,21 +68,26 @@ BOOST_AUTO_TEST_CASE(testshift) {
             tester1 = 100;
             tester2 = 100;
             tester3 = 100;
+        } else if (time_s < 50){
+            tester1 = 200;
+            tester2 = 100;
+            tester3 = 100;
+        } else if (time_s < 70){
+            tester1 = 150;
+            tester2 = 200;
+            tester3 = 100;
+        } else if (time_s < 90){
+            tester1 = 150;
+            tester2 = 150;
+            tester3 = 200;
         } else {
-            tester1 = 0;
-            tester2 = 0;
-            tester3 = 0;
+            tester1 = 10;
+            tester2 = 150;
+            tester3 = 150;
         }
 
         fil8.update();
         fil8.get_output_channels(map, name);
-        for (auto it = map.eight_bit_channels.begin();
-             it != map.eight_bit_channels.end(); ++it) {
-            std::string error =
-                    std::string("Channel ") + it->first + " should be " + std::to_string(tester1) + " , but is " +
-                    std::to_string(*it->second) + " at time: " + std::to_string(time_s);
-            ::spdlog::debug("Hm test: {}", error);
-        }
         std::string error =
                 std::string("Channel ") + "t:output_1" + " should be " + std::to_string(tester1) + " , but is " +
                 std::to_string(*map.eight_bit_channels["t:output_1"]) + " at time: " + std::to_string(time_s);
