@@ -61,10 +61,10 @@ COMPILER_SUPRESS("-Weffc++")
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
-            if(!input_channels.sixteen_bit_channels.contains("value")) {
-                throw filter_config_exception("Unable to link input of bool conversion filter: channel mapping does not contain channel 'value' of type 'uint16_t'.");
+            if(!input_channels.sixteen_bit_channels.contains("value_in")) {
+                throw filter_config_exception("Unable to link input of bool conversion filter: channel mapping does not contain channel 'value_in' of type 'uint16_t'.");
             }
-            this->input = input_channels.sixteen_bit_channels.at("value");
+            this->input = input_channels.sixteen_bit_channels.at("value_in");
         }
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
@@ -140,16 +140,16 @@ COMPILER_SUPRESS("-Weffc++")
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
-            if(!input_channels.float_channels.contains("value")) {
+            if(!input_channels.float_channels.contains("value_in")) {
                 if constexpr (std::is_same<T, uint8_t>::value) {
-                    throw filter_config_exception("Unable to link input of float to 16 bit conversion filter: channel mapping does not contain channel 'value' of type 'double'.");
+                    throw filter_config_exception("Unable to link input of float to 16 bit conversion filter: channel mapping does not contain channel 'value_in' of type 'double'.");
                 } else if constexpr (std::is_same<T, uint16_t>::value) {
-                    throw filter_config_exception("Unable to link input of float to 8 bit conversion filter: channel mapping does not contain channel 'value' of type 'double'.");
+                    throw filter_config_exception("Unable to link input of float to 8 bit conversion filter: channel mapping does not contain channel 'value_in' of type 'double'.");
                 } else {
-                    throw filter_config_exception("Unable to link input of number rounding filter: channel mapping does not contain channel 'value' of type 'double'.");
+                    throw filter_config_exception("Unable to link input of number rounding filter: channel mapping does not contain channel 'value_in' of type 'double'.");
                 }
             }
-            this->input = input_channels.float_channels.at("value");
+            this->input = input_channels.float_channels.at("value_in");
         }
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {

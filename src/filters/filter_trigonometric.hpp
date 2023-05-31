@@ -61,10 +61,10 @@ namespace dmxfish::filters {
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
-            if(!input_channels.float_channels.contains("value")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'value' of type 'double'.");
+            if(!input_channels.float_channels.contains("value_in")) {
+                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'value_in' of type 'double'.");
             }
-	        this->input = input_channels.float_channels.at("value");
+	        this->input = input_channels.float_channels.at("value_in");
             if(input_channels.float_channels.contains("factor_outer")) {
                 this->factor_outer = input_channels.float_channels.at("factor_outer");
             } else {
@@ -125,10 +125,10 @@ namespace dmxfish::filters {
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
-            if(!input_channels.float_channels.contains("value")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'value' of type 'double'.");
+            if(!input_channels.float_channels.contains("value_in")) {
+                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'value_in' of type 'double'.");
             }
-            this->input = input_channels.float_channels.at("value");
+            this->input = input_channels.float_channels.at("value_in");
             if(input_channels.float_channels.contains("factor_outer")) {
                 this->factor_outer = input_channels.float_channels.at("factor_outer");
             } else {
