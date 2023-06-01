@@ -141,7 +141,7 @@ namespace dmxfish::filters {
         cues.at(cue).sixteen_bit_frames.reserve(nr_of_ts * sixteen_bit_channels.size());
         cues.at(cue).float_frames.reserve(nr_of_ts * float_channels.size());
         cues.at(cue).color_frames.reserve(nr_of_ts * color_channels.size());
-        if (!do_with_substr(str, start, end_conf, '|', 1,
+        if (!do_with_substr(str, start, std::min(end_conf, end), '|', 1,
                             std::bind(&dmxfish::filters::filter_cue::handle_timestamps, this, cue,
                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
                                       std::placeholders::_4))) {
