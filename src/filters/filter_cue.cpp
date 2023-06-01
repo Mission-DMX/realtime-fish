@@ -114,6 +114,7 @@ namespace dmxfish::filters {
     }
 
     bool filter_cue::handle_cue_conf(size_t cue, const std::string &str, size_t start, size_t end, size_t number) {
+    
         if (!str.substr(start, end - start).compare("hold")) {
             cues.at(cue).end_handling = HOLD;
         } else if (!str.substr(start, end - start).compare("start_again")) {
@@ -357,11 +358,11 @@ namespace dmxfish::filters {
         }
         this->time = input_channels.float_channels.at("time");
 
-        if (!configuration.contains("mapping")) {
+        if (!initial_parameters.contains("mapping")) {
             throw filter_config_exception("cue filter: unable to setup the mapping");
         }
 
-        std::string mapping = configuration.at("mapping");
+        std::string mapping = initial_parameters.at("mapping");
         size_t start_pos = 0;
         auto next_pos = mapping.find(";");
         int count_channel_type = count_occurence_of(mapping, ":8bit", 0, mapping.size());
@@ -382,6 +383,7 @@ namespace dmxfish::filters {
         last_color_channels.reserve(count_channel_type);
         while (true) {
             const auto sign = mapping.find(":", start_pos);
+            
             std::string channel_type = mapping.substr(sign + 1, next_pos - sign - 1);
             std::string channel_name = mapping.substr(start_pos, sign - start_pos);
             if (!channel_type.compare("8bit")) {
@@ -405,7 +407,7 @@ namespace dmxfish::filters {
                 color_channels.push_back(dmxfish::dmx::pixel());
                 last_color_channels.push_back(dmxfish::dmx::pixel());
             } else {
-                throw filter_config_exception(std::string("can not recognise channel type: ") + mapping.substr(sign, next_pos - sign));
+                throw filter_config_exception(std::string("can not recognise channel type: ") + mapping.substr(sign + 1, next_pos - sign - 1));
             }
 
             if (next_pos >= mapping.length()) {
@@ -417,17 +419,17 @@ namespace dmxfish::filters {
 
 
         this->handle_end = HOLD;
-        if (configuration.contains("end_handling")) {
-            if (!configuration.at("end_handling").compare("start_again")) {
+        if (initial_parameters.contains("end_handling")) {
+            if (!initial_parameters.at("end_handling").compare("start_again")) {
                 this->handle_end = START_AGAIN;
             }
         }
 
-        if (!configuration.contains("cuelist")) {
+        if (!initial_parameters.contains("cuelist")) {
             throw filter_config_exception("cue filter: unable to setup the cuelist");
         }
 
-        const std::string frames = configuration.at("cuelist");
+        const std::string frames = initial_parameters.at("cuelist");
         cues.reserve(count_occurence_of(frames, "$", 0, frames.size()) + 1);
         if (!do_with_substr(frames, 0, frames.length(), '$', 1,
                                std::bind(&dmxfish::filters::filter_cue::handle_cue,
