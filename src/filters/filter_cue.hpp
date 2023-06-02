@@ -75,6 +75,7 @@ namespace dmxfish::filters {
         uint16_t frame = 0;
         bool already_updated_last = false;
         bool already_updated_act = false;
+        bool already_setup_filter_called = false;
         uint16_t active_cue = 0;
 
         uint16_t next_cue = 0xffff;

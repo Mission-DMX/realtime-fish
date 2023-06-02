@@ -352,17 +352,23 @@ namespace dmxfish::filters {
     void filter_cue::setup_filter(const std::map <std::string, std::string> &configuration,
                                   const std::map <std::string, std::string> &initial_parameters,
                                   const channel_mapping &input_channels) {
-        if (!input_channels.float_channels.contains("time")) {
-            throw filter_config_exception(
-                    "Unable to link input of cue filter: channel mapping does not contain channel 'time' of type 'double'");
+        if (already_setup_filter_called){
+            if (!input_channels.float_channels.contains("time")) {
+                throw filter_config_exception(
+                        "Unable to link input of cue filter: channel mapping does not contain channel 'time' of type 'double'");
+            }
+            this->time = input_channels.float_channels.at("time");
+          
+            return;
         }
-        this->time = input_channels.float_channels.at("time");
+        already_setup_filter_called = true;
 
         if (!initial_parameters.contains("mapping")) {
             throw filter_config_exception("cue filter: unable to setup the mapping");
         }
 
         std::string mapping = initial_parameters.at("mapping");
+        ::spdlog::debug("setup_filter: mapping: {}", mapping);
         size_t start_pos = 0;
         auto next_pos = mapping.find(";");
         int count_channel_type = count_occurence_of(mapping, ":8bit", 0, mapping.size());
@@ -593,6 +599,7 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::get_output_channels(channel_mapping &map, const std::string &name) {
+        ::spdlog::debug("Cue filter get outputchannels: 8bit: {}, 16bit:{}, fl:{}, col:{}", eight_bit_channels.size(), sixteen_bit_channels.size(), float_channels.size(), color_channels.size());
         for (size_t i = 0; i < eight_bit_channels.size(); i++) {
             map.eight_bit_channels[name + ":" + channel_names_eight.at(i)] = &eight_bit_channels.at(i);
         }

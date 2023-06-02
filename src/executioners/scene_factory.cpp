@@ -404,6 +404,13 @@ COMPILER_RESTORE("-Weffc++")
 					filter_info_map[filter_index] = fi;
 					scene_filter_index[fid] = fv[filter_index];
 					resolved_filters.insert(fid);
+					switch(static_cast<::dmxfish::filters::filter_type>(f_template.type())) {
+			                    case ::dmxfish::filters::filter_type::filter_cue:
+			                        // dmxfish::filters::channel_mapping cm;
+			                        // auto input_channels = construct_channel_input_mapping(cm, finfo);
+			                        dmxfish::filters::channel_mapping empty_map;
+			                        fv[fv.size()-1]->setup_filter(conf, initial_params, empty_map);
+				        }
 				} else {
 					missing_filter_stack.push_back(f_template);
 				}
