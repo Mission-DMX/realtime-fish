@@ -27,7 +27,7 @@ namespace dmxfish::filters {
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(initial_parameters);
             if(!input_channels.float_channels.contains("time")) {
-                throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain channel 'time' of type 'double'. Should come from the only time node.");
+                throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain channel 'time' of type 'double'. This input should come from the scenes global time node.");
             }
             this->time = input_channels.float_channels.at("time");
 
@@ -56,6 +56,7 @@ namespace dmxfish::filters {
                     throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain channel 'input' of type 'uint8_t'.");
                 }
 //                values = std::vector(nr_outputs, 0);
+                values.reserve(nr_outputs);
                 for(int i = 0; i < nr_outputs; i++){
                     values.push_back(0);
                 }

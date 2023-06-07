@@ -353,7 +353,7 @@ namespace dmxfish::filters {
                                   const channel_mapping &input_channels) {
         if (!input_channels.float_channels.contains("time")) {
             throw filter_config_exception(
-                    "Unable to link input of cue filter: channel mapping does not contain channel 'time' of type 'double'");
+                    "Unable to link input of cue filter: channel mapping does not contain channel 'time' of type 'double'. This input should come from the scenes global time node.");
         }
         this->time = input_channels.float_channels.at("time");
 
