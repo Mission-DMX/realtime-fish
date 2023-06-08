@@ -436,4 +436,9 @@ namespace dmxfish::control_desk {
 		get_iomanager_instance()->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_COLUMN);
 	}
 
+        void bank_column::regular_update(unsigned long current_system_time) {
+            this->last_update_timestamp = current_system_time;
+			// TODO implement display content reset if hold time expired.
+        }
+
 }
