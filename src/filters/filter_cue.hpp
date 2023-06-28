@@ -75,7 +75,6 @@ namespace dmxfish::filters {
         uint16_t frame = 0;
         bool already_updated_last = false;
         bool already_updated_act = false;
-        bool already_setup_filter_called = false;
         uint16_t active_cue = 0;
 
         uint16_t next_cue = 0xffff;
@@ -134,6 +133,7 @@ namespace dmxfish::filters {
         virtual ~filter_cue() {}
 
 
+	virtual void pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters) override;
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override;
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override;
