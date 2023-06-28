@@ -17,6 +17,7 @@
 #include "filters/filter_math.hpp"
 #include "filters/filter_time.hpp"
 #include "filters/filter_cue.hpp"
+#include "filters/filter_shift.hpp"
 
 #include <iostream>
 
@@ -215,6 +216,18 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_cue:
                     sum += sizeof(filter_cue);
                     break;
+                case filter_type::filter_shift_8bit:
+                    sum += sizeof(filter_shift_8bit);
+                    break;
+                case filter_type::filter_shift_16bit:
+                    sum += sizeof(filter_shift_16bit);
+                    break;
+                case filter_type::filter_shift_float:
+                    sum += sizeof(filter_shift_float);
+                    break;
+                case filter_type::filter_shift_color:
+                    sum += sizeof(filter_shift_color);
+                    break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -327,6 +340,14 @@ COMPILER_RESTORE("-Weffc++")
 				return calloc<filter_fader_column_hsiau>(pac);
             case filter_type::filter_cue:
                 return calloc<filter_cue>(pac);
+            case filter_type::filter_shift_8bit:
+                return calloc<filter_shift_8bit>(pac);
+            case filter_type::filter_shift_16bit:
+                return calloc<filter_shift_16bit>(pac);
+            case filter_type::filter_shift_float:
+                return calloc<filter_shift_float>(pac);
+            case filter_type::filter_shift_color:
+                return calloc<filter_shift_color>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}
