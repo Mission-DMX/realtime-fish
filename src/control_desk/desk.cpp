@@ -258,7 +258,7 @@ namespace dmxfish::control_desk {
                                     iom->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_ROTARY_ENCODER_CHANGE);
                                 }
                             } else {
-                                ::spdlog::warn("Received Column encoder change fro {} to {} but no bank set is active.", c.data_1 - XTOUCH_ENCODER_INDEX_OFFSET, c.data_2);
+                                ::spdlog::warn("Received Column encoder change from {} to {} but no bank set is active.", c.data_1 - XTOUCH_ENCODER_INDEX_OFFSET, c.data_2);
                             }
                         } else {
                             if(c.data_1 == CMD_JOGWHEEL) {
