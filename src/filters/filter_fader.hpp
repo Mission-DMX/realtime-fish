@@ -42,7 +42,7 @@ namespace dmxfish::filters {
                 if(const auto& column_mode = candidate.get_mode(); column_mode != MODE) {
                     std::stringstream ss;
 		    ss << "The requested column (" << set_id << ":" << column_id << ") is not in the correct mode. Expected: ";
-		    ss << MODE << ", got: " << column_mode << ".";
+		    ss << (int) MODE << ", got: " << (int) column_mode << ".";
                     throw filter_config_exception(ss.str());
                 }
                 input_col = candidate;
