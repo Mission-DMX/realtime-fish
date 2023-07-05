@@ -39,7 +39,7 @@ namespace dmxfish::filters {
             const auto& set_id = configuration.at("set_id");
             const auto& column_id = configuration.at("column_id");
             if(auto candidate = get_iomanager_instance()->access_desk_column(set_id, column_id); candidate) {
-                if(const auto& column_mode = candidate.get_mode(); column_mode != MODE) {
+                if(const auto& column_mode = candidate->get_mode(); column_mode != MODE) {
                     std::stringstream ss;
 		    ss << "The requested column (" << set_id << ":" << column_id << ") is not in the correct mode. Expected: ";
 		    ss << (int) MODE << ", got: " << (int) column_mode << ".";
@@ -60,6 +60,8 @@ namespace dmxfish::filters {
         }
 
         virtual  bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(_value);
             return false;
         }
 
