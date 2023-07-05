@@ -52,7 +52,7 @@ namespace dmxfish::filters {
                 ss << "The requested column '" << column_id << "' in the '" << set_id << "' set does not seam to exist.";
                 throw filter_config_exception(ss.str());
             }
-            if constexpr (MODE != bank_mode::DIRECT_INPUT_MODE) {
+            if constexpr (MODE != dmxfish::control_desk::bank_mode::DIRECT_INPUT_MODE) {
 	        if(configuration.contains("ignore_main_brightness_control") && configuration.at("ignore_main_brightness_control") == "true") {
                     this->storage.global_main_enabled = false;
 	        }
@@ -69,7 +69,7 @@ namespace dmxfish::filters {
                 map.sixteen_bit_channels[name + ":fader"] = &(storage.fader_position);
                 map.sixteen_bit_channels[name + ":encoder"] = &(storage.rotary_position);
             } else if constexpr (MODE == bank_mode::HSI_COLOR_MODE) {
-                map.color_channels[name + ":color"] = &storage;
+                map.color_channels[name + ":color"] = &storage.color;
             } else if constexpr (MODE == bank_mode::HSI_WITH_AMBER_MODE) {
                 map.color_channels[name + ":color"] = &(storage.color);
                 map.eight_bit_channels[name + ":amber"] = &(storage.amber);
@@ -103,7 +103,7 @@ namespace dmxfish::filters {
                 }
                 if constexpr (MODE != bank_mode::DIRECT_INPUT_MODE) {
                     if(this->storage.global_main_enabled)
-		        this->storage.color.intensity *= (get_iomanager_instance()->get_global_illumination() / 65566);
+		        this->storage.color.iluminance *= (get_iomanager_instance()->get_global_illumination() / 65566);
                 }
             }
         }
