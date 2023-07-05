@@ -50,6 +50,7 @@ namespace dmxfish::filters {
         filter_shift_8bit = 45,
         filter_shift_16bit = 46,
         filter_shift_float = 47,
-        filter_shift_color = 48
+        filter_shift_color = 48,
+	filter_main_brightness_fader = 49
     };
 }

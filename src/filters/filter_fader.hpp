@@ -139,5 +139,37 @@ namespace dmxfish::filters {
     };
 
     using filter_fader_column_hsiau = filter_fader_template<dmxfish::control_desk::bank_mode::HSI_WITH_AMBER_AND_UV_MODE, fader_column_hsiau_storage_t>;
+
+    class filter_main_brightness_fader : public filter {
+    private:
+	uint16_t storage = 0;
+    public:
+        filter_main_brightness_fader() : filter() {}
+        virtual ~filter_main_brightness_fader() {}
+
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+            MARK_UNUSED(configuration);
+            MARK_UNUSED(input_channels);
+            MARK_UNUSED(initial_parameters);
+       }
+
+        virtual  bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(_value);
+            return false;
+        }
+
+        virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
+            map.sixteen_bit_channels[name + ":brightness"] = &storage;
+        }
+
+        virtual void update() override {
+	    this->storage = get_iomanager_instance()->get_global_illumination();
+        }
+
+        virtual void scene_activated() override {}
+
+
+    };
     COMPILER_RESTORE("-Weffc++")
 }

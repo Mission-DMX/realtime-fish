@@ -225,6 +225,9 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_shift_float:
                     sum += sizeof(filter_shift_float);
                     break;
+		case filter_type::filter_main_brightness_fader:
+		    sum += sizeof(filter_main_brightness_fader);
+		    break;
                 case filter_type::filter_shift_color:
                     sum += sizeof(filter_shift_color);
                     break;
@@ -346,6 +349,8 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_shift_16bit>(pac);
             case filter_type::filter_shift_float:
                 return calloc<filter_shift_float>(pac);
+	    case filter_type::filter_main_brightness_fader:
+		return calloc<filter_main_brightness_fader>(pac);
             case filter_type::filter_shift_color:
                 return calloc<filter_shift_color>(pac);
 			default:
