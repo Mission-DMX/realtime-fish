@@ -604,7 +604,6 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::get_output_channels(channel_mapping &map, const std::string &name) {
-        ::spdlog::debug("Cue filter get outputchannels: 8bit: {}, 16bit:{}, fl:{}, col:{}", eight_bit_channels.size(), sixteen_bit_channels.size(), float_channels.size(), color_channels.size());
         for (size_t i = 0; i < eight_bit_channels.size(); i++) {
             map.eight_bit_channels[name + ":" + channel_names_eight.at(i)] = &eight_bit_channels.at(i);
         }
