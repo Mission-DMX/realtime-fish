@@ -46,7 +46,10 @@ public:
 	 * @param configuration the key value pairs to configure the filter
 	 * @param initial_parameters the initial values that should be set after the parent scene got activated
 	 */
-	virtual void pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters) {}
+	virtual void pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters) {
+        MARK_UNUSED(initial_parameters);
+        MARK_UNUSED(configuration);
+    }
 
 	/**
 	 * This constructor is supposed to fill in the required input data pointers from the provided mapping table

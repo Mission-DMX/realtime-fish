@@ -93,19 +93,19 @@ namespace dmxfish::filters {
 
         virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
             if constexpr (std::is_same<T, uint8_t>::value) {
-                for(int i = 0; i < values.size(); i++) {
+                for(size_t i = 0; i < values.size(); i++) {
                     map.eight_bit_channels[name + ":output_" + std::to_string(i+1)] = &values.at(i);
                 }
             } else if constexpr (std::is_same<T, uint16_t>::value) {
-                for(int i = 0; i < values.size(); i++) {
+                for(size_t i = 0; i < values.size(); i++) {
                     map.sixteen_bit_channels[name + ":output_" + std::to_string(i+1)] = &values.at(i);
                 }
             } else if constexpr (std::is_same<T, double>::value) {
-                for(int i = 0; i < values.size(); i++) {
+                for(size_t i = 0; i < values.size(); i++) {
                     map.float_channels[name + ":output_" + std::to_string(i+1)] = &values.at(i);
                 }
             } else {
-                for(int i = 0; i < values.size(); i++) {
+                for(size_t i = 0; i < values.size(); i++) {
                     map.color_channels[name + ":output_" + std::to_string(i+1)] = &values.at(i);
                 }
             }
@@ -113,7 +113,7 @@ namespace dmxfish::filters {
 
         virtual void update() override {
             if (last_update + *switch_time <= *time){
-                for(int i = values.size() - 1; i > 0; i--){
+                for(size_t i = values.size() - 1; i > 0; i--){
                     values.at(i) = values.at(i-1);
                 }
                 values.at(0) = *input;
