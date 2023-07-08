@@ -77,7 +77,7 @@ namespace dmxfish::io {
 				if(control_desk_handle) {
 					return control_desk_handle->get_global_illumination();
 				} else {
-					return 65565;
+					return 0;
 				}
 			}
 
