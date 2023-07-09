@@ -34,6 +34,7 @@ namespace dmxfish::control_desk {
 	// changing the factory though.
         const std::function<void(std::string const&, bool)> set_ready_state_handler;
         const std::function<void(std::string const&, bool)> select_state_handler;
+	unsigned int current_col_update_index = 0
     public:
         bank(std::function<void(std::string const&, bool)> _set_ready_state_handler, std::function<void(std::string const&, bool)> _select_state_handler);
         ~bank() = default;
@@ -47,6 +48,7 @@ namespace dmxfish::control_desk {
          * This method deactivates all of its own colums and resets them if required.
          */
         void deactivate(size_t columns_in_next_row);
+	void update();
 
         inline size_t size() {
             return this->columns.size();

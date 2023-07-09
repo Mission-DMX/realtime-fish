@@ -50,6 +50,11 @@ namespace dmxfish::control_desk {
 		xtouch_set_meter_leds(*d_ptr, led_bar{(uint8_t) led_bar::BAR_CH1 + this->fader_index}, 0);
 	}
 
+	void update() {
+		// TODO reset to rotary mode after 2.5s after change
+		// TODO scroll text
+	}
+
 	void bank_column::process_fader_change_message(unsigned int position_request) {
 		if(position_request > 65535) {
 			position_request = 65535;

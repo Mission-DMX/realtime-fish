@@ -88,6 +88,11 @@ namespace dmxfish::control_desk {
          */
         void reset_column();
 
+	/**
+	 * This method will be called every few milliseconds to perform frequent display updates
+	 */
+	void update();
+
         [[nodiscard]] inline bank_mode get_mode() const {
             return this->current_bank_mode;
         }
