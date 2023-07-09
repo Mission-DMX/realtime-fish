@@ -62,7 +62,7 @@ namespace dmxfish::control_desk {
 			last_update_timestamp = 0;
 		}
 		if(last_display_scroll + 1000 < last_update_timestamp) {
-			if(display_text_index_up < display_text_up.length()) {
+			if(display_text_index_up < display_text_up.size()) {
 				const auto text_length = display_text_up[display_text_index_up].length();
 				if(text_length > 7 && display_scroll_position_up < text_length - 7) {
 					display_scroll_position_up++;
@@ -73,7 +73,7 @@ namespace dmxfish::control_desk {
 			} else {
 				display_text_index_up = 0;
 			}
-			if(display_text_index_down < display_text_down.length()) {
+			if(display_text_index_down < display_text_down.size()) {
 				const auto text_length = display_text_down[display_text_index_down].length();
 				if(text_length > 7 && display_scroll_position_down < text_length - 7) {
 					display_scroll_position_down++;
