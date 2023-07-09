@@ -114,9 +114,9 @@ namespace dmxfish::control_desk {
             }
             this->color = p;
             if(this->readymode_active) {
-                readymode_raw_configuration.fader_position = p.iluminance * 65535;
+                readymode_raw_configuration.fader_position = (uint16_t) p.iluminance * 65535;
             } else {
-		raw_configuration.fader_position = p.iluminance * 65535;
+		raw_configuration.fader_position = (uint16_t) p.iluminance * 65535;
             }
             update_physical_fader_position();
             update_encoder_leds();

@@ -52,7 +52,7 @@ namespace dmxfish::control_desk {
 		xtouch_set_meter_leds(*d_ptr, led_bar{(uint8_t) led_bar::BAR_CH1 + this->fader_index}, 0);
 	}
 
-	void update() {
+	void bank_column::update() {
 		namespace sc = std::chrono;
 		const auto now = sc::duration_cast<sc::milliseconds>(sc::system_clock::now().time_since_epoch()).count();
 		bool display_update_required = false;
@@ -245,9 +245,8 @@ namespace dmxfish::control_desk {
 					readymode_active ? readymode_raw_configuration.rotary_position : raw_configuration.rotary_position
 				);	
 			} else {
-				std::string value;
 				switch(this->current_re_assignment) {
-				case rotary_encoder_assignment::HUE:
+				case rotary_encoder_assignment::HUE: {
 					const auto hue = readymode_active ? readymode_color.hue : color.hue;
 					if(hue < 30.0) {
 						value = "red";
@@ -266,7 +265,7 @@ namespace dmxfish::control_desk {
 					} else {
 						value = "red";
 					}
-					break;
+					} break;
 				case rotary_encoder_assignment::SATURATION:
 					value = std::to_string(readymode_active ? readymode_color.saturation : color.saturation);
 					break;

@@ -34,7 +34,7 @@ namespace dmxfish::control_desk {
 	// changing the factory though.
         const std::function<void(std::string const&, bool)> set_ready_state_handler;
         const std::function<void(std::string const&, bool)> select_state_handler;
-	unsigned int current_col_update_index = 0
+	unsigned int current_col_update_index = 0;
     public:
         bank(std::function<void(std::string const&, bool)> _set_ready_state_handler, std::function<void(std::string const&, bool)> _select_state_handler);
         ~bank() = default;
