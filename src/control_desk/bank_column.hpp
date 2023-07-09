@@ -74,6 +74,7 @@ namespace dmxfish::control_desk {
         unsigned int display_text_index_down = 0;
 	unsigned long last_update_timestamp = 0;
 	unsigned long display_hold_until = 0;
+	unsigned long last_display_scroll = 0;
     public:
         bank_column(std::weak_ptr<device_handle> device_connection, std::function<void(std::string const&, bool)> _desk_ready_update, std::function<void(std::string const&, bool)> _select_state_handler, bank_mode mode, std::string id, uint8_t column_index);
 
@@ -190,7 +191,6 @@ namespace dmxfish::control_desk {
         void process_button_press_message(button b, button_change c);
         void commit_from_readymode();
         void set_display_text(const std::string& text, bool up);
-	void regular_update(unsigned long current_system_time);
     private:
         void update_display_text();
         void update_physical_fader_position(bool from_activate = false);
