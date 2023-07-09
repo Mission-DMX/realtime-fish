@@ -62,7 +62,28 @@ namespace dmxfish::control_desk {
 			last_update_timestamp = 0;
 		}
 		if(last_display_scroll + 1000 < last_update_timestamp) {
-			// TODO scroll text
+			if(display_text_index_up < display_text_up.length()) {
+				const auto text_length = display_text_up[display_text_index_up].length();
+				if(text_length > 7 && display_scroll_position_up < text_length - 7) {
+					display_scroll_position_up++;
+				} else {
+					display_scroll_position_up = 0;
+					display_text_index_up++;
+				}
+			} else {
+				display_text_index_up = 0;
+			}
+			if(display_text_index_down < display_text_down.length()) {
+				const auto text_length = display_text_down[display_text_index_down].length();
+				if(text_length > 7 && display_scroll_position_down < text_length - 7) {
+					display_scroll_position_down++;
+				} else {
+					display_scroll_position_down = 0;
+					display_text_index_down++;
+				}
+			} else {
+				display_text_index_down = 0;
+			}
 			last_display_scroll = now;
 			display_update_required = true;
 		}
@@ -464,10 +485,10 @@ namespace dmxfish::control_desk {
 		selected_text_vector.emplace_back(ss.str());
 		if (up) {
 			display_scroll_position_up = 0;
-			display_text_index_up = selected_text_vector.size() - 1; // TODO later implement scrolling
+			display_text_index_up = selected_text_vector.size() - 1;
 		} else {
 			display_scroll_position_down = 0;
-			display_text_index_down = selected_text_vector.size() - 1; // TODO later implement scrolling;
+			display_text_index_down = selected_text_vector.size() - 1;
 		}
 		update_display_text();
 	}
