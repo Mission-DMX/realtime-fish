@@ -26,6 +26,7 @@ BOOST_AUTO_TEST_CASE(onechannelonecueoneframe) {
 
     std::map < std::string, std::string > initial_parameters;
 
+    fil.pre_setup(configuration, initial_parameters);
     fil.setup_filter (configuration, initial_parameters, input_channels);
 
 
@@ -77,6 +78,7 @@ BOOST_AUTO_TEST_CASE(oneframeeachchanneltype) {
 
     std::map <std::string, std::string> initial_parameters;
 
+    fil.pre_setup(configuration, initial_parameters);
     fil.setup_filter(configuration, initial_parameters, input_channels);
 
 
@@ -187,6 +189,7 @@ BOOST_AUTO_TEST_CASE(onechanneltwoframes) {
 
         std::map < std::string, std::string > initial_parameters;
 
+	fil.pre_setup(configuration, initial_parameters);
         fil.setup_filter (configuration, initial_parameters, input_channels);
 
 
@@ -247,7 +250,8 @@ BOOST_AUTO_TEST_CASE(teststop) {
 
         std::map < std::string, std::string > initial_parameters;
 
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters);
+	fil.setup_filter (configuration, initial_parameters, input_channels);
 
 
 
@@ -318,6 +322,7 @@ BOOST_AUTO_TEST_CASE(testpause) {
 
         std::map < std::string, std::string > initial_parameters;
 
+	fil.pre_setup(configuration, initial_parameters);
         fil.setup_filter (configuration, initial_parameters, input_channels);
 
 
@@ -396,6 +401,7 @@ BOOST_AUTO_TEST_CASE(test_restart) {
 
         std::map < std::string, std::string > initial_parameters;
 
+	fil.pre_setup(configuration, initial_parameters);
         fil.setup_filter (configuration, initial_parameters, input_channels);
 
 
@@ -464,6 +470,7 @@ BOOST_AUTO_TEST_CASE(test_restart_2nd_cue) {
 
         std::map < std::string, std::string > initial_parameters;
 
+	fil.pre_setup(configuration, initial_parameters);
         fil.setup_filter (configuration, initial_parameters, input_channels);
 
         channel_mapping map = channel_mapping ();
@@ -533,6 +540,7 @@ BOOST_AUTO_TEST_CASE(test_start_again_whole_cuelist) {
 
         std::map < std::string, std::string > initial_parameters;
 
+	fil.pre_setup(configuration, initial_parameters);
         fil.setup_filter (configuration, initial_parameters, input_channels);
 
         channel_mapping map = channel_mapping ();
@@ -608,6 +616,7 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue) {
 
         std::map < std::string, std::string > initial_parameters;
 
+	fil.pre_setup(configuration, initial_parameters);
         fil.setup_filter (configuration, initial_parameters, input_channels);
 
         channel_mapping map = channel_mapping ();
@@ -690,6 +699,7 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue_twice) {
 
         std::map < std::string, std::string > initial_parameters;
 
+	fil.pre_setup(configuration, initial_parameters);
         fil.setup_filter (configuration, initial_parameters, input_channels);
 
         channel_mapping map = channel_mapping ();
@@ -790,6 +800,7 @@ BOOST_AUTO_TEST_CASE(twocuestwoframesnext) {
 
         std::map < std::string, std::string > initial_parameters;
 
+	fil.pre_setup(configuration, initial_parameters);
         fil.setup_filter (configuration, initial_parameters, input_channels);
 
         channel_mapping map = channel_mapping ();
@@ -855,6 +866,7 @@ BOOST_AUTO_TEST_CASE(twocuestwoframestart_again) {
 
         std::map < std::string, std::string > initial_parameters;
 
+	fil.pre_setup(configuration, initial_parameters);
         fil.setup_filter (configuration, initial_parameters, input_channels);
 
 
@@ -929,6 +941,7 @@ BOOST_AUTO_TEST_CASE(twocuestwoframeshold) {
 
         std::map < std::string, std::string > initial_parameters;
 
+	fil.pre_setup(configuration, initial_parameters);
         fil.setup_filter (configuration, initial_parameters, input_channels);
 
 
@@ -996,6 +1009,7 @@ BOOST_AUTO_TEST_CASE(anothercuenext) {
 
         std::map < std::string, std::string > initial_parameters;
 
+	fil.pre_setup(configuration, initial_parameters);
         fil.setup_filter (configuration, initial_parameters, input_channels);
 
         channel_mapping map = channel_mapping ();
@@ -1064,6 +1078,7 @@ BOOST_AUTO_TEST_CASE(runcueimmidiatly) {
 
         std::map < std::string, std::string > initial_parameters;
 
+	fil.pre_setup(configuration, initial_parameters);
         fil.setup_filter (configuration, initial_parameters, input_channels);
 
         channel_mapping map = channel_mapping ();
@@ -1134,6 +1149,7 @@ BOOST_AUTO_TEST_CASE(alotofstuff) {
 
         std::map < std::string, std::string > initial_parameters;
 
+	fil.pre_setup(configuration, initial_parameters);
         fil.setup_filter (configuration, initial_parameters, input_channels);
 
         channel_mapping map = channel_mapping ();

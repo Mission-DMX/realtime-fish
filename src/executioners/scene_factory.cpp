@@ -425,6 +425,7 @@ COMPILER_RESTORE("-Weffc++")
 					filter_info_map[filter_index] = fi;
 					scene_filter_index[fid] = fv[filter_index];
 					resolved_filters.insert(fid);
+					fv[fv.size()-1]->pre_setup(conf, initial_params);
 				} else {
 					missing_filter_stack.push_back(f_template);
 				}
