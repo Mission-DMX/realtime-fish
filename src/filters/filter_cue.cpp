@@ -62,12 +62,12 @@ namespace dmxfish::filters {
             switch (channel.at(nr_channel).channel_type) {
                 case EIGHT_BIT: {
                     cues.at(cue).eight_bit_frames.push_back(
-                            key_frame<uint8_t>((uint8_t) std::max(std::min(std::stoi(str.substr(start, sep - start)), 255), 0), tr));
+                            key_frame<uint8_t>((uint8_t) std::max(std::min(std::stoi(str.substr(start, sep - start)),(int) std::numeric_limits<uint8_t>::max()), 0), tr));
                     break;
                 }
                 case SIXTEEN_BIT: {
                     cues.at(cue).sixteen_bit_frames.push_back(
-                            key_frame<uint16_t>((uint16_t) std::max(std::min(std::stoi(str.substr(start, sep - start)), 65535), 0), tr));
+                            key_frame<uint16_t>((uint16_t) std::max(std::min(std::stoi(str.substr(start, sep - start)),(int) std::numeric_limits<uint16_t>::max()), 0), tr));
                     break;
                 }
                 case FLOAT: {
