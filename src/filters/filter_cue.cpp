@@ -60,19 +60,22 @@ namespace dmxfish::filters {
         }
         try {
             switch (channel.at(nr_channel).channel_type) {
-                case EIGHT_BIT:
+                case EIGHT_BIT: {
                     cues.at(cue).eight_bit_frames.push_back(
-                            key_frame<uint8_t>(std::stoi(str.substr(start, sep - start)), tr));
+                            key_frame<uint8_t>((uint8_t) std::max(std::min(std::stoi(str.substr(start, sep - start)),(int) std::numeric_limits<uint8_t>::max()), 0), tr));
                     break;
-                case SIXTEEN_BIT:
+                }
+                case SIXTEEN_BIT: {
                     cues.at(cue).sixteen_bit_frames.push_back(
-                            key_frame<uint16_t>(std::stoi(str.substr(start, sep - start)), tr));
+                            key_frame<uint16_t>((uint16_t) std::max(std::min(std::stoi(str.substr(start, sep - start)),(int) std::numeric_limits<uint16_t>::max()), 0), tr));
                     break;
-                case FLOAT:
+                }
+                case FLOAT: {
                     cues.at(cue).float_frames.push_back(
                             key_frame<double>(std::stod(str.substr(start, sep - start)), tr));
                     break;
-                case COLOR:
+                }
+                case COLOR: {
                     cues.at(cue).color_frames.push_back(key_frame<dmxfish::dmx::pixel>(dmxfish::dmx::pixel(), tr));
                     const auto first_position = str.find(',', start);
                     cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.hue = std::stod(
@@ -83,8 +86,10 @@ namespace dmxfish::filters {
                     cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.iluminance = std::stod(
                             str.substr(second_position + 1, end - second_position - 1));
                     break;
-//                    default:
-//                        return false;
+                }
+                default: {
+                    return false;
+                }
             }
             return true;
         } catch (const std::invalid_argument &ex) {
@@ -96,8 +101,8 @@ namespace dmxfish::filters {
         }
     }
 
-    bool
-    filter_cue::handle_timestamps(size_t cue, const std::string &str, size_t start, size_t end, size_t nr_timestamp) {
+    bool filter_cue::handle_timestamps(size_t cue, const std::string &str, size_t start, size_t end, size_t nr_timestamp) {
+        MARK_UNUSED(nr_timestamp);
         const size_t end_ts = str.find(':', start);
         try {
             cues.at(cue).timestamps.push_back(std::stod(str.substr(start, end_ts - start)) * 1000);
@@ -114,6 +119,7 @@ namespace dmxfish::filters {
     }
 
     bool filter_cue::handle_cue_conf(size_t cue, const std::string &str, size_t start, size_t end, size_t number) {
+        MARK_UNUSED(number);
         if (!str.substr(start, end - start).compare("hold")) {
             cues.at(cue).end_handling = HOLD;
         } else if (!str.substr(start, end - start).compare("start_again")) {
@@ -141,7 +147,7 @@ namespace dmxfish::filters {
         cues.at(cue).sixteen_bit_frames.reserve(nr_of_ts * sixteen_bit_channels.size());
         cues.at(cue).float_frames.reserve(nr_of_ts * float_channels.size());
         cues.at(cue).color_frames.reserve(nr_of_ts * color_channels.size());
-        if (!do_with_substr(str, start, end_conf, '|', 1,
+        if (!do_with_substr(str, start, std::min(end_conf, end), '|', 1,
                             std::bind(&dmxfish::filters::filter_cue::handle_timestamps, this, cue,
                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
                                       std::placeholders::_4))) {
@@ -301,6 +307,9 @@ namespace dmxfish::filters {
                                 case NEXT_CUE:
                                     ::spdlog::warn("should not have reached NEXT CUE at the end of the cuelist");
                                     return;
+                                case HOLDING:
+                                    ::spdlog::warn("should not have reached HOLDING at the end of the cuelist");
+                                    return;
                                 default:
                                     ::spdlog::warn("should not have reached default end_handling at the end of the cuelist");
                                     return;
@@ -348,40 +357,40 @@ namespace dmxfish::filters {
     }
 
 
-    void filter_cue::setup_filter(const std::map <std::string, std::string> &configuration,
-                                  const std::map <std::string, std::string> &initial_parameters,
-                                  const channel_mapping &input_channels) {
-        if (!input_channels.float_channels.contains("time")) {
-            throw filter_config_exception(
-                    "Unable to link input of cue filter: channel mapping does not contain channel 'time' of type 'double'. This input should come from the scenes global time node.");
-        }
-        this->time = input_channels.float_channels.at("time");
-
+    void filter_cue::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters) {
+        MARK_UNUSED(initial_parameters);
         if (!configuration.contains("mapping")) {
             throw filter_config_exception("cue filter: unable to setup the mapping");
         }
 
         std::string mapping = configuration.at("mapping");
+        //::spdlog::debug("setup_filter: mapping: {}", mapping);
         size_t start_pos = 0;
         auto next_pos = mapping.find(";");
-        int count_channel_type = count_occurence_of(mapping, ":8bit", 0, mapping.size());
+        
+	int count_channel_type = count_occurence_of(mapping, ":8bit", 0, mapping.size());
         channel_names_eight.reserve(count_channel_type);
         eight_bit_channels.reserve(count_channel_type);
         last_eight_bit_channels.reserve(count_channel_type);
-        count_channel_type = count_occurence_of(mapping, ":16bit", 0, mapping.size());
+        
+	count_channel_type = count_occurence_of(mapping, ":16bit", 0, mapping.size());
         channel_names_sixteen.reserve(count_channel_type);
         sixteen_bit_channels.reserve(count_channel_type);
         last_sixteen_bit_channels.reserve(count_channel_type);
-        count_channel_type = count_occurence_of(mapping, ":float", 0, mapping.size());
+        
+	count_channel_type = count_occurence_of(mapping, ":float", 0, mapping.size());
         channel_names_float.reserve(count_channel_type);
         float_channels.reserve(count_channel_type);
         last_float_channels.reserve(count_channel_type);
-        count_channel_type = count_occurence_of(mapping, ":color", 0, mapping.size());
+        
+	count_channel_type = count_occurence_of(mapping, ":color", 0, mapping.size());
         channel_names_color.reserve(count_channel_type);
         color_channels.reserve(count_channel_type);
         last_color_channels.reserve(count_channel_type);
+
         while (true) {
             const auto sign = mapping.find(":", start_pos);
+            
             std::string channel_type = mapping.substr(sign + 1, next_pos - sign - 1);
             std::string channel_name = mapping.substr(start_pos, sign - start_pos);
             if (!channel_type.compare("8bit")) {
@@ -405,7 +414,7 @@ namespace dmxfish::filters {
                 color_channels.push_back(dmxfish::dmx::pixel());
                 last_color_channels.push_back(dmxfish::dmx::pixel());
             } else {
-                throw filter_config_exception(std::string("can not recognise channel type: ") + mapping.substr(sign, next_pos - sign));
+                throw filter_config_exception(std::string("can not recognise channel type: ") + mapping.substr(sign + 1, next_pos - sign - 1));
             }
 
             if (next_pos >= mapping.length()) {
@@ -415,6 +424,18 @@ namespace dmxfish::filters {
             next_pos = mapping.find(";", start_pos);
         }
 
+
+    }
+
+    void filter_cue::setup_filter(const std::map <std::string, std::string> &configuration,
+                                  const std::map <std::string, std::string> &initial_parameters,
+                                  const channel_mapping &input_channels) {
+        MARK_UNUSED(initial_parameters);
+        if (!input_channels.float_channels.contains("time")) {
+        throw filter_config_exception(
+            "Unable to link input of cue filter: channel mapping does not contain channel 'time' of type 'double'. This input should come from the scenes global time node.");
+        }
+        this->time = input_channels.float_channels.at("time");
 
         this->handle_end = HOLD;
         if (configuration.contains("end_handling")) {

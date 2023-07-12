@@ -72,6 +72,9 @@ namespace dmxfish::control_desk {
         unsigned int display_scroll_position_down = 0;
         unsigned int display_text_index_up = 0;
         unsigned int display_text_index_down = 0;
+	unsigned long last_update_timestamp = 0;
+	unsigned long display_hold_until = 0;
+	unsigned long last_display_scroll = 0;
     public:
         bank_column(std::weak_ptr<device_handle> device_connection, std::function<void(std::string const&, bool)> _desk_ready_update, std::function<void(std::string const&, bool)> _select_state_handler, bank_mode mode, std::string id, uint8_t column_index);
 
@@ -85,6 +88,11 @@ namespace dmxfish::control_desk {
          * Clear the content of the column on the control desk. This method does not invoke schedule_transmission on the device handle.
          */
         void reset_column();
+
+	/**
+	 * This method will be called every few milliseconds to perform frequent display updates
+	 */
+	void update();
 
         [[nodiscard]] inline bank_mode get_mode() const {
             return this->current_bank_mode;
@@ -106,9 +114,9 @@ namespace dmxfish::control_desk {
             }
             this->color = p;
             if(this->readymode_active) {
-                readymode_raw_configuration.fader_position = p.iluminance * 65535;
+                readymode_raw_configuration.fader_position = (uint16_t) p.iluminance * 65535;
             } else {
-		raw_configuration.fader_position = p.iluminance * 65535;
+		raw_configuration.fader_position = (uint16_t) p.iluminance * 65535;
             }
             update_physical_fader_position();
             update_encoder_leds();

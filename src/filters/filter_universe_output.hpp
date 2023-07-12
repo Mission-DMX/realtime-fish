@@ -62,6 +62,7 @@ namespace dmxfish::filters {
         }
 
         virtual void update() override {
+            // TODO update universe retrival to only occur on scene_activated
             if(auto uptr = dmxfish::io::get_universe(this->universe_id); uptr != nullptr) {
                 for(auto& l : this->mapping) {
                     (*uptr)[l.universe_channel] = *l.input_channel;

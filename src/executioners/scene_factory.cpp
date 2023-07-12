@@ -225,6 +225,9 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_shift_float:
                     sum += sizeof(filter_shift_float);
                     break;
+		case filter_type::filter_main_brightness_fader:
+		    sum += sizeof(filter_main_brightness_fader);
+		    break;
                 case filter_type::filter_shift_color:
                     sum += sizeof(filter_shift_color);
                     break;
@@ -346,6 +349,8 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_shift_16bit>(pac);
             case filter_type::filter_shift_float:
                 return calloc<filter_shift_float>(pac);
+	    case filter_type::filter_main_brightness_fader:
+		return calloc<filter_main_brightness_fader>(pac);
             case filter_type::filter_shift_color:
                 return calloc<filter_shift_color>(pac);
 			default:
@@ -425,6 +430,7 @@ COMPILER_RESTORE("-Weffc++")
 					filter_info_map[filter_index] = fi;
 					scene_filter_index[fid] = fv[filter_index];
 					resolved_filters.insert(fid);
+					fv[fv.size()-1]->pre_setup(conf, initial_params);
 				} else {
 					missing_filter_stack.push_back(f_template);
 				}

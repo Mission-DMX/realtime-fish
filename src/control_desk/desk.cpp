@@ -32,6 +32,15 @@ namespace dmxfish::control_desk {
         }
     }
 
+    void bank::update() {
+        if (current_col_update_index < columns.size()) {
+            columns[current_col_update_index]->update();
+            current_col_update_index++;
+        } else {
+            current_col_update_index = 0;
+        }
+    }
+
     desk::desk(std::list<std::pair<std::string, midi_device_id>> input_devices) : devices{}, bank_sets{}, bankset_to_index_map{} {
         devices.reserve(input_devices.size());
         for(const auto& entry : input_devices) {
@@ -265,7 +274,7 @@ namespace dmxfish::control_desk {
                                 jogwheel_change += c.data_2 > 60 ? 1 : -1;
                                 update_message_required = true;
                             } else if(c.data_1 == (uint8_t) fader::FADER_MAIN) {
-				this->global_illumination = (uint16_t) c.data_2;
+				this->global_illumination = (uint16_t) (c.data_2 * 65535 / 127);
 			    }
                             // TODO foot switches
                         }
@@ -346,6 +355,11 @@ namespace dmxfish::control_desk {
     }
 
     void desk::update() {
+	// TODO Call column update
+        const auto active_bs_valid = this->current_active_bank_set < bank_sets.size();
+	const auto& active_bank_set = this->bank_sets[this->current_active_bank_set];
+        if (active_bs_valid && active_bank_set.active_bank < active_bank_set.fader_banks.size())
+	    active_bank_set.fader_banks[active_bank_set.active_bank]->update();
         for (size_t i = 0; i < this->devices.size(); i++) {
             auto& d = this->devices[i];
             auto c = d->get_next_command_from_desk();
@@ -362,7 +376,7 @@ namespace dmxfish::control_desk {
             msg.set_find_active_on_column_id(find_enabled_on_column_id);
             msg.set_jogwheel_change_since_last_update(jogwheel_change);
             jogwheel_change = 0;
-            if(current_active_bank_set < bank_sets.size()) {
+            if(active_bs_valid) {
                 msg.set_selected_bank(bank_sets[current_active_bank_set].active_bank);
                 msg.set_selected_bank_set(bank_sets[current_active_bank_set].id);
             } else {
@@ -382,7 +396,7 @@ namespace dmxfish::control_desk {
             handle_select_state_update_from_bank(msg.selected_column_id(), true);
         }
         if(msg.find_active_on_column_id().length() > 0) {
-            // TODO implement
+            // TODO maybe implement find fixture
         }
     }
 

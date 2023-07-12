@@ -1,6 +1,8 @@
 #include "control_desk/bank_column.hpp"
 
+#include <chrono>
 #include <sstream>
+#include <string>
 
 #include "control_desk/desk.hpp"
 #include "control_desk/xtouch_driver.hpp"
@@ -48,6 +50,50 @@ namespace dmxfish::control_desk {
 		xtouch_set_button_led(*d_ptr, button{(uint8_t) button::BTN_CH1_SELECT_SELECT + this->fader_index}, button_led_state::off);
 		xtouch_set_ring_led(*d_ptr, encoder{(uint8_t) encoder::ENC_CH1 + this->fader_index}, 128);
 		xtouch_set_meter_leds(*d_ptr, led_bar{(uint8_t) led_bar::BAR_CH1 + this->fader_index}, 0);
+	}
+
+	void bank_column::update() {
+		namespace sc = std::chrono;
+		const auto now = sc::duration_cast<sc::milliseconds>(sc::system_clock::now().time_since_epoch()).count();
+		bool display_update_required = false;
+
+		if(last_update_timestamp != 0 && now >= display_hold_until) {
+			display_update_required = true;
+		}
+		if(last_display_scroll + 1000 < last_update_timestamp) {
+			if(display_text_index_up < display_text_up.size()) {
+				const auto text_length = display_text_up[display_text_index_up].length();
+				if(text_length > 7 && display_scroll_position_up < text_length - 7) {
+					display_scroll_position_up++;
+				} else {
+					display_scroll_position_up = 0;
+					if (++display_text_index_up == display_text_up.size()) {
+						display_text_index_up = 0;
+					}
+				}
+			} else {
+				display_text_index_up = 0;
+			}
+			if(display_text_index_down < display_text_down.size()) {
+				const auto text_length = display_text_down[display_text_index_down].length();
+				if(text_length > 7 && display_scroll_position_down < text_length - 7) {
+					display_scroll_position_down++;
+				} else {
+					display_scroll_position_down = 0;
+					if (++display_text_index_down == display_text_down.size()) {
+						display_text_index_down = 0;
+					}
+				}
+			} else {
+				display_text_index_down = 0;
+			}
+			last_display_scroll = now;
+			display_update_required = true;
+		}
+		this->last_update_timestamp = now;
+		if(display_update_required) {
+			update_display_text();
+		}
 	}
 
 	void bank_column::process_fader_change_message(unsigned int position_request) {
@@ -115,6 +161,7 @@ namespace dmxfish::control_desk {
 					break;
 			}
 		}
+		display_hold_until = last_update_timestamp + 2500;
 		update_display_text();
 		update_encoder_leds();
 		update_side_leds();
@@ -215,7 +262,53 @@ namespace dmxfish::control_desk {
 				}
 			}
 		}
-		switch(current_bank_mode) {
+		if(display_hold_until > last_update_timestamp) {
+			std::string value;
+			if (current_bank_mode == bank_mode::DIRECT_INPUT_MODE) {
+				value = std::to_string(
+					readymode_active ? readymode_raw_configuration.rotary_position : raw_configuration.rotary_position
+				);	
+			} else {
+				switch(this->current_re_assignment) {
+				case rotary_encoder_assignment::HUE: {
+					const auto hue = readymode_active ? readymode_color.hue : color.hue;
+					if(hue < 30.0) {
+						value = "red";
+					} else if (hue < 50.0) {
+						value = "orange";
+					} else if (hue < 70.0) {
+						value = "yellow";
+					} else if (hue < 150.0) {
+						value = "green";
+					} else if (hue < 185.0) {
+						value = "cyan";
+					} else if (hue < 285.0) {
+						value = "blue";
+					} else if (hue < 330.0) {
+						value = "purple";
+					} else {
+						value = "red";
+					}
+					} break;
+				case rotary_encoder_assignment::SATURATION:
+					value = std::to_string(readymode_active ? readymode_color.saturation : color.saturation);
+					break;
+				case rotary_encoder_assignment::AMBER:
+					value = std::to_string(readymode_active ? readymode_amber : amber);
+					break;
+				case rotary_encoder_assignment::UV:
+					value = std::to_string(readymode_active ? readymode_uv : uv);
+					break;
+				default:
+					value = "?";
+					break;
+				}
+			}
+			for (auto i = 0; i < 7; i++) {
+				content[7 + i] = i < value.length() ? value.at(i) : ' ';
+			}
+		} else {
+			switch(current_bank_mode) {
 			case bank_mode::HSI_COLOR_MODE:
 			case bank_mode::HSI_WITH_AMBER_MODE:
 			case bank_mode::HSI_WITH_UV_MODE:
@@ -288,6 +381,7 @@ namespace dmxfish::control_desk {
 				for(auto i = 7; i < 14; i++) {
 					content[i] = '-';
 				}
+			}
 		}
 		if(this->readymode_active) {
 			content[13] = '*';
@@ -394,10 +488,10 @@ namespace dmxfish::control_desk {
 		selected_text_vector.emplace_back(ss.str());
 		if (up) {
 			display_scroll_position_up = 0;
-			display_text_index_up = selected_text_vector.size() - 1; // TODO later implement scrolling
+			display_text_index_up = selected_text_vector.size() - 1;
 		} else {
 			display_scroll_position_down = 0;
-			display_text_index_down = selected_text_vector.size() - 1; // TODO later implement scrolling;
+			display_text_index_down = selected_text_vector.size() - 1;
 		}
 		update_display_text();
 	}
@@ -435,5 +529,4 @@ namespace dmxfish::control_desk {
 		}
 		get_iomanager_instance()->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_COLUMN);
 	}
-
 }

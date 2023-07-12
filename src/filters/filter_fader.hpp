@@ -39,6 +39,12 @@ namespace dmxfish::filters {
             const auto& set_id = configuration.at("set_id");
             const auto& column_id = configuration.at("column_id");
             if(auto candidate = get_iomanager_instance()->access_desk_column(set_id, column_id); candidate) {
+                if(const auto& column_mode = candidate->get_mode(); column_mode != MODE) {
+                    std::stringstream ss;
+		    ss << "The requested column (" << set_id << ":" << column_id << ") is not in the correct mode. Expected: ";
+		    ss << (int) MODE << ", got: " << (int) column_mode << ".";
+                    throw filter_config_exception(ss.str());
+                }
                 input_col = candidate;
                 update();
             } else {
@@ -46,9 +52,16 @@ namespace dmxfish::filters {
                 ss << "The requested column '" << column_id << "' in the '" << set_id << "' set does not seam to exist.";
                 throw filter_config_exception(ss.str());
             }
+            if constexpr (MODE != dmxfish::control_desk::bank_mode::DIRECT_INPUT_MODE) {
+	        if(configuration.contains("ignore_main_brightness_control") && configuration.at("ignore_main_brightness_control") == "true") {
+                    this->storage.global_main_enabled = false;
+	        }
+            }
         }
 
         virtual  bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(_value);
             return false;
         }
 
@@ -58,7 +71,7 @@ namespace dmxfish::filters {
                 map.sixteen_bit_channels[name + ":fader"] = &(storage.fader_position);
                 map.sixteen_bit_channels[name + ":encoder"] = &(storage.rotary_position);
             } else if constexpr (MODE == bank_mode::HSI_COLOR_MODE) {
-                map.color_channels[name + ":color"] = &storage;
+                map.color_channels[name + ":color"] = &storage.color;
             } else if constexpr (MODE == bank_mode::HSI_WITH_AMBER_MODE) {
                 map.color_channels[name + ":color"] = &(storage.color);
                 map.eight_bit_channels[name + ":amber"] = &(storage.amber);
@@ -78,7 +91,7 @@ namespace dmxfish::filters {
                 if constexpr (MODE == bank_mode::DIRECT_INPUT_MODE) {
                     this->storage = col_ptr->get_raw_configuration();
                 } else if constexpr (MODE == bank_mode::HSI_COLOR_MODE) {
-                    this->storage = col_ptr->get_color();
+                    this->storage.color = col_ptr->get_color();
                 } else if constexpr (MODE == bank_mode::HSI_WITH_AMBER_MODE) {
                     this->storage.color = col_ptr->get_color();
                     this->storage.amber = col_ptr->get_amber_value();
@@ -90,6 +103,10 @@ namespace dmxfish::filters {
                     this->storage.amber = col_ptr->get_amber_value();
                     this->storage.uv = col_ptr->get_uv_value();
                 }
+                if constexpr (MODE != bank_mode::DIRECT_INPUT_MODE) {
+                    if(this->storage.global_main_enabled)
+		        this->storage.color.iluminance *= (get_iomanager_instance()->get_global_illumination() / 65535);
+                }
             }
         }
 
@@ -98,17 +115,20 @@ namespace dmxfish::filters {
     };
 
     using filter_fader_column_raw = filter_fader_template<dmxfish::control_desk::bank_mode::DIRECT_INPUT_MODE, dmxfish::control_desk::raw_column_configuration>;
-    using filter_fader_column_hsi = filter_fader_template<dmxfish::control_desk::bank_mode::HSI_COLOR_MODE, dmxfish::dmx::pixel>;
 
-    struct fader_column_hsia_storage_t {
+    struct filter_fader_column_hsi_storage { 
         dmxfish::dmx::pixel color;
+	bool global_main_enabled = true;
+    };
+    using filter_fader_column_hsi = filter_fader_template<dmxfish::control_desk::bank_mode::HSI_COLOR_MODE, filter_fader_column_hsi_storage>;
+
+    struct fader_column_hsia_storage_t : public filter_fader_column_hsi_storage {
         uint8_t amber;
     };
 
     using filter_fader_column_hsia = filter_fader_template<dmxfish::control_desk::bank_mode::HSI_WITH_AMBER_MODE, fader_column_hsia_storage_t>;
 
-    struct fader_column_hsiu_storage_t {
-        dmxfish::dmx::pixel color;
+    struct fader_column_hsiu_storage_t : public filter_fader_column_hsi_storage {
         uint8_t uv;
     };
 
@@ -119,5 +139,37 @@ namespace dmxfish::filters {
     };
 
     using filter_fader_column_hsiau = filter_fader_template<dmxfish::control_desk::bank_mode::HSI_WITH_AMBER_AND_UV_MODE, fader_column_hsiau_storage_t>;
+
+    class filter_main_brightness_fader : public filter {
+    private:
+	uint16_t storage = 0;
+    public:
+        filter_main_brightness_fader() : filter() {}
+        virtual ~filter_main_brightness_fader() {}
+
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+            MARK_UNUSED(configuration);
+            MARK_UNUSED(input_channels);
+            MARK_UNUSED(initial_parameters);
+       }
+
+        virtual  bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(_value);
+            return false;
+        }
+
+        virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
+            map.sixteen_bit_channels[name + ":brightness"] = &storage;
+        }
+
+        virtual void update() override {
+	    this->storage = get_iomanager_instance()->get_global_illumination();
+        }
+
+        virtual void scene_activated() override {}
+
+
+    };
     COMPILER_RESTORE("-Weffc++")
 }
