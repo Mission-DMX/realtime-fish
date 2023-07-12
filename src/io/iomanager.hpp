@@ -73,6 +73,14 @@ namespace dmxfish::io {
 				return control_desk_handle->find_column(set_id, column_id);
 			}
 
+			inline uint16_t get_global_illumination() {
+				if(control_desk_handle) {
+					return control_desk_handle->get_global_illumination();
+				} else {
+					return 0;
+				}
+			}
+
 			void handle_queued_io();
 
 			[[nodiscard]] bool is_rollback_available() {
