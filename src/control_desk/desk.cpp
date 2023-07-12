@@ -265,7 +265,7 @@ namespace dmxfish::control_desk {
                                 jogwheel_change += c.data_2 > 60 ? 1 : -1;
                                 update_message_required = true;
                             } else if(c.data_1 == (uint8_t) fader::FADER_MAIN) {
-				this->global_illumination = (uint16_t) (c.data_2 * 65565 / 127);
+				this->global_illumination = (uint16_t) (c.data_2 * 65535 / 127);
 			    }
                             // TODO foot switches
                         }
