@@ -382,7 +382,7 @@ namespace dmxfish::control_desk {
             handle_select_state_update_from_bank(msg.selected_column_id(), true);
         }
         if(msg.find_active_on_column_id().length() > 0) {
-            // TODO implement
+            // TODO maybe implement find fixture
         }
     }
 
