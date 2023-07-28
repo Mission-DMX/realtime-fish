@@ -27,6 +27,7 @@ namespace dmxfish::filters {
             MARK_UNUSED(configuration);
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(input_channels);
+            this->now = (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()-get_start_time())).count();
         }
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
@@ -71,29 +72,29 @@ namespace dmxfish::filters {
                 throw filter_config_exception("Unable to setup delay filter: could not parse the 'delay' as double");
             }
             if(!input_channels.float_channels.contains("time")) {
-                throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'time' of type 'double'. Should come from the only time node.");
+                throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'time' of type 'double'. This input should come from the scenes global time node.");
             }
             this->time = input_channels.float_channels.at("time");
             if constexpr (std::is_same<T, uint8_t>::value) {
-                if(!input_channels.eight_bit_channels.contains("value")) {
-                    throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value' of type 'uint8_t'.");
+                if(!input_channels.eight_bit_channels.contains("value_in")) {
+                    throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value_in' of type 'uint8_t'.");
                 }
-                this->value = input_channels.eight_bit_channels.at("value");
+                this->value = input_channels.eight_bit_channels.at("value_in");
             } else if constexpr (std::is_same<T, uint16_t>::value) {
-                if(!input_channels.sixteen_bit_channels.contains("value")) {
-                    throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value' of type 'uint16_t'.");
+                if(!input_channels.sixteen_bit_channels.contains("value_in")) {
+                    throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value_in' of type 'uint16_t'.");
                 }
-                this->value = input_channels.sixteen_bit_channels.at("value");
+                this->value = input_channels.sixteen_bit_channels.at("value_in");
             } else if constexpr (std::is_same<T, double>::value) {
-                if(!input_channels.float_channels.contains("value")) {
-                    throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value' of type 'double'.");
+                if(!input_channels.float_channels.contains("value_in")) {
+                    throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value_in' of type 'double'.");
                 }
-                this->value = input_channels.float_channels.at("value");
+                this->value = input_channels.float_channels.at("value_in");
             } else {
-                if(!input_channels.color_channels.contains("value")) {
-                    throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value' of type 'hsv_pixel'.");
+                if(!input_channels.color_channels.contains("value_in")) {
+                    throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value_in' of type 'hsv_pixel'.");
                 }
-                this->value = input_channels.color_channels.at("value");
+                this->value = input_channels.color_channels.at("value_in");
             }
         }
 

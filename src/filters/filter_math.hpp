@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * The filters calculate trigonometric functions
+ * The filters calculate basic math functions
  */
 
 #include <cmath>
@@ -25,10 +25,10 @@ namespace dmxfish::filters {
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
-            if(!input_channels.float_channels.contains("value")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'value' of type 'double'.");
+            if(!input_channels.float_channels.contains("value_in")) {
+                throw filter_config_exception("Unable to link input of math filter: channel mapping does not contain channel 'value_in' of type 'double'.");
             }
-            this->input = input_channels.float_channels.at("value");
+            this->input = input_channels.float_channels.at("value_in");
         }
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {

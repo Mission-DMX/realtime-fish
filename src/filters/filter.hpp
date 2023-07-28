@@ -40,6 +40,18 @@ public:
 	virtual ~filter() {}
 
 	/**
+	 * This method is called prior to calling get_output_channels. It is meant in case a filter needs to dynamically construct the output channels based
+	 * on the configuration.
+	 *
+	 * @param configuration the key value pairs to configure the filter
+	 * @param initial_parameters the initial values that should be set after the parent scene got activated
+	 */
+	virtual void pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters) {
+        MARK_UNUSED(initial_parameters);
+        MARK_UNUSED(configuration);
+    }
+
+	/**
 	 * This constructor is supposed to fill in the required input data pointers from the provided mapping table
 	 * and throw an exception of type channel_mapping_exception if it fails to do so. It can assume its own names
 	 * for the lookup as the scene factory is responsible for the correct mappings.

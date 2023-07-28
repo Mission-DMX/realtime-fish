@@ -62,9 +62,11 @@ namespace dmxfish::filters {
         }
 
         virtual void update() override {
+            // TODO update universe retrival to only occur on scene_activated
             if(auto uptr = dmxfish::io::get_universe(this->universe_id); uptr != nullptr) {
                 for(auto& l : this->mapping) {
                     (*uptr)[l.universe_channel] = *l.input_channel;
+		    //::spdlog::debug("Output {} to channel {} of universe {} of type {}", *l.input_channel, l.universe_channel, this->universe_id, (unsigned int) uptr->getUniverseType());
                 }
             } else {
                 throw std::invalid_argument("The requested universe with id " + std::to_string(this->universe_id) + " does not exist anymore");

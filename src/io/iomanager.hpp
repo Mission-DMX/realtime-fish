@@ -8,8 +8,12 @@
 #include "io/state_book.hpp"
 #include "io/gui_connection_handler.hpp"
 #include "io/client_handler.hpp"
+#include "control_desk/desk.hpp"
 
+#include "lib/macros.hpp"
+COMPILER_SUPRESS("-Wuseless-cast")
 #include "proto_src/FilterMode.pb.h"
+COMPILER_RESTORE("-Wuseless-cast")
 
 namespace dmxfish::io {
 
@@ -23,6 +27,7 @@ namespace dmxfish::io {
 			std::unique_ptr<::ev::async> loop_interrupter;
 			std::shared_ptr<GUI_Connection_Handler> gui_connections;
 			std::shared_ptr<dmxfish::execution::project_configuration> active_show = nullptr, last_active_show = nullptr;
+			std::unique_ptr<dmxfish::control_desk::desk> control_desk_handle = nullptr;
 			std::string latest_error;
 			::missiondmx::fish::ipcmessages::ShowFileApplyState show_file_apply_state = ::missiondmx::fish::ipcmessages::SFAS_INVALID;
 		public:
@@ -49,6 +54,42 @@ namespace dmxfish::io {
 
 			inline void mark_show_file_execution_error() {
 				this->show_file_apply_state = ::missiondmx::fish::ipcmessages::SFAS_ERROR_SHOW_RUNNING;
+			}
+
+			inline void set_control_desk_handle(std::unique_ptr<dmxfish::control_desk::desk> handle) {
+				this->control_desk_handle = std::move(handle);
+			}
+
+			inline void update_control_desk() {
+				if(control_desk_handle) {
+					control_desk_handle->update();
+				}
+			}
+
+			inline std::shared_ptr<dmxfish::control_desk::bank_column> access_desk_column(const std::string& set_id, const std::string& column_id) {
+				if (!control_desk_handle) {
+					return nullptr;
+				}
+				return control_desk_handle->find_column(set_id, column_id);
+			}
+
+			inline uint16_t get_global_illumination() {
+				if(control_desk_handle) {
+					return control_desk_handle->get_global_illumination();
+				} else {
+					return 0;
+				}
+			}
+
+			void handle_queued_io();
+
+			[[nodiscard]] bool is_rollback_available() {
+				return this->last_active_show != nullptr;
+			}
+
+			inline void rollback() {
+				if(this->is_rollback_available())
+					this->active_show = this->last_active_show;
 			}
 		private:
 			void run();

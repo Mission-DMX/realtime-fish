@@ -10,24 +10,19 @@
 
 #include "lib/logging.hpp"
 
-#include "proto_src/MessageTypes.pb.h"
-#include "proto_src/Console.pb.h"
-#include "proto_src/DirectMode.pb.h"
-#include "proto_src/RealTimeControl.pb.h"
-#include "proto_src/UniverseControl.pb.h"
-#include "google/protobuf/io/zero_copy_stream.h"
-
 #include "lib/macros.hpp"
 #include "net/sock_address_factory.hpp"
 #include <netdb.h>
 
 
+COMPILER_SUPRESS("-Wuseless-cast")
 #include "proto_src/MessageTypes.pb.h"
 #include "proto_src/Console.pb.h"
 #include "proto_src/DirectMode.pb.h"
 #include "proto_src/FilterMode.pb.h"
 #include "proto_src/RealTimeControl.pb.h"
 #include "proto_src/UniverseControl.pb.h"
+COMPILER_RESTORE("-Wuseless-cast")
 #include "google/protobuf/io/zero_copy_stream.h"
 
 #include "io/universe_sender.hpp"
@@ -338,7 +333,13 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
         {
             auto msg = missiondmx::fish::ipcmessages::button_state_change();
             if (msg.ParseFromZeroCopyStream(buffer)){
-                // TODO implement
+                if(control_desk_handle) {
+                    try {
+                        control_desk_handle->update_button_leds_from_protobuf(msg);
+                    } catch(const std::exception& e) {
+                        this->latest_error = e.what();
+                    }
+                }
                 return;
             }
             error_message += "Could not parse the message of type: MSGT_BUTTON_STATE_CHANGE.";
@@ -350,7 +351,13 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
         {
             auto msg = missiondmx::fish::ipcmessages::fader_position();
             if (msg.ParseFromZeroCopyStream(buffer)){
-                // TODO implement
+                if(control_desk_handle) {
+                    try {
+                        control_desk_handle->update_fader_position_from_protobuf(msg);
+                    } catch(const std::exception& e) {
+                        this->latest_error = e.what();
+                    }
+                }
                 return;
             }
             error_message += "Could not parse the message of type: MSGT_FADER_POSITION.";
@@ -362,7 +369,13 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
         {
             auto msg = missiondmx::fish::ipcmessages::rotary_encoder_change();
             if (msg.ParseFromZeroCopyStream(buffer)){
-                // TODO implement
+                if(control_desk_handle) {
+                    try {
+                        control_desk_handle->update_encoder_state_from_protobuf(msg);
+                    } catch(const std::exception& e) {
+                        this->latest_error = e.what();
+                    }
+                }
                 return;
             }
             error_message += "Could not parse the message of type: MSGT_ROTARY_ENCODER_CHANGE.";
@@ -447,6 +460,9 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
             if (msg->ParseFromZeroCopyStream(buffer)){
                 using namespace missiondmx::fish::ipcmessages;
                 this->show_file_apply_state = this->active_show == nullptr ? SFAS_SHOW_LOADING : SFAS_SHOW_UPDATING;
+                if(this->show_loading_thread) {
+                    this->show_loading_thread->join();
+                }
                 this->show_loading_thread = std::make_shared<std::thread>(std::bind(&IOManager::load_show_file, this, msg));
                 return;
             }
@@ -510,6 +526,71 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
             error_message += "IOManager Parse Message: Used MsgType_INT_MAX_SENTINEL_DO_NOT_USE_ as Msg Type. ";
             break;
         }
+        case ::missiondmx::fish::ipcmessages::MSGT_REMOVE_FADER_BANK_SET:
+            try {
+                missiondmx::fish::ipcmessages::remove_fader_bank_set msg;
+                if(!msg.ParseFromZeroCopyStream(buffer)) {
+                    error_message += "Failed to decode MSGT_REMOVE_FADER_BANK_SET message.";
+                }
+                if(control_desk_handle) {
+                    control_desk_handle->remove_bank_set(msg.bank_id());
+                } else {
+                    error_message += "No control desk handle has been currently set.";
+                }
+                return;
+            } catch (const std::exception& e) {
+                this->latest_error = e.what();
+            }
+            break;
+        case ::missiondmx::fish::ipcmessages::MSGT_ADD_FADER_BANK_SET:
+            try {
+                missiondmx::fish::ipcmessages::add_fader_bank_set msg;
+                if(!msg.ParseFromZeroCopyStream(buffer)) {
+                    error_message += "Failed to decode MSGT_ADD_FADER_BANK_SET message.";
+                }
+                if(control_desk_handle) {
+                    control_desk_handle->add_bank_set_from_protobuf_msg(msg);
+
+                } else {
+                    error_message += "No control desk handle has been currently set.";
+                }
+                return;
+            } catch (const std::exception& e) {
+                this->latest_error = e.what();
+            }
+            break;
+        case ::missiondmx::fish::ipcmessages::MSGT_DESK_UPDATE:
+            try {
+                missiondmx::fish::ipcmessages::desk_update msg;
+                if(!msg.ParseFromZeroCopyStream(buffer)) {
+                    error_message += "Failed to decode MSGT_DESK_UPDATE message.";
+                }
+                if(control_desk_handle) {
+                    control_desk_handle->process_desk_update_message(msg);
+                } else {
+                    error_message += "No control desk handle has been currently set.";
+                }
+                return;
+            } catch (const std::exception& e) {
+                this->latest_error = e.what();
+            }
+            break;
+        case ::missiondmx::fish::ipcmessages::MSGT_UPDATE_COLUMN:
+            try {
+                missiondmx::fish::ipcmessages::fader_column msg;
+                if(!msg.ParseFromZeroCopyStream(buffer)) {
+                    error_message += "Failed to decode MSGT_UPDATE_COLUMN message.";
+                }
+                if(control_desk_handle) {
+                    control_desk_handle->update_column_from_message(msg);
+                } else {
+                    error_message += "No control desk handle has been currently set.";
+                }
+                return;
+            } catch (const std::exception& e) {
+                this->latest_error = e.what();
+            }
+            break;
 		default:
         {
             error_message += "IOManager Parse Message: Used a unknown Msg Type. ";
@@ -560,17 +641,27 @@ void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::lo
 		if (this->active_show == nullptr) {
 			this->latest_error = "An error occurred while loading the show configuration. No show file is currently loaded. Please review the detailed log message.";
 			this->show_file_apply_state = SFAS_NO_SHOW_ERROR;
+			::spdlog::error("Failed to load show file: No show currently running. Check GUI for log.");
 		} else {
 			this->latest_error = "An error occurred while loading the new show configuration. The last successfully loaded configuration is still active. Please review the detailed log message.";
 			this->show_file_apply_state = SFAS_SHOW_ACTIVE;
+			::spdlog::error(this->latest_error);
 		}
 	} else {
 		this->show_file_apply_state = SFAS_SHOW_ACTIVE;
+		::spdlog::info("Successfully loaded show file");
 	}
 	long_log_update log_msg;
 	log_msg.set_level(success ? LL_INFO : LL_ERROR);
 	log_msg.set_time_stamp(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count());
 	log_msg.set_what(loading_result_stream.str());
 	this->push_msg_to_all_gui(log_msg, MSGT_LOG_MESSAGE);
+	std::cout << loading_result_stream.str() << std::endl;
 }
+
+void IOManager::handle_queued_io() {
+	// TODO run io loop iteration or wait until 2 have passed.
+	std::this_thread::sleep_for(std::chrono::milliseconds(100)); // TODO fixme
+}
+
 }

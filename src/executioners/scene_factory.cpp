@@ -14,10 +14,13 @@
 #include "filters/filter_constants.hpp"
 #include "filters/filter_conversion.hpp"
 #include "filters/filter_debug_output.hpp"
+#include "filters/filter_fader.hpp"
 #include "filters/filter_universe_output.hpp"
 #include "filters/filter_trigonometric.hpp"
 #include "filters/filter_math.hpp"
 #include "filters/filter_time.hpp"
+#include "filters/filter_cue.hpp"
+#include "filters/filter_shift.hpp"
 
 #include <iostream>
 
@@ -198,6 +201,39 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::delay_switch_off_float:
                     sum += sizeof(delay_switch_off_float);
                     break;
+				case filter_type::filter_fader_column_raw:
+					sum += sizeof(filter_fader_column_raw);
+					break;
+				case filter_type::filter_fader_column_hsi:
+					sum += sizeof(filter_fader_column_hsi);
+					break;
+				case filter_type::filter_fader_column_hsia:
+					sum += sizeof(filter_fader_column_hsia);
+					break;
+				case filter_type::filter_fader_column_hsiu:
+					sum += sizeof(filter_fader_column_hsiu);
+					break;
+				case filter_type::filter_fader_column_hsiau:
+					sum += sizeof(filter_fader_column_hsiau);
+					break;
+                case filter_type::filter_cue:
+                    sum += sizeof(filter_cue);
+                    break;
+                case filter_type::filter_shift_8bit:
+                    sum += sizeof(filter_shift_8bit);
+                    break;
+                case filter_type::filter_shift_16bit:
+                    sum += sizeof(filter_shift_16bit);
+                    break;
+                case filter_type::filter_shift_float:
+                    sum += sizeof(filter_shift_float);
+                    break;
+		case filter_type::filter_main_brightness_fader:
+		    sum += sizeof(filter_main_brightness_fader);
+		    break;
+                case filter_type::filter_shift_color:
+                    sum += sizeof(filter_shift_color);
+                    break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -298,6 +334,28 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<delay_switch_off_16bit>(pac);
             case filter_type::delay_switch_off_float:
                 return calloc<delay_switch_off_float>(pac);
+			case filter_type::filter_fader_column_raw:
+				return calloc<filter_fader_column_raw>(pac);
+			case filter_type::filter_fader_column_hsi:
+				return calloc<filter_fader_column_hsi>(pac);
+			case filter_type::filter_fader_column_hsia:
+				return calloc<filter_fader_column_hsia>(pac);
+			case filter_type::filter_fader_column_hsiu:
+				return calloc<filter_fader_column_hsiu>(pac);
+			case filter_type::filter_fader_column_hsiau:
+				return calloc<filter_fader_column_hsiau>(pac);
+            case filter_type::filter_cue:
+                return calloc<filter_cue>(pac);
+            case filter_type::filter_shift_8bit:
+                return calloc<filter_shift_8bit>(pac);
+            case filter_type::filter_shift_16bit:
+                return calloc<filter_shift_16bit>(pac);
+            case filter_type::filter_shift_float:
+                return calloc<filter_shift_float>(pac);
+	    case filter_type::filter_main_brightness_fader:
+		return calloc<filter_main_brightness_fader>(pac);
+            case filter_type::filter_shift_color:
+                return calloc<filter_shift_color>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}
@@ -375,6 +433,7 @@ COMPILER_RESTORE("-Weffc++")
 					filter_info_map[filter_index] = fi;
 					scene_filter_index[fid] = fv[filter_index];
 					resolved_filters.insert(fid);
+					fv[fv.size()-1]->pre_setup(conf, initial_params);
 				} else {
 					missing_filter_stack.push_back(f_template);
 				}
@@ -420,14 +479,12 @@ COMPILER_RESTORE("-Weffc++")
 
 	inline void connect_filters(scene_filter_vector_t& fv, std::map<size_t, filter_info>& filter_info_map) {
 		dmxfish::filters::channel_mapping cm;
-		// TODO connect input data structure
 		for(size_t i = 0; i < fv.size(); i++) {
 			auto& finfo = filter_info_map[i];
 			fv[i]->get_output_channels(cm, finfo.name);
 			auto input_channels = construct_channel_input_mapping(cm, finfo);
 			fv[i]->setup_filter(finfo.configuration, finfo.initial_parameters, input_channels);
 		}
-		// TODO link to universes
 	}
 
     [[nodiscard]] inline std::tuple<scene_filter_vector_t, scene_boundry_vec_t, std::shared_ptr<ZeroDeletingLinearAllocator>, scene_filter_index_t> compute_filter(const ::MissionDMX::ShowFile::Scene& s, std::stringstream& msg_stream) {

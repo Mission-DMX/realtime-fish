@@ -12,42 +12,42 @@ MissionDMX::ShowFile::Scene get_first_scene() {
 	s.id(0);
 	std::vector<MissionDMX::ShowFile::Filter> filters;
 
-	filters.emplace_back(0, "const_8bit");
+	filters.emplace_back(0, "const_8bit", "");
 	filters[0].initialParameters().push_back(MissionDMX::ShowFile::KeyValuePair("value", "50"));
 
-	filters.emplace_back(1, "const_16bit");
+	filters.emplace_back(1, "const_16bit", "");
 	filters[1].initialParameters().push_back(MissionDMX::ShowFile::KeyValuePair("value", "9001"));
 
-	filters.emplace_back(2, "const_float");
+	filters.emplace_back(2, "const_float", "");
 	filters[2].initialParameters().push_back(MissionDMX::ShowFile::KeyValuePair("value", "13.6"));
 
-	filters.emplace_back(3, "const_color");
+	filters.emplace_back(3, "const_color", "");
 	filters[3].initialParameters().push_back(MissionDMX::ShowFile::KeyValuePair("value", "270.0,0.5,0.99"));
 
-	filters.emplace_back(4, "debug_8bit");
+	filters.emplace_back(4, "debug_8bit", "");
 	filters[4].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_8bit:value"));
 
-	filters.emplace_back(5, "debug_16bit");
+	filters.emplace_back(5, "debug_16bit", "");
 	filters[5].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_16bit:value"));
 
-	filters.emplace_back(6, "debug_float");
+	filters.emplace_back(6, "debug_float", "");
 	filters[6].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "multiply_add_filter:value"));
 
-	filters.emplace_back(7, "debug_color");
+	filters.emplace_back(7, "debug_color", "");
 	filters[7].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_color:value"));
 
-	filters.emplace_back(8, "conversion_split_16bit");
+	filters.emplace_back(8, "conversion_split_16bit", "");
 	filters[8].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_16bit:value"));
 
-	filters.emplace_back(9, "conversion_16bit_to_bool");
+	filters.emplace_back(9, "conversion_16bit_to_bool", "");
 	filters[9].channellink().push_back(MissionDMX::ShowFile::ChannelLink("value", "const_16bit:value"));
 
-	filters.emplace_back(10, "multiply_add_filter");
+	filters.emplace_back(10, "multiply_add_filter", "");
 	filters[10].channellink().push_back(MissionDMX::ShowFile::ChannelLink("factor1", "const_float:value"));
 	filters[10].channellink().push_back(MissionDMX::ShowFile::ChannelLink("factor2", "const_float:value"));
 	filters[10].channellink().push_back(MissionDMX::ShowFile::ChannelLink("summand", "const_float:value"));
 
-	filters.emplace_back(11, "universe_output");
+	filters.emplace_back(11, "universe_output", "");
 	filters[11].filterConfiguration().push_back(::MissionDMX::ShowFile::KeyValuePair("1", "input_1"));
 	filters[11].filterConfiguration().push_back(::MissionDMX::ShowFile::KeyValuePair("universe", "1"));
 	filters[11].channellink().push_back(MissionDMX::ShowFile::ChannelLink("input_1", "const_8bit:value"));
