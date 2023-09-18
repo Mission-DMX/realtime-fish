@@ -18,6 +18,7 @@
 #include "filters/filter_time.hpp"
 #include "filters/filter_cue.hpp"
 #include "filters/filter_shift.hpp"
+#include "filters/filter_lua_script.hpp"
 
 #include <iostream>
 
@@ -225,11 +226,14 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_shift_float:
                     sum += sizeof(filter_shift_float);
                     break;
-		case filter_type::filter_main_brightness_fader:
-		    sum += sizeof(filter_main_brightness_fader);
-		    break;
+                case filter_type::filter_main_brightness_fader:
+                    sum += sizeof(filter_main_brightness_fader);
+                    break;
                 case filter_type::filter_shift_color:
                     sum += sizeof(filter_shift_color);
+                    break;
+                case filter_type::filter_lua_script:
+                    sum += sizeof(filter_lua_script);
                     break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
@@ -349,10 +353,12 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_shift_16bit>(pac);
             case filter_type::filter_shift_float:
                 return calloc<filter_shift_float>(pac);
-	    case filter_type::filter_main_brightness_fader:
-		return calloc<filter_main_brightness_fader>(pac);
+            case filter_type::filter_main_brightness_fader:
+                return calloc<filter_main_brightness_fader>(pac);
             case filter_type::filter_shift_color:
                 return calloc<filter_shift_color>(pac);
+            case filter_type::filter_lua_script:
+                return calloc<filter_lua_script>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}

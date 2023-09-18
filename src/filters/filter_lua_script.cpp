@@ -6,15 +6,14 @@
 #include "lib/logging.hpp"
 #include "dmx/pixel.hpp"
 
-
-int count_occurence_of(const std::string &base_string, std::string pattern, size_t start, size_t end) {
-    int occurrences = 0;
-    while ((start = base_string.find(pattern, start)) != std::string::npos && start <= end) {
-        ++occurrences;
-        start += pattern.length();
-    }
-    return occurrences;
-}
+//int count_occurence_of(const std::string &base_string, std::string pattern, size_t start, size_t end) {
+//    int occurrences = 0;
+//    while ((start = base_string.find(pattern, start)) != std::string::npos && start <= end) {
+//        ++occurrences;
+//        start += pattern.length();
+//    }
+//    return occurrences;
+//}
 
 namespace dmxfish::filters {
 
@@ -29,21 +28,21 @@ namespace dmxfish::filters {
         size_t start_pos = 0;
         auto next_pos = mapping.find(";");
         
-	int count_channel_type = count_occurence_of(mapping, ":8bit", 0, mapping.size());
-        channel_names_eight.reserve(count_channel_type);
-        eight_bit_channels.reserve(count_channel_type);
-        
-	count_channel_type = count_occurence_of(mapping, ":16bit", 0, mapping.size());
-        channel_names_sixteen.reserve(count_channel_type);
-        sixteen_bit_channels.reserve(count_channel_type);
-        
-	count_channel_type = count_occurence_of(mapping, ":float", 0, mapping.size());
-        channel_names_float.reserve(count_channel_type);
-        float_channels.reserve(count_channel_type);
-        
-	count_channel_type = count_occurence_of(mapping, ":color", 0, mapping.size());
-        channel_names_color.reserve(count_channel_type);
-        color_channels.reserve(count_channel_type);
+//	int count_channel_type = count_occurence_of(mapping, ":8bit", 0, mapping.size());
+//        channel_names_eight.reserve(count_channel_type);
+//        eight_bit_channels.reserve(count_channel_type);
+//
+//	count_channel_type = count_occurence_of(mapping, ":16bit", 0, mapping.size());
+//        channel_names_sixteen.reserve(count_channel_type);
+//        sixteen_bit_channels.reserve(count_channel_type);
+//
+//	count_channel_type = count_occurence_of(mapping, ":float", 0, mapping.size());
+//        channel_names_float.reserve(count_channel_type);
+//        float_channels.reserve(count_channel_type);
+//
+//	count_channel_type = count_occurence_of(mapping, ":color", 0, mapping.size());
+//        channel_names_color.reserve(count_channel_type);
+//        color_channels.reserve(count_channel_type);
 
         while (true) {
             const auto sign = mapping.find(":", start_pos);
