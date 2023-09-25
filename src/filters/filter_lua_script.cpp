@@ -5,7 +5,11 @@
 #include "lib/macros.hpp"
 #include "lib/logging.hpp"
 #include "dmx/pixel.hpp"
+#include "lua/LuaCpp.hpp"
+#include "lua/LuaContext.hpp"
+#include "lua/LuaMetaObject.hpp"
 
+#include <iostream>
 //int count_occurence_of(const std::string &base_string, std::string pattern, size_t start, size_t end) {
 //    int occurrences = 0;
 //    while ((start = base_string.find(pattern, start)) != std::string::npos && start <= end) {
@@ -15,10 +19,132 @@
 //    return occurrences;
 //}
 
+
+class MetaMap : public LuaCpp::LuaMetaObject {
+public:
+    std::map<std::string, std::shared_ptr<LuaCpp::Engine::LuaType>> values;
+    MetaMap() : values() {}
+    bool inline Exists(const std::string &name) {
+        return !(values.find( name ) == values.end());
+    }
+
+    std::shared_ptr<LuaCpp::Engine::LuaType> getValue(std::string &key) {
+        if (Exists(key)) {
+            return values[key];
+        }
+        return std::make_shared<LuaCpp::Engine::LuaTNil>();
+    }
+
+    void setValue(std::string &key, std::shared_ptr<LuaCpp::Engine::LuaType> val) {
+        values[key] = val;
+    }
+
+};
+
+
+class PixelLua : public LuaCpp::Engine::LuaType {
+public:
+    int a;
+    PixelLua() : a() {}
+    PixelLua(int b) : a(b) {}
+    ~PixelLua() {}
+
+    int getTypeId() const {
+        return 101;
+        return LUA_TNUMBER;
+    }
+
+    std::string getTypeName(LuaCpp::Engine::LuaState &L) const {
+//        return std::string(lua_typename(L, 101));
+        return std::string(lua_typename(L, LUA_TNUMBER));
+    }
+
+    void PushValue(LuaCpp::Engine::LuaState &L) {
+        lua_pushnumber(L, a);
+    }
+
+    void PopValue(LuaCpp::Engine::LuaState &L, int idx) {
+        if (lua_type(L, idx) == LUA_TNUMBER) {
+            a = lua_tonumber(L,idx);
+        } else {
+            throw std::invalid_argument("The value at the stack position " + std::to_string(idx) + " is not LUA_TNUMBER");
+        }
+    }
+
+    std::string ToString() const {
+        return std::to_string(a);
+    }
+
+
+};
+
 namespace dmxfish::filters {
 
     void filter_lua_script::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters) {
         MARK_UNUSED(initial_parameters);
+
+        // Creage Lua context
+        LuaCpp::LuaContext lua;
+
+        lua.CompileString("test1", "print('get a ' .. foo) foo = 42 print('settet foo/a ' .. foo)");
+//        lua.CompileString("test2", "print('foo[\"1\"] : ' .. foo[\"1\"] )");
+
+        std::unique_ptr<LuaCpp::Engine::LuaState> L = lua.newStateFor("test1");
+
+        PixelLua obj = PixelLua(3);
+
+        obj.PushGlobal(*L, "foo");
+
+        int res = lua_pcall(*L, 0, LUA_MULTRET, 0);
+        if (res != LUA_OK ) {
+            std::cout << "Error Executing " << res << " " << lua_tostring(*L,1) << "\n";
+        }
+
+        obj.PopGlobal(*L);
+
+        std::cout << "After it has " << obj.ToString() << "\n";
+
+//        L = lua.newStateFor("test2");
+//        obj.PushGlobal(*L, "foo");
+//
+//        std::string atest = "\"1\"";
+//        std::cout << obj.getValue(atest)->getTypeId() << "\n";
+//
+//
+//        res = lua_pcall(*L, 0, LUA_MULTRET, 0);
+//        if (res != LUA_OK ) {
+//            std::cout << "Error Executing " << res << " " << lua_tostring(*L,1) << "\n";
+//        }
+
+//        // Creage Lua context
+//        LuaCpp::LuaContext lua;
+//
+//        lua.CompileString("test1", "print('Assigning to foo[\"1\"] value \"testing MetaMap\"') foo[\"1\"] = 42");
+//        lua.CompileString("test2", "print('foo[\"1\"] : ' .. foo[\"1\"] )");
+//
+//        std::unique_ptr<LuaCpp::Engine::LuaState> L = lua.newStateFor("test1");
+//
+//        MetaMap obj;
+//
+//        obj.PushGlobal(*L, "foo");
+//
+//        int res = lua_pcall(*L, 0, LUA_MULTRET, 0);
+//        if (res != LUA_OK ) {
+//            std::cout << "Error Executing " << res << " " << lua_tostring(*L,1) << "\n";
+//        }
+//
+//        L = lua.newStateFor("test2");
+//        obj.PushGlobal(*L, "foo");
+//
+//        std::string atest = "\"1\"";
+//        std::cout << obj.getValue(atest)->getTypeId() << "\n";
+//
+//
+//        res = lua_pcall(*L, 0, LUA_MULTRET, 0);
+//        if (res != LUA_OK ) {
+//            std::cout << "Error Executing " << res << " " << lua_tostring(*L,1) << "\n";
+//        }
+
         if (!configuration.contains("mapping")) {
             throw filter_config_exception("cue filter: unable to setup the mapping");
         }

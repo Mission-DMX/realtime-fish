@@ -24,7 +24,7 @@ CFLAGS += -O3 -fomit-frame-pointer -funroll-loops -mavx2 -D NDEBUG
 CXXFLAGS += -O3 -fomit-frame-pointer -funroll-loops -mavx2 -D NDEBUG
 else
 CFLAGS += -g -Og -march=native -masm=intel
-CXXFLAGS += -g -Og -march=native -masm=intel
+CXXFLAGS += -g -Og -march=native -masm=intel `${PKG_TOOL} --cflags lua5.4`
 endif
 
 PKG_TOOL = pkg-config
@@ -45,6 +45,7 @@ LFLAGS += `${PKG_TOOL} --libs xerces-c`
 LFLAGS += `${PKG_TOOL} --libs fmt`
 LFLAGS += `${PKG_TOOL} --libs libusb`
 LFLAGS += `${PKG_TOOL} --libs libftdi`
+LFLAGS += `${PKG_TOOL} --libs lua5.4`
 CFLAGS += `${PKG_TOOL} --cflags xerces-c`
 CFLAGS += `${PKG_TOOL} --cflags libusb`
 CFLAGS += `${PKG_TOOL} --cflags libftdi`
@@ -90,8 +91,10 @@ RMRFNET_SOURCES := $(call rwildcard,${RMRFNET_SRCDIR}/,*.cpp *.c)
 RMRFNET_OBJDIR := ${OBJDIR}/rmrf-net
 
 SRCOBJS := $(patsubst ${SRCDIR}/%.c,${OBJDIR}/%.o,$(patsubst ${SRCDIR}/%.cpp,${OBJDIR}/%.o,${SOURCES}))
+
 RMRFNET_SRCOBJS := $(patsubst ${LIBSRCDIR}/rmrf-net/%.c,${OBJDIR}/rmrf-net/%.o,$(patsubst ${LIBSRCDIR}/rmrf-net/%.cpp,${OBJDIR}/rmrf-net/%.o,${RMRFNET_SOURCES}))
 DEPFLAGS_RMRF = ${DEPFLAGS} -Isubmodules/rmrf/src -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
+# Todo: remove the link in lib to there (and change rmrfnet_srcobjs)?
 
 
 PROTO_DEFDIR := ${LIBSRCDIR}/IPCMessages
@@ -107,6 +110,13 @@ TEST_TARGETS := $(patsubst ${TESTOBJDIR}/%.o,${TESTBINDIR}/%, $(filter %_test.o,
 PROTO_SRCOBJS := $(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,$(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,${PROTO_SOURCES_B}))
 DEPFLAGS_PROTO = ${DEPFLAGS} -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
 
+LUA_SRCDIR := ${LIBSRCDIR}/lua
+LUA_SOURCES := $(filter-out ${LUA_SRCDIR}/UnitTest% ,$(call rwildcard,${LUA_SRCDIR}/,*.cpp *.c))
+LUA_OBJDIR := ${OBJDIR}/lua
+LUA_SRCOBJS := $(patsubst ${LIBSRCDIR}/lua/%.c,${OBJDIR}/lua/%.o,$(patsubst ${LIBSRCDIR}/lua/%.cpp,${OBJDIR}/lua/%.o,${LUA_SOURCES}))
+DEPFLAGS_LUA = ${DEPFLAGS} -I${LIBSRCDIR}/lua -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
+#CXXFLAGS_LUA +=
+
 ALLOCATOR_SRCDIR := ${SRCDIR}/allocators
 ALLOCATOR_OBJDIR := ${OBJDIR}/allocators
 
@@ -120,7 +130,7 @@ XMLTREE_CXXFLAGS := ${CXXFLAGS}
 
 XSD_ARGS := --generate-doxygen --generate-polymorphic --std c++11 --hxx-suffix .xml.hpp --cxx-suffix .xml.cpp
 
-OBJECTS := $(filter-out %_test.o ,${TEST_SRCOBJS}) $(filter-out obj/main.o ,${SRCOBJS}) ${OBJDIR}/libproto.a ${OBJDIR}/librmrfnet.a ${OBJDIR}/showxml.a
+OBJECTS := $(filter-out %_test.o ,${TEST_SRCOBJS}) $(filter-out obj/main.o ,${SRCOBJS}) ${OBJDIR}/libproto.a ${OBJDIR}/librmrfnet.a ${OBJDIR}/liblua.a ${OBJDIR}/showxml.a
 
 .PRECIOUS: ${DEPDIR}/%.d ${OBJDIR}/**/%.o ${POTOBJS} ${POOBJS}
 .PHONY: all tools test clean install lintian style translation
@@ -146,6 +156,12 @@ ${PROTO_OBJDIR}/%.o: ${PROTO_SRCDIR}/%.pb.cc $(PROTO_SOURCES_B)
 ${OBJDIR}/libproto.a: ${PROTO_SRCOBJS}
 	${MKDIR} ${@D} && ar rsv $@ $^ && touch $@
 
+${LUA_OBJDIR}/%.o: ${LUA_SRCDIR}/%.cpp Makefile
+	echo ${LUA_SOURCES} && ${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${DEPFLAGS_LUA} ${CXXFLAGS_LUA} -o $@ -c $< && touch $@
+
+${OBJDIR}/liblua.a: ${LUA_SRCOBJS}
+	${MKDIR} ${@D} && ar rsv $@ $^ && touch $@
+
 ${XMLTREE_SRCDIR}/%.xml.cpp: ${XMLTREE_DEFDIR}/%.xsd Makefile
 	${MKDIR} ${@D} && cd ${@D} && ${XSDTOOL} cxx-tree ${XSD_ARGS} ../../$< && cd ../.. && touch $@
 
@@ -167,7 +183,7 @@ ${ALLOCATOR_OBJDIR}/%.o: ${ALLOCATOR_SRCDIR}/%.cpp $(PROTO_SOURCES_B) $(XMLTREE_
 ${OBJDIR}/%.o: ${SRCDIR}/%.cpp $(PROTO_SOURCES_B) $(XMLTREE_CFILES) Makefile
 	${MKDIR} ${@D} && ${MKDIR} $(patsubst ${OBJDIR}/%,${DEPDIR}/%,${@D}) && ${CXX} ${CXXFLAGS} ${DEPFLAGS} -o $@ -c $< && touch $@
 
-${BINDIR}/fish: ${SRCOBJS} ${OBJDIR}/librmrfnet.a ${OBJDIR}/libproto.a ${OBJDIR}/showxml.a
+${BINDIR}/fish: ${SRCOBJS} ${OBJDIR}/librmrfnet.a ${OBJDIR}/libproto.a ${OBJDIR}/showxml.a ${OBJDIR}/liblua.a
 	${MKDIR} ${@D} && ${CXX} -o $@ $^ ${LFLAGS} && touch $@
 
 ${TESTDIR}/%.ldflags:
