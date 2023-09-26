@@ -10,3 +10,6 @@
 [submodule "submodules/luacpp"]
 	path = submodules/luacpp
 	url = git@github.com:jordanvrtanoski/luacpp.git
+[submodule "submodules/sol2"]
+	path = submodules/sol2
+	url = git@github.com:ThePhD/sol2.git

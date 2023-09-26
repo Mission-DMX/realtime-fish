@@ -8,53 +8,22 @@
 
 using namespace dmxfish::filters;
 
-BOOST_AUTO_TEST_CASE(onechannelonecueoneframe) {
+BOOST_AUTO_TEST_CASE(testlua) {
     spdlog::set_level(spdlog::level::debug);
     dmxfish::filters::filter_lua_script fil = filter_lua_script ();
 
-//    double time_s = 0;
+    channel_mapping input_channels = channel_mapping();
 
-    channel_mapping input_channels = channel_mapping ();
-//    input_channels.float_channels["time"] = &time_s;
-
-    std::map < std::string, std::string > configuration;
-    configuration["mapping"] = "dimmer:8bit";
-//    configuration["end_handling"] = "hold";
-
-//    configuration["cuelist"] ="2:100@edg#hold#do_nothing";
-
-    std::map < std::string, std::string > initial_parameters;
+    std::map <std::string, std::string> configuration;
+    configuration["in_mapping"] = "dimmer:8bit";
+    configuration["out_mapping"] = "dimmer:8bit";
+    std::map <std::string, std::string> initial_parameters;
+//    initial_parameters["script"] = "print(color) color[\"s\"] = 0.2";
+    initial_parameters["script"] = "print(' called update ') print(number) print(number2) number =42 number2 = 56.7 print(number) print(number2)";
 
     fil.pre_setup(configuration, initial_parameters);
-//    fil.setup_filter (configuration, initial_parameters, input_channels);
-
-
-//
-//    channel_mapping map = channel_mapping ();
-//    const std::string name = "t";
-//    for (int i = 0; i < 4000; i = i + 100){
-//        time_s = (double) i;
-//        if (i == 1000) {
-//            const std::string key = "run_mode";
-//            const std::string _value = "play";
-//            fil.receive_update_from_gui(key, _value);
-//        }
-//
-//        fil.update();
-//        fil.get_output_channels(map, name);
-//        for (auto it = map.eight_bit_channels.begin();
-//             it != map.eight_bit_channels.end(); ++it) {
-//            uint8_t tester = (time_s < 2000) ? 0 : 100;
-//            std::string error =
-//                    std::string("Channel ") + it->first + " should be " + std::to_string(tester) + " , but is " +
-//                    std::to_string(*it->second) + " at time: " + std::to_string(time_s);
-//            BOOST_TEST(*map.eight_bit_channels["t:dimmer"] == tester, error);
-//        }
-//        map.eight_bit_channels.clear();
-//        map.sixteen_bit_channels.clear();
-//        map.float_channels.clear();
-//        map.color_channels.clear();
-//
-//    }
+    fil.setup_filter (configuration, initial_parameters, input_channels);
+    fil.update();
+    fil.update();
     BOOST_TEST(true, "ja");
 }
