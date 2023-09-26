@@ -16,9 +16,8 @@ namespace dmxfish::filters {
 
     class filter_lua_script: public filter {
     private:
-
         sol::state lua;
-        std::string script;
+        sol::load_result script;
 
 
         std::vector<uint8_t*> in_eight_bit;

@@ -130,15 +130,10 @@ namespace dmxfish::filters {
         if (!initial_parameters.contains("script")) {
             throw filter_config_exception("lua filter: unable to setup the script");
         }
-        script = initial_parameters.at("script");
 
         lua.open_libraries(sol::lib::base, sol::lib::package);
         // load string without execute
-        sol::load_result script2 = lua.load("print('comp before run')");
-        //execute
-        sol::protected_function_result script2result = script2();
-        // optionally, check if it worked
-        std::cout << "test : " << script2result.valid() << std::endl;
+        script = lua.load(initial_parameters.at("script"));
     }
 
     void filter_lua_script::setup_filter(const std::map <std::string, std::string> &configuration,
@@ -146,7 +141,30 @@ namespace dmxfish::filters {
                                   const channel_mapping &input_channels) {
         MARK_UNUSED(configuration);
         MARK_UNUSED(initial_parameters);
-        MARK_UNUSED(input_channels);
+        for (size_t i = 0; i < in_eight_bit.size(); i++) {
+            if(!input_channels.eight_bit_channels.contains(names_in_eight_bit.at(i))) {
+                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_eight_bit.at(i) + "' of type 'uint8_t'.");
+            }
+            in_eight_bit.at(i) = input_channels.eight_bit_channels.at(names_in_eight_bit.at(i));
+        }
+        for (size_t i = 0; i < in_sixteen_bit.size(); i++) {
+            if(!input_channels.sixteen_bit_channels.contains(names_in_sixteen_bit.at(i))) {
+                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_sixteen_bit.at(i) + "' of type 'uint16_t'.");
+            }
+            in_sixteen_bit.at(i) = input_channels.sixteen_bit_channels.at(names_in_sixteen_bit.at(i));
+        }
+        for (size_t i = 0; i < in_float.size(); i++) {
+            if(!input_channels.float_channels.contains(names_in_float.at(i))) {
+                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_float.at(i) + "' of type 'double'.");
+            }
+            in_float.at(i) = input_channels.float_channels.at(names_in_float.at(i));
+        }
+        for (size_t i = 0; i < in_color.size(); i++) {
+            if(!input_channels.color_channels.contains(names_in_color.at(i))) {
+                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_color.at(i) + "' of type 'pixel'.");
+            }
+            in_color.at(i) = input_channels.color_channels.at(names_in_color.at(i));
+        }
     }
 
     bool filter_lua_script::receive_update_from_gui(const std::string &key, const std::string &_value) {
@@ -170,14 +188,44 @@ namespace dmxfish::filters {
 
     void filter_lua_script::update() {
 
+        // transmit input data to lua
+        for (size_t i = 0; i < in_eight_bit.size(); i++) {
+            lua[names_in_eight_bit.at(i)] = *in_eight_bit.at(i);
+        }
+        for (size_t i = 0; i < in_sixteen_bit.size(); i++) {
+            lua[names_in_sixteen_bit.at(i)] = *in_sixteen_bit.at(i);
+        }
+        for (size_t i = 0; i < in_float.size(); i++) {
+            lua[names_in_float.at(i)] = *in_float.at(i);
+        }
+        for (size_t i = 0; i < in_color.size(); i++) {
+            sol::table color = lua.create_table_with("h", in_color.at(i)->hue,
+                                                           "s", in_color.at(i)->saturation,
+                                                           "i", in_color.at(i)->iluminance
+            );
+            lua[names_in_color.at(i)] = color;
+        }
 
-        lua.set("number", 24);
-        lua["number2"] = 27;
-        lua.script(script);
-        int number = lua["number"];
-        auto number2 = lua.get<double>("number2");
-        std::cout << "test2 " << number << " " << number2 << std::endl;
+        // execute
+        sol::protected_function_result script2result = script();
+//        // optionally, check if it worked
+//        std::cout << "test : " << script2result.valid() << std::endl;
 
+        // receive output data from lua
+        for (size_t i = 0; i < out_eight_bit.size(); i++) {
+            out_eight_bit.at(i) = std::max(std::min(lua[names_out_eight_bit.at(i)].get_or((double) out_eight_bit.at(i)), 255.0), 0.0);
+        }
+        for (size_t i = 0; i < out_sixteen_bit.size(); i++) {
+            out_sixteen_bit.at(i) = std::max(std::min(lua[names_out_sixteen_bit.at(i)].get_or((double) out_sixteen_bit.at(i)), 65535.0), 0.0);
+        }
+        for (size_t i = 0; i < out_float.size(); i++) {
+            out_float.at(i) = lua.get_or(names_out_float.at(i), out_float.at(i));
+        }
+        for (size_t i = 0; i < out_color.size(); i++) {
+            out_color.at(i).hue = lua[names_out_color.at(i)]["h"].get_or(out_color.at(i).hue);
+            out_color.at(i).saturation = lua[names_out_color.at(i)]["s"].get_or(out_color.at(i).saturation);
+            out_color.at(i).iluminance = lua[names_out_color.at(i)]["i"].get_or(out_color.at(i).iluminance);
+        }
     }
 
     void filter_lua_script::scene_activated() {
