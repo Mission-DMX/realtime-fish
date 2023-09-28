@@ -125,15 +125,6 @@ namespace dmxfish::filters {
             start_pos = next_pos + 1;
             next_pos = in_mapping.find(";", start_pos);
         }
-
-
-        if (!initial_parameters.contains("script")) {
-            throw filter_config_exception("lua filter: unable to setup the script");
-        }
-
-        lua.open_libraries(sol::lib::base, sol::lib::package);
-        // load string without execute
-        script = lua.load(initial_parameters.at("script"));
     }
 
     void filter_lua_script::setup_filter(const std::map <std::string, std::string> &configuration,
@@ -165,6 +156,22 @@ namespace dmxfish::filters {
             }
             in_color.at(i) = input_channels.color_channels.at(names_in_color.at(i));
         }
+
+        if (!initial_parameters.contains("script")) {
+            throw filter_config_exception("lua filter: unable to setup the script");
+        }
+
+        lua.open_libraries(sol::lib::base, sol::lib::package);
+        lua.set_function("update", []() {
+        });
+        lua.set_function("scene_activated", []() {
+        });
+        lua.script(initial_parameters.at("script"));
+
+        // run scene_activated
+        lua.script("scene_activated()");
+        // load script without execute
+        script_update = lua.load("update()");
     }
 
     bool filter_lua_script::receive_update_from_gui(const std::string &key, const std::string &_value) {
@@ -206,10 +213,10 @@ namespace dmxfish::filters {
             lua[names_in_color.at(i)] = color;
         }
 
-        // execute
-        sol::protected_function_result script2result = script();
+        // execute update script in lua
+        sol::protected_function_result script_update_res = script_update();
 //        // optionally, check if it worked
-//        std::cout << "test : " << script2result.valid() << std::endl;
+//        std::cout << "test : " << script_update_res.valid() << std::endl;
 
         // receive output data from lua
         for (size_t i = 0; i < out_eight_bit.size(); i++) {
