@@ -6,8 +6,6 @@
 #include "dmx/pixel.hpp"
 #include "filters/util.hpp"
 
-#include <iostream>
-
 
 namespace dmxfish::filters {
     template <typename T>
@@ -158,17 +156,18 @@ namespace dmxfish::filters {
             throw filter_config_exception("lua filter: unable to setup the script");
         }
 
-        lua.open_libraries(sol::lib::base, sol::lib::package);
+//        lua.open_libraries(sol::lib::base, sol::lib::package);
+        lua.open_libraries(sol::lib::math);
         lua.set_function("update", []() {
         });
         lua.set_function("scene_activated", []() {
         });
 
         lua.script("function hsi_to_rgb(color)\n"
-                   "    help_h = color.h % 360;\n"
-                   "    help_h = 3.14159*help_h / 180;\n"
-                   "    help_s = color.s>0 and (color.s<1 and color.s or 1) or 0;\n"
-                   "    help_i = color.i>0 and (color.i<1 and color.i or 1) or 0;\n"
+                   "    help_h = color.h % 360\n"
+                   "    help_h = 3.14159*help_h / 180\n"
+                   "    help_s = color.s>0 and (color.s<1 and color.s or 1) or 0\n"
+                   "    help_i = color.i>0 and (color.i<1 and color.i or 1) or 0\n"
                    "    if help_h < 2.09439\n"
                    "    then\n"
                    "        cos_h = math.cos(help_h)\n"
@@ -201,10 +200,10 @@ namespace dmxfish::filters {
                    "end\n"
                    "\n"
                    "function hsi_to_rgbw(color)\n"
-                   "    help_h = color.h % 360;\n"
-                   "    help_h = 3.14159*help_h / 180;\n"
-                   "    help_s = color.s>0 and (color.s<1 and color.s or 1) or 0;\n"
-                   "    help_i = color.i>0 and (color.i<1 and color.i or 1) or 0;\n"
+                   "    help_h = color.h % 360\n"
+                   "    help_h = 3.14159*help_h / 180\n"
+                   "    help_s = color.s>0 and (color.s<1 and color.s or 1) or 0\n"
+                   "    help_i = color.i>0 and (color.i<1 and color.i or 1) or 0\n"
                    "    if help_h < 2.09439\n"
                    "    then \n"
                    "        cos_h = math.cos(help_h)\n"
@@ -289,14 +288,16 @@ namespace dmxfish::filters {
         // execute update script in lua
         sol::protected_function_result script_update_res = script_update();
 //        // optionally, check if it worked
-//        std::cout << "test : " << script_update_res.valid() << std::endl;
-
+        if (!script_update_res.valid()){
+            sol::error err = script_update_res;
+            ::spdlog::warn("Output of lua update has failed: {}", err.what());
+        }
         // receive output data from lua
         for (size_t i = 0; i < out_eight_bit.size(); i++) {
-            out_eight_bit.at(i) = std::max(std::min(lua[names_out_eight_bit.at(i)].get_or((double) out_eight_bit.at(i)), 255.0), 0.0);
+            out_eight_bit.at(i) = std::max(std::min(std::round(lua[names_out_eight_bit.at(i)].get_or((double) out_eight_bit.at(i))), 255.0), 0.0);
         }
         for (size_t i = 0; i < out_sixteen_bit.size(); i++) {
-            out_sixteen_bit.at(i) = std::max(std::min(lua[names_out_sixteen_bit.at(i)].get_or((double) out_sixteen_bit.at(i)), 65535.0), 0.0);
+            out_sixteen_bit.at(i) = std::max(std::min(std::round(lua[names_out_sixteen_bit.at(i)].get_or((double) out_sixteen_bit.at(i))), 65535.0), 0.0);
         }
         for (size_t i = 0; i < out_float.size(); i++) {
             out_float.at(i) = lua.get_or(names_out_float.at(i), out_float.at(i));
