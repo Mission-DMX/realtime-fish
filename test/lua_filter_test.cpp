@@ -167,3 +167,59 @@ BOOST_AUTO_TEST_CASE(test_lua_wrong_type) {
     BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->saturation - testercol2.saturation) <= testercol2.saturation * 0.00001, "out_color2:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->saturation) + " instead of " + std::to_string(testercol2.saturation));
     BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->iluminance - testercol2.iluminance) <= testercol2.iluminance * 0.00001, "out_color2:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->iluminance) + " instead of " + std::to_string(testercol2.iluminance));
 }
+
+BOOST_AUTO_TEST_CASE(test_lua_color_conversion) {
+    spdlog::set_level(spdlog::level::debug);
+    dmxfish::filters::filter_lua_script fil = filter_lua_script ();
+
+    channel_mapping input_channels = channel_mapping();
+    dmxfish::dmx::pixel color = dmxfish::dmx::pixel(120,1,1);
+    uint8_t test_red1 = 0;
+    uint8_t test_green1 = 255;
+    uint8_t test_blue1 = 0;
+    uint8_t test_red2 = 0;
+    uint8_t test_green2 = 255;
+    uint8_t test_blue2 = 0;
+    uint8_t test_white2 = 0;
+    input_channels.color_channels["in_color"] = &color;
+    std::map <std::string, std::string> configuration;
+    configuration["in_mapping"] = "in_color:color";
+    configuration["out_mapping"] = "red1:8bit;green1:8bit;blue1:8bit;red2:8bit;green2:8bit;blue2:8bit;white2:8bit";
+    std::map <std::string, std::string> initial_parameters;
+
+    initial_parameters["script"] = "function decompose_rgb(color)\n"
+                                   "    print(color.r)\n"
+                                   "    print(color.g)\n"
+                                   "    print(color.b)\n"
+                                   "    print(color.w)\n"
+                                   "    return color.r, color.g, color.b, color.w\n"
+                                   "end\n"
+                                   "function update()\n"
+                                   "    print('testprint1 ' .. in_color.h)\n"
+                                   "    print(in_color)\n"
+                                   "    print(in_color.h)\n"
+                                   "    print(in_color.s)\n"
+                                   "    print(in_color.i)\n"
+                                   "    print(hsi_to_rgb)\n"
+                                   "    color1 = hsi_to_rgb(in_color)\n"
+                                   "    print('testprint2')\n"
+                                   "    color2 = hsi_to_rgbw(in_color)\n"
+                                   "    print('testprint3')\n"
+                                   "    red2, green2, blue2, white2 = decompose_rgb(color2)\n"
+                                   "end\n";
+
+    fil.pre_setup(configuration, initial_parameters);
+
+    channel_mapping map = channel_mapping();
+    fil.get_output_channels(map, "abc");
+    fil.setup_filter (configuration, initial_parameters, input_channels);
+
+    fil.update();
+    BOOST_TEST(*map.eight_bit_channels["abc:red1"] == test_red1, "red1 has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:red1"]) + " instead of " + std::to_string(test_red1));
+    BOOST_TEST(*map.eight_bit_channels["abc:green1"] == test_green1, "green1 has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:green1"]) + " instead of " + std::to_string(test_green1));
+    BOOST_TEST(*map.eight_bit_channels["abc:blue1"] == test_blue1, "blue1 has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:blue1"]) + " instead of " + std::to_string(test_blue1));
+    BOOST_TEST(*map.eight_bit_channels["abc:red2"] == test_red2, "red2 has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:red2"]) + " instead of " + std::to_string(test_red2));
+    BOOST_TEST(*map.eight_bit_channels["abc:green2"] == test_green2, "green2 has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:green2"]) + " instead of " + std::to_string(test_green2));
+    BOOST_TEST(*map.eight_bit_channels["abc:blue2"] == test_blue2, "blue2 has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:blue2"]) + " instead of " + std::to_string(test_blue2));
+    BOOST_TEST(*map.eight_bit_channels["abc:white2"] == test_white2, "white2 has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:white2"]) + " instead of " + std::to_string(test_white2));
+}
