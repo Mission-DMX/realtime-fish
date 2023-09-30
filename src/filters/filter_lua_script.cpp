@@ -4,17 +4,10 @@
 #include "lib/macros.hpp"
 #include "lib/logging.hpp"
 #include "dmx/pixel.hpp"
+#include "filters/util.hpp"
 
 #include <iostream>
 
-//int count_occurence_of(const std::string &base_string, std::string pattern, size_t start, size_t end) {
-//    int occurrences = 0;
-//    while ((start = base_string.find(pattern, start)) != std::string::npos && start <= end) {
-//        ++occurrences;
-//        start += pattern.length();
-//    }
-//    return occurrences;
-//}
 
 namespace dmxfish::filters {
 
@@ -28,23 +21,23 @@ namespace dmxfish::filters {
 
         // getting output channels
         std::string out_mapping = configuration.at("out_mapping");
-        //::spdlog::debug("setup_filter: out_mapping: {}", out_mapping);
+        //::spdlog::debug("pre-setup: out_mapping: {}", out_mapping);
 
-//     int count_channel_type = count_occurence_of(out_mapping, ":8bit", 0, out_mapping.size());
-//        out_eight_bit.reserve(count_channel_type);
-//        names_out_eight_bit.reserve(count_channel_type);
-//
-//     count_channel_type = count_occurence_of(out_mapping, ":16bit", 0, out_mapping.size());
-//        out_sixteen_bit.reserve(count_channel_type);
-//        names_out_sixteen_bit.reserve(count_channel_type);
-//
-//     count_channel_type = count_occurence_of(out_mapping, ":float", 0, out_mapping.size());
-//        out_float.reserve(count_channel_type);
-//        names_out_float.reserve(count_channel_type);
-//
-//     count_channel_type = count_occurence_of(out_mapping, ":color", 0, out_mapping.size());
-//        out_color.reserve(count_channel_type);
-//        names_out_color.reserve(count_channel_type);
+        int count_channel_type = util::count_occurence_of(out_mapping, ":8bit", 0, out_mapping.size());
+        out_eight_bit.reserve(count_channel_type);
+        names_out_eight_bit.reserve(count_channel_type);
+
+        count_channel_type = util::count_occurence_of(out_mapping, ":16bit", 0, out_mapping.size());
+        out_sixteen_bit.reserve(count_channel_type);
+        names_out_sixteen_bit.reserve(count_channel_type);
+
+        count_channel_type = util::count_occurence_of(out_mapping, ":float", 0, out_mapping.size());
+        out_float.reserve(count_channel_type);
+        names_out_float.reserve(count_channel_type);
+
+        count_channel_type = util::count_occurence_of(out_mapping, ":color", 0, out_mapping.size());
+        out_color.reserve(count_channel_type);
+        names_out_color.reserve(count_channel_type);
 
         size_t start_pos = 0;
         auto next_pos = out_mapping.find(";");
@@ -79,21 +72,21 @@ namespace dmxfish::filters {
 
         // getting input channels
         std::string in_mapping = configuration.at("in_mapping");
-//  count_channel_type = count_occurence_of(in_mapping, ":8bit", 0, in_mapping.size());
-//        in_eight_bit.reserve(count_channel_type);
-//        names_in_eight_bit.reserve(count_channel_type);
-//
-//     count_channel_type = count_occurence_of(in_mapping, ":16bit", 0, in_mapping.size());
-//        in_sixteen_bit.reserve(count_channel_type);
-//        names_in_sixteen_bit.reserve(count_channel_type);
-//
-//     count_channel_type = count_occurence_of(in_mapping, ":float", 0, in_mapping.size());
-//        in_float.reserve(count_channel_type);
-//        names_in_float.reserve(count_channel_type);
-//
-//     count_channel_type = count_occurence_of(in_mapping, ":color", 0, in_mapping.size());
-//        in_color.reserve(count_channel_type);
-//        names_in_color.reserve(count_channel_type);
+        count_channel_type = util::count_occurence_of(in_mapping, ":8bit", 0, in_mapping.size());
+        in_eight_bit.reserve(count_channel_type);
+        names_in_eight_bit.reserve(count_channel_type);
+
+        count_channel_type = util::count_occurence_of(in_mapping, ":16bit", 0, in_mapping.size());
+        in_sixteen_bit.reserve(count_channel_type);
+        names_in_sixteen_bit.reserve(count_channel_type);
+
+        count_channel_type = util::count_occurence_of(in_mapping, ":float", 0, in_mapping.size());
+        in_float.reserve(count_channel_type);
+        names_in_float.reserve(count_channel_type);
+
+        count_channel_type = util::count_occurence_of(in_mapping, ":color", 0, in_mapping.size());
+        in_color.reserve(count_channel_type);
+        names_in_color.reserve(count_channel_type);
 
         start_pos = 0;
         next_pos = in_mapping.find(";");
