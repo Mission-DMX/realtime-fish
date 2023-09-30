@@ -52,6 +52,11 @@ namespace dmxfish::filters {
             key_frame(T val, transition_t tr): value(val), transition(tr) {}
         };
 
+        template <typename T>
+        void reserve_init_out(int amount);
+        template <typename T>
+        void init_values_out(std::string &channel_name);
+
         struct cue_st{
             std::vector<double> timestamps;
             std::vector<key_frame<uint8_t>> eight_bit_frames;

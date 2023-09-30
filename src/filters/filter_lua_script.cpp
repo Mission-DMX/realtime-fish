@@ -10,6 +10,75 @@
 
 
 namespace dmxfish::filters {
+    template <typename T>
+    void filter_lua_script::reserve_init_out(int amount){
+        if constexpr (std::is_same<T, uint8_t>::value) {
+            out_eight_bit.reserve(amount);
+            names_out_eight_bit.reserve(amount);
+        } else if constexpr (std::is_same<T, uint16_t>::value) {
+            out_sixteen_bit.reserve(amount);
+            names_out_sixteen_bit.reserve(amount);
+        } else if constexpr (std::is_same<T, double>::value) {
+            out_float.reserve(amount);
+            names_out_float.reserve(amount);
+        } else {
+            out_color.reserve(amount);
+            names_out_color.reserve(amount);
+        }
+    }
+
+    template <typename T>
+    void filter_lua_script::reserve_init_in(int amount){
+        if constexpr (std::is_same<T, uint8_t>::value) {
+            in_eight_bit.reserve(amount);
+            names_in_eight_bit.reserve(amount);
+        } else if constexpr (std::is_same<T, uint16_t>::value) {
+            in_sixteen_bit.reserve(amount);
+            names_in_sixteen_bit.reserve(amount);
+        } else if constexpr (std::is_same<T, double>::value) {
+            in_float.reserve(amount);
+            names_in_float.reserve(amount);
+        } else {
+            in_color.reserve(amount);
+            names_in_color.reserve(amount);
+        }
+    }
+
+
+    template <typename T>
+    void filter_lua_script::init_values_out(std::string &channel_name){
+        if constexpr (std::is_same<T, uint8_t>::value) {
+            out_eight_bit.push_back(0);
+            names_out_eight_bit.push_back(channel_name);
+        } else if constexpr (std::is_same<T, uint16_t>::value) {
+            out_sixteen_bit.push_back(0);
+            names_out_sixteen_bit.push_back(channel_name);
+        } else if constexpr (std::is_same<T, double>::value) {
+            out_float.push_back(0);
+            names_out_float.push_back(channel_name);
+        } else {
+            out_color.push_back(dmxfish::dmx::pixel());
+            names_out_color.push_back(channel_name);
+        }
+    }
+
+
+    template <typename T>
+    void filter_lua_script::init_values_in(std::string &channel_name){
+        if constexpr (std::is_same<T, uint8_t>::value) {
+            in_eight_bit.push_back(NULL);
+            names_in_eight_bit.push_back(channel_name);
+        } else if constexpr (std::is_same<T, uint16_t>::value) {
+            in_sixteen_bit.push_back(NULL);
+            names_in_sixteen_bit.push_back(channel_name);
+        } else if constexpr (std::is_same<T, double>::value) {
+            in_float.push_back(NULL);
+            names_in_float.push_back(channel_name);
+        } else {
+            in_color.push_back(NULL);
+            names_in_color.push_back(channel_name);
+        }
+    }
 
     void filter_lua_script::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters) {
         if (!configuration.contains("out_mapping")) {
@@ -19,106 +88,41 @@ namespace dmxfish::filters {
             throw filter_config_exception("lua filter: unable to setup the in_mapping");
         }
 
-        // getting output channels
-        std::string out_mapping = configuration.at("out_mapping");
         //::spdlog::debug("pre-setup: out_mapping: {}", out_mapping);
-
-        int count_channel_type = util::count_occurence_of(out_mapping, ":8bit", 0, out_mapping.size());
-        out_eight_bit.reserve(count_channel_type);
-        names_out_eight_bit.reserve(count_channel_type);
-
-        count_channel_type = util::count_occurence_of(out_mapping, ":16bit", 0, out_mapping.size());
-        out_sixteen_bit.reserve(count_channel_type);
-        names_out_sixteen_bit.reserve(count_channel_type);
-
-        count_channel_type = util::count_occurence_of(out_mapping, ":float", 0, out_mapping.size());
-        out_float.reserve(count_channel_type);
-        names_out_float.reserve(count_channel_type);
-
-        count_channel_type = util::count_occurence_of(out_mapping, ":color", 0, out_mapping.size());
-        out_color.reserve(count_channel_type);
-        names_out_color.reserve(count_channel_type);
-
-        size_t start_pos = 0;
-        auto next_pos = out_mapping.find(";");
-        while (true) {
-            const auto sign = out_mapping.find(":", start_pos);
-
-            std::string channel_type = out_mapping.substr(sign + 1, next_pos - sign - 1);
-            std::string channel_name = out_mapping.substr(start_pos, sign - start_pos);
-            if (!channel_type.compare("8bit")) {
-                out_eight_bit.push_back(0);
-                names_out_eight_bit.push_back(channel_name);
-            } else if (!channel_type.compare("16bit")) {
-                out_sixteen_bit.push_back(0);
-                names_out_sixteen_bit.push_back(channel_name);
-            } else if (!channel_type.compare("float")) {
-                out_float.push_back(0);
-                names_out_float.push_back(channel_name);
-            } else if (!channel_type.compare("color")) {
-                out_color.push_back(dmxfish::dmx::pixel());
-                names_out_color.push_back(channel_name);
-            } else {
-                throw filter_config_exception(std::string("can not recognise channel type: ") +
-                                              out_mapping.substr(sign + 1, next_pos - sign - 1));
-            }
-            if (next_pos >= out_mapping.length()) {
-                break;
-            }
-            start_pos = next_pos + 1;
-            next_pos = out_mapping.find(";", start_pos);
-        }
-
+        util::init_mapping(
+                configuration.at("out_mapping"),
+                std::bind(&dmxfish::filters::filter_lua_script::reserve_init_out<uint8_t>, this, std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::reserve_init_out<uint16_t>, this,
+                          std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::reserve_init_out<double>, this, std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::reserve_init_out<dmxfish::dmx::pixel>, this,
+                          std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::init_values_out<uint8_t>, this, std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::init_values_out<uint16_t>, this, std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::init_values_out<double>, this, std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::init_values_out<dmxfish::dmx::pixel>, this,
+                          std::placeholders::_1)
+        );
 
         // getting input channels
-        std::string in_mapping = configuration.at("in_mapping");
-        count_channel_type = util::count_occurence_of(in_mapping, ":8bit", 0, in_mapping.size());
-        in_eight_bit.reserve(count_channel_type);
-        names_in_eight_bit.reserve(count_channel_type);
-
-        count_channel_type = util::count_occurence_of(in_mapping, ":16bit", 0, in_mapping.size());
-        in_sixteen_bit.reserve(count_channel_type);
-        names_in_sixteen_bit.reserve(count_channel_type);
-
-        count_channel_type = util::count_occurence_of(in_mapping, ":float", 0, in_mapping.size());
-        in_float.reserve(count_channel_type);
-        names_in_float.reserve(count_channel_type);
-
-        count_channel_type = util::count_occurence_of(in_mapping, ":color", 0, in_mapping.size());
-        in_color.reserve(count_channel_type);
-        names_in_color.reserve(count_channel_type);
-
-        start_pos = 0;
-        next_pos = in_mapping.find(";");
-        while (true) {
-            const auto sign = in_mapping.find(":", start_pos);
-
-            std::string channel_type = in_mapping.substr(sign + 1, next_pos - sign - 1);
-            std::string channel_name = in_mapping.substr(start_pos, sign - start_pos);
-            if (!channel_type.compare("8bit")) {
-                in_eight_bit.push_back(NULL);
-                names_in_eight_bit.push_back(channel_name);
-            } else if (!channel_type.compare("16bit")) {
-                in_sixteen_bit.push_back(NULL);
-                names_in_sixteen_bit.push_back(channel_name);
-            } else if (!channel_type.compare("float")) {
-                in_float.push_back(NULL);
-                names_in_float.push_back(channel_name);
-            } else if (!channel_type.compare("color")) {
-                in_color.push_back(NULL);
-                names_in_color.push_back(channel_name);
-            } else {
-                throw filter_config_exception(std::string("can not recognise channel type: ") +
-                                              in_mapping.substr(sign + 1, next_pos - sign - 1));
-            }
-
-            if (next_pos >= in_mapping.length()) {
-                break;
-            }
-            start_pos = next_pos + 1;
-            next_pos = in_mapping.find(";", start_pos);
-        }
+        util::init_mapping(
+                configuration.at("in_mapping"),
+                std::bind(&dmxfish::filters::filter_lua_script::reserve_init_in<uint8_t>, this,
+                          std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::reserve_init_in<uint16_t>, this,
+                          std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::reserve_init_in<double>, this, std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::reserve_init_in<dmxfish::dmx::pixel>, this,
+                          std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::init_values_in<uint8_t>, this, std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::init_values_in<uint16_t>, this,
+                          std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::init_values_in<double>, this, std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_lua_script::init_values_in<dmxfish::dmx::pixel>, this,
+                          std::placeholders::_1)
+        );
     }
+
 
     void filter_lua_script::setup_filter(const std::map <std::string, std::string> &configuration,
                                   const std::map <std::string, std::string> &initial_parameters,

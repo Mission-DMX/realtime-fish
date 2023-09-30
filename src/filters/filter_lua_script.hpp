@@ -16,6 +16,16 @@ namespace dmxfish::filters {
 
     class filter_lua_script: public filter {
     private:
+        template <typename T>
+        void reserve_init_out(int amount);
+        template <typename T>
+        void init_values_out(std::string &channel_name);
+        template <typename T>
+        void reserve_init_in(int amount);
+        template <typename T>
+        void init_values_in(std::string &channel_name);
+
+
         sol::state lua;
         sol::load_result script_update;
 
