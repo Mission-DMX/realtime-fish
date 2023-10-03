@@ -15,8 +15,8 @@ COMPILER_SUPRESS("-Weffc++")
     class filter_16bit_to_dual_byte : public filter {
     private:
         uint16_t* input = nullptr;
-	uint8_t lower_output = 0;
-	uint8_t upper_output = 0;
+        uint8_t lower_output = 0;
+        uint8_t upper_output = 0;
     public:
         filter_16bit_to_dual_byte() : filter() {}
         virtual ~filter_16bit_to_dual_byte() {}
@@ -231,6 +231,7 @@ COMPILER_SUPRESS("-Weffc++")
                 r = (uint8_t) std::round(255*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
                 g = (uint8_t) std::round(255*I/3*(1-S));
             }
+//            input->pixel_to_rgb(r, g, b);
         }
 
         virtual void scene_activated() override {}
@@ -299,6 +300,7 @@ COMPILER_SUPRESS("-Weffc++")
                 g = 0;
                 w = (uint8_t) std::round(255*(1-S)*I);
             }
+//            input->pixel_to_rgb(r, g, b, w);
         }
 
         virtual void scene_activated() override {}
@@ -321,8 +323,8 @@ COMPILER_SUPRESS("-Weffc++")
                 throw filter_config_exception("Unable to link input of float to color filter: channel mapping does not contain input channels.");
             }
             this->h = input_channels.float_channels.at("h");
-	    this->s = input_channels.float_channels.at("s");
-	    this->i = input_channels.float_channels.at("i");
+            this->s = input_channels.float_channels.at("s");
+            this->i = input_channels.float_channels.at("i");
         }
 
 	virtual bool receive_update_from_gui(const std::string& key, const std::string& value) override {

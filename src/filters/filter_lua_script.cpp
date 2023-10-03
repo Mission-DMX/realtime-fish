@@ -5,7 +5,25 @@
 #include "lib/logging.hpp"
 #include "dmx/pixel.hpp"
 #include "filters/util.hpp"
+#include <iostream>
 
+
+//std::tuple<uint8_t, uint8_t, uint8_t> hsi_to_rgb(dmxfish::dmx::pixel& color){
+//    uint8_t r = 0;
+//    uint8_t g = 0;
+//    uint8_t b = 0;
+//    color.pixel_to_rgb(r, g, b);
+//    return std::make_tuple(r, g, b);
+//}
+
+std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> hsi_to_rgbw(dmxfish::dmx::pixel& color){
+    uint8_t r = 0;
+    uint8_t g = 0;
+    uint8_t b = 0;
+    uint8_t w = 0;
+    color.pixel_to_rgbw(r, g, b, w);
+    return std::make_tuple(r, g, b, w);
+}
 
 namespace dmxfish::filters {
     template <typename T>
@@ -86,6 +104,8 @@ namespace dmxfish::filters {
             throw filter_config_exception("lua filter: unable to setup the in_mapping");
         }
 
+        lua.new_usertype<dmxfish::dmx::pixel>("Pixel", "h", &dmxfish::dmx::pixel::hue, "s", &dmxfish::dmx::pixel::saturation, "i", &dmxfish::dmx::pixel::iluminance);
+
         //::spdlog::debug("pre-setup: out_mapping: {}", out_mapping);
         util::init_mapping(
                 configuration.at("out_mapping"),
@@ -127,42 +147,46 @@ namespace dmxfish::filters {
                                   const channel_mapping &input_channels) {
         MARK_UNUSED(configuration);
         MARK_UNUSED(initial_parameters);
-        for (size_t i = 0; i < in_eight_bit.size(); i++) {
+        for (size_t i = 0; i < names_in_eight_bit.size(); i++) {
             if(!input_channels.eight_bit_channels.contains(names_in_eight_bit.at(i))) {
                 throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_eight_bit.at(i) + "' of type 'uint8_t'.");
             }
             in_eight_bit.at(i) = input_channels.eight_bit_channels.at(names_in_eight_bit.at(i));
         }
-        for (size_t i = 0; i < in_sixteen_bit.size(); i++) {
+        for (size_t i = 0; i < names_in_sixteen_bit.size(); i++) {
             if(!input_channels.sixteen_bit_channels.contains(names_in_sixteen_bit.at(i))) {
                 throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_sixteen_bit.at(i) + "' of type 'uint16_t'.");
             }
             in_sixteen_bit.at(i) = input_channels.sixteen_bit_channels.at(names_in_sixteen_bit.at(i));
         }
-        for (size_t i = 0; i < in_float.size(); i++) {
+        for (size_t i = 0; i < names_in_float.size(); i++) {
             if(!input_channels.float_channels.contains(names_in_float.at(i))) {
                 throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_float.at(i) + "' of type 'double'.");
             }
             in_float.at(i) = input_channels.float_channels.at(names_in_float.at(i));
         }
-        for (size_t i = 0; i < in_color.size(); i++) {
+        for (size_t i = 0; i < names_in_color.size(); i++) {
             if(!input_channels.color_channels.contains(names_in_color.at(i))) {
                 throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_color.at(i) + "' of type 'pixel'.");
             }
             in_color.at(i) = input_channels.color_channels.at(names_in_color.at(i));
+            // Todo delete in_color;
+            lua[names_in_color.at(i)] = std::ref(input_channels.color_channels.at(names_in_color.at(i)));
         }
 
         if (!initial_parameters.contains("script")) {
             throw filter_config_exception("lua filter: unable to setup the script");
         }
 
-//        lua.open_libraries(sol::lib::base, sol::lib::package);
+        lua.open_libraries(sol::lib::base, sol::lib::package);
         lua.open_libraries(sol::lib::math);
         lua.set_function("update", []() {
         });
         lua.set_function("scene_activated", []() {
         });
 
+//        lua.set_function("hsi_to_rgb", hsi_to_rgb);
+//        lua.set_function("hsi_to_rgbw", hsi_to_rgbw);
         lua.script("function hsi_to_rgb(color)\n"
                    "    help_h = color.h % 360\n"
                    "    help_h = 3.14159*help_h / 180\n"
@@ -287,7 +311,9 @@ namespace dmxfish::filters {
 
         // execute update script in lua
         sol::protected_function_result script_update_res = script_update();
-//        // optionally, check if it worked
+
+
+        // optionally, check if it worked
         if (!script_update_res.valid()){
             sol::error err = script_update_res;
             ::spdlog::warn("Output of lua update has failed: {}", err.what());
@@ -307,6 +333,12 @@ namespace dmxfish::filters {
             out_color.at(i).saturation = lua[names_out_color.at(i)]["s"].get_or(out_color.at(i).saturation);
             out_color.at(i).iluminance = lua[names_out_color.at(i)]["i"].get_or(out_color.at(i).iluminance);
         }
+//        std::cout << "test lua: " << in_color.at(0) << std::endl;
+//        std::cout << "test2 lua: " << in_color.at(0)->hue << std::endl;
+//        std::cout << "test2 lua: " << in_color.at(0)->saturation << std::endl;
+//        std::cout << "test2 lua: " << in_color.at(0)->iluminance << std::endl;
+
+
     }
 
     void filter_lua_script::scene_activated() {
