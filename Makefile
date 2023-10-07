@@ -81,7 +81,7 @@ MODIR ?= po/bin
 
 CXXFLAGS += `${PKG_TOOL} --cflags lua5.4`
 LUA_SRCDIR := ${LIBSRCDIR}/lua
-CXXFLAGS += -I${LUA_SRCDIR}
+CXXFLAGS += -I${LUA_SRCDIR} -Isubmodules/sol2/include
 
 TESTDIR ?= test
 TESTBINDIR ?= bin/test
