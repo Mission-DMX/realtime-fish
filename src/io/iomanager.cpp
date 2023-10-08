@@ -624,9 +624,13 @@ void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::lo
 		loading_result_stream << "Show XML successfully parsed." << std::endl;
 		auto show_candidate = std::make_shared<dmxfish::execution::project_configuration>(std::move(candidate), loading_result_stream);
 		if(!msg->goto_default_scene()) {
-			const auto current_scene = this->active_show->get_active_scene();
-			loading_result_stream << "Switching to last active scene " << current_scene << "." << std::endl;
-			show_candidate->set_active_scene(current_scene);
+			if(this->active_show) {
+				const auto current_scene = this->active_show->get_active_scene();
+				loading_result_stream << "Switching to last active scene " << current_scene << "." << std::endl;
+				show_candidate->set_active_scene(current_scene);
+			} else {
+				loading_result_stream << "Failed to load last active scene as there was no previous show." << std::endl;
+			}
 		}
 		this->last_active_show = this->active_show;
 		this->active_show = show_candidate;
