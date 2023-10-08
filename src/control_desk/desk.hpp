@@ -134,7 +134,7 @@ namespace dmxfish::control_desk {
             return global_dark;
         }
 
-        [[nodiscard]] inline uint8_t get_global_illumination() {
+        [[nodiscard]] inline uint16_t get_global_illumination() {
             return global_dark ? 0 : global_illumination;
         }
 

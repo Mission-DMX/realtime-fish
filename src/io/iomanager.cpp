@@ -175,12 +175,14 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                     {
                         // this->run_time_state->running = true;
                         this->run_time_state->is_direct_mode = false;
+			spdlog::info("Enabled filter execution.");
                         break;
                     }
                     case ::missiondmx::fish::ipcmessages::RM_DIRECT:
                     {
                         // this->run_time_state->running = true;
                         this->run_time_state->is_direct_mode = true;
+			spdlog::info("Disabled filter execution.");
                         break;
                     }
                     case ::missiondmx::fish::ipcmessages::RM_STOP:
