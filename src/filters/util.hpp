@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * The filters hold a cue sequence
+ * A class for some generic calculation
  */
 
 #include <functional>
@@ -16,12 +16,6 @@ namespace dmxfish::filters {
 
     class util{
     public:
-        enum channel_t{
-            EIGHT_BIT,
-            SIXTEEN_BIT,
-            FLOAT,
-            COLOR
-        };
         static int count_occurence_of(const std::string &base_string, std::string pattern, size_t start, size_t end);
         static void init_mapping(
                 const std::string &mappingstr,

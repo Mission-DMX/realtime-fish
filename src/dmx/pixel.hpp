@@ -30,6 +30,9 @@ struct pixel {
 	pixel () : hue(0.), saturation(0.), iluminance(0.) {}
 	pixel (double h, double s, double i) : hue(h), saturation(s), iluminance(i) {}
 
+    void pixel_to_rgb(uint8_t& r, uint8_t& g, uint8_t& b);
+    void pixel_to_rgbw(uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& w);
+
 	[[nodiscard]] std::string str();
 };
 
