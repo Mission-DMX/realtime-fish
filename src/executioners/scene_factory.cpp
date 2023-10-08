@@ -235,6 +235,12 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_lua_script:
                     sum += sizeof(filter_lua_script);
                     break;
+                case filter_type::filter_8bit_to_float:
+                    sum += sizeof(filter_8bit_to_float);
+                    break;
+                case filter_type::filter_16bit_to_float:
+                    sum += sizeof(filter_16bit_to_float);
+                    break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
