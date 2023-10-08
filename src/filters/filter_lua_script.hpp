@@ -26,8 +26,24 @@ namespace dmxfish::filters {
         void init_values_in(std::string &channel_name);
 
 
+//        struct fixture {
+//            int universe;
+//            uint16_t first_channel;
+//            std::string name;
+//            std::vector<uint8_t> channel_names;
+//            fixture(int _universe, uint16_t _first, std::string _name): universe(_universe), first_channel(_first), name(_name) {
+////                channel_values.reserve(size);
+////              save channel names
+//            }
+//        };
+
+//        std::vector<fixture> fixtures;
+
         sol::state lua;
-        sol::load_result script_update;
+//        sol::load_result script_update;
+
+        sol::function scene_activated_lua;
+        sol::function update_lua;
 
         std::vector<uint8_t*> in_eight_bit;
         std::vector<uint16_t*> in_sixteen_bit;

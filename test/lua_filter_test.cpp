@@ -3,8 +3,25 @@
 #include <boost/test/included/unit_test.hpp>
 #include "filters/filter_lua_script.hpp"
 #include "lib/logging.hpp"
+#include "io/iomanager.hpp"
 
+#include "io/universe_sender.hpp"
+#include <filesystem>
+#include <map>
+#include <memory>
 #include <sstream>
+
+
+
+#include "rmrf-net/client_factory.hpp"
+#include "rmrf-net/ioqueue.hpp"
+
+#include "proto_src/RealTimeControl.pb.h"
+#include "proto_src/MessageTypes.pb.h"
+#include "proto_src/DirectMode.pb.h"
+#include "google/protobuf/util/delimited_message_util.h"
+
+#include <google/protobuf/text_format.h>
 
 using namespace dmxfish::filters;
 
@@ -45,6 +62,82 @@ using namespace dmxfish::filters;
 //    fil.update();
 //
 //}
+
+BOOST_AUTO_TEST_CASE(testluadirectout) {
+    spdlog::set_level(spdlog::level::debug);
+
+    std::shared_ptr<runtime_state_t> run_time_state = nullptr;
+    static std::shared_ptr<dmxfish::io::IOManager> manager = nullptr;
+
+    run_time_state = std::make_shared<runtime_state_t>();
+    manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
+    manager->start();
+
+
+
+
+//    std::unique_ptr<MissionDMX::ShowFile::BordConfiguration> bc = MissionDMX::ShowFile::bord_configuration("./test/test_bord_config.xml", xml_schema::flags::dont_validate);
+//    ::spdlog::debug("test4");
+////    const std::unique_ptr<MissionDMX::ShowFile::BordConfiguration> bc = MissionDMX::ShowFile::bord_configuration("./test/test_bord_config.xml", xml_schema::flags::dont_validate);
+//    //test_bord_config
+//    //test_color_conv2
+//    ::spdlog::debug("test4.1");
+//    for(const auto& universe : bc->universe()) {
+//
+//        ::spdlog::debug("test4.2");
+//        dmxfish::io::register_universe_from_xml(universe);
+//        ::spdlog::debug("test4.3");
+//    }
+//    ::spdlog::debug("test5");
+
+
+//    const auto msg_universe_init = missiondmx::fish::ipcmessages::Universe();
+//    msg_universe_init.set_id(1);
+
+    auto msg_universe_init = std::make_shared<missiondmx::fish::ipcmessages::Universe>();
+    msg_universe_init->set_id(1);
+
+    const auto universe_inner = msg_universe_init->mutable_remote_location();
+    universe_inner->set_ip_address("192.168.125.23");
+    universe_inner->set_port(6454);
+    universe_inner->set_universe_on_device(1);
+    dmxfish::io::register_universe_from_message(*msg_universe_init.get());
+
+
+
+    dmxfish::filters::filter_lua_script fil = filter_lua_script ();
+
+    channel_mapping input_channels = channel_mapping();
+    std::map <std::string, std::string> configuration;
+    configuration["in_mapping"] = "";
+    configuration["out_mapping"] = "";
+    std::map <std::string, std::string> initial_parameters;
+
+    initial_parameters["script"] = "function update()\n"
+                                   "    print('avc' .. acaae)\n"
+                                   "    output[1]={}\n"
+                                   "    output[\"2\"]={}\n"
+                                   "    output[2]={}\n"
+                                   "    output[1][2]=5\n"
+                                   "    output[1][4]='avad'\n"
+                                   "    output[1][3]=6\n"
+                                   "end\n"
+                                   "function scene_activated()\n"
+                                   "    -- This method will be called every time the show is switched to this scene\n"
+                                   "end";
+
+    fil.pre_setup(configuration, initial_parameters);
+
+    channel_mapping map = channel_mapping();
+    fil.get_output_channels(map, "abc");
+    fil.setup_filter (configuration, initial_parameters, input_channels);
+    fil.update();
+
+    fil.update();
+
+}
+
+
 
 BOOST_AUTO_TEST_CASE(testlua) {
     spdlog::set_level(spdlog::level::debug);

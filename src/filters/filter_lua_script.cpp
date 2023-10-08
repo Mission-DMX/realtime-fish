@@ -5,6 +5,7 @@
 #include "lib/logging.hpp"
 #include "dmx/pixel.hpp"
 #include "filters/util.hpp"
+#include "io/universe_sender.hpp"
 #include <iostream>
 
 
@@ -16,14 +17,15 @@
 //    return std::make_tuple(r, g, b);
 //}
 
-std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> hsi_to_rgbw(dmxfish::dmx::pixel& color){
-    uint8_t r = 0;
-    uint8_t g = 0;
-    uint8_t b = 0;
-    uint8_t w = 0;
-    color.pixel_to_rgbw(r, g, b, w);
-    return std::make_tuple(r, g, b, w);
-}
+//std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> hsi_to_rgbw(dmxfish::dmx::pixel& color){
+//    uint8_t r = 0;
+//    uint8_t g = 0;
+//    uint8_t b = 0;
+//    uint8_t w = 0;
+//    color.pixel_to_rgbw(r, g, b, w);
+//    return std::make_tuple(r, g, b, w);
+//}
+
 
 namespace dmxfish::filters {
     template <typename T>
@@ -178,6 +180,22 @@ namespace dmxfish::filters {
             throw filter_config_exception("lua filter: unable to setup the script");
         }
 
+//        if (!initial_parameters.contains("patching")) {
+//            throw filter_config_exception("lua filter: unable to setup the patching");
+//        }
+
+        // initial_parameters.at("patching") divide
+        // for each fixture
+        //      fix_univ
+        //      fix_name
+        //      fix_ch_size
+        //      fixture local = fixture(fix_univ, fix_name, fix_ch_size);
+        //      ? dynamisch verschieden viele Argumente übergeben?
+//              lua.new_usertype<fixture>("Fixture", "pan", &fixture.channel_values.at(0), "s", &dmxfish::dmx::pixel::saturation, "i", &dmxfish::dmx::pixel::iluminance);
+        //      fixtures.append(local);
+
+
+
         lua.open_libraries(sol::lib::base, sol::lib::package);
         lua.open_libraries(sol::lib::math);
         lua.set_function("update", []() {
@@ -185,8 +203,11 @@ namespace dmxfish::filters {
         lua.set_function("scene_activated", []() {
         });
 
-//        lua.set_function("hsi_to_rgb", hsi_to_rgb);
-//        lua.set_function("hsi_to_rgbw", hsi_to_rgbw);
+//        for(fixture fix: fixtures){
+//            lua.create_named_table(fix.name, "universe", fix.universe,
+//                                   "first_channel", fix.first_channel);
+//        }
+        lua.create_named_table("output");
         lua.script("function hsi_to_rgb(color)\n"
                    "    help_h = color.h % 360\n"
                    "    help_h = 3.14159*help_h / 180\n"
@@ -264,10 +285,19 @@ namespace dmxfish::filters {
 
         lua.script(initial_parameters.at("script"));
 
-        // run scene_activated
-        lua.script("scene_activated()");
-        // load script without execute
-        script_update = lua.load("update()");
+        sol::object scene_activated_obj = lua["scene_activated"];
+        if (scene_activated_obj.get_type() == sol::type::function && scene_activated_obj.is<std::function<void()>>()){
+            scene_activated_lua = scene_activated_obj;
+        } else {
+            throw filter_config_exception("scene_activated is not a function or has the wrong signature");
+        }
+
+        sol::object update_obj = lua["update"];
+        if (update_obj.get_type() == sol::type::function && update_obj.is<std::function<void()>>()){
+            update_lua = update_obj;
+        } else {
+            throw filter_config_exception("update is not a function or has the wrong signature");
+        }
     }
 
     bool filter_lua_script::receive_update_from_gui(const std::string &key, const std::string &_value) {
@@ -310,14 +340,18 @@ namespace dmxfish::filters {
         }
 
         // execute update script in lua
-        sol::protected_function_result script_update_res = script_update();
-
-
-        // optionally, check if it worked
-        if (!script_update_res.valid()){
-            sol::error err = script_update_res;
-            ::spdlog::warn("Output of lua update has failed: {}", err.what());
+//        sol::protected_function_result script_update_res = script_update();
+        try {
+            update_lua();
+        } catch (const std::exception& e) {
+            ::spdlog::warn("Update of lua has failed: {}", e.what());
         }
+
+//        // optionally, check if it worked
+//        if (!script_update_res.valid()){
+//            sol::error err = script_update_res;
+//            ::spdlog::warn("Output of lua update has failed: {}", err.what());
+//        }
         // receive output data from lua
         for (size_t i = 0; i < out_eight_bit.size(); i++) {
             out_eight_bit.at(i) = std::max(std::min(std::round(lua[names_out_eight_bit.at(i)].get_or((double) out_eight_bit.at(i))), 255.0), 0.0);
@@ -333,15 +367,64 @@ namespace dmxfish::filters {
             out_color.at(i).saturation = lua[names_out_color.at(i)]["s"].get_or(out_color.at(i).saturation);
             out_color.at(i).iluminance = lua[names_out_color.at(i)]["i"].get_or(out_color.at(i).iluminance);
         }
-//        std::cout << "test lua: " << in_color.at(0) << std::endl;
-//        std::cout << "test2 lua: " << in_color.at(0)->hue << std::endl;
-//        std::cout << "test2 lua: " << in_color.at(0)->saturation << std::endl;
-//        std::cout << "test2 lua: " << in_color.at(0)->iluminance << std::endl;
 
-
+        // Going through the table and set output channels
+        sol::object outputs = lua["output"];
+        if (outputs.get_type() == sol::type::table) {
+            for(int universe_id = 0; universe_id <= 2 * ((sol::table) outputs).size(); universe_id++){
+                sol::object universe = ((sol::table) outputs)[universe_id];
+                if(auto uptr = dmxfish::io::get_universe(universe_id); uptr != nullptr) {
+                    if (universe.get_type() == sol::type::table) {
+                        for (uint16_t chan = 0; chan < 512; chan++) {
+                            sol::object channel = ((sol::table) universe)[chan];
+                            if (channel.get_type() == sol::type::number) {
+                                uint8_t value = ((sol::table) universe)[chan];
+                                (*uptr)[chan] = value;
+//                                std::cout << "test : " << (int) value << std::endl;
+//                            } else if (channel.get_type() != sol::type::nil) {
+//                                std::cout << " test : is not nil : " << std::endl;
+                            }
+                        }
+                    }
+                }
+//            for (const auto &univ_kvpair: (sol::table) outputs) {
+//                sol::object uni_key = univ_kvpair.first;
+//                sol::object universe = univ_kvpair.second;
+//                if (uni_key.get_type() == sol::type::number) {
+//                    std::cout << "number" << std::endl;
+//                    int i = ((sol::lua_value) uni_key).value();
+//
+//                    std::cout << "b1 " << i << std::endl;
+//                }
+//                if (uni_key.get_type() == sol::type::string) {
+//                    std::cout << "string" << std::endl;
+////                    int str = (uni_key).get<sol::lua_value>();
+////                    std::cout << "b " << str << std::endl;
+//                }
+//                int i = ((sol::lua_value) uni_key).get<int>();
+//                if (universe.get_type() == sol::type::table) {
+//                    if(auto uptr = dmxfish::io::get_universe((sol::lua_value) uni_key); uptr != nullptr) {
+//                        for (const auto &channel_kv_pair: (sol::table) universe) {
+//                            sol::object ch_name = channel_kv_pair.first;
+//                            sol::object ch_value = channel_kv_pair.second;
+//                            (*uptr)[ch_name] = ch_value;
+//                            std::cout << "c " << std::endl;
+//                        }
+//                    } else {
+//                            throw std::invalid_argument("The requested universe with id " + std::to_string(uni_key) +
+//                                                        " does not exist anymore");
+//                    }
+//                }
+            }
+        }
     }
 
     void filter_lua_script::scene_activated() {
+        try {
+            scene_activated_lua();
+        } catch (const std::exception& e) {
+            ::spdlog::warn("Scene activated of lua has failed: {}", e.what());
+        }
     }
 
 }

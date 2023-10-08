@@ -28,6 +28,9 @@ namespace dmxfish::filters {
             std::function<void(std::string&)> init_values_float,
             std::function<void(std::string&)> init_values_color
     ){
+        if (mappingstr.length() < 1){
+            return;
+        }
         reserve_space_8bit(util::count_occurence_of(mappingstr, ":8bit", 0, mappingstr.size()));
         reserve_space_16bit(util::count_occurence_of(mappingstr, ":16bit", 0, mappingstr.size()));
         reserve_space_float(util::count_occurence_of(mappingstr, ":float", 0, mappingstr.size()));
