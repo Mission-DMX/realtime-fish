@@ -241,6 +241,9 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_16bit_to_float:
                     sum += sizeof(filter_16bit_to_float);
                     break;
+                case filter_type::filter_pixel_to_floats:
+                    sum += sizeof(filter_pixel_to_floats);
+                    break;
 				default:
 					throw scheduling_exception("The requested filter type is not yet implemented.");
 			}
@@ -365,6 +368,8 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_shift_color>(pac);
             case filter_type::filter_lua_script:
                 return calloc<filter_lua_script>(pac);
+            case filter_type::filter_pixel_to_floats:
+                return calloc<filter_pixel_to_floats>(pac);
 			default:
 				throw scheduling_exception("The requested filter type is not yet implemented.");
 		}

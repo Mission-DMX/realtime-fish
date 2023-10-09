@@ -308,15 +308,15 @@ COMPILER_SUPRESS("-Weffc++")
 
     class filter_floats_to_pixel : public filter {
     private:
-	    dmxfish::dmx::pixel output;
-	    double* h = nullptr;
-	    double* s = nullptr;
-	    double* i = nullptr;
+        dmxfish::dmx::pixel output;
+        double* h = nullptr;
+        double* s = nullptr;
+        double* i = nullptr;
     public:
-	    filter_floats_to_pixel(): filter(), output{} {}
-	    virtual ~filter_floats_to_pixel() {}
+        filter_floats_to_pixel(): filter(), output{} {}
+        virtual ~filter_floats_to_pixel() {}
 
-            virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.float_channels.contains("h") || !input_channels.float_channels.contains("s") || !input_channels.float_channels.contains("i")) {
@@ -327,21 +327,61 @@ COMPILER_SUPRESS("-Weffc++")
             this->i = input_channels.float_channels.at("i");
         }
 
-	virtual bool receive_update_from_gui(const std::string& key, const std::string& value) override {
+        virtual bool receive_update_from_gui(const std::string& key, const std::string& value) override {
             MARK_UNUSED(key);
             MARK_UNUSED(value);
             return false;
         }
 
-	virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
+        virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
             map.color_channels[name + ":value"] = &output;
         }
 
-	virtual void update() override {
-		this->output = dmxfish::dmx::pixel(*this->h, *this->s, *this->i);
-	}
+        virtual void update() override {
+            this->output = dmxfish::dmx::pixel(*this->h, *this->s, *this->i);
+        }
 
-	virtual void scene_activated() override {}
+        virtual void scene_activated() override {}
+    };
+
+    class filter_pixel_to_floats : public filter {
+    private:
+        dmxfish::dmx::pixel* input = nullptr;
+        double h = 0;
+        double s = 0;
+        double i = 0;
+    public:
+        filter_pixel_to_floats(): filter() {}
+        virtual ~filter_pixel_to_floats() {}
+
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+            MARK_UNUSED(initial_parameters);
+            MARK_UNUSED(configuration);
+            if(!input_channels.color_channels.contains("input")) {
+                throw filter_config_exception("Unable to link input of color to float filter: channel mapping does not contain the input channel.");
+            }
+            this->input = input_channels.color_channels.at("input");
+        }
+
+        virtual bool receive_update_from_gui(const std::string& key, const std::string& value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(value);
+            return false;
+        }
+
+        virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
+            map.float_channels[name + ":hue"] = &h;
+            map.float_channels[name + ":saturation"] = &s;
+            map.float_channels[name + ":iluminance"] = &i;
+        }
+
+        virtual void update() override {
+            this->h = (*this->input).hue;
+            this->s = (*this->input).saturation;
+            this->i = (*this->input).iluminance;
+        }
+
+        virtual void scene_activated() override {}
     };
 
     template <typename T>
