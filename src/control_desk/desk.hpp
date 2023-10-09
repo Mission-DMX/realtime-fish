@@ -83,6 +83,12 @@ namespace dmxfish::control_desk {
 
             bank_set(const std::string& _id) : fader_banks{}, columns_map{}, columns_in_ready_state{}, id{_id} {};
             ~bank_set() = default;
+
+            void clear() {
+                fader_banks.clear();
+                columns_map.clear();
+                columns_in_ready_state.clear();
+            }
         };
     public:
         const static constexpr size_t size_t_max{std::numeric_limits<size_t>::max()};

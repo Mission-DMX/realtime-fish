@@ -467,11 +467,17 @@ namespace dmxfish::control_desk {
     }
 
     void desk::add_bank_set_from_protobuf_msg(const ::missiondmx::fish::ipcmessages::add_fader_bank_set& definition) {
-	bank_set_modification_happened = true;
-        bank_sets.emplace_back(definition.bank_id());
-        const auto new_bank_index = bank_sets.size() - 1;
-        bankset_to_index_map[definition.bank_id()] = new_bank_index;
+        bank_set_modification_happened = true;
+        const bool is_update = bankset_to_index_map.contains(definition.bank_id());
+        if (!is_update) {
+            bank_sets.emplace_back(definition.bank_id());
+        }
+        const auto new_bank_index = is_update ? bankset_to_index_map[definition.bank_id()] : bank_sets.size() - 1;
+        if(!is_update) {
+            bankset_to_index_map[definition.bank_id()] = new_bank_index;
+        }
         auto& bs = bank_sets[new_bank_index];
+        bs.clear();
         bs.fader_banks.reserve(definition.banks_size());
         for (auto& bank_definition : definition.banks()) {
             using namespace std::placeholders;
