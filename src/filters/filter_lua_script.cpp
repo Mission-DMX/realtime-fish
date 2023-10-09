@@ -9,22 +9,32 @@
 #include <iostream>
 
 
-//std::tuple<uint8_t, uint8_t, uint8_t> hsi_to_rgb(dmxfish::dmx::pixel& color){
-//    uint8_t r = 0;
-//    uint8_t g = 0;
-//    uint8_t b = 0;
-//    color.pixel_to_rgb(r, g, b);
-//    return std::make_tuple(r, g, b);
-//}
+std::tuple<uint8_t, uint8_t, uint8_t> hsi_to_rgb_color(dmxfish::dmx::pixel& color){
+    uint8_t r = 0;
+    uint8_t g = 0;
+    uint8_t b = 0;
+    color.pixel_to_rgb(r, g, b);
+    return std::make_tuple(r, g, b);
+}
 
-//std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> hsi_to_rgbw(dmxfish::dmx::pixel& color){
-//    uint8_t r = 0;
-//    uint8_t g = 0;
-//    uint8_t b = 0;
-//    uint8_t w = 0;
-//    color.pixel_to_rgbw(r, g, b, w);
-//    return std::make_tuple(r, g, b, w);
-//}
+std::tuple<uint8_t, uint8_t, uint8_t> hsi_to_rgb_table(sol::table color){
+    dmxfish::dmx::pixel color_local = dmxfish::dmx::pixel(color["h"], color["s"], color["i"]);
+    return hsi_to_rgb_color(color_local);
+}
+
+std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> hsi_to_rgbw_color(dmxfish::dmx::pixel& color){
+    uint8_t r = 0;
+    uint8_t g = 0;
+    uint8_t b = 0;
+    uint8_t w = 0;
+    color.pixel_to_rgbw(r, g, b, w);
+    return std::make_tuple(r, g, b, w);
+}
+
+std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> hsi_to_rgbw_table(sol::table color){
+    dmxfish::dmx::pixel color_local = dmxfish::dmx::pixel(color["h"], color["s"], color["i"]);
+    return hsi_to_rgbw_color(color_local);
+}
 
 
 namespace dmxfish::filters {
@@ -208,82 +218,22 @@ namespace dmxfish::filters {
 //                                   "first_channel", fix.first_channel);
 //        }
         lua.create_named_table("output");
-        lua.script("function hsi_to_rgb(color)\n"
-                   "    help_h = color.h % 360\n"
-                   "    help_h = 3.14159*help_h / 180\n"
-                   "    help_s = color.s>0 and (color.s<1 and color.s or 1) or 0\n"
-                   "    help_i = color.i>0 and (color.i<1 and color.i or 1) or 0\n"
-                   "    if help_h < 2.09439\n"
-                   "    then\n"
-                   "        cos_h = math.cos(help_h)\n"
-                   "        cos_1047_h = math.cos(1.047196667-help_h)\n"
-                   "        return {\n"
-                   "            r = 255*help_i/3*(1+help_s*cos_h/cos_1047_h),\n"
-                   "            g = 255*help_i/3*(1+help_s*(1-cos_h/cos_1047_h)),\n"
-                   "            b = 255*help_i/3*(1-help_s)\n"
-                   "        }\n"
-                   "    elseif help_h < 4.188787\n"
-                   "    then\n"
-                   "        help_h = help_h - 2.09439\n"
-                   "        cos_h = math.cos(help_h)\n"
-                   "        cos_1047_h = math.cos(1.047196667-help_h)\n"
-                   "        return {\n"
-                   "            g = 255*help_i/3*(1+help_s*cos_h/cos_1047_h),\n"
-                   "            b = 255*help_i/3*(1+help_s*(1-cos_h/cos_1047_h)),\n"
-                   "            r = 255*help_i/3*(1-help_s)\n"
-                   "        }\n"
-                   "    else\n"
-                   "        help_h = help_h - 4.188787\n"
-                   "        cos_h = math.cos(help_h)\n"
-                   "        cos_1047_h = math.cos(1.047196667-help_h)\n"
-                   "        return {\n"
-                   "            b = 255*help_i/3*(1+help_s*cos_h/cos_1047_h),\n"
-                   "            r = 255*help_i/3*(1+help_s*(1-cos_h/cos_1047_h)),\n"
-                   "            g = 255*help_i/3*(1-help_s)\n"
-                   "        }\n"
-                   "    end\n"
-                   "end\n"
-                   "\n"
-                   "function hsi_to_rgbw(color)\n"
-                   "    help_h = color.h % 360\n"
-                   "    help_h = 3.14159*help_h / 180\n"
-                   "    help_s = color.s>0 and (color.s<1 and color.s or 1) or 0\n"
-                   "    help_i = color.i>0 and (color.i<1 and color.i or 1) or 0\n"
-                   "    if help_h < 2.09439\n"
-                   "    then \n"
-                   "        cos_h = math.cos(help_h)\n"
-                   "        cos_1047_h = math.cos(1.047196667-help_h)\n"
-                   "        return {\n"
-                   "            r = help_s*255*help_i/3*(1+cos_h/cos_1047_h),\n"
-                   "            g = help_s*255*help_i/3*(1+(1-cos_h/cos_1047_h)),\n"
-                   "            b = 0,\n"
-                   "            w = 255*help_i*(1-help_s)\n"
-                   "        }\n"
-                   "    elseif help_h < 4.188787\n"
-                   "    then\n"
-                   "        help_h = help_h - 2.09439\n"
-                   "        cos_h = math.cos(help_h)\n"
-                   "        cos_1047_h = math.cos(1.047196667-help_h)\n"
-                   "        return {\n"
-                   "            g = help_s*255*help_i/3*(1+cos_h/cos_1047_h),\n"
-                   "            b = help_s*255*help_i/3*(1+(1-cos_h/cos_1047_h)),\n"
-                   "            r = 0,\n"
-                   "            w = 255*help_i*(1-help_s)\n"
-                   "        }\n"
-                   "    else\n"
-                   "        help_h = help_h - 4.188787\n"
-                   "        cos_h = math.cos(help_h)\n"
-                   "        cos_1047_h = math.cos(1.047196667-help_h)\n"
-                   "        return {\n"
-                   "            b = help_s*255*help_i/3*(1+cos_h/cos_1047_h),\n"
-                   "            r = help_s*255*help_i/3*(1+(1-cos_h/cos_1047_h)),\n"
-                   "            g = 0,\n"
-                   "            w = 255*help_i*(1-help_s)\n"
-                   "        }\n"
-                   "    end\n"
-                   "end");
 
-        lua.script(initial_parameters.at("script"));
+        lua.set_function( "hsi_to_rgb", sol::overload(
+                hsi_to_rgb_color,
+                hsi_to_rgb_table
+        ) );
+
+        lua.set_function( "hsi_to_rgbw", sol::overload(
+                hsi_to_rgbw_color,
+                hsi_to_rgbw_table
+        ) );
+
+        try {
+            lua.script(initial_parameters.at("script"));
+        } catch (std::exception &e){
+            throw filter_config_exception(std::string("setup the filter threw an error: ") + e.what());
+        }
 
         sol::object scene_activated_obj = lua["scene_activated"];
         if (scene_activated_obj.get_type() == sol::type::function && scene_activated_obj.is<std::function<void()>>()){
@@ -345,6 +295,7 @@ namespace dmxfish::filters {
             update_lua();
         } catch (const std::exception& e) {
             ::spdlog::warn("Update of lua has failed: {}", e.what());
+            throw filter_config_exception(std::string("update script in lua had an error: ") + e.what());
         }
 
 //        // optionally, check if it worked
@@ -424,6 +375,7 @@ namespace dmxfish::filters {
             scene_activated_lua();
         } catch (const std::exception& e) {
             ::spdlog::warn("Scene activated of lua has failed: {}", e.what());
+            throw filter_config_exception(std::string("scene_sctivated script in lua had an error: ") + e.what());
         }
     }
 
