@@ -99,11 +99,14 @@ namespace dmxfish::control_desk {
                 cbs.fader_banks[cbs.active_bank]->activate();
             }
             // TODO display bank set id on 7seg for a short period of time
+	    // TODO debug index
             update_fader_bank_leds();
             update_message_required = true;
 	    bank_set_modification_happened = false;
+	    ::spdlog::info("Switched to bank set with index {}.", index);
             return true;
         } else {
+	    ::spdlog::error("Failed to activate bank set with index {}. There are {} registered", index, bank_sets.size());
             return false;
         }
     }
@@ -123,6 +126,7 @@ namespace dmxfish::control_desk {
 
     bool desk::set_active_fader_bank_on_current_set(size_t index) {
         if(!(current_active_bank_set < bank_sets.size())) {
+	    ::spdlog::error("Failed to change active bank as it is out of range.");
             return false;
         }
         auto& cbs = bank_sets[current_active_bank_set];
@@ -500,7 +504,12 @@ namespace dmxfish::control_desk {
                 }
                 auto& selected_device = devices[device_index];
                 const auto& id = col_definition.column_id();
-                auto col_ptr = bs.fader_banks[bs.fader_banks.size() - 1]->emplace_back(selected_device, deduce_bank_mode(col_definition), id, (uint8_t) col_index_on_device);
+                auto col_ptr = bs.fader_banks[bs.fader_banks.size() - 1]->emplace_back(
+			selected_device,
+			deduce_bank_mode(col_definition),
+			id,
+			(uint8_t) col_index_on_device
+		);
                 bs.columns_map[id] = col_ptr;
                 col_index_on_device++;
                 update_column_from_message(col_definition, new_bank_index);

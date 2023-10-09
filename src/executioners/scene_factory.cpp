@@ -244,8 +244,13 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_pixel_to_floats:
                     sum += sizeof(filter_pixel_to_floats);
                     break;
-				default:
-					throw scheduling_exception("The requested filter type is not yet implemented.");
+				default: {
+						 std::stringstream ss;
+						 ss << "The requested filter type (";
+						 ss << (int) f.type();
+						 ss << ") is not yet implemented.";
+					throw scheduling_exception(ss.str());
+					 }
 			}
 		}
         return sum;
@@ -368,10 +373,14 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_shift_color>(pac);
             case filter_type::filter_lua_script:
                 return calloc<filter_lua_script>(pac);
+            case filter_type::filter_8bit_to_float:
+                return calloc<filter_8bit_to_float>(pac);
+            case filter_type::filter_16bit_to_float:
+                return calloc<filter_16bit_to_float>(pac);
             case filter_type::filter_pixel_to_floats:
                 return calloc<filter_pixel_to_floats>(pac);
-			default:
-				throw scheduling_exception("The requested filter type is not yet implemented.");
+	default:
+		throw scheduling_exception("Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
 		return nullptr;
 	}

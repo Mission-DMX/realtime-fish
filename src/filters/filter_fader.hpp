@@ -12,6 +12,7 @@
 #include "lib/macros.hpp"
 #include "main.hpp"
 
+#include "lib/logging.hpp"
 #include "control_desk/bank_column.hpp"
 #include "lib/logging.hpp"
 
@@ -201,6 +202,7 @@ namespace dmxfish::filters {
 
         virtual void update() override {
 	    this->storage = get_iomanager_instance()->get_global_illumination();
+	    //::spdlog::debug("{}", this->storage);
         }
 
         virtual void scene_activated() override {}
