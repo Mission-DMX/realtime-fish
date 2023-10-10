@@ -61,7 +61,7 @@ namespace dmxfish::filters {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             this->param1 = input_channels.float_channels.contains("param1") ? input_channels.float_channels.at("param1") : &util::float_one;
-            this->param1 = input_channels.float_channels.contains("param2") ? input_channels.float_channels.at("param2") : &util::float_one;
+            this->param2 = input_channels.float_channels.contains("param2") ? input_channels.float_channels.at("param2") : &util::float_one;
         }
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
