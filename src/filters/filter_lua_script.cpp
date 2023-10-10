@@ -160,30 +160,22 @@ namespace dmxfish::filters {
         MARK_UNUSED(configuration);
         MARK_UNUSED(initial_parameters);
         for (size_t i = 0; i < names_in_eight_bit.size(); i++) {
-            if(!input_channels.eight_bit_channels.contains(names_in_eight_bit.at(i))) {
-                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_eight_bit.at(i) + "' of type 'uint8_t'.");
-            }
-            in_eight_bit.at(i) = input_channels.eight_bit_channels.at(names_in_eight_bit.at(i));
+            in_eight_bit.at(i) = input_channels.eight_bit_channels.contains(names_in_eight_bit.at(i)) ? input_channels.eight_bit_channels.at(names_in_eight_bit.at(i)) : &util::low_8bit;
         }
         for (size_t i = 0; i < names_in_sixteen_bit.size(); i++) {
-            if(!input_channels.sixteen_bit_channels.contains(names_in_sixteen_bit.at(i))) {
-                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_sixteen_bit.at(i) + "' of type 'uint16_t'.");
-            }
-            in_sixteen_bit.at(i) = input_channels.sixteen_bit_channels.at(names_in_sixteen_bit.at(i));
+            in_sixteen_bit.at(i) = input_channels.sixteen_bit_channels.contains(names_in_sixteen_bit.at(i)) ? input_channels.sixteen_bit_channels.at(names_in_sixteen_bit.at(i)) : &util::low_16bit;
         }
         for (size_t i = 0; i < names_in_float.size(); i++) {
-            if(!input_channels.float_channels.contains(names_in_float.at(i))) {
-                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_float.at(i) + "' of type 'double'.");
-            }
-            in_float.at(i) = input_channels.float_channels.at(names_in_float.at(i));
+            in_float.at(i) = input_channels.float_channels.contains(names_in_float.at(i)) ? input_channels.float_channels.at(names_in_float.at(i)) : &util::float_zero;
         }
         for (size_t i = 0; i < names_in_color.size(); i++) {
-            if(!input_channels.color_channels.contains(names_in_color.at(i))) {
-                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_color.at(i) + "' of type 'pixel'.");
+            in_color.at(i) = input_channels.color_channels.contains(names_in_color.at(i)) ? input_channels.color_channels.at(names_in_color.at(i)) : &util::color_white;
+            if (input_channels.color_channels.contains(names_in_color.at(i))) {
+                lua[names_in_color.at(i)] = std::ref(input_channels.color_channels.at(names_in_color.at(i)));
+            } else {
+                lua[names_in_color.at(i)] = std::ref(util::color_white);
             }
-            in_color.at(i) = input_channels.color_channels.at(names_in_color.at(i));
             // Todo delete in_color;
-            lua[names_in_color.at(i)] = std::ref(input_channels.color_channels.at(names_in_color.at(i)));
         }
 
         if (!initial_parameters.contains("script")) {

@@ -9,6 +9,7 @@
 #include "filters/filter.hpp"
 #include "filters/util.hpp"
 #include "lib/macros.hpp"
+#include "lib/logging.hpp"
 
 #include "global_vars.hpp"
 
@@ -72,10 +73,13 @@ namespace dmxfish::filters {
                 MARK_UNUSED(ex);
                 throw filter_config_exception("Unable to setup delay filter: could not parse the 'delay' as double");
             }
-            if(!input_channels.float_channels.contains("time")) {
-                throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'time' of type 'double'. This input should come from the scenes global time node.");
+            if (input_channels.float_channels.contains("time")) {
+                this->time = input_channels.float_channels.at("time");
+            } else {
+                this->time = &util::float_zero;
+                ::spdlog::warn(std::string("delay filter had no time input, so it wont do anything"));
+//                throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'time' of type 'double'. This input should come from the scenes global time node.");
             }
-            this->time = input_channels.float_channels.at("time");
             if constexpr (std::is_same<T, uint8_t>::value) {
                 this->value = input_channels.eight_bit_channels.contains("value_in") ? input_channels.eight_bit_channels.at("value_in") : &util::low_8bit;
             } else if constexpr (std::is_same<T, uint16_t>::value) {

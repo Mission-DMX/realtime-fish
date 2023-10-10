@@ -430,12 +430,14 @@ namespace dmxfish::filters {
                                   const std::map <std::string, std::string> &initial_parameters,
                                   const channel_mapping &input_channels) {
         MARK_UNUSED(initial_parameters);
-        if (!input_channels.float_channels.contains("time")) {
-        throw filter_config_exception(
-            "Unable to link input of cue filter: channel mapping does not contain channel 'time' of type 'double'. This input should come from the scenes global time node.");
+        if (input_channels.float_channels.contains("time")) {
+            this->time = input_channels.float_channels.at("time");
+        } else {
+            this->time = &util::float_zero;
+            ::spdlog::warn(std::string("cue filter had no time input, so you cant start a cue"));
+//            throw filter_config_exception(
+//                    "Unable to link input of cue filter: channel mapping does not contain channel 'time' of type 'double'. This input should come from the scenes global time node.");
         }
-        this->time = input_channels.float_channels.at("time");
-
         this->handle_end = HOLD;
         if (configuration.contains("end_handling")) {
             if (!configuration.at("end_handling").compare("start_again")) {
@@ -450,9 +452,9 @@ namespace dmxfish::filters {
         const std::string frames = configuration.at("cuelist");
         cues.reserve(count_occurence_of(frames, "$", 0, frames.size()) + 1);
         if (!do_with_substr(frames, 0, frames.length(), '$', 1,
-                               std::bind(&dmxfish::filters::filter_cue::handle_cue,
-                                         this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                                         std::placeholders::_4))) {
+                            std::bind(&dmxfish::filters::filter_cue::handle_cue,
+                                      this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+                                      std::placeholders::_4))) {
             throw filter_config_exception("cue filter: unable to parse the cuelist");
         }
     }

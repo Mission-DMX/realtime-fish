@@ -27,15 +27,14 @@ namespace dmxfish::filters {
 
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(initial_parameters);
-            if(!input_channels.float_channels.contains("time")) {
-                throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain channel 'time' of type 'double'. This input should come from the scenes global time node.");
+            if (input_channels.float_channels.contains("time")) {
+                this->time = input_channels.float_channels.at("time");
+            } else {
+                this->time = &util::float_zero;
+                ::spdlog::warn(std::string("shift filter had no time input, so it wont shift"));
+//                throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain channel 'time' of type 'double'. This input should come from the scenes global time node.");
             }
-            this->time = input_channels.float_channels.at("time");
-
-            if(!input_channels.float_channels.contains("switch_time")) {
-                throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain channel 'switch_time' of type 'double'.");
-            }
-            this->switch_time = input_channels.float_channels.at("switch_time");
+            this->switch_time = input_channels.float_channels.contains("switch_time") ? input_channels.float_channels.at("switch_time") : &util::float_1000;
             
             if (!configuration.contains("nr_outputs")){
                 throw filter_config_exception("Unable to setup shift filter: configuration does not contain a value for 'nr_outputs'");
