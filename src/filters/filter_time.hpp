@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include "filters/filter.hpp"
+#include "filters/util.hpp"
 #include "lib/macros.hpp"
 
 #include "global_vars.hpp"
@@ -76,25 +77,13 @@ namespace dmxfish::filters {
             }
             this->time = input_channels.float_channels.at("time");
             if constexpr (std::is_same<T, uint8_t>::value) {
-                if(!input_channels.eight_bit_channels.contains("value_in")) {
-                    throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value_in' of type 'uint8_t'.");
-                }
-                this->value = input_channels.eight_bit_channels.at("value_in");
+                this->value = input_channels.eight_bit_channels.contains("value_in") ? input_channels.eight_bit_channels.at("value_in") : &util::low_8bit;
             } else if constexpr (std::is_same<T, uint16_t>::value) {
-                if(!input_channels.sixteen_bit_channels.contains("value_in")) {
-                    throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value_in' of type 'uint16_t'.");
-                }
-                this->value = input_channels.sixteen_bit_channels.at("value_in");
+                this->value = input_channels.sixteen_bit_channels.contains("value_in") ? input_channels.sixteen_bit_channels.at("value_in") : &util::low_16bit;
             } else if constexpr (std::is_same<T, double>::value) {
-                if(!input_channels.float_channels.contains("value_in")) {
-                    throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value_in' of type 'double'.");
-                }
-                this->value = input_channels.float_channels.at("value_in");
+                this->value = input_channels.float_channels.contains("value_in") ? input_channels.float_channels.at("value_in") : &util::float_zero;
             } else {
-                if(!input_channels.color_channels.contains("value_in")) {
-                    throw filter_config_exception("Unable to link input of delay filter: channel mapping does not contain channel 'value_in' of type 'hsv_pixel'.");
-                }
-                this->value = input_channels.color_channels.at("value_in");
+                this->value = input_channels.color_channels.contains("value_in") ? input_channels.color_channels.at("value_in") : &util::color_white;
             }
         }
 

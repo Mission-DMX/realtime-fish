@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(test_16bit_to_float) {
 
 BOOST_AUTO_TEST_CASE(test_color_to_floats) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_16bit_to_float fil = filter_16bit_to_float();
+    dmxfish::filters::filter_pixel_to_floats fil = filter_pixel_to_floats();
 
     double testh = 355.0;
     double tests = 0.8;
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(test_color_to_floats) {
     const std::string name = "test";
     fil.get_output_channels(map, name);
     fil.update();
-    BOOST_TEST(*map.float_channels["t:hue"] == testh, "value in filter color_to_floats should be " + std::to_string(testh) + " but is " + std::to_string(*map.float_channels["t:hue"]));
-    BOOST_TEST(*map.float_channels["t:saturation"] == tests, "value in filter color_to_floats should be " + std::to_string(tests) + " but is " + std::to_string(*map.float_channels["t:saturation"]));
-    BOOST_TEST(*map.float_channels["t:iluminance"] == testi, "value in filter color_to_floats should be " + std::to_string(testi) + " but is " + std::to_string(*map.float_channels["t:iluminance"]));
+    BOOST_TEST(*map.float_channels["test:hue"] == testh, "value in filter color_to_floats should be " + std::to_string(testh) + " but is " + std::to_string(*map.float_channels["test:hue"]));
+    BOOST_TEST(*map.float_channels["test:saturation"] == tests, "value in filter color_to_floats should be " + std::to_string(tests) + " but is " + std::to_string(*map.float_channels["test:saturation"]));
+    BOOST_TEST(*map.float_channels["test:iluminance"] == testi, "value in filter color_to_floats should be " + std::to_string(testi) + " but is " + std::to_string(*map.float_channels["test:iluminance"]));
 }

@@ -8,6 +8,16 @@
 
 
 namespace dmxfish::filters {
+
+    double util::float_zero = 0.0;
+    double util::float_one = 1.0;
+    double util::float_180 = 180.0;
+    uint8_t util::low_8bit = 0;
+    uint8_t util::high_8bit = 255;
+    uint16_t util::low_16bit = 0;
+    uint16_t util::high_16bit = 65535;
+    dmxfish::dmx::pixel util::color_white = dmxfish::dmx::pixel(0,0,1);
+
     int util::count_occurence_of(const std::string &base_string, std::string pattern, size_t start, size_t end) {
         int occurrences = 0;
         while ((start = base_string.find(pattern, start)) != std::string::npos && start <= end) {

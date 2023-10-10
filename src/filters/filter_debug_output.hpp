@@ -9,6 +9,7 @@
 
 #include "dmx/pixel.hpp"
 #include "filters/filter.hpp"
+#include "filters/util.hpp"
 #include "lib/logging.hpp"
 #include "lib/macros.hpp"
 
@@ -31,25 +32,13 @@ COMPILER_SUPRESS("-Weffc++")
             MARK_UNUSED(configuration);
             // TODO use configuration to push received values to GUI
             if constexpr (std::is_same<T, uint8_t>::value) {
-                if(!input_channels.eight_bit_channels.contains("value")) {
-                    throw filter_config_exception("Unable to link input of debug output filter: channel mapping does not contain channel 'value' of type 'uint8_t'.");
-                }
-                this->input = input_channels.eight_bit_channels.at("value");
+                this->input = input_channels.eight_bit_channels.contains("value") ? input_channels.eight_bit_channels.at("value") : &util::low_8bit;
             } else if constexpr (std::is_same<T, uint16_t>::value) {
-                if(!input_channels.sixteen_bit_channels.contains("value")) {
-                    throw filter_config_exception("Unable to link input of debug output filter: channel mapping does not contain channel 'value' of type 'uint16_t'.");
-                }
-                this->input = input_channels.sixteen_bit_channels.at("value");
+                this->input = input_channels.sixteen_bit_channels.contains("value") ? input_channels.sixteen_bit_channels.at("value") : &util::low_16bit;
             } else if constexpr (std::is_same<T, double>::value) {
-                if(!input_channels.float_channels.contains("value")) {
-                    throw filter_config_exception("Unable to link input of debug output filter: channel mapping does not contain channel 'value' of type 'double'.");
-                }
-                this->input = input_channels.float_channels.at("value");
+                this->input = input_channels.float_channels.contains("value") ? input_channels.float_channels.at("value") : &util::float_zero;
             } else {
-                if(!input_channels.color_channels.contains("value")) {
-                    throw filter_config_exception("Unable to link input of debug output filter: channel mapping does not contain channel 'value' of type 'hsv_pixel'.");
-                }
-                this->input = input_channels.color_channels.at("value");
+                this->input = input_channels.color_channels.contains("value") ? input_channels.color_channels.at("value") : &util::color_white;
             }
 
         }

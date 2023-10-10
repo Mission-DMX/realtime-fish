@@ -8,6 +8,7 @@
 
 #include "filters/filter.hpp"
 #include "lib/macros.hpp"
+#include "filters/util.hpp"
 
 
 namespace dmxfish::filters {
@@ -25,10 +26,7 @@ namespace dmxfish::filters {
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
-            if(!input_channels.float_channels.contains("value_in")) {
-                throw filter_config_exception("Unable to link input of math filter: channel mapping does not contain channel 'value_in' of type 'double'.");
-            }
-            this->input = input_channels.float_channels.at("value_in");
+            this->input = input_channels.float_channels.contains("value_in") ? input_channels.float_channels.at("value_in") : &util::float_one;
         }
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
@@ -42,7 +40,7 @@ namespace dmxfish::filters {
         }
 
         virtual void update() override {
-            this->output = (*input);
+            this->output = F(*input);
         }
 
         virtual void scene_activated() override {}
@@ -62,11 +60,8 @@ namespace dmxfish::filters {
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
-            if(!input_channels.float_channels.contains("param1") || !input_channels.float_channels.contains("param2")) {
-                throw filter_config_exception("Unable to link input of math filter: channel mapping does not contain channel 'param1' or 'param2' of type 'double'.");
-            }
-            this->param1 = input_channels.float_channels.at("param1");
-            this->param2 = input_channels.float_channels.at("param2");
+            this->param1 = input_channels.float_channels.contains("param1") ? input_channels.float_channels.at("param1") : &util::float_one;
+            this->param1 = input_channels.float_channels.contains("param2") ? input_channels.float_channels.at("param2") : &util::float_one;
         }
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {

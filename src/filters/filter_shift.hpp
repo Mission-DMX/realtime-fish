@@ -6,6 +6,7 @@
 #include "filters/filter.hpp"
 #include "lib/macros.hpp"
 
+#include "filters/util.hpp"
 #include "lib/logging.hpp"
 
 namespace dmxfish::filters {
@@ -52,36 +53,17 @@ namespace dmxfish::filters {
             
             
             if constexpr (std::is_same<T, uint8_t>::value) {
-                if(!input_channels.eight_bit_channels.contains("input")) {
-                    throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain channel 'input' of type 'uint8_t'.");
-                }
-//                values = std::vector(nr_outputs, 0);
-                values.reserve(nr_outputs);
-                for(int i = 0; i < nr_outputs; i++){
-                    values.push_back(0);
-                }
-                this->input = input_channels.eight_bit_channels.at("input");
+                this->input = input_channels.eight_bit_channels.contains("input") ? input_channels.eight_bit_channels.at("input") : &util::low_8bit;
+                values = std::vector(nr_outputs, (uint8_t) 0);
             } else if constexpr (std::is_same<T, uint16_t>::value) {
-                if(!input_channels.sixteen_bit_channels.contains("input")) {
-                    throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain channel 'input' of type 'uint16_t'.");
-                }
-//                values = std::vector(nr_outputs, 0);
-                this->input = input_channels.sixteen_bit_channels.at("input");
-                for(int i = 0; i < nr_outputs; i++){
-                    values.push_back(0);
-                }
+                this->input = input_channels.sixteen_bit_channels.contains("input") ? input_channels.sixteen_bit_channels.at("input") : &util::low_16bit;
+                values = std::vector(nr_outputs, 0);
             } else if constexpr (std::is_same<T, double>::value) {
-                if(!input_channels.float_channels.contains("input")) {
-                    throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain channel 'input' of type 'double'.");
-                }
+                this->input = input_channels.float_channels.contains("input") ? input_channels.float_channels.at("input") : &util::float_zero;
                 values = std::vector(nr_outputs, 0.0);
-                this->input = input_channels.float_channels.at("input");
             } else {
-                if(!input_channels.color_channels.contains("input")) {
-                    throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain channel 'input' of type 'hsv_pixel'.");
-                }
+                this->input = input_channels.color_channels.contains("input") ? input_channels.color_channels.at("input") : &util::color_white;
                 values = std::vector(nr_outputs, dmxfish::dmx::pixel());
-                this->input = input_channels.color_channels.at("input");
             }
         }
 

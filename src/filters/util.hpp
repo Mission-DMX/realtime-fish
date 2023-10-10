@@ -16,6 +16,14 @@ namespace dmxfish::filters {
 
     class util{
     public:
+        static double float_zero;
+        static double float_one;
+        static double float_180;
+        static uint8_t low_8bit;
+        static uint8_t high_8bit;
+        static uint16_t low_16bit;
+        static uint16_t high_16bit;
+        static dmxfish::dmx::pixel color_white;
         static int count_occurence_of(const std::string &base_string, std::string pattern, size_t start, size_t end);
         static void init_mapping(
                 const std::string &mappingstr,
