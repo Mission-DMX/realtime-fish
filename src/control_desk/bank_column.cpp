@@ -57,6 +57,10 @@ namespace dmxfish::control_desk {
 		const auto now = sc::duration_cast<sc::milliseconds>(sc::system_clock::now().time_since_epoch()).count();
 		bool display_update_required = false;
 
+        if(last_encoder_turn + 750 < last_update_timestamp) {
+            accumulated_change = 0;
+        }
+
 		if(last_update_timestamp != 0 && now >= display_hold_until) {
 			display_update_required = true;
 		}
@@ -101,22 +105,48 @@ namespace dmxfish::control_desk {
 			position_request = 65535;
 		}
 		if(readymode_active) {
-                    readymode_raw_configuration.fader_position = (uint16_t) position_request;
+            if (raw_working_on_primary) {
+                readymode_raw_configuration.primary_position = (uint16_t) position_request;
+            } else {
+                readymode_raw_configuration.secondary_position = (uint16_t) position_request;
+            }
 		    if(current_bank_mode != bank_mode::DIRECT_INPUT_MODE) {
-		        this->readymode_color.iluminance = raw_configuration.fader_position / 65535.0;
+		        this->readymode_color.iluminance = (uint16_t) position_request / 65535.0;
 		    }
 		} else {
-		    raw_configuration.fader_position = (uint16_t) position_request;
+            if (raw_working_on_primary) {
+                raw_configuration.primary_position = (uint16_t) position_request;
+            } else {
+                raw_configuration.secondary_position = (uint16_t) position_request;
+            }
 		    if(current_bank_mode != bank_mode::DIRECT_INPUT_MODE) {
-		        this->color.iluminance = raw_configuration.fader_position / 65535.0;
+		        this->color.iluminance = ((uint16_t) position_request) / 65535.0;
 		    }
 		}
 		update_physical_fader_position();
+        if (current_bank_mode == bank_mode::DIRECT_INPUT_MODE) {
+            update_display_text();
+        }
 		send_col_update_to_fish();
 	}
 
 	void bank_column::process_encoder_change_message(int change_request) {
-		raw_configuration.rotary_position += (int16_t) change_request;
+        this->accumulated_change++;
+        this->last_encoder_turn = this->last_update_timestamp;
+        change_request *= this->accumulated_change;
+        if (readymode_active) {
+            if (raw_working_on_primary) {
+                readymode_raw_configuration.primary_position += (uint16_t) change_request;
+            } else {
+                readymode_raw_configuration.secondary_position += (uint16_t) change_request;
+            }
+        } else {
+            if (raw_working_on_primary) {
+                raw_configuration.primary_position += (uint16_t) change_request;
+            } else {
+                raw_configuration.secondary_position += (uint16_t) change_request;
+            }
+        }
 		auto& selected_color = readymode_active ? readymode_color : color;
 		auto& selected_amber = readymode_active ? readymode_amber : amber;
 		auto& selected_uv = readymode_active ? readymode_uv : uv;
@@ -165,6 +195,9 @@ namespace dmxfish::control_desk {
 		update_display_text();
 		update_encoder_leds();
 		update_side_leds();
+        if(current_bank_mode == bank_mode::DIRECT_INPUT_MODE) {
+            this->update_physical_fader_position();
+        }
 		send_col_update_to_fish();
 	}
 
@@ -175,7 +208,9 @@ namespace dmxfish::control_desk {
 			case button_change::PRESS:
 				if(b_base == button::BTN_CH1_ENCODER_ROTARYMODE) {
 					if(current_bank_mode == bank_mode::DIRECT_INPUT_MODE) {
-						return;
+						this->raw_working_on_primary = !this->raw_working_on_primary;
+                        update_display_text();
+                        return;
 					}
 					switch(current_re_assignment) {
 						case rotary_encoder_assignment::HUE:
@@ -247,7 +282,7 @@ namespace dmxfish::control_desk {
 		{
 			if(display_text_index_up < display_text_up.size()) {
 				const auto& up_text = display_text_up[display_text_index_up];
-				for(auto i = 0; i < 7; i++){
+				for(auto i = 0, last_printable_char = (current_bank_mode == bank_mode::DIRECT_INPUT_MODE) ? 6 : 7; i < last_printable_char; i++){
 					const auto tpos = i + display_scroll_position_up;
 					if(tpos < up_text.length()) {
 						content[i] = up_text.at(tpos);
@@ -255,6 +290,9 @@ namespace dmxfish::control_desk {
 						content[i] = ' ';
 					}
 				}
+                if (current_bank_mode == bank_mode::DIRECT_INPUT_MODE) {
+                    content[6] = (raw_working_on_primary) ? '+' : '*';
+                }
 			} else {
 				std::array<char, 7> no_data = {'N', 'o', ' ', 'D', 'a', 't', 'a'};
 				for(auto i = 0; i < 7; i++){
@@ -266,7 +304,8 @@ namespace dmxfish::control_desk {
 			std::string value;
 			if (current_bank_mode == bank_mode::DIRECT_INPUT_MODE) {
 				value = std::to_string(
-					readymode_active ? readymode_raw_configuration.rotary_position : raw_configuration.rotary_position
+					readymode_active ? (raw_working_on_primary ? readymode_raw_configuration.primary_position : readymode_raw_configuration.secondary_position) :
+                    (raw_working_on_primary ? raw_configuration.primary_position : raw_configuration.secondary_position)
 				);	
 			} else {
 				switch(this->current_re_assignment) {
@@ -399,7 +438,9 @@ namespace dmxfish::control_desk {
 		if(connection.expired()) {
 			return;
 		}
-		xtouch_set_fader_position(*connection.lock(), fader{fader_index + XTOUCH_FADER_INDEX_OFFSET}, ((readymode_active ? readymode_raw_configuration.fader_position : raw_configuration.fader_position) * 128) / 65536);
+        const auto raw_value = raw_working_on_primary ? (readymode_active ? readymode_raw_configuration.primary_position : raw_configuration.primary_position)
+                : (readymode_active ? readymode_raw_configuration.secondary_position : raw_configuration.secondary_position);
+		xtouch_set_fader_position(*connection.lock(), fader{fader_index + XTOUCH_FADER_INDEX_OFFSET}, (raw_value * 128) / 65536);
 	}
 
 	void bank_column::update_encoder_leds() {
@@ -411,7 +452,19 @@ namespace dmxfish::control_desk {
 		}
 		const encoder e{fader_index + XTOUCH_ENCODER_INDEX_OFFSET};
 		if(current_bank_mode == bank_mode::DIRECT_INPUT_MODE) {
-			xtouch_set_ring_led(*connection.lock(), e, (raw_configuration.rotary_position * 128) / 65536);
+            if(readymode_active) {
+                if (raw_working_on_primary) {
+                    xtouch_set_ring_led(*connection.lock(), e, (raw_configuration.secondary_position * 128) / 65536);
+                } else {
+                    xtouch_set_ring_led(*connection.lock(), e, (raw_configuration.primary_position * 128) / 65536);
+                }
+            } else {
+                if (raw_working_on_primary) {
+                    xtouch_set_ring_led(*connection.lock(), e, (readymode_raw_configuration.secondary_position * 128) / 65536);
+                } else {
+                    xtouch_set_ring_led(*connection.lock(), e, (readymode_raw_configuration.secondary_position * 128) / 65536);
+                }
+            }
 		} else {
 			if(readymode_active)
 			    xtouch_set_ring_led(*connection.lock(), e, (uint8_t) ((this->readymode_color.hue / 360.0) * 128));
@@ -514,8 +567,8 @@ namespace dmxfish::control_desk {
 			case bank_mode::HSI_WITH_AMBER_MODE: {
 				auto rd = msg.mutable_raw_data();
 				const raw_column_configuration& data = this->readymode_active ? this->readymode_raw_configuration : raw_configuration;
-				rd->set_fader(data.fader_position);
-				rd->set_rotary_position(data.rotary_position);
+				rd->set_fader(data.primary_position);
+				rd->set_rotary_position(data.secondary_position);
 				rd->set_meter_leds(data.meter_leds);
 				// TODO copy button states
 				break;

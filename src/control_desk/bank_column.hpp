@@ -22,8 +22,8 @@ namespace dmxfish::control_desk {
     };
 
     struct raw_column_configuration {
-        uint16_t fader_position = 0;
-        uint16_t rotary_position = 0;
+        uint16_t primary_position = 0;
+        uint16_t secondary_position = 0;
         uint8_t meter_leds = 0;
         button_led_state select_led = button_led_state::off;
         button_led_state button_1 = button_led_state::off;
@@ -56,6 +56,7 @@ namespace dmxfish::control_desk {
         bool readymode_active = false;
         bool black_active = false;
         bool flash_active = false;
+        bool raw_working_on_primary = true;
         dmxfish::dmx::pixel color;
         dmxfish::dmx::pixel readymode_color;
 
@@ -72,7 +73,9 @@ namespace dmxfish::control_desk {
         unsigned int display_scroll_position_down = 0;
         unsigned int display_text_index_up = 0;
         unsigned int display_text_index_down = 0;
+        unsigned long accumulated_change = 0;
 	unsigned long last_update_timestamp = 0;
+    unsigned long last_encoder_turn = 0;
 	unsigned long display_hold_until = 0;
 	unsigned long last_display_scroll = 0;
     public:
@@ -121,7 +124,7 @@ namespace dmxfish::control_desk {
             update_physical_fader_position();
             update_encoder_leds();
             update_side_leds();
-	    send_col_update_to_fish();
+            send_col_update_to_fish();
         }
 
         [[nodiscard]] inline raw_column_configuration get_raw_configuration() const {
@@ -132,7 +135,7 @@ namespace dmxfish::control_desk {
             this->raw_configuration = c;
             update_physical_fader_position();
             update_encoder_leds();
-	    send_col_update_to_fish();
+            send_col_update_to_fish();
         }
 
         inline void set_amber_value(uint8_t new_value) {

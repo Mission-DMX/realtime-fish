@@ -99,8 +99,8 @@ namespace dmxfish::filters {
         virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
             using namespace dmxfish::control_desk;
             if constexpr (MODE == bank_mode::DIRECT_INPUT_MODE) {
-                map.sixteen_bit_channels[name + ":fader"] = &(storage.fader_position);
-                map.sixteen_bit_channels[name + ":encoder"] = &(storage.rotary_position);
+                map.sixteen_bit_channels[name + ":primary"] = &(storage.primary_position);
+                map.sixteen_bit_channels[name + ":secondary"] = &(storage.secondary_position);
             } else if constexpr (MODE == bank_mode::HSI_COLOR_MODE) {
                 map.color_channels[name + ":color"] = &storage.color;
             } else if constexpr (MODE == bank_mode::HSI_WITH_AMBER_MODE) {
