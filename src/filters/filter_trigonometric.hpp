@@ -62,7 +62,7 @@ namespace dmxfish::filters {
             MARK_UNUSED(configuration);
             this->input = input_channels.float_channels.contains("value_in") ? input_channels.float_channels.at("value_in") : &util::float_zero;
             this->factor_outer = input_channels.float_channels.contains("factor_outer") ? input_channels.float_channels.at("factor_outer") : &util::float_one;
-            this->factor_inner = input_channels.float_channels.contains("factor_inner") ? input_channels.float_channels.at("factor_inner") : &util::float_one;
+            this->factor_inner = input_channels.float_channels.contains("factor_inner") ? input_channels.float_channels.at("factor_inner") : &util::float_tenth;
             this->phase = input_channels.float_channels.contains("phase") ? input_channels.float_channels.at("phase") : &util::float_zero;
             this->offset = input_channels.float_channels.contains("offset") ? input_channels.float_channels.at("offset") : &util::float_zero;
         }
@@ -104,7 +104,7 @@ namespace dmxfish::filters {
             MARK_UNUSED(configuration);
             this->input = input_channels.float_channels.contains("value_in") ? input_channels.float_channels.at("value_in") : &util::float_zero;
             this->factor_outer = input_channels.float_channels.contains("factor_outer") ? input_channels.float_channels.at("factor_outer") : &util::float_one;
-            this->factor_inner = input_channels.float_channels.contains("factor_inner") ? input_channels.float_channels.at("factor_inner") : &util::float_one;
+            this->factor_inner = input_channels.float_channels.contains("factor_inner") ? input_channels.float_channels.at("factor_inner") : &util::float_tenth;
             this->phase = input_channels.float_channels.contains("phase") ? input_channels.float_channels.at("phase") : &util::float_zero;
             this->offset = input_channels.float_channels.contains("offset") ? input_channels.float_channels.at("offset") : &util::float_zero;
             this->length = input_channels.float_channels.contains("length") ? input_channels.float_channels.at("length") : &util::float_180;

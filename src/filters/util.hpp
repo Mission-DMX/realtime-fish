@@ -20,6 +20,7 @@ namespace dmxfish::filters {
         static double float_one;
         static double float_180;
         static double float_1000;
+        static double float_tenth;
         static uint8_t low_8bit;
         static uint8_t high_8bit;
         static uint16_t low_16bit;

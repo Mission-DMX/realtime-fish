@@ -13,6 +13,7 @@ namespace dmxfish::filters {
     double util::float_one = 1.0;
     double util::float_180 = 180.0;
     double util::float_1000 = 1000.0;
+    double util::float_tenth = 0.1;
     uint8_t util::low_8bit = 0;
     uint8_t util::high_8bit = 255;
     uint16_t util::low_16bit = 0;
