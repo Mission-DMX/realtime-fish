@@ -56,7 +56,7 @@ namespace dmxfish::filters {
                 values = std::vector(nr_outputs, (uint8_t) 0);
             } else if constexpr (std::is_same<T, uint16_t>::value) {
                 this->input = input_channels.sixteen_bit_channels.contains("input") ? input_channels.sixteen_bit_channels.at("input") : &util::low_16bit;
-                values = std::vector(nr_outputs, 0);
+                values = std::vector(nr_outputs, (uint16_t) 0);
             } else if constexpr (std::is_same<T, double>::value) {
                 this->input = input_channels.float_channels.contains("input") ? input_channels.float_channels.at("input") : &util::float_zero;
                 values = std::vector(nr_outputs, 0.0);

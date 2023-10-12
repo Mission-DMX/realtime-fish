@@ -25,6 +25,9 @@
 
 using namespace dmxfish::filters;
 
+
+
+
 BOOST_AUTO_TEST_CASE(test_error_init) {
     spdlog::set_level(spdlog::level::debug);
     dmxfish::filters::filter_lua_script fil = filter_lua_script ();
@@ -146,9 +149,14 @@ BOOST_AUTO_TEST_CASE(testluadirectout) {
     fil.get_output_channels(map, "abc");
     fil.setup_filter (configuration, initial_parameters, input_channels);
     fil.update();
-
-    fil.update();
-
+    if(auto uptr = dmxfish::io::get_universe(1); uptr != nullptr) {
+        BOOST_TEST((*uptr)[2] == 5, std::string("lua direct out to universe has value of ") + std::to_string((*uptr)[2]) + std::string(" instead of 5"));
+        BOOST_TEST((*uptr)[3] == 6, std::string("lua direct out to universe has value of ") + std::to_string((*uptr)[3]) + std::string(" instead of 6"));
+    } else {
+        BOOST_TEST(false, "universe for lua filter test does not exist");
+    }
+    run_time_state->running = false;
+    manager = nullptr;
 }
 
 
@@ -364,4 +372,101 @@ BOOST_AUTO_TEST_CASE(test_lua_color_conversion) {
     BOOST_TEST(*map.eight_bit_channels["abc:green2"] == test_green2, "green2 has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:green2"]) + " instead of " + std::to_string(test_green2));
     BOOST_TEST(*map.eight_bit_channels["abc:blue2"] == test_blue2, "blue2 has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:blue2"]) + " instead of " + std::to_string(test_blue2));
     BOOST_TEST(*map.eight_bit_channels["abc:white2"] == test_white2, "white2 has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:white2"]) + " instead of " + std::to_string(test_white2));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
+    spdlog::set_level(spdlog::level::debug);
+
+    std::shared_ptr<runtime_state_t> run_time_state = nullptr;
+    static std::shared_ptr<dmxfish::io::IOManager> manager = nullptr;
+
+    run_time_state = std::make_shared<runtime_state_t>();
+    manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
+    manager->start();
+
+
+    auto msg_universe_init = std::make_shared<missiondmx::fish::ipcmessages::Universe>();
+    msg_universe_init->set_id(1);
+
+    const auto universe_inner = msg_universe_init->mutable_remote_location();
+    universe_inner->set_ip_address("192.168.125.23");
+    universe_inner->set_port(6454);
+    universe_inner->set_universe_on_device(1);
+    dmxfish::io::register_universe_from_message(*msg_universe_init.get());
+
+
+
+    dmxfish::filters::filter_lua_script fil = filter_lua_script ();
+
+    channel_mapping input_channels = channel_mapping();
+    std::map <std::string, std::string> configuration;
+    configuration["in_mapping"] = "color:color;change_nr:float";
+    configuration["out_mapping"] = "";
+    std::map <std::string, std::string> initial_parameters;
+
+
+    dmxfish::dmx::pixel color = dmxfish::dmx::pixel(120,1,1);
+    input_channels.color_channels["color"] = &color;
+    double change_nr = 25.1;
+    input_channels.float_channels["change_nr"] = &change_nr;
+
+    initial_parameters["script"] = R"(
+        function shuffle()
+            shuffled_fix = {}
+            for i, v in ipairs(fix) do
+            	local pos = math.random(1, #shuffled_fix+1)
+            	table.insert(shuffled_fix, pos, v)
+            end
+        end
+
+        function update()
+            local r
+            local g
+            local b
+            if old_changed_nr ~= changed_nr then
+                shuffle()
+                old_changed_nr = changed_nr
+            end
+            for key,value in ipairs(shuffled_fix) do
+                if key <= nr_of_fix_on then
+                    r, g, b = hsi_to_rgb(color)
+                else
+                    r = 0
+                    g = 0
+                    b = 0
+                end
+                output[value["uni"]][value["red"]] = r
+                output[value["uni"]][value["green"]] = g
+                output[value["uni"]][value["blue"]] = b
+            end
+        end
+
+        function scene_activated()
+            nr_of_fix = 20
+            nr_of_fix_on = 15
+            fix = {}
+            for i = 1,nr_of_fix,1 do
+                local univ = 1
+                fix[i] = {uni= univ,
+                          red = i*5+0,
+                          green = i*5+1,
+                          blue = i*5+2}
+                output[univ] = {}
+            end
+            shuffle()
+        end
+	)";
+
+    fil.pre_setup(configuration, initial_parameters);
+
+    channel_mapping map = channel_mapping();
+    fil.get_output_channels(map, "abc");
+    fil.setup_filter (configuration, initial_parameters, input_channels);
+    fil.scene_activated();
+    fil.update();
+
+    run_time_state->running = false;
+    manager = nullptr;
 }

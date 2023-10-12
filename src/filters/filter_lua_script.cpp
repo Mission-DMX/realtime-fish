@@ -199,7 +199,7 @@ namespace dmxfish::filters {
 
 
         lua.open_libraries(sol::lib::base, sol::lib::package);
-        lua.open_libraries(sol::lib::math);
+        lua.open_libraries(sol::lib::math, sol::lib::table, sol::lib::string);
         lua.set_function("update", []() {
         });
         lua.set_function("scene_activated", []() {
