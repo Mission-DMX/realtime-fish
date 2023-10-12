@@ -395,17 +395,16 @@ BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
     dmxfish::io::register_universe_from_message(*msg_universe_init.get());
 
 
-
-    dmxfish::filters::filter_lua_script fil = filter_lua_script ();
+    dmxfish::filters::filter_lua_script fil = filter_lua_script();
 
     channel_mapping input_channels = channel_mapping();
-    std::map <std::string, std::string> configuration;
+    std::map<std::string, std::string> configuration;
     configuration["in_mapping"] = "color:color;change_nr:float";
     configuration["out_mapping"] = "";
-    std::map <std::string, std::string> initial_parameters;
+    std::map<std::string, std::string> initial_parameters;
 
 
-    dmxfish::dmx::pixel color = dmxfish::dmx::pixel(120,1,1);
+    dmxfish::dmx::pixel color = dmxfish::dmx::pixel(120, 1, 1);
     input_channels.color_channels["color"] = &color;
     double change_nr = 25.1;
     input_channels.float_channels["change_nr"] = &change_nr;
@@ -417,15 +416,15 @@ BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
             	local pos = math.random(1, #shuffled_fix+1)
             	table.insert(shuffled_fix, pos, v)
             end
+            old_change_nr = change_nr
         end
 
         function update()
             local r
             local g
             local b
-            if old_changed_nr ~= changed_nr then
+            if old_change_nr ~= change_nr then
                 shuffle()
-                old_changed_nr = changed_nr
             end
             for key,value in ipairs(shuffled_fix) do
                 if key <= nr_of_fix_on then
@@ -443,7 +442,7 @@ BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
 
         function scene_activated()
             nr_of_fix = 20
-            nr_of_fix_on = 15
+            nr_of_fix_on = 5
             fix = {}
             for i = 1,nr_of_fix,1 do
                 local univ = 1
@@ -461,9 +460,39 @@ BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
 
     channel_mapping map = channel_mapping();
     fil.get_output_channels(map, "abc");
-    fil.setup_filter (configuration, initial_parameters, input_channels);
+    fil.setup_filter(configuration, initial_parameters, input_channels);
     fil.scene_activated();
     fil.update();
+    std::cout << "universe ";
+    if (auto uptr = dmxfish::io::get_universe(1); uptr != nullptr) {
+        for (int i = 1; i <= 512; i++) {
+            std::cout << i << ": " << (int)(*uptr)[i] << ",    ";
+        }
+    }
+    std::cout << std::endl;
+
+
+    color.hue = 180.0;
+    fil.update();
+    std::cout << "universe ";
+    if (auto uptr = dmxfish::io::get_universe(1); uptr != nullptr) {
+        for (int i = 1; i <= 512; i++) {
+            std::cout << i << ": " << (int)(*uptr)[i] << ",    ";
+        }
+    }
+    std::cout << std::endl;
+
+    color.hue = 180.0;
+    change_nr = 0.0;
+    fil.update();
+    std::cout << "universe ";
+    if (auto uptr = dmxfish::io::get_universe(1); uptr != nullptr) {
+        for (int i = 1; i <= 512; i++) {
+            std::cout << i << ": " << (int)(*uptr)[i] << ",    ";
+        }
+    }
+    std::cout << std::endl;
+
 
     run_time_state->running = false;
     manager = nullptr;

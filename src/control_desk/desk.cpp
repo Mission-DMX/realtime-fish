@@ -549,8 +549,8 @@ namespace dmxfish::control_desk {
         } else {
             raw_column_configuration rc = col_ptr->get_raw_configuration();
             const auto& raw_conf_msg = msg.raw_data();
-            rc.fader_position = raw_conf_msg.fader();
-            rc.rotary_position = raw_conf_msg.rotary_position();
+            rc.primary_position = raw_conf_msg.fader();
+            rc.secondary_position = raw_conf_msg.rotary_position();
             rc.meter_leds = raw_conf_msg.meter_leds();
             // TODO handle buttons
             col_ptr->set_raw_configuration(rc);
