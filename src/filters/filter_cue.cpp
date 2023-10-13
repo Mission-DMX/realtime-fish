@@ -443,6 +443,10 @@ namespace dmxfish::filters {
             }
         }
 
+	if(configuration.contains("default_cue")) {
+		this->default_cue = stol(configuration.at("default_cue"));
+	}
+
         if (!configuration.contains("cuelist")) {
             throw filter_config_exception("cue filter: unable to setup the cuelist");
         }
@@ -646,6 +650,13 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::scene_activated() {
+	    if (this->default_cue > -1) {
+		    this->active_cue = (uint16_t) this->default_cue;
+		    update_last_values();
+                    start_time = *time;
+                    last_timestamp = *time;
+                    frame = 0;
+	    }
     }
 
 }
