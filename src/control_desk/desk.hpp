@@ -156,6 +156,7 @@ namespace dmxfish::control_desk {
         void update_button_leds_from_protobuf(const missiondmx::fish::ipcmessages::button_state_change& msg);
         void set_seven_seg_display_data(const std::string& data);
         std::shared_ptr<bank_column> find_column(const std::string& set_id, const std::string& column_id);
+	void notify_showfile_changed();
     private:
         void reset_devices();
         void remove_bank_set(size_t i);

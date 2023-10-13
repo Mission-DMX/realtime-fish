@@ -656,6 +656,10 @@ void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::lo
 	} else {
 		this->show_file_apply_state = SFAS_SHOW_ACTIVE;
 		::spdlog::info("Successfully loaded show file");
+		this->latest_error = "Showfile Applied.";
+		if(this->control_desk_handle) {
+			this->control_desk_handle->notify_showfile_changed();
+		}
 	}
 	long_log_update log_msg;
 	log_msg.set_level(success ? LL_INFO : LL_ERROR);
@@ -669,5 +673,19 @@ void IOManager::handle_queued_io() {
 	// TODO run io loop iteration or wait until 2 have passed.
 	std::this_thread::sleep_for(std::chrono::milliseconds(100)); // TODO fixme
 }
+
+void IOManager::rollback() {       
+        if(this->is_rollback_available()) {
+        	this->active_show = this->last_active_show;
+                this->last_active_show = nullptr;
+                if(this->control_desk_handle) {
+                        this->control_desk_handle->notify_showfile_changed();
+                }
+                ::spdlog::info("Rolled back to last valid show.");
+        } else {
+                ::spdlog::warn("Didn't roll back as there is no valid show avaiable.");
+        }
+}
+
 
 }

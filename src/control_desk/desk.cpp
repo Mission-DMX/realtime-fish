@@ -339,7 +339,8 @@ namespace dmxfish::control_desk {
             const auto current_bank = this->get_active_fader_bank_on_current_set();
             this->set_active_fader_bank_on_current_set(current_bank + 1);
         } else if(b == button::BTN_SEND_OOPS) {
-            // TODO implement
+	    auto iom = get_iomanager_instance();
+            iom->rollback();
         } else if(b == button::BTN_FLIP_MAINDARK) {
             if (c != button_change::PRESS) {
 		return;
@@ -348,9 +349,7 @@ namespace dmxfish::control_desk {
 	    for(auto d_ptr : devices) {
                 xtouch_set_button_led(*d_ptr, button::BTN_FLIP_MAINDARK, global_dark ? button_led_state::flash : button_led_state::off);
             }
-        } else if(b == button::BTN_SEND_OOPS) {
-            get_iomanager_instance()->rollback();
-	} else {
+        } else {
             ::missiondmx::fish::ipcmessages::button_state_change msg;
             msg.set_button(missiondmx::fish::ipcmessages::ButtonCode{(unsigned int) (b)});
             msg.set_new_state(c == button_change::PRESS ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
@@ -665,5 +664,15 @@ namespace dmxfish::control_desk {
         } else {
             return nullptr;
         }
+    }
+
+    void desk::notify_showfile_changed() {
+	    auto iom = get_iomanager_instance();
+	    for(auto btn_state = iom->is_rollback_available() ? button_led_state::on : button_led_state::off; auto& d_ptr : devices) {
+		if(d_ptr->get_device_id() == midi_device_id::X_TOUCH) {
+	    	    xtouch_set_button_led(*d_ptr, button::BTN_SEND_OOPS, btn_state);
+		    d_ptr->schedule_transmission();
+		}
+	    }
     }
 }
