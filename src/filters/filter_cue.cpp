@@ -651,11 +651,12 @@ namespace dmxfish::filters {
 
     void filter_cue::scene_activated() {
 	    if (this->default_cue > -1) {
-		    this->active_cue = (uint16_t) this->default_cue;
+		    this->active_cue = (uint16_t) this->default_cue + 1;
 		    update_last_values();
                     start_time = *time;
                     last_timestamp = *time;
                     frame = 0;
+		    ::spdlog::info("Switched to Cue {}.", this->default_cue + 1);
 	    }
     }
 
