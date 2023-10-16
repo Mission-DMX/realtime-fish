@@ -38,6 +38,68 @@ std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> hsi_to_rgbw_table(sol::table colo
 
 
 namespace dmxfish::filters {
+
+    inline void filter_lua_script::send_input_values_to_lua(){
+        for (size_t i = 0; i < in_eight_bit.size(); i++) {
+            lua[names_in_eight_bit.at(i)] = *in_eight_bit.at(i);
+        }
+        for (size_t i = 0; i < in_sixteen_bit.size(); i++) {
+            lua[names_in_sixteen_bit.at(i)] = *in_sixteen_bit.at(i);
+        }
+        for (size_t i = 0; i < in_float.size(); i++) {
+            lua[names_in_float.at(i)] = *in_float.at(i);
+        }
+        // we dont need pixel, because it was transmitted as reference
+//        for (size_t i = 0; i < in_color.size(); i++) {
+//            sol::table color = lua.create_table_with("h", in_color.at(i)->hue,
+//                                                     "s", in_color.at(i)->saturation,
+//                                                     "i", in_color.at(i)->iluminance
+//            );
+//            lua[names_in_color.at(i)] = color;
+//        }
+    }
+
+    inline void filter_lua_script::get_output_values_from_lua() {
+        for (size_t i = 0; i < out_eight_bit.size(); i++) {
+            out_eight_bit.at(i) = std::max(
+                    std::min(std::round(lua[names_out_eight_bit.at(i)].get_or((double) out_eight_bit.at(i))), 255.0),
+                    0.0);
+        }
+        for (size_t i = 0; i < out_sixteen_bit.size(); i++) {
+            out_sixteen_bit.at(i) = std::max(
+                    std::min(std::round(lua[names_out_sixteen_bit.at(i)].get_or((double) out_sixteen_bit.at(i))),
+                             65535.0), 0.0);
+        }
+        for (size_t i = 0; i < out_float.size(); i++) {
+            out_float.at(i) = lua.get_or(names_out_float.at(i), out_float.at(i));
+        }
+        for (size_t i = 0; i < out_color.size(); i++) {
+            out_color.at(i).hue = lua[names_out_color.at(i)]["h"].get_or(out_color.at(i).hue);
+            out_color.at(i).saturation = lua[names_out_color.at(i)]["s"].get_or(out_color.at(i).saturation);
+            out_color.at(i).iluminance = lua[names_out_color.at(i)]["i"].get_or(out_color.at(i).iluminance);
+        }
+    }
+
+    inline void filter_lua_script::get_direct_out_channels() {
+        sol::object outputs = lua["output"];
+        if (outputs.get_type() == sol::type::table) {
+            for (int universe_id = 0; universe_id <= 2 * ((sol::table) outputs).size(); universe_id++) {
+                sol::object universe = ((sol::table) outputs)[universe_id];
+                if (auto uptr = dmxfish::io::get_universe(universe_id); uptr != nullptr) {
+                    if (universe.get_type() == sol::type::table) {
+                        for (uint16_t chan = 0; chan < 512; chan++) {
+                            sol::object channel = ((sol::table) universe)[chan];
+                            if (channel.get_type() == sol::type::number) {
+                                uint8_t value = ((sol::table) universe)[chan];
+                                (*uptr)[chan] = value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     template <typename T>
     void filter_lua_script::reserve_init_out(int amount){
         if constexpr (std::is_same<T, uint8_t>::value) {
@@ -183,6 +245,7 @@ namespace dmxfish::filters {
             }
             in_color.at(i) = input_channels.color_channels.at(names_in_color.at(i));
             // Todo delete in_color;
+            // setting color as reference in lua
             lua[names_in_color.at(i)] = std::ref(input_channels.color_channels.at(names_in_color.at(i)));
         }
 
@@ -190,33 +253,16 @@ namespace dmxfish::filters {
             throw filter_config_exception("lua filter: unable to setup the script");
         }
 
-//        if (!initial_parameters.contains("patching")) {
-//            throw filter_config_exception("lua filter: unable to setup the patching");
-//        }
-
-        // initial_parameters.at("patching") divide
-        // for each fixture
-        //      fix_univ
-        //      fix_name
-        //      fix_ch_size
-        //      fixture local = fixture(fix_univ, fix_name, fix_ch_size);
-        //      ? dynamisch verschieden viele Argumente übergeben?
-//              lua.new_usertype<fixture>("Fixture", "pan", &fixture.channel_values.at(0), "s", &dmxfish::dmx::pixel::saturation, "i", &dmxfish::dmx::pixel::iluminance);
-        //      fixtures.append(local);
-
-
-
+        // prepare libraries and prerequirements in lua
         lua.open_libraries(sol::lib::base, sol::lib::package);
         lua.open_libraries(sol::lib::math, sol::lib::table, sol::lib::string);
+
         lua.set_function("update", []() {
         });
         lua.set_function("scene_activated", []() {
         });
 
-//        for(fixture fix: fixtures){
-//            lua.create_named_table(fix.name, "universe", fix.universe,
-//                                   "first_channel", fix.first_channel);
-//        }
+
         lua.create_named_table("output");
 
         lua.set_function( "hsi_to_rgb", sol::overload(
@@ -272,25 +318,9 @@ namespace dmxfish::filters {
     void filter_lua_script::update() {
 
         // transmit input data to lua
-        for (size_t i = 0; i < in_eight_bit.size(); i++) {
-            lua[names_in_eight_bit.at(i)] = *in_eight_bit.at(i);
-        }
-        for (size_t i = 0; i < in_sixteen_bit.size(); i++) {
-            lua[names_in_sixteen_bit.at(i)] = *in_sixteen_bit.at(i);
-        }
-        for (size_t i = 0; i < in_float.size(); i++) {
-            lua[names_in_float.at(i)] = *in_float.at(i);
-        }
-        for (size_t i = 0; i < in_color.size(); i++) {
-            sol::table color = lua.create_table_with("h", in_color.at(i)->hue,
-                                                           "s", in_color.at(i)->saturation,
-                                                           "i", in_color.at(i)->iluminance
-            );
-            lua[names_in_color.at(i)] = color;
-        }
+        send_input_values_to_lua();
 
         // execute update script in lua
-//        sol::protected_function_result script_update_res = script_update();
         try {
             update_lua();
         } catch (const std::exception& e) {
@@ -298,76 +328,11 @@ namespace dmxfish::filters {
             throw filter_config_exception(std::string("update script in lua had an error: ") + e.what());
         }
 
-//        // optionally, check if it worked
-//        if (!script_update_res.valid()){
-//            sol::error err = script_update_res;
-//            ::spdlog::warn("Output of lua update has failed: {}", err.what());
-//        }
         // receive output data from lua
-        for (size_t i = 0; i < out_eight_bit.size(); i++) {
-            out_eight_bit.at(i) = std::max(std::min(std::round(lua[names_out_eight_bit.at(i)].get_or((double) out_eight_bit.at(i))), 255.0), 0.0);
-        }
-        for (size_t i = 0; i < out_sixteen_bit.size(); i++) {
-            out_sixteen_bit.at(i) = std::max(std::min(std::round(lua[names_out_sixteen_bit.at(i)].get_or((double) out_sixteen_bit.at(i))), 65535.0), 0.0);
-        }
-        for (size_t i = 0; i < out_float.size(); i++) {
-            out_float.at(i) = lua.get_or(names_out_float.at(i), out_float.at(i));
-        }
-        for (size_t i = 0; i < out_color.size(); i++) {
-            out_color.at(i).hue = lua[names_out_color.at(i)]["h"].get_or(out_color.at(i).hue);
-            out_color.at(i).saturation = lua[names_out_color.at(i)]["s"].get_or(out_color.at(i).saturation);
-            out_color.at(i).iluminance = lua[names_out_color.at(i)]["i"].get_or(out_color.at(i).iluminance);
-        }
+        get_output_values_from_lua();
 
         // Going through the table and set output channels
-        sol::object outputs = lua["output"];
-        if (outputs.get_type() == sol::type::table) {
-            for(int universe_id = 0; universe_id <= 2 * ((sol::table) outputs).size(); universe_id++){
-                sol::object universe = ((sol::table) outputs)[universe_id];
-                if(auto uptr = dmxfish::io::get_universe(universe_id); uptr != nullptr) {
-                    if (universe.get_type() == sol::type::table) {
-                        for (uint16_t chan = 0; chan < 512; chan++) {
-                            sol::object channel = ((sol::table) universe)[chan];
-                            if (channel.get_type() == sol::type::number) {
-                                uint8_t value = ((sol::table) universe)[chan];
-                                (*uptr)[chan] = value;
-//                                std::cout << "test : " << (int) value << std::endl;
-//                            } else if (channel.get_type() != sol::type::nil) {
-//                                std::cout << " test : is not nil : " << std::endl;
-                            }
-                        }
-                    }
-                }
-//            for (const auto &univ_kvpair: (sol::table) outputs) {
-//                sol::object uni_key = univ_kvpair.first;
-//                sol::object universe = univ_kvpair.second;
-//                if (uni_key.get_type() == sol::type::number) {
-//                    std::cout << "number" << std::endl;
-//                    int i = ((sol::lua_value) uni_key).value();
-//
-//                    std::cout << "b1 " << i << std::endl;
-//                }
-//                if (uni_key.get_type() == sol::type::string) {
-//                    std::cout << "string" << std::endl;
-////                    int str = (uni_key).get<sol::lua_value>();
-////                    std::cout << "b " << str << std::endl;
-//                }
-//                int i = ((sol::lua_value) uni_key).get<int>();
-//                if (universe.get_type() == sol::type::table) {
-//                    if(auto uptr = dmxfish::io::get_universe((sol::lua_value) uni_key); uptr != nullptr) {
-//                        for (const auto &channel_kv_pair: (sol::table) universe) {
-//                            sol::object ch_name = channel_kv_pair.first;
-//                            sol::object ch_value = channel_kv_pair.second;
-//                            (*uptr)[ch_name] = ch_value;
-//                            std::cout << "c " << std::endl;
-//                        }
-//                    } else {
-//                            throw std::invalid_argument("The requested universe with id " + std::to_string(uni_key) +
-//                                                        " does not exist anymore");
-//                    }
-//                }
-            }
-        }
+        get_direct_out_channels();
     }
 
     void filter_lua_script::scene_activated() {

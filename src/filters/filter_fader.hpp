@@ -12,7 +12,6 @@
 #include "lib/macros.hpp"
 #include "main.hpp"
 
-#include "lib/logging.hpp"
 #include "control_desk/bank_column.hpp"
 #include "lib/logging.hpp"
 
