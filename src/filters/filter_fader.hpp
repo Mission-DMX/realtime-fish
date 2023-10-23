@@ -135,7 +135,7 @@ namespace dmxfish::filters {
                 }
                 if constexpr (MODE != bank_mode::DIRECT_INPUT_MODE) {
                     if(this->storage.global_main_enabled)
-		        this->storage.color.iluminance *= (get_iomanager_instance()->get_global_illumination() / 65535);
+		        this->storage.color.iluminance = this->storage.color.iluminance * (((double) get_iomanager_instance()->get_global_illumination()) / 65536.0);
                 }
             } else {
                 if (first_retry) {
