@@ -23,6 +23,11 @@ BOOST_AUTO_TEST_CASE(color_filter_test) {
 	std::vector<dmxfish::execution::scene> v;
 	std::map<int32_t, size_t> scene_index_map;
 	auto bc = MissionDMX::ShowFile::bord_configuration("./test/test_color_conv2.xml", xml_schema::flags::dont_validate);
+	for(const auto& universe : bc->universe()) {
+		dmxfish::io::register_universe_from_xml(universe);
+	}
+	const auto res = dmxfish::execution::populate_scene_vector(v, bc->scene(), scene_index_map);
+	BOOST_CHECK(ends_with(res.first, "\nDone.\n") && res.second);
 	BOOST_CHECK_EQUAL(v.size(), 1);
 }
 
