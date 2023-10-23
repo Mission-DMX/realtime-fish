@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "executioners/threadpool.hpp"
+#include "executioners/scheduling_errors.hpp"
 
 #include "filters/types.hpp"
 #include "filters/filter_constants.hpp"
@@ -249,6 +250,7 @@ COMPILER_RESTORE("-Weffc++")
                     break;
 				default: {
 						 std::stringstream ss;
+						 ss << ERROR_FILTER_NOT_IMPLEMENTED_IN_ALLOCATION;
 						 ss << "The requested filter type (";
 						 ss << (int) f.type();
 						 ss << ") is not yet implemented.";
@@ -383,7 +385,7 @@ COMPILER_RESTORE("-Weffc++")
             case filter_type::filter_pixel_to_floats:
                 return calloc<filter_pixel_to_floats>(pac);
 	default:
-		throw scheduling_exception("Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
+		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
 		return nullptr;
 	}
@@ -556,10 +558,10 @@ COMPILER_RESTORE("-Weffc++")
 						scene_index_map[sid] = last_index;
 					}
 				} catch (const ::dmxfish::filters::filter_config_exception& e) {
-					msg_stream << "Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
+					msg_stream << ERROR_FILTER_CONFIGURATION_EXCEPTION << "Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
 					*worked = false;
 				} catch (const scheduling_exception& e) {
-					msg_stream << "Failed to schedule filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
+					msg_stream << ERROR_FILTER_SCHEDULING_EXCEPTION << "Failed to schedule filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
 					*worked = false;
 				}
 				{

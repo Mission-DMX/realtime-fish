@@ -129,12 +129,12 @@
   <p1:scene human_readable_name="A minimal example scene. It does not contain any filters." id="1"/>
   <p1:device channel="0" id="0" name="The name or description of a device" type="A device type. Keep in mind that fish does not use information about devices." universe_id="0"/>
   <p1:universe description="A universe mapped to the first DMX port on the console. The description field can be used for the user to store notes or hints about the stage configuration. Please note that the ID of the universe is different from the physical address and a shared name space with other universe types in which it needs to be unique." id="0" name="Universe 1">
-    <physical_location>0</physical_location>
-    <patching></patching>
+    <p1:physical_location>0</p1:physical_location>
+    <p1:patching></p1:patching>
   </p1:universe>
   <p1:universe description="This universe would be mapped to an artnet device (such as a stage box or complex light controller). Keep in mind that physical universes and artnet configurations are mutually exclusive." id="1" name="ArtNet Universe 1">
-    <artnet_location device_universe_id="0" ip_address="10.0.15.1" udp_port="6465"/>
-    <patching></patching>
+    <p1:artnet_location device_universe_id="0" ip_address="10.0.15.1" udp_port="6465"/>
+    <p1:patching></p1:patching>
   </p1:universe>
   <p1:uihint name="key" value="value"/>
   <p1:uihint name="description" value="This is a key value storage not uitilized by fish. The GUI may use this to store any data it may desire."/>

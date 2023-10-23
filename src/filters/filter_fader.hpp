@@ -42,11 +42,17 @@ namespace dmxfish::filters {
             }
             this->set_id = configuration.at("set_id");
             this->column_id = configuration.at("column_id");
-            if(auto candidate = get_iomanager_instance()->access_desk_column(set_id, column_id); candidate) {
+            auto iom = get_iomanager_instance();
+            if (!iom) {
+                // We don't have an IO Manager instance. Most likely we're inside a unit test. Anyway, there's nothing we can do about it.
+                ::spdlog::error("BUG: there is no IO Manager instance.");
+                return;
+            }
+            if(auto candidate = iom->access_desk_column(set_id, column_id); candidate) {
                 if(const auto& column_mode = candidate->get_mode(); column_mode != MODE) {
                     std::stringstream ss;
-		    ss << "The requested column (" << set_id << ":" << column_id << ") is not in the correct mode. Expected: ";
-		    ss << (int) MODE << ", got: " << (int) column_mode << ".";
+                    ss << "The requested column (" << set_id << ":" << column_id << ") is not in the correct mode. Expected: ";
+                    ss << (int) MODE << ", got: " << (int) column_mode << ".";
                     throw filter_config_exception(ss.str());
                 }
                 input_col = candidate;
