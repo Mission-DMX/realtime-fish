@@ -13,6 +13,7 @@ The part of the software that translates the users wishes to DMX in real time.
 	* libusb-dev
 	* libftdi-dev
 	* pkg-config
+	* liblua5.4-dev
 2. Perform a recursive clone of this repository.
 3. Call `gmake` on the root directory of this repo. Tip: issue `make -j<ncores> BUILD_MODE=Release`
 if you're building a release.

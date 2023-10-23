@@ -83,6 +83,12 @@ namespace dmxfish::control_desk {
 
             bank_set(const std::string& _id) : fader_banks{}, columns_map{}, columns_in_ready_state{}, id{_id} {};
             ~bank_set() = default;
+
+            void clear() {
+                fader_banks.clear();
+                columns_map.clear();
+                columns_in_ready_state.clear();
+            }
         };
     public:
         const static constexpr size_t size_t_max{std::numeric_limits<size_t>::max()};
@@ -134,7 +140,7 @@ namespace dmxfish::control_desk {
             return global_dark;
         }
 
-        [[nodiscard]] inline uint8_t get_global_illumination() {
+        [[nodiscard]] inline uint16_t get_global_illumination() {
             return global_dark ? 0 : global_illumination;
         }
 
@@ -150,6 +156,7 @@ namespace dmxfish::control_desk {
         void update_button_leds_from_protobuf(const missiondmx::fish::ipcmessages::button_state_change& msg);
         void set_seven_seg_display_data(const std::string& data);
         std::shared_ptr<bank_column> find_column(const std::string& set_id, const std::string& column_id);
+	void notify_showfile_changed();
     private:
         void reset_devices();
         void remove_bank_set(size_t i);

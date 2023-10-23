@@ -128,7 +128,12 @@ namespace dmxfish::filters {
             }
         }
 
-        virtual void scene_activated() override {}
+        virtual void scene_activated() override {
+            if(F(0)){
+                output = 0;
+            }
+            last_update = *time;
+        }
 
     };
 

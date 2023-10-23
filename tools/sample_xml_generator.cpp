@@ -87,11 +87,12 @@ int main(int argc, char* argv[]) {
 		obj.device().push_back(d);
 
 		std::vector<MissionDMX::ShowFile::Universe> universes;
-		universes.emplace_back(0);
+		MissionDMX::ShowFile::Patching patching_t;
+		universes.emplace_back(patching_t, 0);
 		universes[0].physical_location(0);
 		universes[0].name("Universe 1");
 		universes[0].description("A universe mapped to the first DMX port on the console. The description field can be used for the user to store notes or hints about the stage configuration. Please note that the ID of the universe is different from the physical address and a shared name space with other universe types in which it needs to be unique.");
-		universes.emplace_back(1);
+		universes.emplace_back(patching_t, 1);
 		universes[1].artnet_location(MissionDMX::ShowFile::ArtnetLocation("10.0.15.1", 6465, 0));
 		universes[1].name("ArtNet Universe 1");
 		universes[1].description("This universe would be mapped to an artnet device (such as a stage box or complex light controller). Keep in mind that physical universes and artnet configurations are mutually exclusive.");

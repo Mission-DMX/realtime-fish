@@ -36,8 +36,8 @@ namespace dmxfish::filters {
                     throw filter_config_exception("The configured universe id does not seam to match a universe.");
                 }
             }
-            for(const auto& [uchannel, ichannel] : configuration) {
-                if(uchannel != "universe") {
+            for(const auto& [ichannel, uchannel] : configuration) {
+                if(ichannel != "universe") {
                     try {
                         if(!input_channels.eight_bit_channels.contains(ichannel)) {
                             throw filter_config_exception("Failed to configure output filter for universe " + std::to_string(this->universe_id) + ": input channel '" + ichannel + "' does not exist.");

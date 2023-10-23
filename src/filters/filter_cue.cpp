@@ -6,6 +6,7 @@
 #include "lib/macros.hpp"
 #include "lib/logging.hpp"
 #include "dmx/pixel.hpp"
+#include "filters/util.hpp"
 
 
 int count_occurence_of(const std::string &base_string, std::string pattern, size_t start, size_t end) {
@@ -18,6 +19,53 @@ int count_occurence_of(const std::string &base_string, std::string pattern, size
 }
 
 namespace dmxfish::filters {
+
+    template <typename T>
+    void filter_cue::reserve_init_out(int amount){
+        if constexpr (std::is_same<T, uint8_t>::value) {
+            channel_names_eight.reserve(amount);
+            eight_bit_channels.reserve(amount);
+            last_eight_bit_channels.reserve(amount);
+        } else if constexpr (std::is_same<T, uint16_t>::value) {
+            channel_names_sixteen.reserve(amount);
+            sixteen_bit_channels.reserve(amount);
+            last_sixteen_bit_channels.reserve(amount);
+        } else if constexpr (std::is_same<T, double>::value) {
+            channel_names_float.reserve(amount);
+            float_channels.reserve(amount);
+            last_float_channels.reserve(amount);
+        } else {
+            channel_names_color.reserve(amount);
+            color_channels.reserve(amount);
+            last_color_channels.reserve(amount);
+        }
+    }
+
+    template <typename T>
+    void filter_cue::init_values_out(std::string &channel_name){
+        if constexpr (std::is_same<T, uint8_t>::value) {
+            channel.push_back(channel_str(EIGHT_BIT, eight_bit_channels.size()));
+            channel_names_eight.push_back(channel_name);
+            eight_bit_channels.push_back(0);
+            last_eight_bit_channels.push_back(0);
+        } else if constexpr (std::is_same<T, uint16_t>::value) {
+            channel.push_back(channel_str(SIXTEEN_BIT, sixteen_bit_channels.size()));
+            channel_names_sixteen.push_back(channel_name);
+            sixteen_bit_channels.push_back(0);
+            last_sixteen_bit_channels.push_back(0);
+        } else if constexpr (std::is_same<T, double>::value) {
+            channel.push_back(channel_str(FLOAT, float_channels.size()));
+            channel_names_float.push_back(channel_name);
+            float_channels.push_back(0);
+            last_float_channels.push_back(0);
+        } else {
+            channel.push_back(channel_str(COLOR, color_channels.size()));
+            channel_names_color.push_back(channel_name);
+            color_channels.push_back(dmxfish::dmx::pixel());
+            last_color_channels.push_back(dmxfish::dmx::pixel());
+        }
+    }
+
     inline bool
     filter_cue::do_with_substr(const std::string &str, size_t start, const size_t end, const char sep, size_t min_loops,
                                const std::function<bool(const std::string &, size_t, size_t, size_t)> func) {
@@ -362,69 +410,20 @@ namespace dmxfish::filters {
         if (!configuration.contains("mapping")) {
             throw filter_config_exception("cue filter: unable to setup the mapping");
         }
-
-        std::string mapping = configuration.at("mapping");
-        //::spdlog::debug("setup_filter: mapping: {}", mapping);
-        size_t start_pos = 0;
-        auto next_pos = mapping.find(";");
-        
-	int count_channel_type = count_occurence_of(mapping, ":8bit", 0, mapping.size());
-        channel_names_eight.reserve(count_channel_type);
-        eight_bit_channels.reserve(count_channel_type);
-        last_eight_bit_channels.reserve(count_channel_type);
-        
-	count_channel_type = count_occurence_of(mapping, ":16bit", 0, mapping.size());
-        channel_names_sixteen.reserve(count_channel_type);
-        sixteen_bit_channels.reserve(count_channel_type);
-        last_sixteen_bit_channels.reserve(count_channel_type);
-        
-	count_channel_type = count_occurence_of(mapping, ":float", 0, mapping.size());
-        channel_names_float.reserve(count_channel_type);
-        float_channels.reserve(count_channel_type);
-        last_float_channels.reserve(count_channel_type);
-        
-	count_channel_type = count_occurence_of(mapping, ":color", 0, mapping.size());
-        channel_names_color.reserve(count_channel_type);
-        color_channels.reserve(count_channel_type);
-        last_color_channels.reserve(count_channel_type);
-
-        while (true) {
-            const auto sign = mapping.find(":", start_pos);
-            
-            std::string channel_type = mapping.substr(sign + 1, next_pos - sign - 1);
-            std::string channel_name = mapping.substr(start_pos, sign - start_pos);
-            if (!channel_type.compare("8bit")) {
-                channel.push_back(channel_str(EIGHT_BIT, eight_bit_channels.size()));
-                channel_names_eight.push_back(channel_name);
-                eight_bit_channels.push_back(0);
-                last_eight_bit_channels.push_back(0);
-            } else if (!channel_type.compare("16bit")) {
-                channel.push_back(channel_str(SIXTEEN_BIT, sixteen_bit_channels.size()));
-                channel_names_sixteen.push_back(channel_name);
-                sixteen_bit_channels.push_back(0);
-                last_sixteen_bit_channels.push_back(0);
-            } else if (!channel_type.compare("float")) {
-                channel.push_back(channel_str(FLOAT, float_channels.size()));
-                channel_names_float.push_back(channel_name);
-                float_channels.push_back(0);
-                last_float_channels.push_back(0);
-            } else if (!channel_type.compare("color")) {
-                channel.push_back(channel_str(COLOR, color_channels.size()));
-                channel_names_color.push_back(channel_name);
-                color_channels.push_back(dmxfish::dmx::pixel());
-                last_color_channels.push_back(dmxfish::dmx::pixel());
-            } else {
-                throw filter_config_exception(std::string("can not recognise channel type: ") + mapping.substr(sign + 1, next_pos - sign - 1));
-            }
-
-            if (next_pos >= mapping.length()) {
-                break;
-            }
-            start_pos = next_pos + 1;
-            next_pos = mapping.find(";", start_pos);
-        }
-
-
+        util::init_mapping(
+                configuration.at("mapping"),
+                std::bind(&dmxfish::filters::filter_cue::reserve_init_out<uint8_t>, this, std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_cue::reserve_init_out<uint16_t>, this,
+                          std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_cue::reserve_init_out<double>, this, std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_cue::reserve_init_out<dmxfish::dmx::pixel>, this,
+                          std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_cue::init_values_out<uint8_t>, this, std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_cue::init_values_out<uint16_t>, this, std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_cue::init_values_out<double>, this, std::placeholders::_1),
+                std::bind(&dmxfish::filters::filter_cue::init_values_out<dmxfish::dmx::pixel>, this,
+                          std::placeholders::_1)
+        );
     }
 
     void filter_cue::setup_filter(const std::map <std::string, std::string> &configuration,
@@ -443,6 +442,10 @@ namespace dmxfish::filters {
                 this->handle_end = START_AGAIN;
             }
         }
+
+	if(configuration.contains("default_cue")) {
+		this->default_cue = stol(configuration.at("default_cue"));
+	}
 
         if (!configuration.contains("cuelist")) {
             throw filter_config_exception("cue filter: unable to setup the cuelist");
@@ -647,6 +650,14 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::scene_activated() {
+	    if (this->default_cue > -1) {
+		    this->active_cue = (uint16_t) this->default_cue + 1;
+		    update_last_values();
+                    start_time = *time;
+                    last_timestamp = *time;
+                    frame = 0;
+		    ::spdlog::info("Switched to Cue {}.", this->default_cue + 1);
+	    }
     }
 
 }

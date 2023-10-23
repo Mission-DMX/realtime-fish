@@ -52,6 +52,11 @@ namespace dmxfish::filters {
             key_frame(T val, transition_t tr): value(val), transition(tr) {}
         };
 
+        template <typename T>
+        void reserve_init_out(int amount);
+        template <typename T>
+        void init_values_out(std::string &channel_name);
+
         struct cue_st{
             std::vector<double> timestamps;
             std::vector<key_frame<uint8_t>> eight_bit_frames;
@@ -78,6 +83,7 @@ namespace dmxfish::filters {
         uint16_t active_cue = 0;
 
         uint16_t next_cue = 0xffff;
+	long default_cue = -1;
         handling_at_the_end cue_end_handling_real = START_AGAIN;
 
         handling_at_the_end handle_end = HOLD;
@@ -132,8 +138,8 @@ namespace dmxfish::filters {
         filter_cue() : filter() {}
         virtual ~filter_cue() {}
 
+        virtual void pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters) override;
 
-	virtual void pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters) override;
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override;
 
         virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override;

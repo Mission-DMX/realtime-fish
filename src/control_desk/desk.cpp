@@ -99,11 +99,14 @@ namespace dmxfish::control_desk {
                 cbs.fader_banks[cbs.active_bank]->activate();
             }
             // TODO display bank set id on 7seg for a short period of time
+	    // TODO debug index
             update_fader_bank_leds();
             update_message_required = true;
 	    bank_set_modification_happened = false;
+	    ::spdlog::info("Switched to bank set with index {}.", index);
             return true;
         } else {
+	    ::spdlog::error("Failed to activate bank set with index {}. There are {} registered", index, bank_sets.size());
             return false;
         }
     }
@@ -123,6 +126,7 @@ namespace dmxfish::control_desk {
 
     bool desk::set_active_fader_bank_on_current_set(size_t index) {
         if(!(current_active_bank_set < bank_sets.size())) {
+	    ::spdlog::error("Failed to change active bank as it is out of range.");
             return false;
         }
         auto& cbs = bank_sets[current_active_bank_set];
@@ -335,7 +339,8 @@ namespace dmxfish::control_desk {
             const auto current_bank = this->get_active_fader_bank_on_current_set();
             this->set_active_fader_bank_on_current_set(current_bank + 1);
         } else if(b == button::BTN_SEND_OOPS) {
-            // TODO implement
+	    auto iom = get_iomanager_instance();
+            iom->rollback();
         } else if(b == button::BTN_FLIP_MAINDARK) {
             if (c != button_change::PRESS) {
 		return;
@@ -344,9 +349,7 @@ namespace dmxfish::control_desk {
 	    for(auto d_ptr : devices) {
                 xtouch_set_button_led(*d_ptr, button::BTN_FLIP_MAINDARK, global_dark ? button_led_state::flash : button_led_state::off);
             }
-        } else if(b == button::BTN_SEND_OOPS) {
-            get_iomanager_instance()->rollback();
-	} else {
+        } else {
             ::missiondmx::fish::ipcmessages::button_state_change msg;
             msg.set_button(missiondmx::fish::ipcmessages::ButtonCode{(unsigned int) (b)});
             msg.set_new_state(c == button_change::PRESS ? ::missiondmx::fish::ipcmessages::BS_BUTTON_PRESSED : ::missiondmx::fish::ipcmessages::BS_BUTTON_RELEASED);
@@ -467,11 +470,17 @@ namespace dmxfish::control_desk {
     }
 
     void desk::add_bank_set_from_protobuf_msg(const ::missiondmx::fish::ipcmessages::add_fader_bank_set& definition) {
-	bank_set_modification_happened = true;
-        bank_sets.emplace_back(definition.bank_id());
-        const auto new_bank_index = bank_sets.size() - 1;
-        bankset_to_index_map[definition.bank_id()] = new_bank_index;
+        bank_set_modification_happened = true;
+        const bool is_update = bankset_to_index_map.contains(definition.bank_id());
+        if (!is_update) {
+            bank_sets.emplace_back(definition.bank_id());
+        }
+        const auto new_bank_index = is_update ? bankset_to_index_map[definition.bank_id()] : bank_sets.size() - 1;
+        if(!is_update) {
+            bankset_to_index_map[definition.bank_id()] = new_bank_index;
+        }
         auto& bs = bank_sets[new_bank_index];
+        bs.clear();
         bs.fader_banks.reserve(definition.banks_size());
         for (auto& bank_definition : definition.banks()) {
             using namespace std::placeholders;
@@ -494,7 +503,12 @@ namespace dmxfish::control_desk {
                 }
                 auto& selected_device = devices[device_index];
                 const auto& id = col_definition.column_id();
-                auto col_ptr = bs.fader_banks[bs.fader_banks.size() - 1]->emplace_back(selected_device, deduce_bank_mode(col_definition), id, (uint8_t) col_index_on_device);
+                auto col_ptr = bs.fader_banks[bs.fader_banks.size() - 1]->emplace_back(
+			selected_device,
+			deduce_bank_mode(col_definition),
+			id,
+			(uint8_t) col_index_on_device
+		);
                 bs.columns_map[id] = col_ptr;
                 col_index_on_device++;
                 update_column_from_message(col_definition, new_bank_index);
@@ -534,8 +548,8 @@ namespace dmxfish::control_desk {
         } else {
             raw_column_configuration rc = col_ptr->get_raw_configuration();
             const auto& raw_conf_msg = msg.raw_data();
-            rc.fader_position = raw_conf_msg.fader();
-            rc.rotary_position = raw_conf_msg.rotary_position();
+            rc.primary_position = raw_conf_msg.fader();
+            rc.secondary_position = raw_conf_msg.rotary_position();
             rc.meter_leds = raw_conf_msg.meter_leds();
             // TODO handle buttons
             col_ptr->set_raw_configuration(rc);
@@ -650,5 +664,15 @@ namespace dmxfish::control_desk {
         } else {
             return nullptr;
         }
+    }
+
+    void desk::notify_showfile_changed() {
+	    auto iom = get_iomanager_instance();
+	    for(auto btn_state = iom->is_rollback_available() ? button_led_state::on : button_led_state::off; auto& d_ptr : devices) {
+		if(d_ptr->get_device_id() == midi_device_id::X_TOUCH) {
+	    	    xtouch_set_button_led(*d_ptr, button::BTN_SEND_OOPS, btn_state);
+		    d_ptr->schedule_transmission();
+		}
+	    }
     }
 }
