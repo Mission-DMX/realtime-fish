@@ -1,125 +1,125 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <p1:bord_configuration xmlns:p1="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile" default_active_scene="0" notes="This field may contain any human readable show notes" show_name="A generated sample show file" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/home/leondietrich/localdev/realtime-fish/submodules/Docs/FormatSchemes/ProjectFile/ShowFile_v0.xsd">
   <p1:scene human_readable_name="An example scene containing all filters with an example." id="0">
-    <p1:filter id="const_8bit" type="0">
+    <p1:filter  pos="0:0" id="const_8bit" type="0">
       <p1:initialParameters name="value" value="50"/>
     </p1:filter>
-    <p1:filter id="const_16bit" type="1">
+    <p1:filter  pos="0:0" id="const_16bit" type="1">
       <p1:initialParameters name="value" value="9001"/>
     </p1:filter>
-    <p1:filter id="const_float" type="2">
+    <p1:filter  pos="0:0" id="const_float" type="2">
       <p1:initialParameters name="value" value="13.6"/>
     </p1:filter>
-    <p1:filter id="const_color" type="3">
+    <p1:filter  pos="0:0" id="const_color" type="3">
       <p1:initialParameters name="value" value="270.0,0.5,0.99"/>
     </p1:filter>
-    <p1:filter id="debug_8bit" type="4">
+    <p1:filter  pos="0:0" id="debug_8bit" type="4">
       <p1:channellink input_channel_id="value" output_channel_id="const_8bit:value"/>
     </p1:filter>
-    <p1:filter id="debug_16bit" type="5">
+    <p1:filter  pos="0:0" id="debug_16bit" type="5">
       <p1:channellink input_channel_id="value" output_channel_id="const_16bit:value"/>
     </p1:filter>
-    <p1:filter id="debug_float" type="6">
+    <p1:filter  pos="0:0" id="debug_float" type="6">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
     </p1:filter>
-    <p1:filter id="debug_color" type="7">
+    <p1:filter  pos="0:0" id="debug_color" type="7">
       <p1:channellink input_channel_id="value" output_channel_id="const_color:value"/>
     </p1:filter>
-    <p1:filter id="conversion_split_16bit" type="8">
+    <p1:filter  pos="0:0" id="conversion_split_16bit" type="8">
       <p1:channellink input_channel_id="value" output_channel_id="float_to_16bit:value"/>
     </p1:filter>
-    <p1:filter id="multiply_add_filter" type="10">
+    <p1:filter  pos="0:0" id="multiply_add_filter" type="10">
       <p1:channellink input_channel_id="factor1" output_channel_id="const_float:value"/>
       <p1:channellink input_channel_id="factor2" output_channel_id="const_float:value"/>
       <p1:channellink input_channel_id="summand" output_channel_id="const_float:value"/>
     </p1:filter>
-    <p1:filter id="universe_output" type="11">
+    <p1:filter  pos="0:0" id="universe_output" type="11">
       <p1:channellink input_channel_id="input_1" output_channel_id="conversion_split_16bit:value_upper"/>
       <p1:filterConfiguration name="1" value="input_1"/>
       <p1:channellink input_channel_id="input_2" output_channel_id="conversion_split_16bit:value_lower"/>
       <p1:filterConfiguration name="2" value="input_2"/>
       <p1:filterConfiguration name="universe" value="1"/>
     </p1:filter>
-    <p1:filter id="float_to_16bit" type="12">
+    <p1:filter  pos="0:0" id="float_to_16bit" type="12">
       <p1:channellink input_channel_id="value" output_channel_id="multiply_add_filter:value"/>
     </p1:filter>
-    <p1:filter id="sine" type="19">
+    <p1:filter  pos="0:0" id="sine" type="19">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
     </p1:filter>
-    <p1:filter id="cosine" type="20">
+    <p1:filter  pos="0:0" id="cosine" type="20">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
     </p1:filter>
-    <p1:filter id="tangent" type="21">
+    <p1:filter  pos="0:0" id="tangent" type="21">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
     </p1:filter>
-    <p1:filter id="const_float_2" type="2">
+    <p1:filter  pos="0:0" id="const_float_2" type="2">
       <p1:initialParameters name="value" value="0.7"/>
     </p1:filter>
-    <p1:filter id="arcsine" type="22">
+    <p1:filter  pos="0:0" id="arcsine" type="22">
       <p1:channellink input_channel_id="value" output_channel_id="const_float_2:value"/>
     </p1:filter>
-    <p1:filter id="arccosine" type="23">
+    <p1:filter  pos="0:0" id="arccosine" type="23">
       <p1:channellink input_channel_id="value" output_channel_id="const_float_2:value"/>
     </p1:filter>
-    <p1:filter id="arctangent" type="24">
+    <p1:filter  pos="0:0" id="arctangent" type="24">
       <p1:channellink input_channel_id="value" output_channel_id="const_float_2:value"/>
     </p1:filter>
-    <p1:filter id="square" type="25">
+    <p1:filter  pos="0:0" id="square" type="25">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
     </p1:filter>
-    <p1:filter id="triangle" type="26">
+    <p1:filter  pos="0:0" id="triangle" type="26">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
     </p1:filter>
-    <p1:filter id="sawtooth" type="27">
+    <p1:filter  pos="0:0" id="sawtooth" type="27">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
     </p1:filter>
-    <p1:filter id="logarithm" type="28">
+    <p1:filter  pos="0:0" id="logarithm" type="28">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
     </p1:filter>
-    <p1:filter id="exponential" type="29">
+    <p1:filter  pos="0:0" id="exponential" type="29">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
     </p1:filter>
-    <p1:filter id="min" type="30">
+    <p1:filter  pos="0:0" id="min" type="30">
       <p1:channellink input_channel_id="param1" output_channel_id="const_float:value"/>
       <p1:channellink input_channel_id="param2" output_channel_id="const_float_2:value"/>
     </p1:filter>
-    <p1:filter id="max" type="31">
+    <p1:filter  pos="0:0" id="max" type="31">
       <p1:channellink input_channel_id="param1" output_channel_id="const_float:value"/>
       <p1:channellink input_channel_id="param2" output_channel_id="const_float_2:value"/>
     </p1:filter>
-    <p1:filter id="time_generator" type="32">
+    <p1:filter  pos="0:0" id="time_generator" type="32">
     </p1:filter>
-    <p1:filter id="8bit_switch_on_delay" type="33">
+    <p1:filter  pos="0:0" id="8bit_switch_on_delay" type="33">
       <p1:channellink input_channel_id="value" output_channel_id="conversion_split_16bit:value_lower"/>
       <p1:channellink input_channel_id="time" output_channel_id="time_generator:value"/>
       <p1:filterConfiguration name="delay" value="2.3"/>
     </p1:filter>
-    <p1:filter id="16bit_switch_on_delay" type="34">
+    <p1:filter  pos="0:0" id="16bit_switch_on_delay" type="34">
       <p1:channellink input_channel_id="value" output_channel_id="float_to_16bit:value"/>
       <p1:channellink input_channel_id="time" output_channel_id="time_generator:value"/>
       <p1:filterConfiguration name="delay" value="2.3"/>
     </p1:filter>
-    <p1:filter id="float_switch_on_delay" type="35">
+    <p1:filter  pos="0:0" id="float_switch_on_delay" type="35">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
       <p1:channellink input_channel_id="time" output_channel_id="time_generator:value"/>
       <p1:filterConfiguration name="delay" value="2.3"/>
     </p1:filter>
-    <p1:filter id="8bit_switch_off_delay" type="36">
+    <p1:filter  pos="0:0" id="8bit_switch_off_delay" type="36">
       <p1:channellink input_channel_id="value" output_channel_id="conversion_split_16bit:value_lower"/>
       <p1:channellink input_channel_id="time" output_channel_id="time_generator:value"/>
       <p1:filterConfiguration name="delay" value="2.3"/>
     </p1:filter>
-    <p1:filter id="16bit_switch_off_delay" type="37">
+    <p1:filter  pos="0:0" id="16bit_switch_off_delay" type="37">
       <p1:channellink input_channel_id="value" output_channel_id="float_to_16bit:value"/>
       <p1:channellink input_channel_id="time" output_channel_id="time_generator:value"/>
       <p1:filterConfiguration name="delay" value="2.3"/>
     </p1:filter>
-    <p1:filter id="float_switch_off_delay" type="38">
+    <p1:filter  pos="0:0" id="float_switch_off_delay" type="38">
       <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
       <p1:channellink input_channel_id="time" output_channel_id="time_generator:value"/>
       <p1:filterConfiguration name="delay" value="2.3"/>
     </p1:filter>
-<!--    <p1:filter id="cue_filter" type="44">-->
+<!--    <p1:filter  pos="0:0" id="cue_filter" type="44">-->
 <!--      <p1:channellink input_channel_id="time" output_channel_id="time_generator:value"/>-->
 <!--      <p1:filterConfiguration name="mapping" value="wash_x_pos:float;wash_y_pos:float;wash_dimmer:8bit;wash_color:color"/>-->
 <!--      <p1:filterConfiguration name="end_handling" value="hold"/>-->
@@ -129,10 +129,12 @@
   <p1:scene human_readable_name="A minimal example scene. It does not contain any filters." id="1"/>
   <p1:device channel="0" id="0" name="The name or description of a device" type="A device type. Keep in mind that fish does not use information about devices." universe_id="0"/>
   <p1:universe description="A universe mapped to the first DMX port on the console. The description field can be used for the user to store notes or hints about the stage configuration. Please note that the ID of the universe is different from the physical address and a shared name space with other universe types in which it needs to be unique." id="0" name="Universe 1">
-    <p1:physical_location>0</p1:physical_location>
+    <physical_location>0</physical_location>
+    <patching></patching>
   </p1:universe>
   <p1:universe description="This universe would be mapped to an artnet device (such as a stage box or complex light controller). Keep in mind that physical universes and artnet configurations are mutually exclusive." id="1" name="ArtNet Universe 1">
-    <p1:artnet_location device_universe_id="0" ip_address="10.0.15.1" udp_port="6465"/>
+    <artnet_location device_universe_id="0" ip_address="10.0.15.1" udp_port="6465"/>
+    <patching></patching>
   </p1:universe>
   <p1:uihint name="key" value="value"/>
   <p1:uihint name="description" value="This is a key value storage not uitilized by fish. The GUI may use this to store any data it may desire."/>
