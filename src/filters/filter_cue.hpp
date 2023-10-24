@@ -131,6 +131,8 @@ namespace dmxfish::filters {
 
         void update_last_values();
 
+        void start_new_cue(bool update_last_values);
+
         void calc_values();
 
 

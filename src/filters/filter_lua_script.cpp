@@ -1,40 +1,12 @@
 #include "filters/filter_lua_script.hpp"
 
-
+#include "filters/filter_lua_functions.hpp"
 #include "lib/macros.hpp"
 #include "lib/logging.hpp"
 #include "dmx/pixel.hpp"
 #include "filters/util.hpp"
 #include "io/universe_sender.hpp"
 #include <iostream>
-
-
-std::tuple<uint8_t, uint8_t, uint8_t> hsi_to_rgb_color(dmxfish::dmx::pixel& color){
-    uint8_t r = 0;
-    uint8_t g = 0;
-    uint8_t b = 0;
-    color.pixel_to_rgb(r, g, b);
-    return std::make_tuple(r, g, b);
-}
-
-std::tuple<uint8_t, uint8_t, uint8_t> hsi_to_rgb_table(sol::table color){
-    dmxfish::dmx::pixel color_local = dmxfish::dmx::pixel(color["h"], color["s"], color["i"]);
-    return hsi_to_rgb_color(color_local);
-}
-
-std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> hsi_to_rgbw_color(dmxfish::dmx::pixel& color){
-    uint8_t r = 0;
-    uint8_t g = 0;
-    uint8_t b = 0;
-    uint8_t w = 0;
-    color.pixel_to_rgbw(r, g, b, w);
-    return std::make_tuple(r, g, b, w);
-}
-
-std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> hsi_to_rgbw_table(sol::table color){
-    dmxfish::dmx::pixel color_local = dmxfish::dmx::pixel(color["h"], color["s"], color["i"]);
-    return hsi_to_rgbw_color(color_local);
-}
 
 
 namespace dmxfish::filters {
@@ -83,6 +55,7 @@ namespace dmxfish::filters {
     inline void filter_lua_script::get_direct_out_channels() {
         sol::object outputs = lua["output"];
         if (outputs.get_type() == sol::type::table) {
+            // Todo: improve check all! existing universes and (only?) patched channels
             for (int universe_id = 0; universe_id <= 2 * ((sol::table) outputs).size(); universe_id++) {
                 sol::object universe = ((sol::table) outputs)[universe_id];
                 if (auto uptr = dmxfish::io::get_universe(universe_id); uptr != nullptr) {
@@ -253,27 +226,10 @@ namespace dmxfish::filters {
             throw filter_config_exception("lua filter: unable to setup the script");
         }
 
-        // prepare libraries and prerequirements in lua
-        lua.open_libraries(sol::lib::base, sol::lib::package);
-        lua.open_libraries(sol::lib::math, sol::lib::table, sol::lib::string);
 
-        lua.set_function("update", []() {
-        });
-        lua.set_function("scene_activated", []() {
-        });
+        dmxfish::filters::lua::init_lua(lua);
 
 
-        lua.create_named_table("output");
-
-        lua.set_function( "hsi_to_rgb", sol::overload(
-                hsi_to_rgb_color,
-                hsi_to_rgb_table
-        ) );
-
-        lua.set_function( "hsi_to_rgbw", sol::overload(
-                hsi_to_rgbw_color,
-                hsi_to_rgbw_table
-        ) );
 
         try {
             lua.script(initial_parameters.at("script"));
@@ -281,6 +237,8 @@ namespace dmxfish::filters {
             throw filter_config_exception(std::string("setup the filter threw an error: ") + e.what());
         }
 
+
+        // Todo: checking signature does not work?
         sol::object scene_activated_obj = lua["scene_activated"];
         if (scene_activated_obj.get_type() == sol::type::function && scene_activated_obj.is<std::function<void()>>()){
             scene_activated_lua = scene_activated_obj;
@@ -294,10 +252,23 @@ namespace dmxfish::filters {
         } else {
             throw filter_config_exception("update is not a function or has the wrong signature");
         }
+
+        sol::object receive_update_obj = lua["receive_update_from_gui"];
+        if (receive_update_obj.get_type() == sol::type::function && receive_update_obj.is<std::function<bool(std::string, std::string)>>()){
+            receive_update = receive_update_obj;
+        } else {
+            throw filter_config_exception("receive_update_from_gui is not a function or has the wrong signature");
+        }
     }
 
     bool filter_lua_script::receive_update_from_gui(const std::string &key, const std::string &_value) {
-
+        // execute receive_update_from_gui script in lua
+        try {
+            return receive_update(key, _value);
+        } catch (const std::exception& e) {
+            ::spdlog::warn("receive_update_from_gui of lua has failed: {}", e.what());
+            return false;
+        }
     }
 
     void filter_lua_script::get_output_channels(channel_mapping &map, const std::string &name) {

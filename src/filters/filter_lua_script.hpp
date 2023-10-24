@@ -33,6 +33,7 @@ namespace dmxfish::filters {
 
         sol::function scene_activated_lua;
         sol::function update_lua;
+        sol::function receive_update;
 
         std::vector<uint8_t*> in_eight_bit;
         std::vector<uint16_t*> in_sixteen_bit;

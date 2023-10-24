@@ -128,17 +128,19 @@ BOOST_AUTO_TEST_CASE(testluadirectout) {
     configuration["out_mapping"] = "";
     std::map <std::string, std::string> initial_parameters;
 
-    initial_parameters["script"] = "function update()\n"
-                                   "    output[1]={}\n"
-                                   "    output[\"2\"]={}\n"
-                                   "    output[2]={}\n"
-                                   "    output[1][2]=5\n"
-                                   "    output[1][4]='avad'\n"
-                                   "    output[1][3]=6\n"
-                                   "end\n"
-                                   "function scene_activated()\n"
-                                   "    -- This method will be called every time the show is switched to this scene\n"
-                                   "end";
+    initial_parameters["script"] = R"(
+        function update()
+            output[1]={}
+            output["2"]={}
+            output[2]={}
+            output[1][2]=5
+            output[1][4]='avad'
+            output[1][3]=6
+        end
+        function scene_activated()
+            -- This method will be called every time the show is switched to this scene
+        end
+    )";
 
     fil.pre_setup(configuration, initial_parameters);
 
@@ -176,21 +178,23 @@ BOOST_AUTO_TEST_CASE(testlua) {
     configuration["out_mapping"] = "out_dimmer:8bit;out_color:color;out_color2:color";
     std::map <std::string, std::string> initial_parameters;
 
-    initial_parameters["script"] = "function update()\n"
-                                   "    -- This method will be called once per DMX output cycle\n"
-                                   "    -- Put your effect here\n"
-                                   "    out_color = {\n"
-                                   "        h = in_color[\"h\"]*8,\n"
-                                   "        s = in_color[\"s\"]*3,\n"
-                                   "        i = in_color[\"i\"]*2}\n"
-                                   "    out_dimmer = in_dimmer/2\n"
-                                   "    out_color2 = in_color\n"
-                                   "    out_color2.h = in_color.h/10\n"
-                                   "    out_color2.s = in_color.s/2\n"
-                                   "end\n"
-                                   "function scene_activated()\n"
-                                   "    -- This method will be called every time the show is switched to this scene\n"
-                                   "end";
+    initial_parameters["script"] = R"(
+        function update()
+            -- This method will be called once per DMX output cycle
+            -- Put your effect here
+            out_color = {
+                h = in_color["h"]*8,
+                s = in_color["s"]*3,
+                i = in_color["i"]*2}
+            out_dimmer = in_dimmer/2
+            out_color2 = in_color
+            out_color2.h = in_color.h/10
+            out_color2.s = in_color.s/2
+        end
+        function scene_activated()
+            -- This method will be called every time the show is switched to this scene
+        end
+    )";
 
     fil.pre_setup(configuration, initial_parameters);
 
@@ -265,9 +269,11 @@ BOOST_AUTO_TEST_CASE(testlua_nil_value) {
     configuration["out_mapping"] = "out_dimmer:8bit;out_color:color";
     std::map <std::string, std::string> initial_parameters;
 
-    initial_parameters["script"] = "function update()\n"
-                                   "    out_color = nil\n"
-                                   "end\n";
+    initial_parameters["script"] = R"(
+        function update()
+           out_color = nil
+       end
+    )";
 
     fil.pre_setup(configuration, initial_parameters);
 
@@ -298,11 +304,13 @@ BOOST_AUTO_TEST_CASE(test_lua_wrong_type) {
     configuration["out_mapping"] = "out_dimmer:8bit;out_color:color;out_color2:color";
     std::map <std::string, std::string> initial_parameters;
 
-    initial_parameters["script"] = "function update()\n"
-                                   "    out_color = {h=90, s=0.4}\n"
-                                   "    out_color2 = 3\n"
-                                   "    out_dimmer = {z=8}\n"
-                                   "end\n";
+    initial_parameters["script"] = R"(
+        function update()
+           out_color = {h=90, s=0.4}
+           out_color2 = 3
+           out_dimmer = {z=8}
+       end
+    )";
 
     fil.pre_setup(configuration, initial_parameters);
 
@@ -339,13 +347,15 @@ BOOST_AUTO_TEST_CASE(test_lua_color_conversion) {
     configuration["out_mapping"] = "red1:8bit;green1:8bit;blue1:8bit;red2:8bit;green2:8bit;blue2:8bit;white2:8bit";
     std::map <std::string, std::string> initial_parameters;
 
-    initial_parameters["script"] = "function decompose_rgb(color)\n"
-                                   "    return color.r, color.g, color.b, color.w\n"
-                                   "end\n"
-                                   "function update()\n"
-                                   "    red1, green1, blue1 = hsi_to_rgb(in_color)\n"
-                                   "    red2, green2, blue2, white2 = hsi_to_rgbw(in_color)\n"
-                                   "end\n";
+    initial_parameters["script"] = R"(
+        function decompose_rgb(color)
+            return color.r, color.g, color.b, color.w
+        end
+        function update()
+            red1, green1, blue1 = hsi_to_rgb(in_color)
+            red2, green2, blue2, white2 = hsi_to_rgbw(in_color)
+        end
+    )";
 
     fil.pre_setup(configuration, initial_parameters);
 
@@ -370,6 +380,64 @@ BOOST_AUTO_TEST_CASE(test_lua_color_conversion) {
     BOOST_TEST(*map.eight_bit_channels["abc:green2"] == test_green2, "green2 has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:green2"]) + " instead of " + std::to_string(test_green2));
     BOOST_TEST(*map.eight_bit_channels["abc:blue2"] == test_blue2, "blue2 has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:blue2"]) + " instead of " + std::to_string(test_blue2));
     BOOST_TEST(*map.eight_bit_channels["abc:white2"] == test_white2, "white2 has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:white2"]) + " instead of " + std::to_string(test_white2));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(test_update_gui_empty) {
+    spdlog::set_level(spdlog::level::debug);
+    dmxfish::filters::filter_lua_script fil = filter_lua_script ();
+
+    channel_mapping input_channels = channel_mapping();
+    std::map <std::string, std::string> configuration;
+    configuration["in_mapping"] = "";
+    configuration["out_mapping"] = "";
+    std::map <std::string, std::string> initial_parameters;
+
+    initial_parameters["script"] = "";
+
+    fil.pre_setup(configuration, initial_parameters);
+
+    channel_mapping map = channel_mapping();
+    fil.get_output_channels(map, "abc");
+    fil.setup_filter (configuration, initial_parameters, input_channels);
+
+    fil.update();
+    fil.receive_update_from_gui("false", "test");
+}
+
+BOOST_AUTO_TEST_CASE(test_update_gui) {
+    spdlog::set_level(spdlog::level::debug);
+    dmxfish::filters::filter_lua_script fil = filter_lua_script ();
+
+    channel_mapping input_channels = channel_mapping();
+    std::map <std::string, std::string> configuration;
+    configuration["in_mapping"] = "";
+    configuration["out_mapping"] = "";
+    std::map <std::string, std::string> initial_parameters;
+
+    initial_parameters["script"] = R"(
+        function receive_update_from_gui(key, value)
+            if key == 'true' then
+                return true
+            end
+            return false
+        end
+	)";
+
+    fil.pre_setup(configuration, initial_parameters);
+
+    channel_mapping map = channel_mapping();
+    fil.get_output_channels(map, "abc");
+    fil.setup_filter (configuration, initial_parameters, input_channels);
+
+    fil.update();
+    bool test1 = fil.receive_update_from_gui("false", "test1");
+    BOOST_TEST(!test1, "lua receive update from gui should return false but is" + std::to_string(test1));
+
+    fil.update();
+    bool test2 = fil.receive_update_from_gui("true", "test2");
+    BOOST_TEST(test2, "lua receive update from gui should return false but is" + std::to_string(test2));
 }
 
 
