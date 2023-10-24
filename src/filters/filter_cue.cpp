@@ -283,7 +283,7 @@ namespace dmxfish::filters {
         }
     }
 
-    void filter_cue::update_last_values() {
+    inline void filter_cue::update_last_values() {
         last_timestamp = *time;
         if (!already_updated_last) {
             for (size_t i = 0; i < eight_bit_channels.size(); i++) {
@@ -302,10 +302,8 @@ namespace dmxfish::filters {
         }
     }
 
-    void filter_cue::start_new_cue(bool update_last) {
-        if (update_last){
-            update_last_values();
-        }
+    void filter_cue::start_new_cue() {
+        update_last_values();
         start_time = *time;
         frame = 0;
     }
@@ -354,7 +352,6 @@ namespace dmxfish::filters {
                             switch (handle_end) { // end of cuelist handling
                                 case START_AGAIN:
                                     active_cue = 0;
-                                    start_new_cue(true);
                                     break;
                                 case HOLD:
                                     update_hold_values();
@@ -379,7 +376,7 @@ namespace dmxfish::filters {
                     active_cue = next_cue;
                     next_cue = 0xffff;
                 }
-                start_new_cue(false);
+                start_new_cue();
                 cue_end_handling_real = cues.at(active_cue).end_handling;
             }
         }
@@ -487,14 +484,14 @@ namespace dmxfish::filters {
                             active_cue = next_cue;
                             next_cue = 0xffff;
                         }
-                        start_new_cue(true);
+                        start_new_cue();
                         break;
                     case PLAY:
                         switch (cues.at(active_cue).restart_handling) {
                             case DO_NOTHING:
                                 break;
                             case START_FROM_BEGIN:
-                                start_new_cue(true);
+                                start_new_cue();
                                 break;
                             default:
                                 return false;
@@ -516,7 +513,7 @@ namespace dmxfish::filters {
                                     next_cue = 0xffff;
                                 }
                             }
-                            start_new_cue(true);
+                            start_new_cue();
                         }
                         break;
                     default:
@@ -567,7 +564,7 @@ namespace dmxfish::filters {
             if (next > cues.size()) {
                 return false;
             }
-            start_new_cue(true);
+            start_new_cue();
             active_cue = next;
             return true;
         }
@@ -633,7 +630,7 @@ namespace dmxfish::filters {
     void filter_cue::scene_activated() {
 	    if (this->default_cue > -1) {
 		    this->active_cue = (uint16_t) this->default_cue + 1;
-            start_new_cue(true);
+            start_new_cue();
 		    ::spdlog::info("Switched to Cue {}.", this->default_cue + 1);
 	    }
     }
