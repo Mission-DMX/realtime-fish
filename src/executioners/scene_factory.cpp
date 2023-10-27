@@ -467,7 +467,7 @@ COMPILER_RESTORE("-Weffc++")
 				}
 			}
 			if(!placed_filter) {
-				throw scheduling_exception("There were no filters with resolved dependencies within this round (" + std::to_string(round) + "). Possible causes: broken or cyclic dependencies.\nAlready scheduled filters: "
+				throw scheduling_exception(std::string(ERROR_CYCLIC_OR_BROKEN_DEPENDENCY_WHILE_SCHEDULING) + "There were no filters with resolved dependencies within this round (" + std::to_string(round) + "). Possible causes: broken or cyclic dependencies.\nAlready scheduled filters: "
 						+ iteratable_to_string(resolved_filters) + "\nStill missing filters: " + iteratable_to_string(missing_filter_stack));
 			}
 			b.emplace_back(fv.size());
@@ -499,7 +499,7 @@ COMPILER_RESTORE("-Weffc++")
 				found = true;
 			}
 			if(!found) {
-				throw scheduling_exception("The filter " + i.name + " requested the output channel " + entry.first + " to populate its input channel " + entry.second + " but the corresponding output channel wasn't found.");
+				throw scheduling_exception(std::string(ERROR_UNKNOWN_REQUESTED_OUTPUT_CHANNEL) + "The filter '" + i.name + "' requested the output channel '" + entry.first + "' to populate its input channel '" + entry.second + "' but the corresponding output channel wasn't found.");
 			}
 		}
 		return configuration_cm;
