@@ -2,15 +2,15 @@
 <bord_configuration xmlns="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile" show_name="Show" default_active_scene="0" notes="">
    <scene id="0" human_readable_name="Test123">
       <filter id="Universe.0" type="11" pos="0:0">
-         <channellink input_channel_id="input_1" output_channel_id="Constants8Bit.0:value" />
+         <!--<channellink input_channel_id="input_1" output_channel_id="Constants8Bit.0:value" />-->
          <channellink input_channel_id="input_2" output_channel_id="ColorToRGB.0:r" />
          <channellink input_channel_id="input_3" output_channel_id="ColorToRGB.0:g" />
          <channellink input_channel_id="input_4" output_channel_id="ColorToRGB.0:b" />
          <filterConfiguration name="universe" value="0" />
-         <filterConfiguration name="0" value="input_1" />
-         <filterConfiguration name="1" value="input_2" />
-         <filterConfiguration name="2" value="input_3" />
-         <filterConfiguration name="3" value="input_4" />
+         <!--<filterConfiguration name="0" value="input_1" />-->
+         <filterConfiguration name="input_2" value="1" />
+         <filterConfiguration name="input_3" value="2" />
+         <filterConfiguration name="input_4" value="3" />
       </filter>
       <filter id="ColorToRGB.0" type="15" pos="0:0">
          <channellink input_channel_id="value" output_channel_id="ConstantsColor.0:value" />
