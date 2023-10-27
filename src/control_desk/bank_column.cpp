@@ -131,7 +131,9 @@ namespace dmxfish::control_desk {
 	}
 
 	void bank_column::process_encoder_change_message(int change_request) {
-        this->accumulated_change++;
+        if (this->accumulated_change < 1024) {
+            this->accumulated_change++;
+        }
         this->last_encoder_turn = this->last_update_timestamp;
         change_request *= this->accumulated_change;
         if (readymode_active) {
