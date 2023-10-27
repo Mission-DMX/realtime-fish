@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(testshift) {
 
     std::map < std::string, std::string > initial_parameters;
 
-    fil8.setup_filter(configuration, initial_parameters, input_channels);
+    fil8.setup_filter(configuration, initial_parameters, input_channels, "");
 
 
 

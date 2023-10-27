@@ -35,49 +35,88 @@
     </p1:filter>
     <p1:filter  pos="0:0" id="universe_output" type="11">
       <p1:channellink input_channel_id="input_1" output_channel_id="conversion_split_16bit:value_upper"/>
-      <p1:filterConfiguration name="1" value="input_1"/>
+      <p1:filterConfiguration name="input_1" value="1"/>
       <p1:channellink input_channel_id="input_2" output_channel_id="conversion_split_16bit:value_lower"/>
-      <p1:filterConfiguration name="2" value="input_2"/>
+      <p1:filterConfiguration name="input_2" value="2"/>
       <p1:filterConfiguration name="universe" value="1"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="float_to_16bit" type="12">
-      <p1:channellink input_channel_id="value" output_channel_id="multiply_add_filter:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="multiply_add_filter:value"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="sine" type="19">
-      <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_outer" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_inner" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="phase" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="offset" output_channel_id="const_float:value"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="cosine" type="20">
-      <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_outer" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_inner" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="phase" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="offset" output_channel_id="const_float:value"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="tangent" type="21">
-      <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_outer" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_inner" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="phase" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="offset" output_channel_id="const_float:value"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="const_float_2" type="2">
       <p1:initialParameters name="value" value="0.7"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="arcsine" type="22">
-      <p1:channellink input_channel_id="value" output_channel_id="const_float_2:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="const_float_2:value"/>
+      <p1:channellink input_channel_id="factor_outer" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_inner" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="phase" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="offset" output_channel_id="const_float:value"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="arccosine" type="23">
-      <p1:channellink input_channel_id="value" output_channel_id="const_float_2:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="const_float_2:value"/>
+      <p1:channellink input_channel_id="factor_outer" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_inner" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="phase" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="offset" output_channel_id="const_float:value"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="arctangent" type="24">
-      <p1:channellink input_channel_id="value" output_channel_id="const_float_2:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="const_float_2:value"/>
+      <p1:channellink input_channel_id="factor_outer" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_inner" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="phase" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="offset" output_channel_id="const_float:value"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="square" type="25">
-      <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_outer" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_inner" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="phase" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="offset" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="length" output_channel_id="const_float:value"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="triangle" type="26">
-      <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_outer" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_inner" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="phase" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="offset" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="length" output_channel_id="const_float:value"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="sawtooth" type="27">
-      <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_outer" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="factor_inner" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="phase" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="offset" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="length" output_channel_id="const_float:value"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="logarithm" type="28">
-      <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="const_float:value"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="exponential" type="29">
-      <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="const_float:value"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="min" type="30">
       <p1:channellink input_channel_id="param1" output_channel_id="const_float:value"/>
@@ -90,32 +129,32 @@
     <p1:filter  pos="0:0" id="time_generator" type="32">
     </p1:filter>
     <p1:filter  pos="0:0" id="8bit_switch_on_delay" type="33">
-      <p1:channellink input_channel_id="value" output_channel_id="conversion_split_16bit:value_lower"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="conversion_split_16bit:value_lower"/>
       <p1:channellink input_channel_id="time" output_channel_id="time_generator:value"/>
       <p1:filterConfiguration name="delay" value="2.3"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="16bit_switch_on_delay" type="34">
-      <p1:channellink input_channel_id="value" output_channel_id="float_to_16bit:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="float_to_16bit:value"/>
       <p1:channellink input_channel_id="time" output_channel_id="time_generator:value"/>
       <p1:filterConfiguration name="delay" value="2.3"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="float_switch_on_delay" type="35">
-      <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="const_float:value"/>
       <p1:channellink input_channel_id="time" output_channel_id="time_generator:value"/>
       <p1:filterConfiguration name="delay" value="2.3"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="8bit_switch_off_delay" type="36">
-      <p1:channellink input_channel_id="value" output_channel_id="conversion_split_16bit:value_lower"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="conversion_split_16bit:value_lower"/>
       <p1:channellink input_channel_id="time" output_channel_id="time_generator:value"/>
       <p1:filterConfiguration name="delay" value="2.3"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="16bit_switch_off_delay" type="37">
-      <p1:channellink input_channel_id="value" output_channel_id="float_to_16bit:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="float_to_16bit:value"/>
       <p1:channellink input_channel_id="time" output_channel_id="time_generator:value"/>
       <p1:filterConfiguration name="delay" value="2.3"/>
     </p1:filter>
     <p1:filter  pos="0:0" id="float_switch_off_delay" type="38">
-      <p1:channellink input_channel_id="value" output_channel_id="const_float:value"/>
+      <p1:channellink input_channel_id="value_in" output_channel_id="const_float:value"/>
       <p1:channellink input_channel_id="time" output_channel_id="time_generator:value"/>
       <p1:filterConfiguration name="delay" value="2.3"/>
     </p1:filter>
