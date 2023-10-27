@@ -26,7 +26,9 @@ namespace dmxfish::filters {
                 std::function<void(std::string&)> init_values_8bit,
                 std::function<void(std::string&)> init_values_16bit,
                 std::function<void(std::string&)> init_values_float,
-                std::function<void(std::string&)> init_values_color
+                std::function<void(std::string&)> init_values_color,
+                filter_type ftype,
+                const std::string& fid
                 );
     };
 

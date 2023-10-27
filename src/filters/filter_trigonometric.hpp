@@ -43,7 +43,7 @@ namespace dmxfish::filters {
         return std::atan(v)*180/M_PI;
     }
 
-    template <double (*F)(double, double, double, double, double)>
+    template <double (*F)(double, double, double, double, double), filter_type own_type>
     class filter_trigonometric: public filter {
     private:
         double* input = nullptr;
@@ -56,31 +56,36 @@ namespace dmxfish::filters {
         filter_trigonometric() : filter() {}
         virtual ~filter_trigonometric() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.float_channels.contains("value_in")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'value_in' of type 'double'.");
+                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not "
+                                              "contain channel 'value_in' of type 'double'.", own_type, own_id);
             }
 	        this->input = input_channels.float_channels.at("value_in");
 
             if(!input_channels.float_channels.contains("factor_outer")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'factor_outer' of type 'double'.");
+                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not "
+                                              "contain channel 'factor_outer' of type 'double'.", own_type, own_id);
             }
             this->factor_outer = input_channels.float_channels.at("factor_outer");
 
             if(!input_channels.float_channels.contains("factor_inner")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'factor_inner' of type 'double'.");
+                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not "
+                                              "contain channel 'factor_inner' of type 'double'.", own_type, own_id);
             }
             this->factor_inner = input_channels.float_channels.at("factor_inner");
 
             if(!input_channels.float_channels.contains("phase")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'phase' of type 'double'.");
+                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not "
+                                              "contain channel 'phase' of type 'double'.", own_type, own_id);
             }
             this->phase = input_channels.float_channels.at("phase");
 
             if(!input_channels.float_channels.contains("offset")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'offset' of type 'double'.");
+                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not "
+                                              "contain channel 'offset' of type 'double'.", own_type, own_id);
             }
             this->offset = input_channels.float_channels.at("offset");
         }
@@ -103,7 +108,7 @@ namespace dmxfish::filters {
 
     };
 
-    template <double (*F)(double, double, double, double, double, double)>
+    template <double (*F)(double, double, double, double, double, double), filter_type own_type>
     class filter_five_params: public filter {
     private:
         double* input = nullptr;
@@ -117,36 +122,42 @@ namespace dmxfish::filters {
         filter_five_params() : filter() {}
         virtual ~filter_five_params() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.float_channels.contains("value_in")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'value_in' of type 'double'.");
+                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not "
+                                              "contain channel 'value_in' of type 'double'.", own_type, own_id);
             }
             this->input = input_channels.float_channels.at("value_in");
 
             if(!input_channels.float_channels.contains("factor_outer")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'factor_outer' of type 'double'.");
+                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not "
+                                              "contain channel 'factor_outer' of type 'double'.", own_type, own_id);
             }
             this->factor_outer = input_channels.float_channels.at("factor_outer");
 
             if(!input_channels.float_channels.contains("factor_inner")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'factor_inner' of type 'double'.");
+                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not "
+                                              "contain channel 'factor_inner' of type 'double'.", own_type, own_id);
             }
             this->factor_inner = input_channels.float_channels.at("factor_inner");
 
             if(!input_channels.float_channels.contains("phase")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'phase' of type 'double'.");
+                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not "
+                                              "contain channel 'phase' of type 'double'.", own_type, own_id);
             }
             this->phase = input_channels.float_channels.at("phase");
 
             if(!input_channels.float_channels.contains("offset")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'offset' of type 'double'.");
+                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not "
+                                              "contain channel 'offset' of type 'double'.", own_type, own_id);
             }
             this->offset = input_channels.float_channels.at("offset");
 
             if(!input_channels.float_channels.contains("length")) {
-                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not contain channel 'length' of type 'double'.");
+                throw filter_config_exception("Unable to link input of trigonometric filter: channel mapping does not "
+                                              "contain channel 'length' of type 'double'.", own_type, own_id);
             }
             this->length = input_channels.float_channels.at("length");
         }
@@ -170,17 +181,17 @@ namespace dmxfish::filters {
     };
 
 
-    using filter_sine = filter_trigonometric<sin_deg>;
-    using filter_cosine = filter_trigonometric<cos_deg>;
-    using filter_tangent = filter_trigonometric<tan_deg>;
+    using filter_sine = filter_trigonometric<sin_deg, filter_type::filter_sine>;
+    using filter_cosine = filter_trigonometric<cos_deg, filter_type::filter_cosine>;
+    using filter_tangent = filter_trigonometric<tan_deg, filter_type::filter_tangent>;
 
-    using filter_arcsine = filter_math_single<asin_deg>;
-    using filter_arccosine = filter_math_single<acos_deg>;
-    using filter_arctangent = filter_math_single<atan_deg>;
+    using filter_arcsine = filter_math_single<asin_deg, filter_type::filter_arcsine>;
+    using filter_arccosine = filter_math_single<acos_deg, filter_type::filter_arccosine>;
+    using filter_arctangent = filter_math_single<atan_deg, filter_type::filter_arctangent>;
 
-    using filter_square = filter_five_params<square>;
-    using filter_triangle = filter_trigonometric<triangle>;
-    using filter_sawtooth = filter_trigonometric<sawtooth>;
+    using filter_square = filter_five_params<square, filter_type::filter_square>;
+    using filter_triangle = filter_trigonometric<triangle, filter_type::filter_triangle>;
+    using filter_sawtooth = filter_trigonometric<sawtooth, filter_type::filter_sawtooth>;
 
     COMPILER_RESTORE("-Weffc++")
 }

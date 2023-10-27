@@ -25,26 +25,33 @@ namespace dmxfish::filters {
         filter_universe_output() : filter(), mapping{} {}
         virtual ~filter_universe_output() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             this->mapping.reserve(configuration.size() - 1);
             if(!configuration.contains("universe")){
-                throw filter_config_exception("A universe id must be set in order to let the universe output filter do its work.");
+                throw filter_config_exception("A universe id must be set in order to let the universe output filter do "
+                                              "its work.", filter_type::filter_universe_output, own_id);
             } else {
                 this->universe_id = std::stoi(configuration.at("universe"));
                 if(dmxfish::io::get_universe(this->universe_id) == nullptr) {
-                    throw filter_config_exception("The configured universe id does not seam to match a universe.");
+                    throw filter_config_exception("The configured universe id does not seam to match a universe.",
+                                                  filter_type::filter_universe_output, own_id);
                 }
             }
             for(const auto& [ichannel, uchannel] : configuration) {
                 if(ichannel != "universe") {
                     try {
                         if(!input_channels.eight_bit_channels.contains(ichannel)) {
-                            throw filter_config_exception("Failed to configure output filter for universe " + std::to_string(this->universe_id) + ": input channel '" + ichannel + "' does not exist.");
+                            throw filter_config_exception("Failed to configure output filter for universe " +
+                            std::to_string(this->universe_id) + ": input channel '" + ichannel + "' does not exist.",
+                                                          filter_type::filter_universe_output, own_id);
                         }
                         this->mapping.emplace_back((uint16_t) std::stoi(uchannel), input_channels.eight_bit_channels.at(ichannel));
                     } catch (const std::exception& e) {
-                        throw filter_config_exception("Failed to configure output filter for universe " + std::to_string(this->universe_id) + ": input channel '" + ichannel + "' cannot be mapped to universe channel #" + uchannel + ". Reason: " + e.what());
+                        throw filter_config_exception("Failed to configure output filter for universe " +
+                        std::to_string(this->universe_id) + ": input channel '" + ichannel +
+                        "' cannot be mapped to universe channel #" + uchannel + ". Reason: " + e.what(),
+                                                      filter_type::filter_universe_output, own_id);
                     }
                 }
             }
@@ -69,7 +76,8 @@ namespace dmxfish::filters {
 		    //::spdlog::debug("Output {} to channel {} of universe {} of type {}", *l.input_channel, l.universe_channel, this->universe_id, (unsigned int) uptr->getUniverseType());
                 }
             } else {
-                throw std::invalid_argument("The requested universe with id " + std::to_string(this->universe_id) + " does not exist anymore");
+                throw filter_runtime_exception("The requested universe with id " +
+                std::to_string(this->universe_id) + " does not exist anymore", filter_type::filter_universe_output);
             }
         }
 

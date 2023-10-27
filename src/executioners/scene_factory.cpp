@@ -461,7 +461,7 @@ COMPILER_RESTORE("-Weffc++")
 					filter_info_map[filter_index] = fi;
 					scene_filter_index[fid] = fv[filter_index];
 					resolved_filters.insert(fid);
-					fv[fv.size()-1]->pre_setup(conf, initial_params);
+					fv[fv.size()-1]->pre_setup(conf, initial_params, fi.name);
 				} else {
 					missing_filter_stack.push_back(f_template);
 				}
@@ -511,7 +511,7 @@ COMPILER_RESTORE("-Weffc++")
 			auto& finfo = filter_info_map[i];
 			fv[i]->get_output_channels(cm, finfo.name);
 			auto input_channels = construct_channel_input_mapping(cm, finfo);
-			fv[i]->setup_filter(finfo.configuration, finfo.initial_parameters, input_channels);
+			fv[i]->setup_filter(finfo.configuration, finfo.initial_parameters, input_channels, finfo.name);
 		}
 	}
 
@@ -558,10 +558,10 @@ COMPILER_RESTORE("-Weffc++")
 						scene_index_map[sid] = last_index;
 					}
 				} catch (const ::dmxfish::filters::filter_config_exception& e) {
-					msg_stream << ERROR_FILTER_CONFIGURATION_EXCEPTION << "Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
+					msg_stream << ERROR_FILTER_CONFIGURATION_EXCEPTION << "SCENE_ID:" << stemplate.id() << "/Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
 					*worked = false;
 				} catch (const scheduling_exception& e) {
-					msg_stream << ERROR_FILTER_SCHEDULING_EXCEPTION << "Failed to schedule filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
+					msg_stream << ERROR_FILTER_SCHEDULING_EXCEPTION << "SCENE_ID:" << stemplate.id() << "Failed to schedule filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
 					*worked = false;
 				}
 				{

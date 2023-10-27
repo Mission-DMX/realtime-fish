@@ -170,12 +170,14 @@ namespace dmxfish::filters {
         }
     }
 
-    void filter_lua_script::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters) {
+    void filter_lua_script::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& own_id) {
         if (!configuration.contains("out_mapping")) {
-            throw filter_config_exception("lua filter: unable to setup the out_mapping");
+            throw filter_config_exception("lua filter: unable to setup the out_mapping",
+                                          filter_type::filter_lua_script, own_id);
         }
         if (!configuration.contains("in_mapping")) {
-            throw filter_config_exception("lua filter: unable to setup the in_mapping");
+            throw filter_config_exception("lua filter: unable to setup the in_mapping",
+                                          filter_type::filter_lua_script, own_id);
         }
 
         lua.new_usertype<dmxfish::dmx::pixel>("Pixel", "h", &dmxfish::dmx::pixel::hue, "s", &dmxfish::dmx::pixel::saturation, "i", &dmxfish::dmx::pixel::iluminance);
@@ -193,7 +195,8 @@ namespace dmxfish::filters {
                 std::bind(&dmxfish::filters::filter_lua_script::init_values_out<uint16_t>, this, std::placeholders::_1),
                 std::bind(&dmxfish::filters::filter_lua_script::init_values_out<double>, this, std::placeholders::_1),
                 std::bind(&dmxfish::filters::filter_lua_script::init_values_out<dmxfish::dmx::pixel>, this,
-                          std::placeholders::_1)
+                          std::placeholders::_1),
+                          filter_type::filter_lua_script, own_id
         );
 
         // getting input channels
@@ -211,37 +214,47 @@ namespace dmxfish::filters {
                           std::placeholders::_1),
                 std::bind(&dmxfish::filters::filter_lua_script::init_values_in<double>, this, std::placeholders::_1),
                 std::bind(&dmxfish::filters::filter_lua_script::init_values_in<dmxfish::dmx::pixel>, this,
-                          std::placeholders::_1)
+                          std::placeholders::_1),
+                          filter_type::filter_lua_script, own_id
         );
     }
 
 
     void filter_lua_script::setup_filter(const std::map <std::string, std::string> &configuration,
                                   const std::map <std::string, std::string> &initial_parameters,
-                                  const channel_mapping &input_channels) {
+                                  const channel_mapping &input_channels,
+                                  const std::string& own_id) {
         MARK_UNUSED(configuration);
         MARK_UNUSED(initial_parameters);
         for (size_t i = 0; i < names_in_eight_bit.size(); i++) {
             if(!input_channels.eight_bit_channels.contains(names_in_eight_bit.at(i))) {
-                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_eight_bit.at(i) + "' of type 'uint8_t'.");
+                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain "
+                                              "channel '" + names_in_eight_bit.at(i) + "' of type 'uint8_t'.",
+                                              filter_type::filter_lua_script, own_id);
             }
             in_eight_bit.at(i) = input_channels.eight_bit_channels.at(names_in_eight_bit.at(i));
         }
         for (size_t i = 0; i < names_in_sixteen_bit.size(); i++) {
             if(!input_channels.sixteen_bit_channels.contains(names_in_sixteen_bit.at(i))) {
-                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_sixteen_bit.at(i) + "' of type 'uint16_t'.");
+                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain "
+                                              "channel '" + names_in_sixteen_bit.at(i) + "' of type 'uint16_t'.",
+                                              filter_type::filter_lua_script, own_id);
             }
             in_sixteen_bit.at(i) = input_channels.sixteen_bit_channels.at(names_in_sixteen_bit.at(i));
         }
         for (size_t i = 0; i < names_in_float.size(); i++) {
             if(!input_channels.float_channels.contains(names_in_float.at(i))) {
-                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_float.at(i) + "' of type 'double'.");
+                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain "
+                                              "channel '" + names_in_float.at(i) + "' of type 'double'.",
+                                              filter_type::filter_lua_script, own_id);
             }
             in_float.at(i) = input_channels.float_channels.at(names_in_float.at(i));
         }
         for (size_t i = 0; i < names_in_color.size(); i++) {
             if(!input_channels.color_channels.contains(names_in_color.at(i))) {
-                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain channel '" + names_in_color.at(i) + "' of type 'pixel'.");
+                throw filter_config_exception("Unable to link input of lua filter: channel mapping does not contain "
+                                              "channel '" + names_in_color.at(i) + "' of type 'pixel'.",
+                                              filter_type::filter_lua_script, own_id);
             }
             in_color.at(i) = input_channels.color_channels.at(names_in_color.at(i));
             // Todo delete in_color;
@@ -250,7 +263,8 @@ namespace dmxfish::filters {
         }
 
         if (!initial_parameters.contains("script")) {
-            throw filter_config_exception("lua filter: unable to setup the script");
+            throw filter_config_exception("lua filter: unable to setup the script. Parameter missing.",
+                                          filter_type::filter_lua_script, own_id);
         }
 
         // prepare libraries and prerequirements in lua
@@ -278,21 +292,24 @@ namespace dmxfish::filters {
         try {
             lua.script(initial_parameters.at("script"));
         } catch (std::exception &e){
-            throw filter_config_exception(std::string("setup the filter threw an error: ") + e.what());
+            throw filter_config_exception(std::string("setup the filter threw an error: ") + e.what(),
+                                          filter_type::filter_lua_script, own_id);
         }
 
         sol::object scene_activated_obj = lua["scene_activated"];
         if (scene_activated_obj.get_type() == sol::type::function && scene_activated_obj.is<std::function<void()>>()){
             scene_activated_lua = scene_activated_obj;
         } else {
-            throw filter_config_exception("scene_activated is not a function or has the wrong signature");
+            throw filter_config_exception("scene_activated is not a function or has the wrong signature",
+                                          filter_type::filter_lua_script, own_id);
         }
 
         sol::object update_obj = lua["update"];
         if (update_obj.get_type() == sol::type::function && update_obj.is<std::function<void()>>()){
             update_lua = update_obj;
         } else {
-            throw filter_config_exception("update is not a function or has the wrong signature");
+            throw filter_config_exception("update is not a function or has the wrong signature",
+                                          filter_type::filter_lua_script, own_id);
         }
     }
 
@@ -325,7 +342,7 @@ namespace dmxfish::filters {
             update_lua();
         } catch (const std::exception& e) {
             ::spdlog::warn("Update of lua has failed: {}", e.what());
-            throw filter_config_exception(std::string("update script in lua had an error: ") + e.what());
+            throw filter_runtime_exception(std::string("update script in lua had an error: ") + e.what(), filter_type::filter_lua_script);
         }
 
         // receive output data from lua
@@ -340,7 +357,7 @@ namespace dmxfish::filters {
             scene_activated_lua();
         } catch (const std::exception& e) {
             ::spdlog::warn("Scene activated of lua has failed: {}", e.what());
-            throw filter_config_exception(std::string("scene_sctivated script in lua had an error: ") + e.what());
+            throw filter_runtime_exception(std::string("scene_sctivated script in lua had an error: ") + e.what(), filter_type::filter_lua_script);
         }
     }
 

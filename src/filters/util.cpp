@@ -26,7 +26,9 @@ namespace dmxfish::filters {
             std::function<void(std::string&)> init_values_8bit,
             std::function<void(std::string&)> init_values_16bit,
             std::function<void(std::string&)> init_values_float,
-            std::function<void(std::string&)> init_values_color
+            std::function<void(std::string&)> init_values_color,
+            filter_type ftype,
+            const std::string& fid
     ){
         if (mappingstr.length() < 1){
             return;
@@ -52,7 +54,7 @@ namespace dmxfish::filters {
                 init_values_color(channel_name);
             } else {
                 throw filter_config_exception(std::string("can not recognise channel type: ") +
-                                              mappingstr.substr(sign + 1, next_pos - sign - 1));
+                                              mappingstr.substr(sign + 1, next_pos - sign - 1), ftype, fid);
             }
             if (next_pos >= mappingstr.length()) {
                 break;
