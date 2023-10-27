@@ -284,7 +284,7 @@ namespace dmxfish::control_desk {
 		{
 			if(display_text_index_up < display_text_up.size()) {
 				const auto& up_text = display_text_up[display_text_index_up];
-				for(auto i = 0, last_printable_char = (current_bank_mode == bank_mode::DIRECT_INPUT_MODE) ? 6 : 7; i < last_printable_char; i++){
+				for(auto i = 0, last_printable_char = 7; i < last_printable_char; i++){
 					const auto tpos = i + display_scroll_position_up;
 					if(tpos < up_text.length()) {
 						content[i] = up_text.at(tpos);
@@ -292,9 +292,6 @@ namespace dmxfish::control_desk {
 						content[i] = ' ';
 					}
 				}
-                if (current_bank_mode == bank_mode::DIRECT_INPUT_MODE) {
-                    content[6] = (raw_working_on_primary) ? '+' : '*';
-                }
 			} else {
 				std::array<char, 7> no_data = {'N', 'o', ' ', 'D', 'a', 't', 'a'};
 				for(auto i = 0; i < 7; i++){
@@ -413,6 +410,12 @@ namespace dmxfish::control_desk {
 							} else {
 								content[i] = ' ';
 							}
+						}
+						break;
+					} else {
+						const auto text = this->raw_working_on_primary ? "primary" : "second.";
+						for(auto i = 7; i < 14; i++) {
+							content[i] = text[i - 7];
 						}
 						break;
 					}
