@@ -396,11 +396,11 @@ BOOST_AUTO_TEST_CASE(test_update_gui_empty) {
 
     initial_parameters["script"] = "";
 
-    fil.pre_setup(configuration, initial_parameters);
+    fil.pre_setup(configuration, initial_parameters, "");
 
     channel_mapping map = channel_mapping();
     fil.get_output_channels(map, "abc");
-    fil.setup_filter (configuration, initial_parameters, input_channels);
+    fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
     fil.update();
     fil.receive_update_from_gui("false", "test");
@@ -425,11 +425,11 @@ BOOST_AUTO_TEST_CASE(test_update_gui) {
         end
 	)";
 
-    fil.pre_setup(configuration, initial_parameters);
+    fil.pre_setup(configuration, initial_parameters, "");
 
     channel_mapping map = channel_mapping();
     fil.get_output_channels(map, "abc");
-    fil.setup_filter (configuration, initial_parameters, input_channels);
+    fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
     fil.update();
     bool test1 = fil.receive_update_from_gui("false", "test1");

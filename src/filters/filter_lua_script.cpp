@@ -274,7 +274,8 @@ namespace dmxfish::filters {
         if (receive_update_obj.get_type() == sol::type::function && receive_update_obj.is<std::function<bool(std::string, std::string)>>()){
             receive_update = receive_update_obj;
         } else {
-            throw filter_config_exception("receive_update_from_gui is not a function or has the wrong signature");
+            throw filter_config_exception("receive_update_from_gui is not a function or has the wrong signature",
+                                          filter_type::filter_lua_script, own_id);
         }
     }
 
