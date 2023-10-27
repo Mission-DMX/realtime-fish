@@ -3,6 +3,7 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <filesystem>
+#include <iostream>
 #include <map>
 #include <memory>
 
@@ -23,6 +24,15 @@ BOOST_AUTO_TEST_CASE(color_filter_test) {
 	std::vector<dmxfish::execution::scene> v;
 	std::map<int32_t, size_t> scene_index_map;
 	auto bc = MissionDMX::ShowFile::bord_configuration("./test/test_color_conv2.xml", xml_schema::flags::dont_validate);
+	for(const auto& universe : bc->universe()) {
+		dmxfish::io::register_universe_from_xml(universe);
+	}
+	const auto res = dmxfish::execution::populate_scene_vector(v, bc->scene(), scene_index_map);
+	const auto operation_successful = ends_with(res.first, "\nDone.\n") && res.second;
+	BOOST_CHECK(operation_successful);
+	if(!operation_successful) {
+		std::cout << res.first;
+	}
 	BOOST_CHECK_EQUAL(v.size(), 1);
 }
 
@@ -52,8 +62,8 @@ BOOST_AUTO_TEST_CASE(scheduler_test) {
 
 		BOOST_CHECK_EQUAL(v.size(), 2);
 		if(v.size() == 2) {
-			BOOST_CHECK_EQUAL(v[0].get_filter_count(), 33);
-			BOOST_CHECK_EQUAL(v[1].get_filter_count(), 0);
+			BOOST_CHECK_EQUAL(v[0].get_filter_count(), 0);
+			BOOST_CHECK_EQUAL(v[1].get_filter_count(), 33);
 			v[0].on_start();
 			v[0].invoke_filters();
 			v[0].on_stop();

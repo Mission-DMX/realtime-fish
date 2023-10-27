@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(test_8bit_to_float) {
 
     std::map < std::string, std::string > initial_parameters;
 
-    fil8.setup_filter(configuration, initial_parameters, input_channels);
+    fil8.setup_filter(configuration, initial_parameters, input_channels, "");
 
     channel_mapping map = channel_mapping();
     const std::string name = "t";
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(test_16bit_to_float) {
 
     std::map < std::string, std::string > initial_parameters;
 
-    fil16.setup_filter(configuration, initial_parameters, input_channels);
+    fil16.setup_filter(configuration, initial_parameters, input_channels, "");
 
     channel_mapping map = channel_mapping();
     const std::string name = "t";
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(test_color_to_floats) {
     input_channels.color_channels["input"] = &in_channel;
     std::map < std::string, std::string > configuration;
     std::map < std::string, std::string > initial_parameters;
-    fil.setup_filter(configuration, initial_parameters, input_channels);
+    fil.setup_filter(configuration, initial_parameters, input_channels, "");
 
     channel_mapping map = channel_mapping();
     const std::string name = "test";
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(test_color_to_rgb) {
     input_channels.color_channels["value"] = &in_channel;
     std::map < std::string, std::string > configuration;
     std::map < std::string, std::string > initial_parameters;
-    fil.setup_filter(configuration, initial_parameters, input_channels);
+    fil.setup_filter(configuration, initial_parameters, input_channels, "");
 
     channel_mapping map = channel_mapping();
     const std::string name = "test";
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(test_color_to_rgbw) {
     input_channels.color_channels["value"] = &in_channel;
     std::map < std::string, std::string > configuration;
     std::map < std::string, std::string > initial_parameters;
-    fil.setup_filter(configuration, initial_parameters, input_channels);
+    fil.setup_filter(configuration, initial_parameters, input_channels, "");
 
     channel_mapping map = channel_mapping();
     const std::string name = "test";

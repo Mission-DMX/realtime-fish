@@ -21,11 +21,13 @@ COMPILER_SUPRESS("-Weffc++")
         filter_16bit_to_dual_byte() : filter() {}
         virtual ~filter_16bit_to_dual_byte() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.sixteen_bit_channels.contains("value")) {
-                throw filter_config_exception("Unable to link input of 16 bit splitting filter: channel mapping does not contain channel 'value' of type 'uint16_t'.");
+                throw filter_config_exception("Unable to link input of 16 bit splitting filter: channel mapping does "
+                                              "not contain channel 'value' of type 'uint16_t'.",
+                                              filter_type::filter_16bit_to_dual_byte, own_id);
             }
             this->input = input_channels.sixteen_bit_channels.at("value");
         }
@@ -58,11 +60,13 @@ COMPILER_SUPRESS("-Weffc++")
         filter_16bit_to_bool() : filter() {}
         virtual ~filter_16bit_to_bool() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.sixteen_bit_channels.contains("value_in")) {
-                throw filter_config_exception("Unable to link input of bool conversion filter: channel mapping does not contain channel 'value_in' of type 'uint16_t'.");
+                throw filter_config_exception("Unable to link input of bool conversion filter: channel mapping does not"
+                                              " contain channel 'value_in' of type 'uint16_t'.",
+                                              filter_type::filter_16bit_to_bool, own_id);
             }
             this->input = input_channels.sixteen_bit_channels.at("value_in");
         }
@@ -95,13 +99,16 @@ COMPILER_SUPRESS("-Weffc++")
         filter_multiply_add() : filter() {}
         virtual ~filter_multiply_add() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.float_channels.contains("factor1") ||
                     !input_channels.float_channels.contains("factor2") ||
                     !input_channels.float_channels.contains("summand")) {
-                throw filter_config_exception("Unable to link input of multiply add filter: channel mapping does not contain required channels.");
+                throw filter_config_exception("Unable to link input of multiply add filter: channel mapping does not "
+                                              "contain required channels.",
+                                              filter_type::filter_multiply_add,
+                                              own_id);
             }
             this->input_factor_1 = input_channels.float_channels.at("factor1");
             this->input_factor_2 = input_channels.float_channels.at("factor2");
@@ -126,7 +133,7 @@ COMPILER_SUPRESS("-Weffc++")
 
     };
 
-    template <typename T>
+    template <typename T, filter_type own_type>
     class filter_float_to_X_template : public filter {
     private:
         double* input = nullptr;
@@ -137,16 +144,22 @@ COMPILER_SUPRESS("-Weffc++")
         }
         virtual ~filter_float_to_X_template() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.float_channels.contains("value_in")) {
                 if constexpr (std::is_same<T, uint8_t>::value) {
-                    throw filter_config_exception("Unable to link input of float to 16 bit conversion filter: channel mapping does not contain channel 'value_in' of type 'double'.");
+                    throw filter_config_exception("Unable to link input of float to 16 bit conversion filter: channel "
+                                                  "mapping does not contain channel 'value_in' of type 'double'.",
+                                                  own_type, own_id);
                 } else if constexpr (std::is_same<T, uint16_t>::value) {
-                    throw filter_config_exception("Unable to link input of float to 8 bit conversion filter: channel mapping does not contain channel 'value_in' of type 'double'.");
+                    throw filter_config_exception("Unable to link input of float to 8 bit conversion filter: channel "
+                                                  "mapping does not contain channel 'value_in' of type 'double'.",
+                                                  own_type, own_id);
                 } else {
-                    throw filter_config_exception("Unable to link input of number rounding filter: channel mapping does not contain channel 'value_in' of type 'double'.");
+                    throw filter_config_exception("Unable to link input of number rounding filter: channel mapping "
+                                                  "does not contain channel 'value_in' of type 'double'.",
+                                                  own_type, own_id);
                 }
             }
             this->input = input_channels.float_channels.at("value_in");
@@ -176,9 +189,9 @@ COMPILER_SUPRESS("-Weffc++")
 
     };
 
-    using filter_float_to_16bit = filter_float_to_X_template<uint16_t>;
-    using filter_float_to_8bit = filter_float_to_X_template<uint8_t>;
-    using filter_round_number = filter_float_to_X_template<double>;
+    using filter_float_to_16bit = filter_float_to_X_template<uint16_t, filter_type::filter_float_to_16bit>;
+    using filter_float_to_8bit = filter_float_to_X_template<uint8_t, filter_type::filter_float_to_8bit>;
+    using filter_round_number = filter_float_to_X_template<double, filter_type::filter_round_number>;
 
     class filter_pixel_to_rgb_channels : public filter {
     private:
@@ -188,11 +201,13 @@ COMPILER_SUPRESS("-Weffc++")
         filter_pixel_to_rgb_channels() : filter() {}
         virtual ~filter_pixel_to_rgb_channels() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.color_channels.contains("value")) {
-                throw filter_config_exception("Unable to link input of color to rgb filter: channel mapping does not contain channel 'value' of type 'color'.");
+                throw filter_config_exception("Unable to link input of color to rgb filter: channel mapping does not "
+                                              "contain channel 'value' of type 'color'.",
+                                              filter_type::filter_pixel_to_rgb_channels, own_id);
             }
             this->input = input_channels.color_channels.at("value");
         }
@@ -224,11 +239,13 @@ COMPILER_SUPRESS("-Weffc++")
         filter_pixel_to_rgbw_channels() : filter() {}
         virtual ~filter_pixel_to_rgbw_channels() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.color_channels.contains("value")) {
-                throw filter_config_exception("Unable to link input of color to rgbw filter: channel mapping does not contain channel 'value' of type 'color'.");
+                throw filter_config_exception("Unable to link input of color to rgbw filter: channel mapping does not "
+                                              "contain channel 'value' of type 'color'.",
+                                              filter_type::filter_pixel_to_rgbw_channels, own_id);
             }
             this->input = input_channels.color_channels.at("value");
         }
@@ -263,11 +280,13 @@ COMPILER_SUPRESS("-Weffc++")
         filter_floats_to_pixel(): filter(), output{} {}
         virtual ~filter_floats_to_pixel() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.float_channels.contains("h") || !input_channels.float_channels.contains("s") || !input_channels.float_channels.contains("i")) {
-                throw filter_config_exception("Unable to link input of float to color filter: channel mapping does not contain input channels.");
+                throw filter_config_exception("Unable to link input of float to color filter: channel mapping does not "
+                                              "contain input channels.",
+                                              filter_type::filter_floats_to_pixel, own_id);
             }
             this->h = input_channels.float_channels.at("h");
             this->s = input_channels.float_channels.at("s");
@@ -301,11 +320,13 @@ COMPILER_SUPRESS("-Weffc++")
         filter_pixel_to_floats(): filter() {}
         virtual ~filter_pixel_to_floats() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.color_channels.contains("input")) {
-                throw filter_config_exception("Unable to link input of color to float filter: channel mapping does not contain the input channel.");
+                throw filter_config_exception("Unable to link input of color to float filter: channel mapping does not "
+                                              "contain the input channel.",
+                                              filter_type::filter_pixel_to_floats, own_id);
             }
             this->input = input_channels.color_channels.at("input");
         }
@@ -331,7 +352,7 @@ COMPILER_SUPRESS("-Weffc++")
         virtual void scene_activated() override {}
     };
 
-    template <typename T>
+    template <typename T, filter_type own_type>
     class filter_to_float_template : public filter {
     private:
         T* input = nullptr;
@@ -340,18 +361,22 @@ COMPILER_SUPRESS("-Weffc++")
         filter_to_float_template() : filter() {}
         virtual ~filter_to_float_template() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
 
             if constexpr (std::is_same<T, uint8_t>::value) {
                 if(!input_channels.eight_bit_channels.contains("value_in")) {
-                    throw filter_config_exception("Unable to link input of float conversion filter: channel mapping does not contain channel 'value_in' of type 'uint8_t'.");
+                    throw filter_config_exception("Unable to link input of float conversion filter: channel mapping "
+                                                  "does not contain channel 'value_in' of type 'uint8_t'.",
+                                                  own_type, own_id);
                 }
                 this->input = input_channels.eight_bit_channels.at("value_in");
             } else if constexpr (std::is_same<T, uint16_t>::value) {
                 if(!input_channels.sixteen_bit_channels.contains("value_in")) {
-                    throw filter_config_exception("Unable to link input of float conversion filter: channel mapping does not contain channel 'value_in' of type 'uint16_t'.");
+                    throw filter_config_exception("Unable to link input of float conversion filter: channel mapping "
+                                                  "does not contain channel 'value_in' of type 'uint16_t'.",
+                                                  own_type, own_id);
                 }
                 this->input =input_channels.sixteen_bit_channels.at("value_in");
             }
@@ -375,8 +400,8 @@ COMPILER_SUPRESS("-Weffc++")
 
     };
 
-    using filter_8bit_to_float = filter_to_float_template<uint8_t>;
-    using filter_16bit_to_float = filter_to_float_template<uint16_t>;
+    using filter_8bit_to_float = filter_to_float_template<uint8_t, filter_type::filter_8bit_to_float>;
+    using filter_16bit_to_float = filter_to_float_template<uint16_t, filter_type::filter_16bit_to_float>;
 
 
 COMPILER_RESTORE("-Weffc++")

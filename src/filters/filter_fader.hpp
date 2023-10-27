@@ -19,7 +19,7 @@
 namespace dmxfish::filters {
 
     COMPILER_SUPRESS("-Weffc++")
-    template <dmxfish::control_desk::bank_mode MODE, typename STORAGE_T>
+    template <dmxfish::control_desk::bank_mode MODE, typename STORAGE_T, filter_type own_type>
     class filter_fader_template : public filter {
     private:
         std::weak_ptr<dmxfish::control_desk::bank_column> input_col;
@@ -31,30 +31,38 @@ namespace dmxfish::filters {
         filter_fader_template() : filter(), input_col{}, storage{} {}
         virtual ~filter_fader_template() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(input_channels);
             MARK_UNUSED(initial_parameters);
             if(!configuration.contains("column_id")){
-                throw filter_config_exception("Unable to set value of fader input filter: configuration does not contain column_id parameter");
+                throw filter_config_exception("Unable to set value of fader input filter: configuration does not "
+                                              "contain column_id parameter", own_type, own_id);
             }
             if(!configuration.contains("set_id")){
-                throw filter_config_exception("Unable to set value of fader input filter: configuration does not contain set_id parameter");
+                throw filter_config_exception("Unable to set value of fader input filter: configuration does not "
+                                              "contain set_id parameter", own_type, own_id);
             }
             this->set_id = configuration.at("set_id");
             this->column_id = configuration.at("column_id");
-            if(auto candidate = get_iomanager_instance()->access_desk_column(set_id, column_id); candidate) {
+            auto iom = get_iomanager_instance();
+            if (!iom) {
+                // We don't have an IO Manager instance. Most likely we're inside a unit test. Anyway, there's nothing we can do about it.
+                ::spdlog::error("BUG: there is no IO Manager instance.");
+                return;
+            }
+            if(auto candidate = iom->access_desk_column(set_id, column_id); candidate) {
                 if(const auto& column_mode = candidate->get_mode(); column_mode != MODE) {
                     std::stringstream ss;
-		    ss << "The requested column (" << set_id << ":" << column_id << ") is not in the correct mode. Expected: ";
-		    ss << (int) MODE << ", got: " << (int) column_mode << ".";
-                    throw filter_config_exception(ss.str());
+                    ss << "The requested column (" << set_id << ":" << column_id << ") is not in the correct mode. Expected: ";
+                    ss << (int) MODE << ", got: " << (int) column_mode << ".";
+                    throw filter_config_exception(ss.str(), own_type, own_id);
                 }
                 input_col = candidate;
                 update();
             } else {
                 std::stringstream ss;
                 ss << "The requested column '" << column_id << "' in the '" << set_id << "' set does not seam to exist.";
-                throw filter_config_exception(ss.str());
+                throw filter_config_exception(ss.str(), own_type, own_id);
             }
             if constexpr (MODE != dmxfish::control_desk::bank_mode::DIRECT_INPUT_MODE) {
 	        if(configuration.contains("ignore_main_brightness_control") && configuration.at("ignore_main_brightness_control") == "true") {
@@ -150,31 +158,31 @@ namespace dmxfish::filters {
 
     };
 
-    using filter_fader_column_raw = filter_fader_template<dmxfish::control_desk::bank_mode::DIRECT_INPUT_MODE, dmxfish::control_desk::raw_column_configuration>;
+    using filter_fader_column_raw = filter_fader_template<dmxfish::control_desk::bank_mode::DIRECT_INPUT_MODE, dmxfish::control_desk::raw_column_configuration, filter_type::filter_fader_column_raw>;
 
     struct filter_fader_column_hsi_storage { 
         dmxfish::dmx::pixel color;
 	bool global_main_enabled = true;
     };
-    using filter_fader_column_hsi = filter_fader_template<dmxfish::control_desk::bank_mode::HSI_COLOR_MODE, filter_fader_column_hsi_storage>;
+    using filter_fader_column_hsi = filter_fader_template<dmxfish::control_desk::bank_mode::HSI_COLOR_MODE, filter_fader_column_hsi_storage, filter_type::filter_fader_column_hsi>;
 
     struct fader_column_hsia_storage_t : public filter_fader_column_hsi_storage {
         uint8_t amber;
     };
 
-    using filter_fader_column_hsia = filter_fader_template<dmxfish::control_desk::bank_mode::HSI_WITH_AMBER_MODE, fader_column_hsia_storage_t>;
+    using filter_fader_column_hsia = filter_fader_template<dmxfish::control_desk::bank_mode::HSI_WITH_AMBER_MODE, fader_column_hsia_storage_t, filter_type::filter_fader_column_hsia>;
 
     struct fader_column_hsiu_storage_t : public filter_fader_column_hsi_storage {
         uint8_t uv;
     };
 
-    using filter_fader_column_hsiu = filter_fader_template<dmxfish::control_desk::bank_mode::HSI_WITH_UV_MODE, fader_column_hsiu_storage_t>;
+    using filter_fader_column_hsiu = filter_fader_template<dmxfish::control_desk::bank_mode::HSI_WITH_UV_MODE, fader_column_hsiu_storage_t, filter_type::filter_fader_column_hsiu>;
 
     struct fader_column_hsiau_storage_t : public fader_column_hsia_storage_t {
         uint8_t uv;
     };
 
-    using filter_fader_column_hsiau = filter_fader_template<dmxfish::control_desk::bank_mode::HSI_WITH_AMBER_AND_UV_MODE, fader_column_hsiau_storage_t>;
+    using filter_fader_column_hsiau = filter_fader_template<dmxfish::control_desk::bank_mode::HSI_WITH_AMBER_AND_UV_MODE, fader_column_hsiau_storage_t, filter_type::filter_fader_column_hsiau>;
 
     class filter_main_brightness_fader : public filter {
     private:
@@ -183,10 +191,11 @@ namespace dmxfish::filters {
         filter_main_brightness_fader() : filter() {}
         virtual ~filter_main_brightness_fader() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(configuration);
             MARK_UNUSED(input_channels);
             MARK_UNUSED(initial_parameters);
+            MARK_UNUSED(own_id);
        }
 
         virtual  bool receive_update_from_gui(const std::string& key, const std::string& _value) override {

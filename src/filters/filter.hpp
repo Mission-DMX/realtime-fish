@@ -4,19 +4,33 @@
 #include <string>
 
 #include "dmx/pixel.hpp"
+#include "filters/types.hpp"
 
 #include "lib/macros.hpp"
+#include "types.hpp"
 
 namespace dmxfish::filters {
 
 class filter_config_exception : public std::exception {
 private:
-    std::string cause;
+    const std::string cause;
 
 public:
-    filter_config_exception(const std::string cause_) : cause(cause_) {}
+    filter_config_exception(const std::string& cause_, const filter_type type, const std::string& filter_id);
 
-    [[nodiscard]] inline virtual const char* what() const throw () {
+    [[nodiscard]] inline const char* what() const noexcept override {
+        return this->cause.c_str();
+    }
+};
+
+class filter_runtime_exception : public std::exception {
+private:
+    const std::string cause;
+
+public:
+    filter_runtime_exception(const std::string& cause_, const filter_type type);
+
+    [[nodiscard]] inline const char* what() const noexcept override {
         return this->cause.c_str();
     }
 };
@@ -45,8 +59,9 @@ public:
 	 *
 	 * @param configuration the key value pairs to configure the filter
 	 * @param initial_parameters the initial values that should be set after the parent scene got activated
+	 * @param filter_id The own ID of the filter
 	 */
-	virtual void pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters) {
+	virtual void pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& filter_id) {
         MARK_UNUSED(initial_parameters);
         MARK_UNUSED(configuration);
     }
@@ -59,8 +74,12 @@ public:
 	 * @param configuration the key value pairs to configure the filter
 	 * @param initial_parameters the initial values that should be set after the parent scene got activated
 	 * @param input_channels The mapping table the UI provided
+	 * @param filter_id The own id of the filter
 	 */
-	virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) = 0;
+	virtual void setup_filter(const std::map<std::string, std::string>& configuration,
+                              const std::map<std::string, std::string>& initial_parameters,
+                              const channel_mapping& input_channels,
+                              const std::string& filter_id) = 0;
 
 	/**
 	 * This method will be called in order to get the output channels. It is supposed

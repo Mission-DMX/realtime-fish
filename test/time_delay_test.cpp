@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(test_switch_on_delay_8bit) {
     std::map < std::string, std::string > configuration;
     configuration["delay"] = "10";
     std::map < std::string, std::string > initial_parameters;
-    fil.setup_filter(configuration, initial_parameters, input_channels);
+    fil.setup_filter(configuration, initial_parameters, input_channels, "");
 
     channel_mapping map = channel_mapping();
     const std::string name = "t";
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(test_switch_off_delay_8bit) {
     std::map < std::string, std::string > configuration;
     configuration["delay"] = "10";
     std::map < std::string, std::string > initial_parameters;
-    fil.setup_filter(configuration, initial_parameters, input_channels);
+    fil.setup_filter(configuration, initial_parameters, input_channels, "");
 
     channel_mapping map = channel_mapping();
     const std::string name = "t";

@@ -408,10 +408,10 @@ namespace dmxfish::filters {
     }
 
 
-    void filter_cue::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters) {
+    void filter_cue::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& own_id) {
         MARK_UNUSED(initial_parameters);
         if (!configuration.contains("mapping")) {
-            throw filter_config_exception("cue filter: unable to setup the mapping");
+            throw filter_config_exception("cue filter: unable to setup the mapping", filter_type::filter_cue, own_id);
         }
         util::init_mapping(
                 configuration.at("mapping"),
@@ -425,17 +425,20 @@ namespace dmxfish::filters {
                 std::bind(&dmxfish::filters::filter_cue::init_values_out<uint16_t>, this, std::placeholders::_1),
                 std::bind(&dmxfish::filters::filter_cue::init_values_out<double>, this, std::placeholders::_1),
                 std::bind(&dmxfish::filters::filter_cue::init_values_out<dmxfish::dmx::pixel>, this,
-                          std::placeholders::_1)
+                          std::placeholders::_1),
+                          filter_type::filter_cue, own_id
         );
     }
 
     void filter_cue::setup_filter(const std::map <std::string, std::string> &configuration,
                                   const std::map <std::string, std::string> &initial_parameters,
-                                  const channel_mapping &input_channels) {
+                                  const channel_mapping &input_channels,
+                                  const std::string& own_id) {
         MARK_UNUSED(initial_parameters);
         if (!input_channels.float_channels.contains("time")) {
-        throw filter_config_exception(
-            "Unable to link input of cue filter: channel mapping does not contain channel 'time' of type 'double'. This input should come from the scenes global time node.");
+        throw filter_config_exception("Unable to link input of cue filter: channel mapping does not contain channel "
+                                      "'time' of type 'double'. This input should come from the scenes global time "
+                                      "node.", filter_type::filter_cue, own_id);
         }
         this->time = input_channels.float_channels.at("time");
 
@@ -451,7 +454,8 @@ namespace dmxfish::filters {
 	}
 
         if (!configuration.contains("cuelist")) {
-            throw filter_config_exception("cue filter: unable to setup the cuelist");
+            throw filter_config_exception("cue filter: unable to setup the cuelist. Property is missing.",
+                                          filter_type::filter_cue, own_id);
         }
 
         const std::string frames = configuration.at("cuelist");
@@ -460,7 +464,7 @@ namespace dmxfish::filters {
                                std::bind(&dmxfish::filters::filter_cue::handle_cue,
                                          this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
                                          std::placeholders::_4))) {
-            throw filter_config_exception("cue filter: unable to parse the cuelist");
+            throw filter_config_exception("cue filter: unable to parse the cuelist", filter_type::filter_cue, own_id);
         }
     }
 

@@ -40,14 +40,14 @@ BOOST_AUTO_TEST_CASE(test_error_init) {
             print('test2 ' .. empty_value)
 	)";
 
-    fil.pre_setup(configuration, initial_parameters);
+    fil.pre_setup(configuration, initial_parameters, "");
 
     channel_mapping map = channel_mapping();
     fil.get_output_channels(map, "abc");
 
     bool test = false;
     try {
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
     } catch (std::exception &e){
         test = true;
     }
@@ -74,12 +74,12 @@ BOOST_AUTO_TEST_CASE(test_error_code) {
         end
 	)";
 
-    fil.pre_setup(configuration, initial_parameters);
+    fil.pre_setup(configuration, initial_parameters, "");
 
     channel_mapping map = channel_mapping();
     fil.get_output_channels(map, "abc");
 
-    fil.setup_filter(configuration, initial_parameters, input_channels);
+    fil.setup_filter(configuration, initial_parameters, input_channels, "");
     bool test = false;
     try {
         fil.scene_activated();
@@ -142,11 +142,11 @@ BOOST_AUTO_TEST_CASE(testluadirectout) {
         end
     )";
 
-    fil.pre_setup(configuration, initial_parameters);
+    fil.pre_setup(configuration, initial_parameters, "");
 
     channel_mapping map = channel_mapping();
     fil.get_output_channels(map, "abc");
-    fil.setup_filter (configuration, initial_parameters, input_channels);
+    fil.setup_filter (configuration, initial_parameters, input_channels, "");
     fil.update();
     if(auto uptr = dmxfish::io::get_universe(1); uptr != nullptr) {
         BOOST_TEST((*uptr)[2] == 5, std::string("lua direct out to universe has value of ") + std::to_string((*uptr)[2]) + std::string(" instead of 5"));
@@ -196,11 +196,11 @@ BOOST_AUTO_TEST_CASE(testlua) {
         end
     )";
 
-    fil.pre_setup(configuration, initial_parameters);
+    fil.pre_setup(configuration, initial_parameters, "");
 
     channel_mapping map = channel_mapping();
     fil.get_output_channels(map, "abc");
-    fil.setup_filter (configuration, initial_parameters, input_channels);
+    fil.setup_filter (configuration, initial_parameters, input_channels, "");
     fil.update();
     BOOST_TEST(*map.eight_bit_channels["abc:out_dimmer"] == test_val, "out_dimmer has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:out_dimmer"]) + " instead of " + std::to_string(test_val));
     BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->hue - testercol.hue) <= testercol.hue * 0.00001, "out_color:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->hue) + " instead of " + std::to_string(testercol.hue));
@@ -244,11 +244,11 @@ BOOST_AUTO_TEST_CASE(testlua_missing_function) {
 
     initial_parameters["script"] = "";
 
-    fil.pre_setup(configuration, initial_parameters);
+    fil.pre_setup(configuration, initial_parameters, "");
 
     channel_mapping map = channel_mapping();
     fil.get_output_channels(map, "abc");
-    fil.setup_filter (configuration, initial_parameters, input_channels);
+    fil.setup_filter (configuration, initial_parameters, input_channels, "");
     fil.update();
 
 }
@@ -275,11 +275,11 @@ BOOST_AUTO_TEST_CASE(testlua_nil_value) {
        end
     )";
 
-    fil.pre_setup(configuration, initial_parameters);
+    fil.pre_setup(configuration, initial_parameters, "");
 
     channel_mapping map = channel_mapping();
     fil.get_output_channels(map, "abc");
-    fil.setup_filter (configuration, initial_parameters, input_channels);
+    fil.setup_filter (configuration, initial_parameters, input_channels, "");
     fil.update();
     BOOST_TEST(*map.eight_bit_channels["abc:out_dimmer"] == test_val, "out_dimmer has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:out_dimmer"]) + " instead of " + std::to_string(test_val));
     BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->hue - testercol.hue) <= testercol.hue * 0.00001, "out_color:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->hue) + " instead of " + std::to_string(testercol.hue));
@@ -312,11 +312,11 @@ BOOST_AUTO_TEST_CASE(test_lua_wrong_type) {
        end
     )";
 
-    fil.pre_setup(configuration, initial_parameters);
+    fil.pre_setup(configuration, initial_parameters, "");
 
     channel_mapping map = channel_mapping();
     fil.get_output_channels(map, "abc");
-    fil.setup_filter (configuration, initial_parameters, input_channels);
+    fil.setup_filter (configuration, initial_parameters, input_channels, "");
     fil.update();
     BOOST_TEST(*map.eight_bit_channels["abc:out_dimmer"] == test_val, "out_dimmer has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:out_dimmer"]) + " instead of " + std::to_string(test_val));
     BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->hue - testercol.hue) <= testercol.hue * 0.00001, "out_color:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->hue) + " instead of " + std::to_string(testercol.hue));
@@ -357,11 +357,11 @@ BOOST_AUTO_TEST_CASE(test_lua_color_conversion) {
         end
     )";
 
-    fil.pre_setup(configuration, initial_parameters);
+    fil.pre_setup(configuration, initial_parameters, "");
 
     channel_mapping map = channel_mapping();
     fil.get_output_channels(map, "abc");
-    fil.setup_filter (configuration, initial_parameters, input_channels);
+    fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
 
     color = dmxfish::dmx::pixel(240,0.5001,1);
@@ -524,11 +524,11 @@ BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
         end
 	)";
 
-    fil.pre_setup(configuration, initial_parameters);
+    fil.pre_setup(configuration, initial_parameters, "");
 
     channel_mapping map = channel_mapping();
     fil.get_output_channels(map, "abc");
-    fil.setup_filter(configuration, initial_parameters, input_channels);
+    fil.setup_filter(configuration, initial_parameters, input_channels, "");
     fil.scene_activated();
     fil.update();
     std::cout << "universe ";
