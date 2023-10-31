@@ -554,6 +554,15 @@ namespace dmxfish::control_desk {
 		update_display_text();
 	}
 
+	std::string bank_column::get_display_text(bool up) {
+		auto& tv = up ? this->display_text_up : this->display_text_down;
+		if (tv.size() > 0) {
+			return tv[0];
+		} else {
+			return "";
+		}
+	}
+
 	inline void color_to_message(const dmxfish::dmx::pixel& c, missiondmx::fish::ipcmessages::fader_column_hsi_color& cm) {
 		cm.set_hue(c.hue);
 		cm.set_saturation(c.saturation);

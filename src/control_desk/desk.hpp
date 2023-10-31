@@ -166,6 +166,7 @@ namespace dmxfish::control_desk {
         void handle_select_state_update_from_bank(const std::string& column_id, bool new_state);
         void update_fader_bank_leds();
         void commit_readymode();
+	void print_bs_structure();
     };
 
 }

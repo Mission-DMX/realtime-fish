@@ -194,6 +194,7 @@ namespace dmxfish::control_desk {
         void process_button_press_message(button b, button_change c);
         void commit_from_readymode();
         void set_display_text(const std::string& text, bool up);
+	std::string get_display_text(bool up);
     private:
         void update_display_text();
         void update_physical_fader_position(bool from_activate = false);

@@ -91,22 +91,27 @@ namespace dmxfish::control_desk {
                 cbs.fader_banks[cbs.active_bank]->deactivate(size_of_bank_on_new_set);
             }
             current_active_bank_set = index;
-            cbs = bank_sets[current_active_bank_set];
-            if(!(cbs.active_bank < cbs.fader_banks.size())) {
-                cbs.active_bank = 0;
+            auto& new_bs = bank_sets[current_active_bank_set];
+            if(!(new_bs.active_bank < new_bs.fader_banks.size())) {
+                new_bs.active_bank = 0;
             }
-            if(cbs.active_bank < cbs.fader_banks.size()) {
-                cbs.fader_banks[cbs.active_bank]->activate();
+            if(new_bs.active_bank < new_bs.fader_banks.size()) {
+                new_bs.fader_banks[new_bs.active_bank]->activate();
             }
             // TODO display bank set id on 7seg for a short period of time
 	    // TODO debug index
             update_fader_bank_leds();
             update_message_required = true;
 	    bank_set_modification_happened = false;
-	    ::spdlog::info("Switched to bank set with index {}.", index);
+	    ::spdlog::debug("Switched to bank set with index {}.", index);
             return true;
         } else {
-	    ::spdlog::error("Failed to activate bank set with index {}. There are {} registered", index, bank_sets.size());
+	    if (index == current_active_bank_set) {
+		::spdlog::info("Remained on current index {}.", current_active_bank_set);
+	    } else {
+	        ::spdlog::error("Failed to activate bank set with index {}. There are {} registered. Remaining on index {}.", index, bank_sets.size(), current_active_bank_set);
+		this->print_bs_structure();
+	    }
             return false;
         }
     }
@@ -427,6 +432,7 @@ namespace dmxfish::control_desk {
             ::spdlog::error("Tried to remove fader bank set {}. The container contains only {} elements though.", i, s);
             return;
         } else if(i + 1 == s) {
+	    ::spdlog::debug("Removing bank set {}, which is the last one", i);
             if (i == current_active_bank_set) {
                 if (s > 1) {
                     // if we're erasing the active one and we're not the last one, call set_active_bank_set with i - 1
@@ -441,6 +447,7 @@ namespace dmxfish::control_desk {
             }
         } else {
             // swap set with last one if it isn't the last one (by copying the last one to the one being removed)
+	    ::spdlog::debug("Removing bank set {}.", i);
             this->bank_sets[i] = this->bank_sets[s - 1];
             // update the id of the last element in index map
             for(const auto& [k, v] : bankset_to_index_map) {
@@ -674,5 +681,33 @@ namespace dmxfish::control_desk {
 		    d_ptr->schedule_transmission();
 		}
 	    }
+    }
+
+    void desk::print_bs_structure() {
+	    std::cout << "Configured bank sets:\n";
+	    for (auto i = 0; i < this->bank_sets.size(); i++) {
+		    auto& cbs = this->bank_sets[i];
+		    std::cout << i << ": " << cbs.id << '\n';
+		    for (auto bank_ptr : cbs.fader_banks) {
+			    std::cout << "  Fader Bank\n";
+			    for (size_t k = 0; k < bank_ptr->size(); k++) {
+				    auto col_ptr = bank_ptr->get(k);
+				    std::string mode_str;
+				    switch(col_ptr->get_mode()) {
+					    case bank_mode::DIRECT_INPUT_MODE:
+						    mode_str = " r ";
+						    break;
+					    case bank_mode::HSI_COLOR_MODE:
+						    mode_str = " c ";
+						    break;
+					    default:
+						    mode_str = " + ";
+						    break;
+				    }
+				    std::cout << "    " << k << mode_str << col_ptr->get_display_text(true) << '\n';
+			    }
+		    }
+	    }
+	    std::cout << std::endl;
     }
 }
