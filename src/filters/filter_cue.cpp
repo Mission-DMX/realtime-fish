@@ -632,7 +632,7 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::scene_activated() {
-	    if (this->default_cue > -1) {
+	    if (this->default_cue > -1 && this->default_cue < this->cues.size()) {
 		    this->active_cue = (uint16_t) this->default_cue + 1;
             start_new_cue();
 		    ::spdlog::info("Switched to Cue {}.", this->default_cue + 1);
