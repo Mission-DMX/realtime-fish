@@ -3,7 +3,15 @@
 /*
  * This holds functions for the lua filter
  */
+COMPILER_SUPRESS("-Wswitch-default")
+COMPILER_SUPRESS("-Weffc++")
+COMPILER_SUPRESS("-Wuseless-cast")
+COMPILER_SUPRESS("-Wswitch-enum")
 #include <sol/sol.hpp>
+COMPILER_RESTORE("-Wswitch-enum")
+COMPILER_RESTORE("-Wuseless-cast")
+COMPILER_RESTORE("-Weffc++")
+COMPILER_RESTORE("-Wswitch-default")
 
 
 namespace dmxfish::filters::lua {
@@ -44,7 +52,9 @@ namespace dmxfish::filters::lua {
         });
         lua.set_function("scene_activated", []() {
         });
-        lua.set_function("receive_update_from_gui", [](const std::string& key, const std::string& _value) {
+        lua.set_function("receive_update_from_gui", [](const std::string& key, const std::string& value) {
+            MARK_UNUSED(key);
+            MARK_UNUSED(value);
             return false;
         });
 

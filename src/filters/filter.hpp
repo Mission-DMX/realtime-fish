@@ -7,7 +7,7 @@
 #include "filters/types.hpp"
 
 #include "lib/macros.hpp"
-#include "types.hpp"
+
 
 namespace dmxfish::filters {
 
@@ -64,6 +64,7 @@ public:
 	virtual void pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& filter_id) {
         MARK_UNUSED(initial_parameters);
         MARK_UNUSED(configuration);
+        MARK_UNUSED(filter_id);
     }
 
 	/**

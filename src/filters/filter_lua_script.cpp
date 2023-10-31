@@ -33,14 +33,14 @@ namespace dmxfish::filters {
 
     inline void filter_lua_script::get_output_values_from_lua() {
         for (size_t i = 0; i < out_eight_bit.size(); i++) {
-            out_eight_bit.at(i) = std::max(
-                    std::min(std::round(lua[names_out_eight_bit.at(i)].get_or((double) out_eight_bit.at(i))), 255.0),
-                    0.0);
+            out_eight_bit.at(i) = (uint8_t) std::round(std::max(
+                    std::min(lua[names_out_eight_bit.at(i)].get_or((double) out_eight_bit.at(i)), 255.0),
+                    0.0));
         }
         for (size_t i = 0; i < out_sixteen_bit.size(); i++) {
-            out_sixteen_bit.at(i) = std::max(
-                    std::min(std::round(lua[names_out_sixteen_bit.at(i)].get_or((double) out_sixteen_bit.at(i))),
-                             65535.0), 0.0);
+            out_sixteen_bit.at(i) = (uint16_t) std::round(std::max(
+                    std::min(lua[names_out_sixteen_bit.at(i)].get_or((double) out_sixteen_bit.at(i)),
+                             65535.0), 0.0));
         }
         for (size_t i = 0; i < out_float.size(); i++) {
             out_float.at(i) = lua.get_or(names_out_float.at(i), out_float.at(i));
@@ -56,9 +56,9 @@ namespace dmxfish::filters {
         sol::object outputs = lua["output"];
         if (outputs.get_type() == sol::type::table) {
             // Todo: improve check all! existing universes and (only?) patched channels
-            for (int universe_id = 0; universe_id <= 2 * ((sol::table) outputs).size(); universe_id++) {
+            for (size_t universe_id = 0; universe_id <= 2 * ((sol::table) outputs).size(); universe_id++) {
                 sol::object universe = ((sol::table) outputs)[universe_id];
-                if (auto uptr = dmxfish::io::get_universe(universe_id); uptr != nullptr) {
+                if (auto uptr = dmxfish::io::get_universe((int) universe_id); uptr != nullptr) {
                     if (universe.get_type() == sol::type::table) {
                         for (uint16_t chan = 0; chan < 512; chan++) {
                             sol::object channel = ((sol::table) universe)[chan];
@@ -144,6 +144,7 @@ namespace dmxfish::filters {
     }
 
     void filter_lua_script::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& own_id) {
+        MARK_UNUSED(initial_parameters);
         if (!configuration.contains("out_mapping")) {
             throw filter_config_exception("lua filter: unable to setup the out_mapping",
                                           filter_type::filter_lua_script, own_id);

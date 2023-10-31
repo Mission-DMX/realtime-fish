@@ -306,6 +306,7 @@ namespace dmxfish::filters {
         update_last_values();
         start_time = *time;
         frame = 0;
+        cue_end_handling_real = cues.at(active_cue).end_handling;
     }
 
     void filter_cue::calc_values() {
@@ -333,7 +334,6 @@ namespace dmxfish::filters {
             if (frame < cues.at(active_cue).timestamps.size() - 1) { // Not the last Frame of the cue?
                 frame++;
             } else { // last frame of cue
-//                ::spdlog::debug("now the val is: {} at {}", cue_end_handling_real, *time);
                 switch (cue_end_handling_real) { // end of cue handling
                     case START_AGAIN:
                         break;
@@ -426,7 +426,7 @@ namespace dmxfish::filters {
                 std::bind(&dmxfish::filters::filter_cue::init_values_out<double>, this, std::placeholders::_1),
                 std::bind(&dmxfish::filters::filter_cue::init_values_out<dmxfish::dmx::pixel>, this,
                           std::placeholders::_1),
-                          filter_type::filter_cue, own_id
+                filter_type::filter_cue, own_id
         );
     }
 
@@ -436,9 +436,9 @@ namespace dmxfish::filters {
                                   const std::string& own_id) {
         MARK_UNUSED(initial_parameters);
         if (!input_channels.float_channels.contains("time")) {
-        throw filter_config_exception("Unable to link input of cue filter: channel mapping does not contain channel "
-                                      "'time' of type 'double'. This input should come from the scenes global time "
-                                      "node.", filter_type::filter_cue, own_id);
+            throw filter_config_exception("Unable to link input of cue filter: channel mapping does not contain channel "
+                                          "'time' of type 'double'. This input should come from the scenes global time "
+                                          "node.", filter_type::filter_cue, own_id);
         }
         this->time = input_channels.float_channels.at("time");
 
@@ -449,38 +449,48 @@ namespace dmxfish::filters {
             }
         }
 
-	if(configuration.contains("default_cue")) {
-		this->default_cue = stol(configuration.at("default_cue"));
-	}
-
         if (!configuration.contains("cuelist")) {
-            throw filter_config_exception("cue filter: unable to setup the cuelist. Property is missing.",
+            throw filter_config_exception("cue filter: unable to setup the cuelist. Property 'cuelist' is missing.",
                                           filter_type::filter_cue, own_id);
         }
 
         const std::string frames = configuration.at("cuelist");
         cues.reserve(count_occurence_of(frames, "$", 0, frames.size()) + 1);
         if (!do_with_substr(frames, 0, frames.length(), '$', 1,
-                               std::bind(&dmxfish::filters::filter_cue::handle_cue,
-                                         this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                                         std::placeholders::_4))) {
+                            std::bind(&dmxfish::filters::filter_cue::handle_cue,
+                                      this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+                                      std::placeholders::_4))) {
             throw filter_config_exception("cue filter: unable to parse the cuelist", filter_type::filter_cue, own_id);
+        }
+
+        if(configuration.contains("default_cue")) {
+            long new_default_cue;
+            try {
+                new_default_cue = stol(configuration.at("default_cue"));
+            } catch (
+                    const std::invalid_argument &ex
+            ) {
+                MARK_UNUSED(ex);
+                throw filter_config_exception("cue filter: unable to setup the cuelist. Property 'default_cue' is not parseable as long.",
+                                              filter_type::filter_cue, own_id);
+            } catch (
+                    const std::out_of_range &ex
+            ) {
+                MARK_UNUSED(ex);
+                throw filter_config_exception("cue filter: unable to setup the cuelist. Property 'default_cue' was too large.",
+                                              filter_type::filter_cue, own_id);
+            }
+            if (new_default_cue > (long) cues.size()) {
+                default_cue = -1;
+            } else {
+                default_cue = new_default_cue;
+            }
         }
     }
 
     bool filter_cue::receive_update_from_gui(const std::string &key, const std::string &_value) {
         if (!key.compare("run_mode")) {
             if (!_value.compare("play") || !_value.compare("to_next_cue")) {
-//                if (cue_end_handling_real == HOLDING){
-//                    if (cues.at(active_cue).end_handling == HOLD) {
-//                        cue_end_handling_real = NEXT_CUE;
-//                    } else {
-//                        cue_end_handling_real = cues.at(active_cue).end_handling;
-//                    }
-//                    return true;
-//                } else {
-//                    cue_end_handling_real = cues.at(active_cue).end_handling;
-//                }
                 switch (running_state) {
                     case STOP:
                         active_cue = 0;
@@ -510,7 +520,6 @@ namespace dmxfish::filters {
                                     active_cue++;
                                 } else {
                                     active_cue = 0;
-
                                 }
                                 if (next_cue < cues.size()) { // if next cue is set, start this cue
                                     active_cue = next_cue;
@@ -593,6 +602,29 @@ namespace dmxfish::filters {
             next_cue = next;
             return true;
         }
+        if (!key.compare("set_default_cue")) {
+            long new_default_cue;
+            try {
+                new_default_cue = std::stol(_value);
+            } catch (
+                    const std::invalid_argument &ex
+            ) {
+                MARK_UNUSED(ex);
+                return false;
+            } catch (
+                    const std::out_of_range &ex
+            ) {
+                MARK_UNUSED(ex);
+                return false;
+            }
+            if (new_default_cue > (long) cues.size()) {
+                default_cue = -1;
+                ::spdlog::info("removed autoplay for this scene");
+            } else {
+                default_cue = new_default_cue;
+            }
+            return true;
+        }
         return false;
     }
 
@@ -632,11 +664,12 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::scene_activated() {
-	    if (this->default_cue > -1 && this->default_cue < this->cues.size()) {
-		    this->active_cue = (uint16_t) this->default_cue + 1;
+        if (this->default_cue > -1) {
+            running_state = PLAY;
+            this->active_cue = (uint16_t) this->default_cue;
             start_new_cue();
-		    ::spdlog::info("Switched to Cue {}.", this->default_cue + 1);
-	    }
+            ::spdlog::info("Switched to Cue {}.", this->default_cue);
+        }
     }
 
 }
