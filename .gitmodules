@@ -7,3 +7,6 @@
 [submodule "submodules/memory-allocators"]
 	path = submodules/memory-allocators
 	url = https://github.com/mtrebi/memory-allocators.git
+[submodule "submodules/sol2"]
+	path = submodules/sol2
+	url = git@github.com:ThePhD/sol2.git

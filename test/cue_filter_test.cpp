@@ -26,8 +26,8 @@ BOOST_AUTO_TEST_CASE(onechannelonecueoneframe) {
 
     std::map < std::string, std::string > initial_parameters;
 
-    fil.pre_setup(configuration, initial_parameters);
-    fil.setup_filter (configuration, initial_parameters, input_channels);
+    fil.pre_setup(configuration, initial_parameters, "");
+    fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
 
 
@@ -78,8 +78,8 @@ BOOST_AUTO_TEST_CASE(oneframeeachchanneltype) {
 
     std::map <std::string, std::string> initial_parameters;
 
-    fil.pre_setup(configuration, initial_parameters);
-    fil.setup_filter(configuration, initial_parameters, input_channels);
+    fil.pre_setup(configuration, initial_parameters, "");
+    fil.setup_filter(configuration, initial_parameters, input_channels, "");
 
 
     channel_mapping map = channel_mapping();
@@ -189,8 +189,8 @@ BOOST_AUTO_TEST_CASE(onechanneltwoframes) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
 
 
@@ -250,8 +250,8 @@ BOOST_AUTO_TEST_CASE(teststop) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-	fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+	fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
 
 
@@ -322,8 +322,8 @@ BOOST_AUTO_TEST_CASE(testpause) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
 
 
@@ -401,8 +401,8 @@ BOOST_AUTO_TEST_CASE(test_restart) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
 
 
@@ -470,8 +470,8 @@ BOOST_AUTO_TEST_CASE(test_restart_2nd_cue) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
         channel_mapping map = channel_mapping ();
         const std::string name = "t";
@@ -540,8 +540,8 @@ BOOST_AUTO_TEST_CASE(test_start_again_whole_cuelist) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
         channel_mapping map = channel_mapping ();
         const std::string name = "t";
@@ -616,8 +616,8 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
         channel_mapping map = channel_mapping ();
         const std::string name = "t";
@@ -699,8 +699,8 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue_twice) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
         channel_mapping map = channel_mapping ();
         const std::string name = "t";
@@ -800,8 +800,8 @@ BOOST_AUTO_TEST_CASE(twocuestwoframesnext) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
         channel_mapping map = channel_mapping ();
         const std::string name = "t";
@@ -866,8 +866,8 @@ BOOST_AUTO_TEST_CASE(twocuestwoframestart_again) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
 
 
@@ -941,8 +941,8 @@ BOOST_AUTO_TEST_CASE(twocuestwoframeshold) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
 
 
@@ -1009,8 +1009,8 @@ BOOST_AUTO_TEST_CASE(anothercuenext) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
         channel_mapping map = channel_mapping ();
         const std::string name = "t";
@@ -1078,8 +1078,8 @@ BOOST_AUTO_TEST_CASE(runcueimmidiatly) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
         channel_mapping map = channel_mapping ();
         const std::string name = "t";
@@ -1149,8 +1149,8 @@ BOOST_AUTO_TEST_CASE(alotofstuff) {
 
         std::map < std::string, std::string > initial_parameters;
 
-	fil.pre_setup(configuration, initial_parameters);
-        fil.setup_filter (configuration, initial_parameters, input_channels);
+	fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
         channel_mapping map = channel_mapping ();
         const std::string name = "t";
@@ -1239,4 +1239,213 @@ BOOST_AUTO_TEST_CASE(alotofstuff) {
             map.float_channels.clear();
             map.color_channels.clear();
         }
+}
+
+
+BOOST_AUTO_TEST_CASE(startdefaultcue) {
+    spdlog::set_level(spdlog::level::debug);
+    dmxfish::filters::filter_cue fil = filter_cue ();
+
+    double time_s = 0;
+
+    channel_mapping input_channels = channel_mapping ();
+    input_channels.float_channels["time"] = &time_s;
+
+    std::map < std::string, std::string > configuration;
+    configuration["mapping"] = "dimmer:8bit";
+    configuration["end_handling"] = "hold";
+
+    configuration["cuelist"] =
+            "2:200@lin|4:50@lin#next_cue#restart$3:20@lin|7:100@lin#next_cue#do_nothing$4:60@lin|7:180@lin#hold#do_nothing";
+    configuration["default_cue"] =
+            "1";
+
+    std::map < std::string, std::string > initial_parameters;
+
+    fil.pre_setup(configuration, initial_parameters, "");
+    fil.setup_filter (configuration, initial_parameters, input_channels, "");
+
+    channel_mapping map = channel_mapping ();
+    const std::string name = "t";
+    fil.scene_activated();
+    for (int i = 0; i < 60000; i = i + 100){
+        time_s = (double) i;
+
+        fil.update();
+        fil.get_output_channels(map, name);
+        uint8_t tester;
+        for (auto it = map.eight_bit_channels.begin();
+             it != map.eight_bit_channels.end(); ++it) {
+            if (time_s < 3000){
+                tester = std::round((double) 20 * (time_s)/3000);
+            } else if (time_s < 7000) {
+                tester = std::round((double) 20 + 80 * (time_s - 3000) / 4000);
+            } else if (time_s < 10000) {
+                tester = std::round((double) 100 - 40 * (time_s - 7000) / 4000);
+            } else if (time_s < 11000) {
+                tester = std::round((double) 100 - 40 * (10000 - 7000) / 4000);
+            } else if (time_s < 12000) {
+                tester = std::round((double) 100 - 40 * (time_s - 8000) / 4000);
+            } else if (time_s < 15000) {
+                tester = std::round((double) 60 + 120 * (time_s - 12000) / 3000);
+            } else if (time_s < 20000) {
+                tester = 180;
+            } else if (time_s < 23000){
+                tester = std::round((double) 180 - 160 * (time_s - 20000) / 3000);
+            } else if (time_s < 27000) {
+                tester = std::round((double) 20 + 80 * (time_s - 23000) / 4000);
+            } else if (time_s < 29000) {
+                tester = std::round((double) 100 + 100 * (time_s - 27000) / 2000);
+            } else if (time_s < 30000) {
+                tester = std::round((double) 200 - 150  * (time_s - 29000) / 2000);
+            } else if (time_s < 32000) {
+                tester = std::round((double) 125 + 75  * (time_s - 30000) / 2000);
+            } else if (time_s < 34000) {
+                tester = std::round((double) 200 - 150  * (time_s - 32000) / 2000);
+            } else if (time_s < 37000){
+                tester = std::round((double) 50 - 30 * (time_s - 34000) / 3000);
+            } else if (time_s < 41000) {
+                tester = std::round((double) 20 + 80 * (time_s - 37000) / 4000);
+            } else if (time_s < 45000) {
+                tester = std::round((double) 100 - 40 * (time_s - 41000) / 4000);
+            } else if (time_s < 47000) {
+                tester = std::round((double) 60 + 120 * (time_s - 45000) / 3000);
+            } else if (time_s < 50000){
+                tester = std::round((double) 140 - 120 * (time_s - 47000) / 3000);
+            } else if (time_s < 54000) {
+                tester = std::round((double) 20 + 80 * (time_s - 50000) / 4000);
+            } else if (time_s < 57000) {
+                tester = std::round((double) 100 - 40 * (time_s - 54000) / 4000);
+            } else if (time_s < 59000) {
+                tester = std::round((double) 70 + 130 * (time_s - 57000) / 2000);
+            } else if (time_s < 61000) {
+                tester = std::round((double) 200 - 150 * (time_s - 59000) / 2000);
+            }
+            std::string error =
+                    std::string("Channel ") + it->first + " should be " + std::to_string(tester) + " , but is " +
+                    std::to_string(*it->second) + " at time: " + std::to_string(time_s);
+            BOOST_TEST(*map.eight_bit_channels["t:dimmer"] == tester, error);
+
+
+            if (i == 5000 || i == 9000 || i == 11000 || i == 13000 || i == 30000) {
+                fil.receive_update_from_gui("run_mode", "play");
+            }
+//
+            if (i == 10000) {
+                fil.receive_update_from_gui("run_mode", "pause");
+            }
+            if (i == 24000) {
+                fil.receive_update_from_gui("next_cue", "0");
+            }
+            if (i == 54000) {
+                fil.receive_update_from_gui("set_default_cue", "0");
+            }
+            if (i == 58000) {
+                fil.receive_update_from_gui("set_default_cue", "0");
+            }
+            if (i == 20000 || i == 47000 || i == 57000 || i == 60000) {
+                fil.scene_activated();
+            }
+        }
+        map.eight_bit_channels.clear();
+        map.sixteen_bit_channels.clear();
+        map.float_channels.clear();
+        map.color_channels.clear();
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(startanothercuefromstart) {
+    spdlog::set_level(spdlog::level::debug);
+    dmxfish::filters::filter_cue fil = filter_cue ();
+
+    double time_s = 0;
+
+    channel_mapping input_channels = channel_mapping ();
+    input_channels.float_channels["time"] = &time_s;
+
+    std::map < std::string, std::string > configuration;
+    configuration["mapping"] = "dimmer:8bit";
+    configuration["end_handling"] = "hold";
+
+    configuration["cuelist"] =
+            "2:80@lin|4:250@lin#next_cue#restart$3:40@lin|7:120@lin#next_cue#do_nothing$4:200@lin|7:20@lin#hold#do_nothing";
+
+    std::map < std::string, std::string > initial_parameters;
+
+    fil.pre_setup(configuration, initial_parameters, "");
+    fil.setup_filter (configuration, initial_parameters, input_channels, "");
+
+    channel_mapping map = channel_mapping ();
+    const std::string name = "t";
+    fil.scene_activated();
+    for (int i = 0; i < 60000; i = i + 100){
+        time_s = (double) i;
+
+        fil.update();
+        fil.get_output_channels(map, name);
+        uint8_t tester;
+        for (auto it = map.eight_bit_channels.begin();
+             it != map.eight_bit_channels.end(); ++it) {
+            if (time_s < 3000){
+                tester = 0;
+            } else if (time_s < 7000) {
+                tester = std::round((double) 0 + 200 * (time_s - 3000) / 4000);
+            } else if (time_s < 10000) {
+                tester = std::round((double) 200 - 180 * (time_s - 7000) / 3000);
+            } else if (time_s < 12000) {
+                tester = 20;
+            } else if (time_s < 15000) {
+                tester = std::round((double) 20 + 20 * (time_s - 12000) / 3000);
+            } else if (time_s < 17000) {
+                tester = std::round((double) 40 + 80 * (time_s - 15000) / 4000);
+            } else if (time_s < 19000) {
+                tester = 80;
+            } else if (time_s < 20000) {
+                tester = std::round((double) 40 + 80 * (time_s - 17000) / 4000);
+            } else if (time_s < 23000) {
+                tester = 100;
+            } else if (time_s < 25000) {
+                tester = std::round((double) 100 - 20 * (time_s - 23000) / 2000);
+            } else if (time_s < 26000) {
+                tester = std::round((double) 80 + 170 * (time_s - 25000) / 2000);
+            } else if (time_s < 30000) {
+                tester = 165;
+            } else if (time_s < 34000) {
+                tester = std::round((double) 165 + 35 * (time_s - 30000) / 4000);
+            } else if (time_s < 37000) {
+                tester = std::round((double) 200 - 180 * (time_s - 34000) / 3000);
+            } else if (time_s < 39000) {
+                tester = 20;
+            }
+            std::string error =
+                    std::string("Channel ") + it->first + " should be " + std::to_string(tester) + " , but is " +
+                    std::to_string(*it->second) + " at time: " + std::to_string(time_s);
+            BOOST_TEST(*map.eight_bit_channels["t:dimmer"] == tester, error);
+
+
+            if (i == 3000 || i == 12000 || i == 19000 || i == 23000 || i == 30000) {
+                fil.receive_update_from_gui("run_mode", "play");
+            }
+            if (i == 17000) {
+                fil.receive_update_from_gui("run_mode", "pause");
+            }
+            if (i == 20000 || i == 26000) {
+                fil.receive_update_from_gui("run_mode", "stop");
+            }
+            if (i == 19500) {
+                fil.receive_update_from_gui("next_cue", "0");
+            }
+            if (i == 4000) {
+                fil.receive_update_from_gui("next_cue", "1");
+            }
+            if (i == 1000 || i == 28000) {
+                fil.receive_update_from_gui("next_cue", "2");
+            }
+        }
+        map.eight_bit_channels.clear();
+        map.sixteen_bit_channels.clear();
+        map.float_channels.clear();
+        map.color_channels.clear();
+    }
 }

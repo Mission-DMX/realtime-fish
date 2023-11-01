@@ -15,7 +15,7 @@
 
 namespace dmxfish::filters {
 COMPILER_SUPRESS("-Weffc++")
-    template <typename T>
+    template <typename T, filter_type own_type>
     class filter_debug_output_template : public filter {
     private:
         T* input = nullptr;
@@ -26,28 +26,32 @@ COMPILER_SUPRESS("-Weffc++")
         }
         virtual ~filter_debug_output_template() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             // TODO use configuration to push received values to GUI
             if constexpr (std::is_same<T, uint8_t>::value) {
                 if(!input_channels.eight_bit_channels.contains("value")) {
-                    throw filter_config_exception("Unable to link input of debug output filter: channel mapping does not contain channel 'value' of type 'uint8_t'.");
+                    throw filter_config_exception("Unable to link input of debug output filter: channel mapping does "
+                                                  "not contain channel 'value' of type 'uint8_t'.", own_type, own_id);
                 }
                 this->input = input_channels.eight_bit_channels.at("value");
             } else if constexpr (std::is_same<T, uint16_t>::value) {
                 if(!input_channels.sixteen_bit_channels.contains("value")) {
-                    throw filter_config_exception("Unable to link input of debug output filter: channel mapping does not contain channel 'value' of type 'uint16_t'.");
+                    throw filter_config_exception("Unable to link input of debug output filter: channel mapping does "
+                                                  "not contain channel 'value' of type 'uint16_t'.", own_type, own_id);
                 }
                 this->input = input_channels.sixteen_bit_channels.at("value");
             } else if constexpr (std::is_same<T, double>::value) {
                 if(!input_channels.float_channels.contains("value")) {
-                    throw filter_config_exception("Unable to link input of debug output filter: channel mapping does not contain channel 'value' of type 'double'.");
+                    throw filter_config_exception("Unable to link input of debug output filter: channel mapping does "
+                                                  "not contain channel 'value' of type 'double'.", own_type, own_id);
                 }
                 this->input = input_channels.float_channels.at("value");
             } else {
                 if(!input_channels.color_channels.contains("value")) {
-                    throw filter_config_exception("Unable to link input of debug output filter: channel mapping does not contain channel 'value' of type 'hsv_pixel'.");
+                    throw filter_config_exception("Unable to link input of debug output filter: channel mapping does "
+                                                  "not contain channel 'value' of type 'hsv_pixel'.", own_type, own_id);
                 }
                 this->input = input_channels.color_channels.at("value");
             }
@@ -81,9 +85,9 @@ COMPILER_SUPRESS("-Weffc++")
 
     };
 
-    using debug_8bit = filter_debug_output_template<uint8_t>;
-    using debug_16bit = filter_debug_output_template<uint16_t>;
-    using debug_float = filter_debug_output_template<double>;
-    using debug_pixel = filter_debug_output_template<dmxfish::dmx::pixel>;
+    using debug_8bit = filter_debug_output_template<uint8_t, filter_type::debug_8bit>;
+    using debug_16bit = filter_debug_output_template<uint16_t, filter_type::debug_16bit>;
+    using debug_float = filter_debug_output_template<double, filter_type::debug_float>;
+    using debug_pixel = filter_debug_output_template<dmxfish::dmx::pixel, filter_type::debug_pixel>;
 COMPILER_RESTORE("-Weffc++")
 }

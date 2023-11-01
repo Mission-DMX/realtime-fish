@@ -175,12 +175,14 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                     {
                         // this->run_time_state->running = true;
                         this->run_time_state->is_direct_mode = false;
+			spdlog::info("Enabled filter execution.");
                         break;
                     }
                     case ::missiondmx::fish::ipcmessages::RM_DIRECT:
                     {
                         // this->run_time_state->running = true;
                         this->run_time_state->is_direct_mode = true;
+			spdlog::info("Disabled filter execution.");
                         break;
                     }
                     case ::missiondmx::fish::ipcmessages::RM_STOP:
@@ -622,9 +624,13 @@ void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::lo
 		loading_result_stream << "Show XML successfully parsed." << std::endl;
 		auto show_candidate = std::make_shared<dmxfish::execution::project_configuration>(std::move(candidate), loading_result_stream);
 		if(!msg->goto_default_scene()) {
-			const auto current_scene = this->active_show->get_active_scene();
-			loading_result_stream << "Switching to last active scene " << current_scene << "." << std::endl;
-			show_candidate->set_active_scene(current_scene);
+			if(this->active_show) {
+				const auto current_scene = this->active_show->get_active_scene();
+				loading_result_stream << "Switching to last active scene " << current_scene << "." << std::endl;
+				show_candidate->set_active_scene(current_scene);
+			} else {
+				loading_result_stream << "Failed to load last active scene as there was no previous show." << std::endl;
+			}
 		}
 		this->last_active_show = this->active_show;
 		this->active_show = show_candidate;
@@ -650,6 +656,10 @@ void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::lo
 	} else {
 		this->show_file_apply_state = SFAS_SHOW_ACTIVE;
 		::spdlog::info("Successfully loaded show file");
+		this->latest_error = "Showfile Applied.";
+		if(this->control_desk_handle) {
+			this->control_desk_handle->notify_showfile_changed();
+		}
 	}
 	long_log_update log_msg;
 	log_msg.set_level(success ? LL_INFO : LL_ERROR);
@@ -663,5 +673,19 @@ void IOManager::handle_queued_io() {
 	// TODO run io loop iteration or wait until 2 have passed.
 	std::this_thread::sleep_for(std::chrono::milliseconds(100)); // TODO fixme
 }
+
+void IOManager::rollback() {       
+        if(this->is_rollback_available()) {
+        	this->active_show = this->last_active_show;
+                this->last_active_show = nullptr;
+                if(this->control_desk_handle) {
+                        this->control_desk_handle->notify_showfile_changed();
+                }
+                ::spdlog::info("Rolled back to last valid show.");
+        } else {
+                ::spdlog::warn("Didn't roll back as there is no valid show avaiable.");
+        }
+}
+
 
 }

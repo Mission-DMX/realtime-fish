@@ -2,10 +2,14 @@
 
 #include <deque>
 #include <map>
+#include <mutex>
 #include <set>
 #include <sstream>
 #include <utility>
 #include <vector>
+
+#include "executioners/threadpool.hpp"
+#include "executioners/scheduling_errors.hpp"
 
 #include "filters/types.hpp"
 #include "filters/filter_constants.hpp"
@@ -18,6 +22,7 @@
 #include "filters/filter_time.hpp"
 #include "filters/filter_cue.hpp"
 #include "filters/filter_shift.hpp"
+#include "filters/filter_lua_script.hpp"
 
 #include <iostream>
 
@@ -225,14 +230,32 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_shift_float:
                     sum += sizeof(filter_shift_float);
                     break;
-		case filter_type::filter_main_brightness_fader:
-		    sum += sizeof(filter_main_brightness_fader);
-		    break;
+                case filter_type::filter_main_brightness_fader:
+                    sum += sizeof(filter_main_brightness_fader);
+                    break;
                 case filter_type::filter_shift_color:
                     sum += sizeof(filter_shift_color);
                     break;
-				default:
-					throw scheduling_exception("The requested filter type is not yet implemented.");
+                case filter_type::filter_lua_script:
+                    sum += sizeof(filter_lua_script);
+                    break;
+                case filter_type::filter_8bit_to_float:
+                    sum += sizeof(filter_8bit_to_float);
+                    break;
+                case filter_type::filter_16bit_to_float:
+                    sum += sizeof(filter_16bit_to_float);
+                    break;
+                case filter_type::filter_pixel_to_floats:
+                    sum += sizeof(filter_pixel_to_floats);
+                    break;
+				default: {
+						 std::stringstream ss;
+						 ss << ERROR_FILTER_NOT_IMPLEMENTED_IN_ALLOCATION;
+						 ss << "The requested filter type (";
+						 ss << (int) f.type();
+						 ss << ") is not yet implemented.";
+					throw scheduling_exception(ss.str());
+					 }
 			}
 		}
         return sum;
@@ -349,12 +372,20 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_shift_16bit>(pac);
             case filter_type::filter_shift_float:
                 return calloc<filter_shift_float>(pac);
-	    case filter_type::filter_main_brightness_fader:
-		return calloc<filter_main_brightness_fader>(pac);
+            case filter_type::filter_main_brightness_fader:
+                return calloc<filter_main_brightness_fader>(pac);
             case filter_type::filter_shift_color:
                 return calloc<filter_shift_color>(pac);
-			default:
-				throw scheduling_exception("The requested filter type is not yet implemented.");
+            case filter_type::filter_lua_script:
+                return calloc<filter_lua_script>(pac);
+            case filter_type::filter_8bit_to_float:
+                return calloc<filter_8bit_to_float>(pac);
+            case filter_type::filter_16bit_to_float:
+                return calloc<filter_16bit_to_float>(pac);
+            case filter_type::filter_pixel_to_floats:
+                return calloc<filter_pixel_to_floats>(pac);
+	default:
+		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
 		return nullptr;
 	}
@@ -430,13 +461,13 @@ COMPILER_RESTORE("-Weffc++")
 					filter_info_map[filter_index] = fi;
 					scene_filter_index[fid] = fv[filter_index];
 					resolved_filters.insert(fid);
-					fv[fv.size()-1]->pre_setup(conf, initial_params);
+					fv[fv.size()-1]->pre_setup(conf, initial_params, fi.name);
 				} else {
 					missing_filter_stack.push_back(f_template);
 				}
 			}
 			if(!placed_filter) {
-				throw scheduling_exception("There were no filters with resolved dependencies within this round (" + std::to_string(round) + "). Possible causes: broken or cyclic dependencies.\nAlready scheduled filters: "
+				throw scheduling_exception(std::string(ERROR_CYCLIC_OR_BROKEN_DEPENDENCY_WHILE_SCHEDULING) + "There were no filters with resolved dependencies within this round (" + std::to_string(round) + "). Possible causes: broken or cyclic dependencies.\nAlready scheduled filters: "
 						+ iteratable_to_string(resolved_filters) + "\nStill missing filters: " + iteratable_to_string(missing_filter_stack));
 			}
 			b.emplace_back(fv.size());
@@ -468,7 +499,7 @@ COMPILER_RESTORE("-Weffc++")
 				found = true;
 			}
 			if(!found) {
-				throw scheduling_exception("The filter " + i.name + " requested the output channel " + entry.first + " to populate its input channel " + entry.second + " but the corresponding output channel wasn't found.");
+				throw scheduling_exception(std::string(ERROR_UNKNOWN_REQUESTED_OUTPUT_CHANNEL) + "The filter '" + i.name + "' requested the output channel '" + entry.first + "' to populate its input channel '" + entry.second + "' but the corresponding output channel wasn't found.");
 			}
 		}
 		return configuration_cm;
@@ -480,7 +511,7 @@ COMPILER_RESTORE("-Weffc++")
 			auto& finfo = filter_info_map[i];
 			fv[i]->get_output_channels(cm, finfo.name);
 			auto input_channels = construct_channel_input_mapping(cm, finfo);
-			fv[i]->setup_filter(finfo.configuration, finfo.initial_parameters, input_channels);
+			fv[i]->setup_filter(finfo.configuration, finfo.initial_parameters, input_channels, finfo.name);
 		}
 	}
 
@@ -503,31 +534,45 @@ COMPILER_RESTORE("-Weffc++")
 			return std::make_pair("There were no scenes defined. Skipping.", false);
 		}
         v.reserve(ss.size());
-		std::stringstream msg_stream;
-		bool worked = true;
+		std::stringstream global_msg_stream;
+		std::shared_ptr<bool> worked = std::make_shared<bool>(true);
+
+		threadpool tp;
+		std::mutex msg_stream_mutex{}, v_mutex{};
 
 		for(auto& stemplate : ss) {
-			// TODO make parallel
-			try {
-				auto filter_tuple = compute_filter(stemplate, msg_stream);
-				v.emplace_back(std::move(std::get<0>(filter_tuple)),
-					std::move(std::get<1>(filter_tuple)),
-					std::get<2>(filter_tuple),
-					std::get<3>(filter_tuple)
-				);
-				const auto last_index = v.size() - 1;
-				const int32_t sid = (int32_t) (stemplate.id().present() ? stemplate.id().get() : last_index);
-				scene_index_map[sid] = last_index;
-			} catch (const ::dmxfish::filters::filter_config_exception& e) {
-				msg_stream << "Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
-				worked = false;
-			} catch (const scheduling_exception& e) {
-				msg_stream << "Failed to schedule filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
-				worked = false;
-			}
+			tp.enque([&global_msg_stream, &v, &scene_index_map, &msg_stream_mutex, &v_mutex, stemplate, worked](){
+				std::stringstream msg_stream;
+				try {
+					auto filter_tuple = compute_filter(stemplate, msg_stream);
+					scene s{std::move(std::get<0>(filter_tuple)),
+							std::move(std::get<1>(filter_tuple)),
+							std::get<2>(filter_tuple),
+							std::get<3>(filter_tuple)
+						};
+					{
+						std::lock_guard lock(v_mutex);
+						v.push_back(std::move(s));
+						const auto last_index = v.size() - 1;
+						const int32_t sid = (int32_t) (stemplate.id().present() ? stemplate.id().get() : last_index);
+						scene_index_map[sid] = last_index;
+					}
+				} catch (const ::dmxfish::filters::filter_config_exception& e) {
+					msg_stream << ERROR_FILTER_CONFIGURATION_EXCEPTION << "SCENE_ID:" << stemplate.id() << "/Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
+					*worked = false;
+				} catch (const scheduling_exception& e) {
+					msg_stream << ERROR_FILTER_SCHEDULING_EXCEPTION << "SCENE_ID:" << stemplate.id() << "Failed to schedule filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
+					*worked = false;
+				}
+				{
+					std::lock_guard lock(msg_stream_mutex);
+					global_msg_stream << msg_stream.str();
+				}
+			});
 		}
-		msg_stream << "Done." << std::endl;
-		return std::make_pair(msg_stream.str(), worked);
+		tp.join();
+		global_msg_stream << "Done." << std::endl;
+		return std::make_pair(global_msg_stream.str(), *worked);
     }
 
 }

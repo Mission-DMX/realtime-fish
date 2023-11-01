@@ -87,10 +87,7 @@ namespace dmxfish::io {
 				return this->last_active_show != nullptr;
 			}
 
-			inline void rollback() {
-				if(this->is_rollback_available())
-					this->active_show = this->last_active_show;
-			}
+			void rollback();
 		private:
 			void run();
 			void load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::load_show_file> msg);

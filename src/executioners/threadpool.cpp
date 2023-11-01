@@ -17,7 +17,9 @@ namespace dmxfish::execution {
             }
         }
         for(auto& t : threads) {
-            t.join();
+            if(t.joinable()) {
+                t.join();
+            }
         }
     }
 

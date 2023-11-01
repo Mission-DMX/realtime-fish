@@ -45,6 +45,7 @@ LFLAGS += `${PKG_TOOL} --libs xerces-c`
 LFLAGS += `${PKG_TOOL} --libs fmt`
 LFLAGS += `${PKG_TOOL} --libs libusb`
 LFLAGS += `${PKG_TOOL} --libs libftdi`
+LFLAGS += `${PKG_TOOL} --libs lua5.4`
 CFLAGS += `${PKG_TOOL} --cflags xerces-c`
 CFLAGS += `${PKG_TOOL} --cflags libusb`
 CFLAGS += `${PKG_TOOL} --cflags libftdi`
@@ -77,6 +78,11 @@ POTDIR ?= po/tpl
 PODIR ?= po/lang
 MODIR ?= po/bin
 
+
+CXXFLAGS += `${PKG_TOOL} --cflags lua5.4`
+LUA_SRCDIR := ${LIBSRCDIR}/lua
+CXXFLAGS += -I${LUA_SRCDIR} -Isubmodules/sol2/include
+
 TESTDIR ?= test
 TESTBINDIR ?= bin/test
 TESTOBJDIR ?= obj/test
@@ -90,8 +96,10 @@ RMRFNET_SOURCES := $(call rwildcard,${RMRFNET_SRCDIR}/,*.cpp *.c)
 RMRFNET_OBJDIR := ${OBJDIR}/rmrf-net
 
 SRCOBJS := $(patsubst ${SRCDIR}/%.c,${OBJDIR}/%.o,$(patsubst ${SRCDIR}/%.cpp,${OBJDIR}/%.o,${SOURCES}))
+
 RMRFNET_SRCOBJS := $(patsubst ${LIBSRCDIR}/rmrf-net/%.c,${OBJDIR}/rmrf-net/%.o,$(patsubst ${LIBSRCDIR}/rmrf-net/%.cpp,${OBJDIR}/rmrf-net/%.o,${RMRFNET_SOURCES}))
 DEPFLAGS_RMRF = ${DEPFLAGS} -Isubmodules/rmrf/src -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
+# Todo: remove the link in lib to there (and change rmrfnet_srcobjs)?
 
 
 PROTO_DEFDIR := ${LIBSRCDIR}/IPCMessages
@@ -106,6 +114,7 @@ TEST_TARGETS := $(patsubst ${TESTOBJDIR}/%.o,${TESTBINDIR}/%, $(filter %_test.o,
 
 PROTO_SRCOBJS := $(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,$(patsubst ${PROTO_SRCDIR}/%.pb.cc,${PROTO_OBJDIR}/%.o,${PROTO_SOURCES_B}))
 DEPFLAGS_PROTO = ${DEPFLAGS} -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shadow
+
 
 ALLOCATOR_SRCDIR := ${SRCDIR}/allocators
 ALLOCATOR_OBJDIR := ${OBJDIR}/allocators

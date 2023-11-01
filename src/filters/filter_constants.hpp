@@ -14,7 +14,7 @@
 
 namespace dmxfish::filters {
 
-    template <typename T>
+    template <typename T, filter_type own_type>
     class filter_constant_template : public filter {
     private:
         T value;
@@ -24,13 +24,13 @@ namespace dmxfish::filters {
         }
         virtual ~filter_constant_template() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(input_channels);
             MARK_UNUSED(configuration);
             if(!initial_parameters.contains("value")){
-                throw filter_config_exception("Unable to set value of constant filter: initial configuration does not contain value parameter");
+                throw filter_config_exception("Unable to set value of constant filter: initial configuration does not contain value parameter", own_type, own_id);
             } else if (!this->receive_update_from_gui("value", initial_parameters.at("value"))) {
-                throw filter_config_exception("Unable to set value of constant filter: unable to parse parameter.");
+                throw filter_config_exception("Unable to set value of constant filter: unable to parse parameter.", own_type, own_id);
             }
         }
 
@@ -78,8 +78,8 @@ namespace dmxfish::filters {
 
     };
 
-    using constant_8bit = filter_constant_template<uint8_t>;
-    using constant_16bit = filter_constant_template<uint16_t>;
-    using constant_float = filter_constant_template<double>;
-    using constant_color = filter_constant_template<dmxfish::dmx::pixel>;
+    using constant_8bit = filter_constant_template<uint8_t, filter_type::constants_8bit>;
+    using constant_16bit = filter_constant_template<uint16_t, filter_type::constants_16bit>;
+    using constant_float = filter_constant_template<double, filter_type::constants_float>;
+    using constant_color = filter_constant_template<dmxfish::dmx::pixel, filter_type::constants_pixel>;
 }

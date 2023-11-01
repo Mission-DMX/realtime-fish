@@ -13,7 +13,7 @@
 namespace dmxfish::filters {
 
     COMPILER_SUPRESS("-Weffc++")
-    template <double (*F)(double)>
+    template <double (*F)(double), filter_type own_type>
     class filter_math_single: public filter {
     private:
         double* input = nullptr;
@@ -22,11 +22,12 @@ namespace dmxfish::filters {
         filter_math_single() : filter() {}
         virtual ~filter_math_single() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.float_channels.contains("value_in")) {
-                throw filter_config_exception("Unable to link input of math filter: channel mapping does not contain channel 'value_in' of type 'double'.");
+                throw filter_config_exception("Unable to link input of math filter: channel mapping does not contain "
+                                              "channel 'value_in' of type 'double'.", own_type, own_id);
             }
             this->input = input_channels.float_channels.at("value_in");
         }
@@ -49,7 +50,7 @@ namespace dmxfish::filters {
 
     };
 
-    template <typename T, T (*F)(T, T)>
+    template <typename T, T (*F)(T, T), filter_type own_type>
     class filter_math_dual: public filter {
     private:
         T* param1 = nullptr;
@@ -59,11 +60,12 @@ namespace dmxfish::filters {
         filter_math_dual() : filter() {}
         virtual ~filter_math_dual() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels) override {
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
             MARK_UNUSED(configuration);
             if(!input_channels.float_channels.contains("param1") || !input_channels.float_channels.contains("param2")) {
-                throw filter_config_exception("Unable to link input of math filter: channel mapping does not contain channel 'param1' or 'param2' of type 'double'.");
+                throw filter_config_exception("Unable to link input of math filter: channel mapping does not contain "
+                                              "channel 'param1' or 'param2' of type 'double'.", own_type, own_id);
             }
             this->param1 = input_channels.float_channels.at("param1");
             this->param2 = input_channels.float_channels.at("param2");
@@ -88,11 +90,11 @@ namespace dmxfish::filters {
     };
 
 
-    using filter_logarithm = filter_math_single<std::log>;
-    using filter_exponential = filter_math_single<std::exp>;
+    using filter_logarithm = filter_math_single<std::log, filter_type::filter_logarithm>;
+    using filter_exponential = filter_math_single<std::exp, filter_type::filter_exponential>;
 
-    using filter_minimum = filter_math_dual<double, std::fmin>;
-    using filter_maximum = filter_math_dual<double, std::fmax>;
+    using filter_minimum = filter_math_dual<double, std::fmin, filter_type::filter_minimum>;
+    using filter_maximum = filter_math_dual<double, std::fmax, filter_type::filter_maximum>;
 
     COMPILER_RESTORE("-Weffc++")
 
