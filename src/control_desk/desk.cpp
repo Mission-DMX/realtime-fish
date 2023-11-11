@@ -321,12 +321,12 @@ namespace dmxfish::control_desk {
 	bs.columns_in_ready_state.clear();
 	for (auto d_ptr : devices) {
 	    if(d_ptr->get_device_id() == midi_device_id::X_TOUCH)
-                xtouch_set_button_led(*d_ptr, button::BTN_EQ_COMMITRDY, button_led_state::off);
+                xtouch_set_button_led(*d_ptr, button::BTN_GLOBALVIEW_COMMITRDY, button_led_state::off);
 	}
     }
 
     void desk::handle_bord_buttons(button b, button_change c) {
-        if(b == button::BTN_EQ_COMMITRDY) {
+        if(b == button::BTN_GLOBALVIEW_COMMITRDY) {
             if(c != button_change::PRESS) {
                 return;
             }
@@ -343,7 +343,7 @@ namespace dmxfish::control_desk {
 	    }
             const auto current_bank = this->get_active_fader_bank_on_current_set();
             this->set_active_fader_bank_on_current_set(current_bank + 1);
-        } else if(b == button::BTN_SEND_OOPS) {
+        } else if(b == button::BTN_BEATS_OOPS) {
 	    auto iom = get_iomanager_instance();
             iom->rollback();
         } else if(b == button::BTN_FLIP_MAINDARK) {
@@ -628,7 +628,7 @@ namespace dmxfish::control_desk {
         }
         for(auto btn_state = rset.empty() ? button_led_state::off : button_led_state::flash ; auto& d_ptr : devices) {
             if(d_ptr->get_device_id() == midi_device_id::X_TOUCH) {
-                xtouch_set_button_led(*d_ptr, button::BTN_EQ_COMMITRDY, btn_state);
+                xtouch_set_button_led(*d_ptr, button::BTN_GLOBALVIEW_COMMITRDY, btn_state);
                 d_ptr->schedule_transmission();
             }
         }
@@ -677,7 +677,7 @@ namespace dmxfish::control_desk {
 	    auto iom = get_iomanager_instance();
 	    for(auto btn_state = iom->is_rollback_available() ? button_led_state::on : button_led_state::off; auto& d_ptr : devices) {
 		if(d_ptr->get_device_id() == midi_device_id::X_TOUCH) {
-	    	    xtouch_set_button_led(*d_ptr, button::BTN_SEND_OOPS, btn_state);
+	    	    xtouch_set_button_led(*d_ptr, button::BTN_BEATS_OOPS, btn_state);
 		    d_ptr->schedule_transmission();
 		}
 	    }
