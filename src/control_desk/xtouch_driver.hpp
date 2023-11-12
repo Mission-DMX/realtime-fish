@@ -111,20 +111,20 @@ namespace dmxfish::control_desk {
         BTN_CH6_SELECT_SELECT = 37,
         BTN_CH7_SELECT_SELECT = 38,
         BTN_CH8_SELECT_SELECT = 39,
-        BTN_TRACK_EDITSHOW = 40, // Open the show file editor
-        BTN_PAN_COMMITSHOW = 41, // Apply the changes of the edited show
-        BTN_EQ_COMMITRDY = 42, // Apply the chanes of all columns in READY-Mode, is blinking as long as some colums are in Ready/Wait mode
-        BTN_SEND_OOPS = 43, // Undo the commit of show file or column updates (whichever was last)
+        BTN_TRACK_CONSOLE = 40, // Show the direct console and ask if fish should switch to direct mode if it is in filter mode
+        BTN_PAN_EDITSHOW = 41, // Open the show file editor
+        BTN_EQ_SHOWUI = 42, // Open the show UI display and ask if fish should switch to filter mode if it is in direct mode
+        BTN_SEND_VISUALIZER = 43, // Open the visualizer view in the current open window
         BTN_PLUGIN_PATCH = 44, // Open the patching menu and review current transmitted values
-        BTN_INST_UNIVERSES = 45, // Edit the connected universes
+        BTN_INST_DEBUG = 45, // Open the debug view
 
-        BTN_NAMEVALUE_FIND = 46, // When in quick console mode: let the ficture strobe in order to find the linked lamp
+        BTN_NAMEVALUE_COMMITSHOW = 46, // Apply the changes of the edited show
+        BTN_BEATS_OOPS = 47, // Undo last commit
+        BTN_GLOBALVIEW_COMMITRDY = 48, // Apply staged input changes
+        BTN_MIDITRACKS_FIND = 49, // When in quick console mode: let the ficture strobe in order to find the linked lamp
         // When in show mode with displayed show UI: open an advanced color picker on the touch screen
-        // When show editor is displayed: jump to and highlight input filter
-        BTN_BEATS = 47,
-        BTN_GLOBALVIEW = 48,
-        BTN_MIDITRACKS = 49,
-        BTN_INPUTS = 50,
+	// When show editor is displayed: jump to and highlight input filter
+	BTN_INPUTS_EVENTS = 50,
         BTN_AUDIOTRACKS = 51,
         BTN_AUDIOINST = 52,
         BTN_AUX = 53,
