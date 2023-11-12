@@ -8,6 +8,7 @@
 
 #include "filters/filter.hpp"
 #include "lib/macros.hpp"
+#include "lib/logging.hpp"
 
 
 namespace dmxfish::filters {
@@ -403,6 +404,223 @@ COMPILER_SUPRESS("-Weffc++")
     using filter_8bit_to_float = filter_to_float_template<uint8_t, filter_type::filter_8bit_to_float>;
     using filter_16bit_to_float = filter_to_float_template<uint16_t, filter_type::filter_16bit_to_float>;
 
+    template <typename T, filter_type own_type>
+    class float_map_range : public filter {
+    private:
+        double* input = nullptr;
+        double lower_bound_in = 0.0;
+        double upper_bound_in = 1.0;
+        double lower_bound_out = 0.0;
+        double upper_bound_out = 1.0;
+        T output = 0;
+    public:
+        float_map_range() : filter() {}
+        virtual ~float_map_range() {}
+
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
+            MARK_UNUSED(initial_parameters);
+//            MARK_UNUSED(configuration);
+            if(!input_channels.float_channels.contains("value_in")) {
+                throw filter_config_exception("Unable to link input of float map range filter conversion filter: channel mapping "
+                                              "does not contain channel 'value_in' of type 'float'.",
+                                              own_type, own_id);
+            }
+            this->input = input_channels.float_channels.at("value_in");
+
+            if constexpr (std::is_same<T, uint8_t>::value) {
+                this->upper_bound_out = 255.0;
+            } else if constexpr (std::is_same<T, uint16_t>::value) {
+                this->upper_bound_out = 65535.0;
+            }
+
+            if(configuration.contains("lower_bound_in")) {
+                if (!(std::string("").compare(configuration.at("lower_bound_in"))==0)) {
+                    try {
+                        this->lower_bound_in = std::stod(configuration.at("lower_bound_in"));
+                    } catch (const std::invalid_argument &ex) {
+                        throw filter_config_exception(std::string(
+                                                              "Unable to parse lower_bound_in of float map range filter conversion filter ") +
+                                                      ex.what(),
+                                                      own_type, own_id);
+                    } catch (const std::out_of_range &ex) {
+                        throw filter_config_exception(std::string(
+                                                              "Unable to parse lower_bound_in of float map range filter conversion filter ") +
+                                                      ex.what(),
+                                                      own_type, own_id);
+                    }
+                }
+            }
+
+            if(configuration.contains("upper_bound_in")) {
+                if (!(std::string("").compare(configuration.at("upper_bound_in"))==0)) {
+                    try {
+                        this->upper_bound_in = std::stod(configuration.at("upper_bound_in"));
+                    } catch (const std::invalid_argument &ex) {
+                        throw filter_config_exception(std::string(
+                                                              "Unable to parse upper_bound_in of float map range filter conversion filter ") +
+                                                      ex.what(),
+                                                      own_type, own_id);
+                    } catch (const std::out_of_range &ex) {
+                        throw filter_config_exception(std::string(
+                                                              "Unable to parse upper_bound_in of float map range filter conversion filter ") +
+                                                      ex.what(),
+                                                      own_type, own_id);
+                    }
+                }
+            }
+
+            if(configuration.contains("lower_bound_out")) {
+                if (!(std::string("").compare(configuration.at("lower_bound_out"))==0)) {
+                    try {
+                        this->lower_bound_out = std::stod(configuration.at("lower_bound_out"));
+                    } catch (const std::invalid_argument &ex) {
+                        throw filter_config_exception(std::string(
+                                                              "Unable to parse lower_bound_out of float map range filter conversion filter ") +
+                                                      ex.what(),
+                                                      own_type, own_id);
+                    } catch (const std::out_of_range &ex) {
+                        throw filter_config_exception(std::string(
+                                                              "Unable to parse lower_bound_out of float map range filter conversion filter ") +
+                                                      ex.what(),
+                                                      own_type, own_id);
+                    }
+                }
+            }
+
+            if(configuration.contains("upper_bound_out")) {
+                if (!(std::string("").compare(configuration.at("upper_bound_out"))==0)) {
+                    try {
+                        this->upper_bound_out = std::stod(configuration.at("upper_bound_out"));
+                    } catch (const std::invalid_argument &ex) {
+                        throw filter_config_exception(std::string(
+                                                              "Unable to parse upper_bound_out of float map range filter conversion filter ") +
+                                                      ex.what(),
+                                                      own_type, own_id);
+                    } catch (const std::out_of_range &ex) {
+                        throw filter_config_exception(std::string(
+                                                              "Unable to parse upper_bound_out of float map range filter conversion filter ") +
+                                                      ex.what(),
+                                                      own_type, own_id);
+                    }
+                }
+            }
+        }
+
+        virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(_value);
+            return false;
+        }
+
+        virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
+            if constexpr (std::is_same<T, uint8_t>::value) {
+                map.eight_bit_channels[name + ":value"] = &output;
+            } else if constexpr (std::is_same<T, uint16_t>::value) {
+                map.sixteen_bit_channels[name + ":value"] = &output;
+            } else if constexpr (std::is_same<T, double>::value) {
+                map.float_channels[name + ":value"] = &output;
+            }
+        }
+
+        virtual void update() override {
+            double val = (*input - lower_bound_in) / (upper_bound_in - lower_bound_in) * (upper_bound_out - lower_bound_out) + lower_bound_out;
+            if constexpr (std::is_same<T, uint8_t>::value) {
+                this->output = (uint8_t) std::round(std::max(std::min(val, 255.0), 0.0));
+            } else if constexpr (std::is_same<T, uint16_t>::value) {
+                this->output = (uint16_t) std::round(std::max(std::min(val, 65535.0), 0.0));
+            } else if constexpr (std::is_same<T, double>::value) {
+                this->output = val;
+            }
+        }
+
+        virtual void scene_activated() override {}
+
+    };
+
+    using filter_float_map_range_8bit = float_map_range<uint8_t, filter_type::filter_float_map_range_8bit>;
+    using filter_float_map_range_16bit = float_map_range<uint16_t, filter_type::filter_float_map_range_16bit>;
+    using filter_float_map_range_float = float_map_range<double, filter_type::filter_float_map_range_float>;
+
+    class filter_dual_byte_to_16bit : public filter {
+    private:
+        uint16_t output = 0;
+        uint8_t* lower_input = nullptr;
+        uint8_t* upper_input = nullptr;
+    public:
+        filter_dual_byte_to_16bit() : filter() {}
+        virtual ~filter_dual_byte_to_16bit() {}
+
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
+            MARK_UNUSED(initial_parameters);
+            MARK_UNUSED(configuration);
+            if(!input_channels.eight_bit_channels.contains("lower")) {
+                throw filter_config_exception("Unable to link input of 8 bit merge to 16 bit filter: channel mapping does "
+                                              "not contain channel 'lower' of type 'uint8_t'.",
+                                              filter_type::filter_dual_byte_to_16bit, own_id);
+            }
+            this->lower_input = input_channels.eight_bit_channels.at("lower");
+            if(!input_channels.eight_bit_channels.contains("upper")) {
+                throw filter_config_exception("Unable to link input of 8 bit merge to 16 bit filter: channel mapping does "
+                                              "not contain channel 'upper' of type 'uint8_t'.",
+                                              filter_type::filter_dual_byte_to_16bit, own_id);
+            }
+            this->upper_input = input_channels.eight_bit_channels.at("upper");
+        }
+
+        virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(_value);
+            return false;
+        }
+
+        virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
+            map.sixteen_bit_channels[name + ":value"] = &output;
+        }
+
+        virtual void update() override {
+            this->output = (uint16_t) (*this->upper_input << 8) + *this->lower_input;
+        }
+
+        virtual void scene_activated() override {}
+
+    };
+
+    class filter_one_byte_to_16bit : public filter {
+    private:
+        uint16_t output = 0;
+        uint8_t* input = nullptr;
+    public:
+        filter_one_byte_to_16bit() : filter() {}
+        virtual ~filter_one_byte_to_16bit() {}
+
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
+            MARK_UNUSED(initial_parameters);
+            MARK_UNUSED(configuration);
+            if(!input_channels.eight_bit_channels.contains("value_in")) {
+                throw filter_config_exception("Unable to link input of 8 bit map to 16 bit filter: channel mapping does "
+                                              "not contain channel 'value_in' of type 'uint8_t'.",
+                                              filter_type::filter_dual_byte_to_16bit, own_id);
+            }
+            this->input = input_channels.eight_bit_channels.at("value_in");
+        }
+
+        virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(_value);
+            return false;
+        }
+
+        virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
+            map.sixteen_bit_channels[name + ":value"] = &output;
+        }
+
+        virtual void update() override {
+            this->output = (uint16_t) (*this->input << 8) + *this->input;
+        }
+
+        virtual void scene_activated() override {}
+
+    };
 
 COMPILER_RESTORE("-Weffc++")
 }

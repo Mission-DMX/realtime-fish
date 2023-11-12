@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(test_8bit_to_float) {
     fil8.get_output_channels(map, name);
 
     for (int i = 10; i < 255; i += 150){
-        in_channel = i;
+        in_channel = (uint8_t) i;
         test = i;
         fil8.update();
 
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(test_16bit_to_float) {
     const std::string name = "t";
     fil16.get_output_channels(map, name);
     for (int i = 10; i < 65000; i += 21250){
-        in_channel = i;
+        in_channel = (uint16_t) i;
         test = i;
         fil16.update();
         BOOST_TEST(*map.float_channels["t:value"] == test, "value in filter 8bit_to_float should be " + std::to_string(test) + " but is " + std::to_string(*map.float_channels["t:value"]));
@@ -197,4 +197,170 @@ BOOST_AUTO_TEST_CASE(test_color_to_rgbw) {
     BOOST_TEST(*map.eight_bit_channels["test:g"] == testg, "value g in filter color_to_rgbw should be " + std::to_string(testg) + " but is " + std::to_string(*map.eight_bit_channels["test:g"]));
     BOOST_TEST(*map.eight_bit_channels["test:b"] == testb, "value b in filter color_to_rgbw should be " + std::to_string(testb) + " but is " + std::to_string(*map.eight_bit_channels["test:b"]));
     BOOST_TEST(*map.eight_bit_channels["test:w"] == testw, "value w in filter color_to_rgbw should be " + std::to_string(testw) + " but is " + std::to_string(*map.eight_bit_channels["test:w"]));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(test_float_map_range_16) {
+    spdlog::set_level(spdlog::level::debug);
+    dmxfish::filters::filter_float_map_range_16bit fil= filter_float_map_range_16bit();
+
+    double in_channel = -20.0;
+    uint16_t test = 10;
+
+    channel_mapping input_channels = channel_mapping();
+    input_channels.float_channels["value_in"] = &in_channel;
+
+    std::map < std::string, std::string > configuration;
+    configuration["lower_bound_in"] = "-20";
+    configuration["upper_bound_in"] = "80";
+    std::map < std::string, std::string > initial_parameters;
+
+    fil.setup_filter(configuration, initial_parameters, input_channels, "");
+
+    channel_mapping map = channel_mapping();
+    const std::string name = "t";
+    fil.get_output_channels(map, name);
+    for (double i = -20; i < 81; i += 10){
+        in_channel = i;
+        test = (uint16_t) std::round(((i + 20) / 100) * 65535);
+        fil.update();
+        BOOST_TEST(*map.sixteen_bit_channels["t:value"] == test, "value in filter float_map_range_16bit should be " + std::to_string(test) + " but is " + std::to_string(*map.sixteen_bit_channels["t:value"]));
+    }
+}
+
+
+
+BOOST_AUTO_TEST_CASE(test_float_map_range_8) {
+    spdlog::set_level(spdlog::level::debug);
+    dmxfish::filters::filter_float_map_range_8bit fil= filter_float_map_range_8bit();
+
+    double in_channel = -20.0;
+    uint8_t test = 10;
+
+    channel_mapping input_channels = channel_mapping();
+    input_channels.float_channels["value_in"] = &in_channel;
+
+    std::map < std::string, std::string > configuration;
+    configuration["lower_bound_in"] = "-50";
+    configuration["upper_bound_in"] = "1450";
+    configuration["lower_bound_out"] = "20";
+    configuration["upper_bound_out"] = "170";
+    std::map < std::string, std::string > initial_parameters;
+
+    fil.setup_filter(configuration, initial_parameters, input_channels, "");
+
+    channel_mapping map = channel_mapping();
+    const std::string name = "t";
+    fil.get_output_channels(map, name);
+    for (double i = -300; i < 2400 ; i += 10){
+        in_channel = i;
+        if (i < -250) {
+            test = 0;
+        } else if (i > 2300) {
+            test = 255;
+        } else {
+            test = (uint8_t) std::round(((i + 50) / 1500) * 150 + 20);
+        }
+        fil.update();
+        BOOST_TEST(*map.eight_bit_channels["t:value"] == test, "value in filter float_map_range_8bit should be " + std::to_string(test) + " but is " + std::to_string(*map.eight_bit_channels["t:value"]));
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(test_float_map_range_float) {
+    spdlog::set_level(spdlog::level::debug);
+    dmxfish::filters::filter_float_map_range_float fil= filter_float_map_range_float();
+
+    double in_channel = -20.0;
+    double test = 10;
+
+    channel_mapping input_channels = channel_mapping();
+    input_channels.float_channels["value_in"] = &in_channel;
+
+    std::map < std::string, std::string > configuration;
+    configuration["lower_bound_in"] = "";
+    configuration["upper_bound_in"] = "";
+    configuration["lower_bound_out"] = "-100";
+    configuration["upper_bound_out"] = "300";
+    std::map < std::string, std::string > initial_parameters;
+
+    fil.setup_filter(configuration, initial_parameters, input_channels, "");
+
+    channel_mapping map = channel_mapping();
+    const std::string name = "t";
+    fil.get_output_channels(map, name);
+    for (double i = -1; i < 2 ; i += 0.125){
+        in_channel = i;
+        test = (i * 400 - 100);
+        fil.update();
+        BOOST_TEST(std::abs(*map.float_channels["t:value"]- test) <= std::abs(test * 0.00001), "value in filter float_map_range_float should be " + std::to_string(test) + " but is " + std::to_string(*map.float_channels["t:value"]));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_split_and_merge_16bit) {
+    spdlog::set_level(spdlog::level::debug);
+    dmxfish::filters::filter_dual_byte_to_16bit fil_merge = filter_dual_byte_to_16bit();
+    dmxfish::filters::filter_16bit_to_dual_byte fil_split = filter_16bit_to_dual_byte();
+
+    uint8_t lower = 0;
+    uint8_t upper = 0;
+    uint16_t value = 0;
+
+    channel_mapping input_channels_merge = channel_mapping();
+    input_channels_merge.eight_bit_channels["lower"] = &lower;
+    input_channels_merge.eight_bit_channels["upper"] = &upper;
+    std::map < std::string, std::string > configuration;
+    std::map < std::string, std::string > initial_parameters;
+    fil_merge.setup_filter(configuration, initial_parameters, input_channels_merge, "");
+
+    channel_mapping map_merge = channel_mapping();
+    const std::string name_merge = "t1";
+    fil_merge.get_output_channels(map_merge, name_merge);
+
+    channel_mapping input_channels_split = channel_mapping();
+    input_channels_split.sixteen_bit_channels["value"] = map_merge.sixteen_bit_channels["t1:value"];
+    fil_split.setup_filter(configuration, initial_parameters, input_channels_split, "");
+
+    channel_mapping map_split = channel_mapping();
+    const std::string name_split = "t2";
+    fil_split.get_output_channels(map_split, name_split);
+
+    for (int i = 0; i < 65536 ; i++){
+        value = (uint16_t) i;
+        lower = (uint8_t) (value & (0x00FF));
+        upper = (uint8_t) ((value & (0xFF00)) >> 8);
+
+        fil_merge.update();
+        fil_split.update();
+        BOOST_TEST(*map_merge.sixteen_bit_channels["t1:value"] == value, "value in filter dual_byte_to_16bit should be " + std::to_string(value) + " but is " + std::to_string(*map_merge.sixteen_bit_channels["t1:value"]));
+        BOOST_TEST(*map_split.eight_bit_channels["t2:value_lower"] == lower, "value in filter 16bit_to_dual_byte lower part should be " + std::to_string(lower) + " but is " + std::to_string(*map_split.eight_bit_channels["t2:value_lower"]));
+        BOOST_TEST(*map_split.eight_bit_channels["t2:value_upper"] == upper, "value in filter 16bit_to_dual_byte upper part should be " + std::to_string(upper) + " but is " + std::to_string(*map_split.eight_bit_channels["t2:value_upper"]));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_one_8bit_to_16bit) {
+    spdlog::set_level(spdlog::level::debug);
+    dmxfish::filters::filter_one_byte_to_16bit fil = filter_one_byte_to_16bit();
+
+    uint8_t input = 0;
+    uint16_t value = 0;
+
+    channel_mapping input_channels = channel_mapping();
+    input_channels.eight_bit_channels["value_in"] = &input;
+    std::map < std::string, std::string > configuration;
+    std::map < std::string, std::string > initial_parameters;
+    fil.setup_filter(configuration, initial_parameters, input_channels, "");
+
+    channel_mapping map = channel_mapping();
+    const std::string name = "t";
+    fil.get_output_channels(map, name);
+
+    for (int i = 0; i < 256 ; i++){
+        value = (uint16_t) (i * 65535 / 255);
+        input = (uint8_t) i;
+
+        fil.update();
+        BOOST_TEST(*map.sixteen_bit_channels["t:value"] == value, "value in filter one_byte_to_16bit should be " + std::to_string(value) + " but is " + std::to_string(*map.sixteen_bit_channels["t:value"]));
+    }
 }

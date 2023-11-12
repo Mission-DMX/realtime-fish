@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(oneframeeachchanneltype) {
             if (time_s < 1000){
                 tester8 = 0;
             } else if (time_s < 3000) {
-                tester8 = std::round(100 * 1.0 / (1 + std::exp(6 - ((double)time_s - 1000)/2000 *12)));
+                tester8 = (uint8_t) std::round(100 * 1.0 / (1 + std::exp(6 - (time_s - 1000)/2000 *12)));
             } else {
                 tester8 = 100;
             }
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(oneframeeachchanneltype) {
                 if (time_s < 1000){
                     tester16 = 0;
                 } else if (time_s < 3000) {
-                    tester16 = std::round(16000 * (((double)time_s - 1000)/2000)*(((double)time_s - 1000)/2000));
+                    tester16 = (uint16_t) std::round(16000 * ((time_s - 1000)/2000)*((time_s - 1000)/2000));
                 } else {
                     tester16 = 16000;
                 }
@@ -131,14 +131,15 @@ BOOST_AUTO_TEST_CASE(oneframeeachchanneltype) {
             for (auto it = map.float_channels.begin();
                  it != map.float_channels.end(); ++it) {
 
-                float testerfl;
+                double testerfl;
                 if (time_s < 1000){
                     testerfl = 0;
                 } else if (time_s < 3000) {
-                    testerfl = 0.8 * ((double)time_s - 1000)/2000;
+                    testerfl = 0.8 * (time_s - 1000)/2000;
                 } else {
                     testerfl = 0.8;
                 }
+
                 std::string error = std::string("Channel ") + it->first + " should be " + std::to_string(testerfl) +
                                     " , but is " + std::to_string(*it->second) + " at time: " +
                                     std::to_string(time_s);
@@ -212,9 +213,9 @@ BOOST_AUTO_TEST_CASE(onechanneltwoframes) {
                 if (time_s < 1000){
                     tester = 0;
                 } else if (time_s < 3000){
-                    tester = std::round((double) 255 * (time_s-1000)/2000);
+                    tester = (uint8_t) std::round(255 * (time_s-1000)/2000);
                 } else if (time_s < 5000){
-                    tester = std::round((double) 255 - (double) 205 * (time_s-3000)/2000);
+                    tester = (uint8_t) std::round(255 - 205 * (time_s-3000)/2000);
                 } else {
                     tester = 50;
                 }
@@ -279,15 +280,15 @@ BOOST_AUTO_TEST_CASE(teststop) {
                 if (time_s < 1000){
                     tester = 0;
                 } else if (time_s < 3000){
-                    tester = std::round((double) 250 * (time_s-1000)/2000);
+                    tester = (uint8_t) std::round(250 * (time_s-1000)/2000);
                 } else if (time_s < 4000){
-                    tester = std::round((double) 250 - (double) 200 * (time_s-3000)/2000);
+                    tester = (uint8_t) std::round(250 - 200 * (time_s-3000)/2000);
                 } else if (time_s < 6000){
-                    tester = std::round(150);
+                    tester = 150;
                 } else if (time_s < 8000){
-                    tester = std::round((double) 150 + 100 * (time_s-6000)/2000);
+                    tester = (uint8_t) std::round(150 + 100 * (time_s-6000)/2000);
                 } else if (time_s < 10000){
-                    tester = std::round((double) 250 - (double) 200 * (time_s-8000)/2000);
+                    tester = (uint8_t) std::round(250 - 200 * (time_s-8000)/2000);
                 } else {
                     tester = 50;
                 }
@@ -358,15 +359,15 @@ BOOST_AUTO_TEST_CASE(testpause) {
                 if (time_s < 1000){
                     tester = 0;
                 } else if (time_s < 2100){
-                    tester = std::round((double) 255 * (time_s-1000)/2000);
+                    tester = (uint8_t) std::round(255 * (time_s-1000)/2000);
                 } else if (time_s < 2600){
-                    tester = std::round((double) 255 * (2100-1000)/2000);
+                    tester = (uint8_t) std::round(255 * (2100-1000)/2000);
                 } else if (time_s < 3500){
-                    tester = std::round((double) 255 * (time_s-1500)/2000);
+                    tester = (uint8_t) std::round(255 * (time_s-1500)/2000);
                 } else if (time_s < 4300){
-                    tester = std::round((double) 255);
+                    tester = 255;
                 } else if (time_s < 6300){
-                    tester = std::round((double) 255 - (double) 205 * (time_s-4300)/2000);
+                    tester = (uint8_t) std::round(255 - 205 * (time_s-4300)/2000);
                 } else {
                     tester = 50;
                 }
@@ -427,13 +428,13 @@ BOOST_AUTO_TEST_CASE(test_restart) {
                 if (time_s < 1000){
                     tester = 0;
                 } else if (time_s < 3000){
-                    tester = std::round((double) 200 * (time_s-1000)/2000);
+                    tester = (uint8_t) std::round(200 * (time_s-1000)/2000);
                 } else if (time_s < 4000){
-                    tester = std::round((double) 200 - 150 * (time_s-3000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-3000)/2000);
                 } else if (time_s < 6000){
-                    tester = std::round((double) 125 + 75 * (time_s-4000)/2000);
+                    tester = (uint8_t) std::round(125 + 75 * (time_s-4000)/2000);
                 } else if (time_s < 8000){
-                    tester = std::round((double) 200 - 150 * (time_s-6000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-6000)/2000);
                 } else {
                     tester = 50;
                 }
@@ -494,17 +495,17 @@ BOOST_AUTO_TEST_CASE(test_restart_2nd_cue) {
                 if (time_s < 1000){
                     tester = 0;
                 } else if (time_s < 3000){
-                    tester = std::round((double) 200 * (time_s-1000)/2000);
+                    tester = (uint8_t) std::round(200 * (time_s-1000)/2000);
                 } else if (time_s < 5000){
-                    tester = std::round((double) 200 - 150 * (time_s-3000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-3000)/2000);
                 } else if (time_s < 8000){
-                    tester = std::round((double) 50 + 50 * (time_s-5000)/3000);
+                    tester = (uint8_t) std::round(50 + 50 * (time_s-5000)/3000);
                 } else if (time_s < 10000){
-                    tester = std::round((double) 100 + 150 * (time_s-8000)/3000);
+                    tester = (uint8_t) std::round(100 + 150 * (time_s-8000)/3000);
                 } else if (time_s < 13000){
-                    tester = std::round((double) 200 - 100 * (time_s-10000)/3000);
+                    tester = (uint8_t) std::round(200 - 100 * (time_s-10000)/3000);
                 } else if (time_s < 16000){
-                    tester = std::round((double) 100 + 150 * (time_s-13000)/3000);
+                    tester = (uint8_t) std::round(100 + 150 * (time_s-13000)/3000);
                 } else {
                     tester = 250;
                 }
@@ -564,25 +565,25 @@ BOOST_AUTO_TEST_CASE(test_start_again_whole_cuelist) {
                 if (time_s < 1000){
                     tester = 0;
                 } else if (time_s < 3000){
-                    tester = std::round((double) 200 * (time_s-1000)/2000);
+                    tester = (uint8_t) std::round(200 * (time_s-1000)/2000);
                 } else if (time_s < 5000){
-                    tester = std::round((double) 200 - 150 * (time_s-3000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-3000)/2000);
                 } else if (time_s < 8000){
-                    tester = std::round((double) 50 + 50 * (time_s-5000)/3000);
+                    tester = (uint8_t) std::round(50 + 50 * (time_s-5000)/3000);
                 } else if (time_s < 11000){
-                    tester = std::round((double) 100 + 150 * (time_s-8000)/3000);
+                    tester = (uint8_t) std::round(100 + 150 * (time_s-8000)/3000);
                 } else if (time_s < 13000){
-                    tester = std::round((double) 250 - 50 * (time_s-11000)/2000);
+                    tester = (uint8_t) std::round(250 - 50 * (time_s-11000)/2000);
                 } else if (time_s < 15000){
-                    tester = std::round((double) 200 - 150 * (time_s-13000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-13000)/2000);
                 } else if (time_s < 18000){
-                    tester = std::round((double) 50 + 50 * (time_s-15000)/3000);
+                    tester = (uint8_t) std::round(50 + 50 * (time_s-15000)/3000);
                 } else if (time_s < 21000){
-                    tester = std::round((double) 100 + 150 * (time_s-18000)/3000);
+                    tester = (uint8_t) std::round(100 + 150 * (time_s-18000)/3000);
                 } else if (time_s < 23000){
-                    tester = std::round((double) 250 - 50 * (time_s-21000)/2000);
+                    tester = (uint8_t) std::round(250 - 50 * (time_s-21000)/2000);
                 } else if (time_s < 25000){
-                    tester = std::round((double) 200 - 150 * (time_s-23000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-23000)/2000);
                 }
                 std::string error =
                         std::string("Channel ") + it->first + " should be " + std::to_string(tester) + " , but is " +
@@ -644,27 +645,27 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue) {
                 if (time_s < 1000){
                     tester = 0;
                 } else if (time_s < 3000){
-                    tester = std::round((double) 200 * (time_s-1000)/2000);
+                    tester = (uint8_t) std::round(200 * (time_s-1000)/2000);
                 } else if (time_s < 5000){
-                    tester = std::round((double) 200 - 150 * (time_s-3000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-3000)/2000);
                 } else if (time_s < 6000){
-                    tester = std::round((double) 50);
+                    tester = 50;
                 } else if (time_s < 9000){
-                    tester = std::round((double) 50 + 50 * (time_s-6000)/3000);
+                    tester = (uint8_t) std::round(50 + 50 * (time_s-6000)/3000);
                 } else if (time_s < 12000){
-                    tester = std::round((double) 100 + 150 * (time_s-9000)/3000);
+                    tester = (uint8_t) std::round(100 + 150 * (time_s-9000)/3000);
                 } else if (time_s < 14000){
-                    tester = std::round((double) 250 - 50 * (time_s-12000)/2000);
+                    tester = (uint8_t) std::round(250 - 50 * (time_s-12000)/2000);
                 } else if (time_s < 16000){
-                    tester = std::round((double) 200 - 150 * (time_s-14000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-14000)/2000);
                 } else if (time_s < 19000){
-                    tester = std::round((double) 50 + 50 * (time_s-16000)/3000);
+                    tester = (uint8_t) std::round(50 + 50 * (time_s-16000)/3000);
                 } else if (time_s < 22000){
-                    tester = std::round((double) 100 + 150 * (time_s-19000)/3000);
+                    tester = (uint8_t) std::round(100 + 150 * (time_s-19000)/3000);
                 } else if (time_s < 24000){
-                    tester = std::round((double) 250 - 50 * (time_s-22000)/2000);
+                    tester = (uint8_t) std::round(250 - 50 * (time_s-22000)/2000);
                 } else if (time_s < 26000){
-                    tester = std::round((double) 200 - 150 * (time_s-24000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-24000)/2000);
 //                } else {
 //                    tester = 250;
                 }
@@ -739,31 +740,31 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue_twice) {
                 if (time_s < 1000){
                     tester = 0;
                 } else if (time_s < 3000){
-                    tester = std::round((double) 200 * (time_s-1000)/2000);
+                    tester = (uint8_t) std::round(200 * (time_s-1000)/2000);
                 } else if (time_s < 5000){
-                    tester = std::round((double) 200 - 150 * (time_s-3000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-3000)/2000);
                 } else if (time_s < 6000){
-                    tester = std::round((double) 50);
+                    tester = 50;
                 } else if (time_s < 9000){
-                    tester = std::round((double) 50 + 50 * (time_s-6000)/3000);
+                    tester = (uint8_t) std::round(50 + 50 * (time_s-6000)/3000);
                 } else if (time_s < 12000){
-                    tester = std::round((double) 100 + 150 * (time_s-9000)/3000);
+                    tester = (uint8_t) std::round(100 + 150 * (time_s-9000)/3000);
                 } else if (time_s < 13000){
-                    tester = std::round((double) 250);
+                    tester = 250;
                 } else if (time_s < 15000){
-                    tester = std::round((double) 250 - 50 * (time_s-13000)/2000);
+                    tester = (uint8_t) std::round(250 - 50 * (time_s-13000)/2000);
                 } else if (time_s < 17000){
-                    tester = std::round((double) 200 - 150 * (time_s-15000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-15000)/2000);
                 } else if (time_s < 19000){
-                    tester = std::round((double) 50);
+                    tester = 50;
                 } else if (time_s < 22000){
-                    tester = std::round((double) 50 + 50 * (time_s-19000)/3000);
+                    tester = (uint8_t) std::round(50 + 50 * (time_s-19000)/3000);
                 } else if (time_s < 25000){
-                    tester = std::round((double) 100 + 150 * (time_s-22000)/3000);
+                    tester = (uint8_t) std::round(100 + 150 * (time_s-22000)/3000);
                 } else if (time_s < 27000){
-                    tester = std::round((double) 250 - 50 * (time_s-25000)/2000);
+                    tester = (uint8_t) std::round(250 - 50 * (time_s-25000)/2000);
                 } else if (time_s < 29000){
-                    tester = std::round((double) 200 - 150 * (time_s-27000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-27000)/2000);
 //                } else {
 //                    tester = 250;
                 }
@@ -821,15 +822,15 @@ BOOST_AUTO_TEST_CASE(twocuestwoframesnext) {
                 if (time_s < 1000){
                     tester = 0;
                 } else if (time_s < 3000){
-                    tester = std::round((double) 205 * (time_s-1000)/2000);
+                    tester = (uint8_t) std::round(205 * (time_s-1000)/2000);
                 } else if (time_s < 5000){
-                    tester = std::round((double) 205 - (double) 155 * (time_s-3000)/2000);
+                    tester = (uint8_t) std::round(205 - 155 * (time_s-3000)/2000);
                 } else if (time_s < 7000){
-                    tester = std::round((double) 50 + (double) 50 * (time_s-5000)/2000);
+                    tester = (uint8_t) std::round(50 + 50 * (time_s-5000)/2000);
                 } else if (time_s < 10000){
-                    tester = std::round((double) 100 - 80 * (time_s-7000)/3000);
+                    tester = (uint8_t) std::round(100 - 80 * (time_s-7000)/3000);
                 } else if (time_s < 14000){
-                    tester = std::round((double) 20 + 80 * (time_s-10000)/4000);
+                    tester = (uint8_t) std::round(20 + 80 * (time_s-10000)/4000);
                 } else {
                     tester = 100;
                 }
@@ -889,21 +890,21 @@ BOOST_AUTO_TEST_CASE(twocuestwoframestart_again) {
                 if (time_s < 1000) {
                     tester = 0;
                 } else if (time_s < 3000) {
-                    tester = std::round((double) 205 * (time_s - 1000) / 2000);
+                    tester = (uint8_t) std::round(205 * (time_s - 1000) / 2000);
                 } else if (time_s < 5000) {
-                    tester = std::round((double) 205 - (double) 155 * (time_s - 3000) / 2000);
+                    tester = (uint8_t) std::round(205 - 155 * (time_s - 3000) / 2000);
                 } else if (time_s < 7000) {
-                    tester = std::round((double) 50 + 155 * (time_s - 5000) / 2000);
+                    tester = (uint8_t) std::round(50 + 155 * (time_s - 5000) / 2000);
                 } else if (time_s < 9000) {
-                    tester = std::round((double) 205 - (double) 155 * (time_s - 7000) / 2000);
+                    tester = (uint8_t) std::round(205 - 155 * (time_s - 7000) / 2000);
                 } else if (time_s < 11000) {
-                    tester = std::round((double) 50 + 155 * (time_s - 9000) / 2000);
+                    tester = (uint8_t) std::round(50 + 155 * (time_s - 9000) / 2000);
                 } else if (time_s < 13000) {
-                    tester = std::round((double) 205 - (double) 155 * (time_s - 11000) / 2000);
+                    tester = (uint8_t) std::round(205 - 155 * (time_s - 11000) / 2000);
                 } else if (time_s < 15000) {
-                    tester = std::round((double) 50 + 155 * (time_s - 13000) / 2000);
+                    tester = (uint8_t) std::round(50 + 155 * (time_s - 13000) / 2000);
                 } else if (time_s < 17000) {
-                    tester = std::round((double) 205 - (double) 155 * (time_s - 15000) / 2000);
+                    tester = (uint8_t) std::round(205 - 155 * (time_s - 15000) / 2000);
                 } else {
                     tester = 100;
                 }
@@ -966,15 +967,15 @@ BOOST_AUTO_TEST_CASE(twocuestwoframeshold) {
                 if (time_s < 1000){
                     tester = 0;
                 } else if (time_s < 3000){
-                    tester = std::round((double) 205 * (time_s-1000)/2000);
+                    tester = (uint8_t) std::round(205 * (time_s-1000)/2000);
                 } else if (time_s < 5000){
-                    tester = std::round((double) 205 - (double) 155 * (time_s-3000)/2000);
+                    tester = (uint8_t) std::round(205 - 155 * (time_s-3000)/2000);
                 } else if (time_s < 7000){
                     tester = 50;
                 } else if (time_s < 10000){
-                    tester = std::round((double) 50 - 30 * (time_s-7000)/3000);
+                    tester = (uint8_t) std::round(50 - 30 * (time_s-7000)/3000);
                 } else if (time_s < 14000){
-                    tester = std::round((double) 20 + 80 * (time_s-10000)/4000);
+                    tester = (uint8_t) std::round(20 + 80 * (time_s-10000)/4000);
                 } else {
                     tester = 100;
                 }
@@ -1037,13 +1038,13 @@ BOOST_AUTO_TEST_CASE(anothercuenext) {
                 if (time_s < 1000){
                     tester = 0;
                 } else if (time_s < 3000){
-                    tester = std::round((double) 200 * (time_s-1000)/2000);
+                    tester = (uint8_t) std::round(200 * (time_s-1000)/2000);
                 } else if (time_s < 5000){
-                    tester = std::round((double) 200 - (double) 150 * (time_s-3000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-3000)/2000);
                 } else if (time_s < 9000){
-                    tester = std::round((double) 50 + 10 * (time_s-5000)/4000);
+                    tester = (uint8_t) std::round(50 + 10 * (time_s-5000)/4000);
                 } else if (time_s < 12000){
-                    tester = std::round((double) 60 + 120 * (time_s-9000)/3000);
+                    tester = (uint8_t) std::round(60 + 120 * (time_s-9000)/3000);
                 } else {
                     tester = 180;
                 }
@@ -1106,13 +1107,13 @@ BOOST_AUTO_TEST_CASE(runcueimmidiatly) {
                 if (time_s < 1000){
                     tester = 0;
                 } else if (time_s < 3000){
-                    tester = std::round((double) 200 * (time_s-1000)/2000);
+                    tester = (uint8_t) std::round(200 * (time_s-1000)/2000);
                 } else if (time_s < 4000){
-                    tester = std::round((double) 200 - (double) 150 * (time_s-3000)/3000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-3000)/3000);
                 } else if (time_s < 8000){
-                    tester = std::round((double) 150 - 90 * (time_s-4000)/4000);
+                    tester = (uint8_t) std::round(150 - 90 * (time_s-4000)/4000);
                 } else if (time_s < 11000){
-                    tester = std::round((double) 60 + 120 * (time_s-8000)/3000);
+                    tester = (uint8_t) std::round(60 + 120 * (time_s-8000)/3000);
                 } else {
                     tester = 180;
                 }
@@ -1191,41 +1192,41 @@ BOOST_AUTO_TEST_CASE(alotofstuff) {
                 if (time_s < 1000){
                     tester = 0;
                 } else if (time_s < 3000){
-                    tester = std::round((double) 200 * (time_s-1000)/2000);
+                    tester = (uint8_t) std::round(200 * (time_s-1000)/2000);
                 } else if (time_s < 4000){
-                    tester = std::round((double) 200 - 150 * (time_s-3000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-3000)/2000);
                 } else if (time_s < 6000){
-                    tester = std::round((double) 125 + 75 * (time_s-4000)/2000);
+                    tester = (uint8_t) std::round(125 + 75 * (time_s-4000)/2000);
                 } else if (time_s < 8000){
-                    tester = std::round((double) 200 - 150 * (time_s-6000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-6000)/2000);
                 } else if (time_s < 12000){
-                    tester = std::round((double) 50 + 10 * (time_s-8000)/4000);
+                    tester = (uint8_t) std::round(50 + 10 * (time_s-8000)/4000);
                 } else if (time_s < 15000){
-                    tester = std::round((double) 60 + 120 * (time_s-12000)/3000);
+                    tester = (uint8_t) std::round(60 + 120 * (time_s-12000)/3000);
                 } else if (time_s < 16000){
-                    tester = std::round((double) 180);
+                    tester = 180;
                 } else if (time_s < 18000){
-                    tester = std::round((double) 180 + 20 * (time_s-16000)/2000);
+                    tester = (uint8_t) std::round(180 + 20 * (time_s-16000)/2000);
                 } else if (time_s < 20000){
-                    tester = std::round((double) 200 - 150 * (time_s-18000)/2000);
+                    tester = (uint8_t) std::round(200 - 150 * (time_s-18000)/2000);
                 } else if (time_s < 23000){
-                    tester = std::round((double) 50 - 30 * (time_s-20000)/3000);
+                    tester = (uint8_t) std::round(50 - 30 * (time_s-20000)/3000);
                 } else if (time_s < 27000){
-                    tester = std::round((double) 20 + 80 * (time_s-23000)/4000);
+                    tester = (uint8_t) std::round(20 + 80 * (time_s-23000)/4000);
                 } else if (time_s < 30000){
-                    tester = std::round((double) 100 - 80 * (time_s-27000)/3000);
+                    tester = (uint8_t) std::round(100 - 80 * (time_s-27000)/3000);
                 } else if (time_s < 34000){
-                    tester = std::round((double) 20 + 80 * (time_s-30000)/4000);
+                    tester = (uint8_t) std::round(20 + 80 * (time_s-30000)/4000);
                 } else if (time_s < 38000){
-                    tester = std::round((double) 100 - 40 * (time_s-34000)/4000);
+                    tester = (uint8_t) std::round(100 - 40 * (time_s-34000)/4000);
                 } else if (time_s < 41000){
-                    tester = std::round((double) 60 + 120 * (time_s-38000)/3000);
+                    tester = (uint8_t) std::round(60 + 120 * (time_s-38000)/3000);
                 } else if (time_s < 43000){
-                    tester = std::round((double) 180);
+                    tester = 180;
                 } else if (time_s < 46000){
-                    tester = std::round((double) 180 - 160 * (time_s-43000)/3000);
+                    tester = (uint8_t) std::round(180 - 160 * (time_s-43000)/3000);
                 } else if (time_s < 50000){
-                    tester = std::round((double) 20 + 80 * (time_s-46000)/4000);
+                    tester = (uint8_t) std::round(20 + 80 * (time_s-46000)/4000);
                 } else {
                     tester = 100;
                 }
@@ -1277,49 +1278,49 @@ BOOST_AUTO_TEST_CASE(startdefaultcue) {
         for (auto it = map.eight_bit_channels.begin();
              it != map.eight_bit_channels.end(); ++it) {
             if (time_s < 3000){
-                tester = std::round((double) 20 * (time_s)/3000);
+                tester = (uint8_t) std::round(20 * (time_s)/3000);
             } else if (time_s < 7000) {
-                tester = std::round((double) 20 + 80 * (time_s - 3000) / 4000);
+                tester = (uint8_t) std::round(20 + 80 * (time_s - 3000) / 4000);
             } else if (time_s < 10000) {
-                tester = std::round((double) 100 - 40 * (time_s - 7000) / 4000);
+                tester = (uint8_t) std::round(100 - 40 * (time_s - 7000) / 4000);
             } else if (time_s < 11000) {
-                tester = std::round((double) 100 - 40 * (10000 - 7000) / 4000);
+                tester = (uint8_t) std::round(100 - 40 * (10000 - 7000) / 4000);
             } else if (time_s < 12000) {
-                tester = std::round((double) 100 - 40 * (time_s - 8000) / 4000);
+                tester = (uint8_t) std::round(100 - 40 * (time_s - 8000) / 4000);
             } else if (time_s < 15000) {
-                tester = std::round((double) 60 + 120 * (time_s - 12000) / 3000);
+                tester = (uint8_t) std::round(60 + 120 * (time_s - 12000) / 3000);
             } else if (time_s < 20000) {
                 tester = 180;
             } else if (time_s < 23000){
-                tester = std::round((double) 180 - 160 * (time_s - 20000) / 3000);
+                tester = (uint8_t) std::round(180 - 160 * (time_s - 20000) / 3000);
             } else if (time_s < 27000) {
-                tester = std::round((double) 20 + 80 * (time_s - 23000) / 4000);
+                tester = (uint8_t) std::round(20 + 80 * (time_s - 23000) / 4000);
             } else if (time_s < 29000) {
-                tester = std::round((double) 100 + 100 * (time_s - 27000) / 2000);
+                tester = (uint8_t) std::round(100 + 100 * (time_s - 27000) / 2000);
             } else if (time_s < 30000) {
-                tester = std::round((double) 200 - 150  * (time_s - 29000) / 2000);
+                tester = (uint8_t) std::round(200 - 150  * (time_s - 29000) / 2000);
             } else if (time_s < 32000) {
-                tester = std::round((double) 125 + 75  * (time_s - 30000) / 2000);
+                tester = (uint8_t) std::round(125 + 75  * (time_s - 30000) / 2000);
             } else if (time_s < 34000) {
-                tester = std::round((double) 200 - 150  * (time_s - 32000) / 2000);
+                tester = (uint8_t) std::round(200 - 150  * (time_s - 32000) / 2000);
             } else if (time_s < 37000){
-                tester = std::round((double) 50 - 30 * (time_s - 34000) / 3000);
+                tester = (uint8_t) std::round(50 - 30 * (time_s - 34000) / 3000);
             } else if (time_s < 41000) {
-                tester = std::round((double) 20 + 80 * (time_s - 37000) / 4000);
+                tester = (uint8_t) std::round(20 + 80 * (time_s - 37000) / 4000);
             } else if (time_s < 45000) {
-                tester = std::round((double) 100 - 40 * (time_s - 41000) / 4000);
+                tester = (uint8_t) std::round(100 - 40 * (time_s - 41000) / 4000);
             } else if (time_s < 47000) {
-                tester = std::round((double) 60 + 120 * (time_s - 45000) / 3000);
+                tester = (uint8_t) std::round(60 + 120 * (time_s - 45000) / 3000);
             } else if (time_s < 50000){
-                tester = std::round((double) 140 - 120 * (time_s - 47000) / 3000);
+                tester = (uint8_t) std::round(140 - 120 * (time_s - 47000) / 3000);
             } else if (time_s < 54000) {
-                tester = std::round((double) 20 + 80 * (time_s - 50000) / 4000);
+                tester = (uint8_t) std::round(20 + 80 * (time_s - 50000) / 4000);
             } else if (time_s < 57000) {
-                tester = std::round((double) 100 - 40 * (time_s - 54000) / 4000);
+                tester = (uint8_t) std::round(100 - 40 * (time_s - 54000) / 4000);
             } else if (time_s < 59000) {
-                tester = std::round((double) 70 + 130 * (time_s - 57000) / 2000);
+                tester = (uint8_t) std::round(70 + 130 * (time_s - 57000) / 2000);
             } else if (time_s < 61000) {
-                tester = std::round((double) 200 - 150 * (time_s - 59000) / 2000);
+                tester = (uint8_t) std::round(200 - 150 * (time_s - 59000) / 2000);
             }
             std::string error =
                     std::string("Channel ") + it->first + " should be " + std::to_string(tester) + " , but is " +
@@ -1390,31 +1391,31 @@ BOOST_AUTO_TEST_CASE(startanothercuefromstart) {
             if (time_s < 3000){
                 tester = 0;
             } else if (time_s < 7000) {
-                tester = std::round((double) 0 + 200 * (time_s - 3000) / 4000);
+                tester = (uint8_t) std::round(0 + 200 * (time_s - 3000) / 4000);
             } else if (time_s < 10000) {
-                tester = std::round((double) 200 - 180 * (time_s - 7000) / 3000);
+                tester = (uint8_t) std::round(200 - 180 * (time_s - 7000) / 3000);
             } else if (time_s < 12000) {
                 tester = 20;
             } else if (time_s < 15000) {
-                tester = std::round((double) 20 + 20 * (time_s - 12000) / 3000);
+                tester = (uint8_t) std::round(20 + 20 * (time_s - 12000) / 3000);
             } else if (time_s < 17000) {
-                tester = std::round((double) 40 + 80 * (time_s - 15000) / 4000);
+                tester = (uint8_t) std::round(40 + 80 * (time_s - 15000) / 4000);
             } else if (time_s < 19000) {
                 tester = 80;
             } else if (time_s < 20000) {
-                tester = std::round((double) 40 + 80 * (time_s - 17000) / 4000);
+                tester = (uint8_t) std::round(40 + 80 * (time_s - 17000) / 4000);
             } else if (time_s < 23000) {
                 tester = 100;
             } else if (time_s < 25000) {
-                tester = std::round((double) 100 - 20 * (time_s - 23000) / 2000);
+                tester = (uint8_t) std::round(100 - 20 * (time_s - 23000) / 2000);
             } else if (time_s < 26000) {
-                tester = std::round((double) 80 + 170 * (time_s - 25000) / 2000);
+                tester = (uint8_t) std::round(80 + 170 * (time_s - 25000) / 2000);
             } else if (time_s < 30000) {
                 tester = 165;
             } else if (time_s < 34000) {
-                tester = std::round((double) 165 + 35 * (time_s - 30000) / 4000);
+                tester = (uint8_t) std::round(165 + 35 * (time_s - 30000) / 4000);
             } else if (time_s < 37000) {
-                tester = std::round((double) 200 - 180 * (time_s - 34000) / 3000);
+                tester = (uint8_t) std::round(200 - 180 * (time_s - 34000) / 3000);
             } else if (time_s < 39000) {
                 tester = 20;
             }
