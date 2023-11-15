@@ -21,6 +21,7 @@ namespace dmxfish::events {
         event_sender_t sender_id;
     public:
         event(event_type _type, event_sender_t sender_id);
+        event(const event& other);
 
         inline event_id_t get_event_id() {
             return this->event_id;
