@@ -1,0 +1,828 @@
+<bord_configuration xmlns="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile" xsi:schemaLocation="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" show_name="" default_active_scene="0" notes="">
+  <scene id="0" human_readable_name="TheOnlyScene" linkedBankset="1b12808e-73ab-4e01-a883-f8614e3cb3d0">
+    <filter id="universe-output_2-65_4-Channel_Dimmer_Pack" type="11" pos="328.46164799056373,-122.13765270873691">
+      <channellink input_channel_id="Dimmer_Master" output_channel_id="Float to 8 bit converter.0:value" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer_Master" value="65" />
+    </filter>
+    <filter id="TableFader12" type="39" pos="-264.41137416800046,-44.41426404920388">
+      <filterConfiguration name="set_id" value="1b12808e-73ab-4e01-a883-f8614e3cb3d0" />
+      <filterConfiguration name="column_id" value="64dfc396-3073-4967-ab43-4da50d210181" />
+      <filterConfiguration name="ignore_main_brightness_control" value="false" />
+    </filter>
+    <filter id="TableFader34" type="39" pos="-276.2008675224138,109.75300386647768">
+      <filterConfiguration name="set_id" value="" />
+      <filterConfiguration name="column_id" value="" />
+    </filter>
+    <filter id="Float to 8 bit converter.0" type="13" pos="161.1025191675793,-142.8401971522453">
+      <channellink input_channel_id="value_in" output_channel_id="MAC filter.0:value" />
+    </filter>
+    <filter id="MAC filter.0" type="10" pos="3.443811610076608,-125.61697699890462">
+      <channellink input_channel_id="factor1" output_channel_id="16bit to Float converter.0:value" />
+      <channellink input_channel_id="factor2" output_channel_id="Table16bitscalingConstant:value" />
+      <channellink input_channel_id="summand" output_channel_id="TableFloatZero:value" />
+    </filter>
+    <filter id="16bit to Float converter.0" type="52" pos="-136.99167579408547,-65.3357064622125">
+      <channellink input_channel_id="value_in" output_channel_id="TableFader12:primary" />
+    </filter>
+    <filter id="Table16bitscalingConstant" type="2" pos="-140.28995122673305,16.93592662341004">
+      <initialParameters name="value" value="0.00390625" />
+    </filter>
+    <filter id="TableFloatZero" type="2" pos="-129.96849329440744,63.41885370080922">
+      <initialParameters name="value" value="0.0" />
+    </filter>
+    <filter id="Float to 8 bit converter.1" type="13" pos="145.62167848784537,-53.86789567594202">
+      <channellink input_channel_id="value_in" output_channel_id="MAC filter.1:value" />
+    </filter>
+    <filter id="16bit to Float converter.1" type="52" pos="-138.35826653669912,-24.87211361289883">
+      <channellink input_channel_id="value_in" output_channel_id="TableFader12:secondary" />
+    </filter>
+    <filter id="MAC filter.1" type="10" pos="2.9864696341055605,-37.87582934061288">
+      <channellink input_channel_id="factor2" output_channel_id="16bit to Float converter.1:value" />
+      <channellink input_channel_id="factor1" output_channel_id="Table16bitscalingConstant:value" />
+      <channellink input_channel_id="summand" output_channel_id="TableFloatZero:value" />
+    </filter>
+    <filter id="universe-output_2-66_4-Channel_Dimmer_Pack" type="11" pos="350.16703427005586,-53.5640165067567">
+      <channellink input_channel_id="Dimmer_Master" output_channel_id="Float to 8 bit converter.1:value" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer_Master" value="66" />
+    </filter>
+    <filter id="16bit to Float converter.2" type="52" pos="-94.34719064642775,115.8916106044017">
+      <channellink input_channel_id="value_in" output_channel_id="TableFader34:primary" />
+    </filter>
+    <filter id="16bit to Float converter.3" type="52" pos="-94.06174001497071,157.01200657318088">
+      <channellink input_channel_id="value_in" output_channel_id="TableFader34:secondary" />
+    </filter>
+    <filter id="MAC filter.2" type="10" pos="83.49322228609361,91.32821327775859">
+      <channellink input_channel_id="factor2" output_channel_id="16bit to Float converter.2:value" />
+      <channellink input_channel_id="factor1" output_channel_id="Table16bitscalingConstant:value" />
+      <channellink input_channel_id="summand" output_channel_id="TableFloatZero:value" />
+    </filter>
+    <filter id="MAC filter.3" type="10" pos="79.97961318070065,158.08678628022628">
+      <channellink input_channel_id="factor2" output_channel_id="16bit to Float converter.3:value" />
+      <channellink input_channel_id="factor1" output_channel_id="Table16bitscalingConstant:value" />
+      <channellink input_channel_id="summand" output_channel_id="TableFloatZero:value" />
+    </filter>
+    <filter id="Float to 8 bit converter.2" type="13" pos="255.6600684503524,99.23383376489289">
+      <channellink input_channel_id="value_in" output_channel_id="MAC filter.2:value" />
+    </filter>
+    <filter id="Float to 8 bit converter.3" type="13" pos="224.91598877816335,164.23560221466403">
+      <channellink input_channel_id="value_in" output_channel_id="MAC filter.3:value" />
+    </filter>
+    <filter id="universe-output_2-67_4-Channel_Dimmer_Pack" type="11" pos="432.7263202317157,115.51459281217535">
+      <channellink input_channel_id="Dimmer_Master" output_channel_id="Float to 8 bit converter.2:value" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer_Master" value="67" />
+    </filter>
+    <filter id="universe-output_2-68_4-Channel_Dimmer_Pack" type="11" pos="435.8928134202263,177.2612099881348">
+      <channellink input_channel_id="Dimmer_Master" output_channel_id="Float to 8 bit converter.3:value" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer_Master" value="68" />
+    </filter>
+    <filter id="universe-output_2-PlastikUnten1" type="11" pos="299.73181972882685,-88.64116788132706">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_2-0_DRGBW_Fader:value_upper" />
+      <channellink input_channel_id="Red" output_channel_id="color2rgbw_1_2-0_DRGBW_Fader:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgbw_1_2-0_DRGBW_Fader:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgbw_1_2-0_DRGBW_Fader:b" />
+      <channellink input_channel_id="White" output_channel_id="color2rgbw_1_2-0_DRGBW_Fader:w" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer" value="0" />
+      <filterConfiguration name="Red" value="1" />
+      <filterConfiguration name="Green" value="2" />
+      <filterConfiguration name="Blue" value="3" />
+      <filterConfiguration name="White" value="4" />
+    </filter>
+    <filter id="dimmer_0_2-0_DRGBW_Fader" type="49" pos="47.49183135339044,-85.69094672397269" />
+    <filter id="dimmer2byte_0_2-0_DRGBW_Fader" type="8" pos="185.26747285179803,-94.73700983890413">
+      <channellink input_channel_id="value" output_channel_id="dimmer_0_2-0_DRGBW_Fader:brightness" />
+    </filter>
+    <filter id="color2rgbw_1_2-0_DRGBW_Fader" type="16" pos="163.10754518140737,-40.94770223577109">
+      <channellink input_channel_id="value" output_channel_id="FaderColorBarUnten:color" />
+    </filter>
+    <filter id="universe-output_2-5_4-StrobePlastikUnten1" type="11" pos="320.83007758429704,8.913153238530953">
+      <channellink input_channel_id="Dimmer_Master" output_channel_id="BarNoStrobe:value" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer_Master" value="5" />
+    </filter>
+    <filter id="universe-output_2-PlastikUnten2" type="11" pos="347.5430033903813,107.50514247783016">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_2-8_DRGBW_Fader:value_upper" />
+      <channellink input_channel_id="Red" output_channel_id="color2rgbw_1_2-8_DRGBW_Fader:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgbw_1_2-8_DRGBW_Fader:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgbw_1_2-8_DRGBW_Fader:b" />
+      <channellink input_channel_id="White" output_channel_id="color2rgbw_1_2-8_DRGBW_Fader:w" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer" value="8" />
+      <filterConfiguration name="Red" value="9" />
+      <filterConfiguration name="Green" value="10" />
+      <filterConfiguration name="Blue" value="11" />
+      <filterConfiguration name="White" value="12" />
+    </filter>
+    <filter id="dimmer_0_2-8_DRGBW_Fader" type="49" pos="85.70018885568624,61.26133625410745" />
+    <filter id="dimmer2byte_0_2-8_DRGBW_Fader" type="8" pos="203.01409904188606,60.59890470974807">
+      <channellink input_channel_id="value" output_channel_id="dimmer_0_2-8_DRGBW_Fader:brightness" />
+    </filter>
+    <filter id="color2rgbw_1_2-8_DRGBW_Fader" type="16" pos="222.8870453726634,115.28127053669243">
+      <channellink input_channel_id="value" output_channel_id="FaderColorBarUnten:color" />
+    </filter>
+    <filter id="universe-output_2-13_4-StrobePlastikUnten2" type="11" pos="341.08109621067666,206.24866329411168">
+      <channellink input_channel_id="Dimmer_Master" output_channel_id="BarNoStrobe:value" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer_Master" value="13" />
+    </filter>
+    <filter id="universe-output_2-PlastikUnten3" type="11" pos="332.0628970156906,300.9339056919147">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_2-16_DRGBW_Fader:value_upper" />
+      <channellink input_channel_id="Red" output_channel_id="color2rgbw_1_2-16_DRGBW_Fader:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgbw_1_2-16_DRGBW_Fader:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgbw_1_2-16_DRGBW_Fader:b" />
+      <channellink input_channel_id="White" output_channel_id="color2rgbw_1_2-16_DRGBW_Fader:w" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer" value="16" />
+      <filterConfiguration name="Red" value="17" />
+      <filterConfiguration name="Green" value="18" />
+      <filterConfiguration name="Blue" value="19" />
+      <filterConfiguration name="White" value="20" />
+    </filter>
+    <filter id="dimmer_0_2-16_DRGBW_Fader" type="49" pos="28.67985137456742,267.52952319722874" />
+    <filter id="dimmer2byte_0_2-16_DRGBW_Fader" type="8" pos="180.42479091998354,253.82651435085432">
+      <channellink input_channel_id="value" output_channel_id="dimmer_0_2-16_DRGBW_Fader:brightness" />
+    </filter>
+    <filter id="color2rgbw_1_2-16_DRGBW_Fader" type="16" pos="149.1443157072323,324.8944190025102">
+      <channellink input_channel_id="value" output_channel_id="FaderColorBarUnten:color" />
+    </filter>
+    <filter id="universe-output_2-21_4-StrobePlastikUnten3" type="11" pos="347.73656808501755,407.0541538995258">
+      <channellink input_channel_id="Dimmer_Master" output_channel_id="BarNoStrobe:value" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer_Master" value="21" />
+    </filter>
+    <filter id="BarNoStrobe" type="0" pos="827.0881352333693,191.9784817638887">
+      <initialParameters name="value" value="0" />
+    </filter>
+    <filter id="universe-output_2-PlastikUnten4" type="11" pos="295.2964655588978,527.02459525868">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_2-24_DRGBW_Fader:value_upper" />
+      <channellink input_channel_id="Red" output_channel_id="color2rgbw_1_2-24_DRGBW_Fader:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgbw_1_2-24_DRGBW_Fader:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgbw_1_2-24_DRGBW_Fader:b" />
+      <channellink input_channel_id="White" output_channel_id="color2rgbw_1_2-24_DRGBW_Fader:w" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer" value="24" />
+      <filterConfiguration name="Red" value="25" />
+      <filterConfiguration name="Green" value="26" />
+      <filterConfiguration name="Blue" value="27" />
+      <filterConfiguration name="White" value="28" />
+    </filter>
+    <filter id="dimmer_0_2-24_DRGBW_Fader" type="49" pos="-14.036730915825672,498.11019069957115" />
+    <filter id="dimmer2byte_0_2-24_DRGBW_Fader" type="8" pos="124.51947133405105,492.6006391745758">
+      <channellink input_channel_id="value" output_channel_id="dimmer_0_2-24_DRGBW_Fader:brightness" />
+    </filter>
+    <filter id="color2rgbw_1_2-24_DRGBW_Fader" type="16" pos="122.68295415905294,556.3691887745202">
+      <channellink input_channel_id="value" output_channel_id="FaderColorBarUnten:color" />
+    </filter>
+    <filter id="universe-output_2-29_4-StrobePlastikUnten4" type="11" pos="286.9966792997259,682.090349033552">
+      <channellink input_channel_id="Dimmer_Master" output_channel_id="BarNoStrobe:value" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer_Master" value="29" />
+    </filter>
+    <filter id="FaderColorBarUnten" type="40" pos="-152.98075082957897,273.81194637604926">
+      <filterConfiguration name="set_id" value="1b12808e-73ab-4e01-a883-f8614e3cb3d0" />
+      <filterConfiguration name="column_id" value="87f987cb-e528-4f3d-9eca-48b9d244211a" />
+      <filterConfiguration name="ignore_main_brightness_control" value="true" />
+    </filter>
+    <filter id="universe-output_2-PlastikOben1" type="11" pos="83.26856516977,-118.74764512595836">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_2-32_DRGBW_Fader:value_upper" />
+      <channellink input_channel_id="Red" output_channel_id="color2rgbw_1_2-32_DRGBW_Fader:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgbw_1_2-32_DRGBW_Fader:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgbw_1_2-32_DRGBW_Fader:b" />
+      <channellink input_channel_id="White" output_channel_id="color2rgbw_1_2-32_DRGBW_Fader:w" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer" value="32" />
+      <filterConfiguration name="Red" value="33" />
+      <filterConfiguration name="Green" value="34" />
+      <filterConfiguration name="Blue" value="35" />
+      <filterConfiguration name="White" value="36" />
+    </filter>
+    <filter id="dimmer2byte_0_2-32_DRGBW_Fader" type="8" pos="-74.1288061336254,-173.9018619934281">
+      <channellink input_channel_id="value" output_channel_id="BarObenLightness:primary" />
+    </filter>
+    <filter id="color2rgbw_1_2-32_DRGBW_Fader" type="16" pos="-56.243154435925504,-118.55706462212487">
+      <channellink input_channel_id="value" output_channel_id="BarCue:C1" />
+    </filter>
+    <filter id="universe-output_2-37_4-StrobePlastikOben1" type="11" pos="419.1996625017731,27.31680689350617">
+      <channellink input_channel_id="Dimmer_Master" output_channel_id="PlastikNoStrob2:value" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer_Master" value="37" />
+    </filter>
+    <filter id="universe-output_2-PlastikOben2" type="11" pos="104.26856516977,108.26856516977">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_2-40_DRGBW_Fader:value_upper" />
+      <channellink input_channel_id="Red" output_channel_id="color2rgbw_1_2-40_DRGBW_Fader:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgbw_1_2-40_DRGBW_Fader:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgbw_1_2-40_DRGBW_Fader:b" />
+      <channellink input_channel_id="White" output_channel_id="color2rgbw_1_2-40_DRGBW_Fader:w" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer" value="40" />
+      <filterConfiguration name="Red" value="41" />
+      <filterConfiguration name="Green" value="42" />
+      <filterConfiguration name="Blue" value="43" />
+      <filterConfiguration name="White" value="44" />
+    </filter>
+    <filter id="dimmer2byte_0_2-40_DRGBW_Fader" type="8" pos="-25.969112814895908,69.87294633077767">
+      <channellink input_channel_id="value" output_channel_id="BarObenLightness:primary" />
+    </filter>
+    <filter id="color2rgbw_1_2-40_DRGBW_Fader" type="16" pos="-156.46812705366898,107.9945235487404">
+      <channellink input_channel_id="value" output_channel_id="BarCue:C2" />
+    </filter>
+    <filter id="universe-output_2-45_4-StrobePlastikOben2" type="11" pos="425.9986695678864,101.169596424721">
+      <channellink input_channel_id="Dimmer_Master" output_channel_id="PlastikNoStrob2:value" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer_Master" value="45" />
+    </filter>
+    <filter id="PlastikNoStrob2" type="0" pos="254.27306388433107,124.30007750949801">
+      <initialParameters name="value" value="0" />
+    </filter>
+    <filter id="universe-output_2-PlastikOben3" type="11" pos="139.43816452743437,269.675685252993">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_2-48_DRGBW_Fader:value_upper" />
+      <channellink input_channel_id="Red" output_channel_id="color2rgbw_1_2-48_DRGBW_Fader:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgbw_1_2-48_DRGBW_Fader:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgbw_1_2-48_DRGBW_Fader:b" />
+      <channellink input_channel_id="White" output_channel_id="color2rgbw_1_2-48_DRGBW_Fader:w" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer" value="48" />
+      <filterConfiguration name="Red" value="49" />
+      <filterConfiguration name="Green" value="50" />
+      <filterConfiguration name="Blue" value="51" />
+      <filterConfiguration name="White" value="52" />
+    </filter>
+    <filter id="dimmer2byte_0_2-48_DRGBW_Fader" type="8" pos="-17.30879121934703,224.43730136622656">
+      <channellink input_channel_id="value" output_channel_id="BarObenLightness:primary" />
+    </filter>
+    <filter id="color2rgbw_1_2-48_DRGBW_Fader" type="16" pos="-134.3654013466833,275.34185435733895">
+      <channellink input_channel_id="value" output_channel_id="BarCue:C3" />
+    </filter>
+    <filter id="universe-output_2-53_4-StrobePlastikOben3" type="11" pos="430.8855992328174,156.1200027824314">
+      <channellink input_channel_id="Dimmer_Master" output_channel_id="PlastikNoStrob2:value" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer_Master" value="53" />
+    </filter>
+    <filter id="universe-output_2-PlastikOben4" type="11" pos="190.76042037205082,473.0085617810644">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_2-56_DRGBW_Fader:value_upper" />
+      <channellink input_channel_id="Red" output_channel_id="color2rgbw_1_2-56_DRGBW_Fader:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgbw_1_2-56_DRGBW_Fader:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgbw_1_2-56_DRGBW_Fader:b" />
+      <channellink input_channel_id="White" output_channel_id="color2rgbw_1_2-56_DRGBW_Fader:w" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer" value="56" />
+      <filterConfiguration name="Red" value="57" />
+      <filterConfiguration name="Green" value="58" />
+      <filterConfiguration name="Blue" value="59" />
+      <filterConfiguration name="White" value="60" />
+    </filter>
+    <filter id="dimmer2byte_0_2-56_DRGBW_Fader" type="8" pos="46.19312375609394,418.100615697867">
+      <channellink input_channel_id="value" output_channel_id="BarObenLightness:primary" />
+    </filter>
+    <filter id="color2rgbw_1_2-56_DRGBW_Fader" type="16" pos="-127.88499731635139,494.92889713990405">
+      <channellink input_channel_id="value" output_channel_id="BarCue:C4" />
+    </filter>
+    <filter id="universe-output_2-61_4-StrobePlastikOben4" type="11" pos="437.13554498029873,204.34511200655317">
+      <channellink input_channel_id="Dimmer_Master" output_channel_id="PlastikNoStrob2:value" />
+      <filterConfiguration name="universe" value="2" />
+      <filterConfiguration name="Dimmer_Master" value="61" />
+    </filter>
+    <filter id="BarCue" type="44" pos="-619.7929300917382,259.5271360107854">
+      <channellink input_channel_id="time" output_channel_id="BarTime0:value" />
+      <filterConfiguration name="mapping" value="C1:color;C2:color;C3:color;C4:color" />
+      <filterConfiguration name="end_handling" value="hold" />
+      <filterConfiguration name="cuelist" value="26.88:55.0,0.8490272164344788,0.40645456314086914@lin&amp;3.0,0.9284199476242065,0.3608911335468292@lin&amp;41.0,0.9197985529899597,0.29481956362724304@lin&amp;34.0,0.8624399304389954,0.34038299322128296@lin|255.36:57.0,0.886213481426239,0.5047836899757385@lin&amp;2.0,1.0,0.4163881838321686@lin&amp;54.0,0.9415732026100159,0.3978942632675171@lin&amp;4.0,0.920851469039917,0.43509575724601746@lin|558.08:40.0,0.9245594143867493,0.5082627534866333@lin&amp;46.0,0.9250476956367493,0.4311284124851227@lin&amp;359.0,0.9295490980148315,0.5018386840820312@lin&amp;59.0,0.8930037617683411,0.545830488204956@lin|926.72:40.0,0.9245594143867493,0.5082627534866333@lin&amp;21.0,0.9501792788505554,0.46613261103630066@lin&amp;27.0,0.9207446575164795,0.4267643392086029@lin&amp;48.0,0.9698176383972168,0.4788433611392975@lin#start_again#do_nothing" />
+    </filter>
+    <filter id="BarTime0" type="32" pos="-739.653667929467,268.0886172849089" />
+    <filter id="BarObenLightness" type="39" pos="-641.8967609552734,-7.476556759561731">
+      <filterConfiguration name="set_id" value="" />
+      <filterConfiguration name="column_id" value="" />
+    </filter>
+    <filter id="universe-output_1-384_LED_Flood_Panel_150" type="11" pos="191.24490690032877,20.36297918948526">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_1-384_LED_Flood_Panel_150:value_upper" />
+      <channellink input_channel_id="Red___Color_Presets___Program_Speed___Sound_Sensitivity" output_channel_id="color2rgb_1_1-384_LED_Flood_Panel_150:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgb_1_1-384_LED_Flood_Panel_150:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgb_1_1-384_LED_Flood_Panel_150:b" />
+      <channellink input_channel_id="Strobe" output_channel_id="Float to 8 bit converter.0:value" />
+      <channellink input_channel_id="Internal_Programs" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="ID_Select" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="Dimmer_Delay" output_channel_id="FloodPanels0:value" />
+      <filterConfiguration name="universe" value="1" />
+      <filterConfiguration name="Dimmer" value="384" />
+      <filterConfiguration name="Red___Color_Presets___Program_Speed___Sound_Sensitivity" value="385" />
+      <filterConfiguration name="Green" value="386" />
+      <filterConfiguration name="Blue" value="387" />
+      <filterConfiguration name="Strobe" value="388" />
+      <filterConfiguration name="Internal_Programs" value="389" />
+      <filterConfiguration name="ID_Select" value="390" />
+      <filterConfiguration name="Dimmer_Delay" value="391" />
+    </filter>
+    <filter id="dimmer_0_1-384_LED_Flood_Panel_150" type="49" pos="-131.8238773274917,-6.11610076670317" />
+    <filter id="dimmer2byte_0_1-384_LED_Flood_Panel_150" type="8" pos="13.974589266155533,-37.9128148959474">
+      <channellink input_channel_id="value" output_channel_id="dimmer_0_1-384_LED_Flood_Panel_150:brightness" />
+    </filter>
+    <filter id="color2rgb_1_1-384_LED_Flood_Panel_150" type="15" pos="36.4972617743702,24.056297918948502">
+      <channellink input_channel_id="value" output_channel_id="Flat1Fader:color" />
+    </filter>
+    <filter id="universe-output_1-392_LED_Flood_Panel_150" type="11" pos="159.2503833515882,153.9763417305586">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_1-392_LED_Flood_Panel_150:value_upper" />
+      <channellink input_channel_id="Red___Color_Presets___Program_Speed___Sound_Sensitivity" output_channel_id="color2rgb_1_1-392_LED_Flood_Panel_150:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgb_1_1-392_LED_Flood_Panel_150:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgb_1_1-392_LED_Flood_Panel_150:b" />
+      <channellink input_channel_id="Strobe" output_channel_id="Float to 8 bit converter.0:value" />
+      <channellink input_channel_id="Internal_Programs" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="ID_Select" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="Dimmer_Delay" output_channel_id="FloodPanels0:value" />
+      <filterConfiguration name="universe" value="1" />
+      <filterConfiguration name="Dimmer" value="392" />
+      <filterConfiguration name="Red___Color_Presets___Program_Speed___Sound_Sensitivity" value="393" />
+      <filterConfiguration name="Green" value="394" />
+      <filterConfiguration name="Blue" value="395" />
+      <filterConfiguration name="Strobe" value="396" />
+      <filterConfiguration name="Internal_Programs" value="397" />
+      <filterConfiguration name="ID_Select" value="398" />
+      <filterConfiguration name="Dimmer_Delay" value="399" />
+    </filter>
+    <filter id="dimmer_0_1-392_LED_Flood_Panel_150" type="49" pos="-204.88915662650584,158.82935377875137" />
+    <filter id="dimmer2byte_0_1-392_LED_Flood_Panel_150" type="8" pos="-52.46637458926614,144.91829134720683">
+      <channellink input_channel_id="value" output_channel_id="dimmer_0_1-392_LED_Flood_Panel_150:brightness" />
+    </filter>
+    <filter id="color2rgb_1_1-392_LED_Flood_Panel_150" type="15" pos="-8.745892661555274,194.3012048192771">
+      <channellink input_channel_id="value" output_channel_id="Flat2Fader:color" />
+    </filter>
+    <filter id="FaderFlatStrobe" type="39" pos="591.4983284339571,88.12981643272879">
+      <filterConfiguration name="set_id" value="1b12808e-73ab-4e01-a883-f8614e3cb3d0" />
+      <filterConfiguration name="column_id" value="9e24e83b-b754-490e-b23b-35877ceffdbb" />
+      <filterConfiguration name="ignore_main_brightness_control" value="false" />
+    </filter>
+    <filter id="FloodPanels16BitMappingConstant" type="2" pos="749.3309606688613,65.15418009473629">
+      <initialParameters name="value" value="0.00390625" />
+    </filter>
+    <filter id="FloodFloatZero" type="2" pos="745.3351978274692,166.04719183983306">
+      <initialParameters name="value" value="0.0" />
+    </filter>
+    <filter id="16bit to Float converter.0" type="52" pos="747.333079248166,124.09168200523843">
+      <channellink input_channel_id="value_in" output_channel_id="FaderFlatStrobe:primary" />
+    </filter>
+    <filter id="MAC filter.0" type="10" pos="890.1816008278574,91.12663856377105">
+      <channellink input_channel_id="factor1" output_channel_id="FloodPanels16BitMappingConstant:value" />
+      <channellink input_channel_id="factor2" output_channel_id="16bit to Float converter.0:value" />
+      <channellink input_channel_id="summand" output_channel_id="FloodFloatZero:value" />
+    </filter>
+    <filter id="Float to 8 bit converter.0" type="13" pos="598.4909134063872,175.03765823296038">
+      <channellink input_channel_id="value_in" output_channel_id="MAC filter.0:value" />
+    </filter>
+    <filter id="universe-output_1-400_LED_Flood_Panel_150" type="11" pos="181.7729721270639,334.5339424541997">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_1-400_LED_Flood_Panel_150:value_upper" />
+      <channellink input_channel_id="Red___Color_Presets___Program_Speed___Sound_Sensitivity" output_channel_id="color2rgb_1_1-400_LED_Flood_Panel_150:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgb_1_1-400_LED_Flood_Panel_150:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgb_1_1-400_LED_Flood_Panel_150:b" />
+      <channellink input_channel_id="Internal_Programs" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="Strobe" output_channel_id="Float to 8 bit converter.0:value" />
+      <channellink input_channel_id="ID_Select" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="Dimmer_Delay" output_channel_id="FloodPanels0:value" />
+      <filterConfiguration name="universe" value="1" />
+      <filterConfiguration name="Dimmer" value="400" />
+      <filterConfiguration name="Red___Color_Presets___Program_Speed___Sound_Sensitivity" value="401" />
+      <filterConfiguration name="Green" value="402" />
+      <filterConfiguration name="Blue" value="403" />
+      <filterConfiguration name="Strobe" value="404" />
+      <filterConfiguration name="Internal_Programs" value="405" />
+      <filterConfiguration name="ID_Select" value="406" />
+      <filterConfiguration name="Dimmer_Delay" value="407" />
+    </filter>
+    <filter id="dimmer_0_1-400_LED_Flood_Panel_150" type="49" pos="-260.5329390238888,313.47578573537794" />
+    <filter id="dimmer2byte_0_1-400_LED_Flood_Panel_150" type="8" pos="-26.158435007645437,317.7023488181669">
+      <channellink input_channel_id="value" output_channel_id="dimmer_0_1-400_LED_Flood_Panel_150:brightness" />
+    </filter>
+    <filter id="color2rgb_1_1-400_LED_Flood_Panel_150" type="15" pos="-34.89749194948985,354.1629538088064">
+      <channellink input_channel_id="value" output_channel_id="Flat3Fader:color" />
+    </filter>
+    <filter id="universe-output_1-408_LED_Flood_Panel_150" type="11" pos="145.02371438907016,521.541583985873">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_1-408_LED_Flood_Panel_150:value_upper" />
+      <channellink input_channel_id="Red___Color_Presets___Program_Speed___Sound_Sensitivity" output_channel_id="color2rgb_1_1-408_LED_Flood_Panel_150:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgb_1_1-408_LED_Flood_Panel_150:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgb_1_1-408_LED_Flood_Panel_150:b" />
+      <channellink input_channel_id="Strobe" output_channel_id="Float to 8 bit converter.0:value" />
+      <channellink input_channel_id="Internal_Programs" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="ID_Select" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="Dimmer_Delay" output_channel_id="FloodPanels0:value" />
+      <filterConfiguration name="universe" value="1" />
+      <filterConfiguration name="Dimmer" value="408" />
+      <filterConfiguration name="Red___Color_Presets___Program_Speed___Sound_Sensitivity" value="409" />
+      <filterConfiguration name="Green" value="410" />
+      <filterConfiguration name="Blue" value="411" />
+      <filterConfiguration name="Strobe" value="412" />
+      <filterConfiguration name="Internal_Programs" value="413" />
+      <filterConfiguration name="ID_Select" value="414" />
+      <filterConfiguration name="Dimmer_Delay" value="415" />
+    </filter>
+    <filter id="dimmer_0_1-408_LED_Flood_Panel_150" type="49" pos="-155.1901914497384,543.2930589001035" />
+    <filter id="dimmer2byte_0_1-408_LED_Flood_Panel_150" type="8" pos="-30.048524532592808,530.8477294691756">
+      <channellink input_channel_id="value" output_channel_id="dimmer_0_1-408_LED_Flood_Panel_150:brightness" />
+    </filter>
+    <filter id="color2rgb_1_1-408_LED_Flood_Panel_150" type="15" pos="-47.16932438585198,594.3437956344798">
+      <channellink input_channel_id="value" output_channel_id="Flat4Fader:color" />
+    </filter>
+    <filter id="universe-output_1-416_LED_Flood_Panel_150" type="11" pos="180.38393629508653,702.3668963210615">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_1-416_LED_Flood_Panel_150:value_upper" />
+      <channellink input_channel_id="Red___Color_Presets___Program_Speed___Sound_Sensitivity" output_channel_id="color2rgb_1_1-416_LED_Flood_Panel_150:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgb_1_1-416_LED_Flood_Panel_150:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgb_1_1-416_LED_Flood_Panel_150:b" />
+      <channellink input_channel_id="Strobe" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="Internal_Programs" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="ID_Select" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="Dimmer_Delay" output_channel_id="FloodPanels0:value" />
+      <filterConfiguration name="universe" value="1" />
+      <filterConfiguration name="Dimmer" value="416" />
+      <filterConfiguration name="Red___Color_Presets___Program_Speed___Sound_Sensitivity" value="417" />
+      <filterConfiguration name="Green" value="418" />
+      <filterConfiguration name="Blue" value="419" />
+      <filterConfiguration name="Strobe" value="420" />
+      <filterConfiguration name="Internal_Programs" value="421" />
+      <filterConfiguration name="ID_Select" value="422" />
+      <filterConfiguration name="Dimmer_Delay" value="423" />
+    </filter>
+    <filter id="dimmer_0_1-416_LED_Flood_Panel_150" type="49" pos="-161.83571791694715,647.6434183250416" />
+    <filter id="dimmer2byte_0_1-416_LED_Flood_Panel_150" type="8" pos="47.24315015935815,649.2688754461711">
+      <channellink input_channel_id="value" output_channel_id="dimmer_0_1-416_LED_Flood_Panel_150:brightness" />
+    </filter>
+    <filter id="color2rgb_1_1-416_LED_Flood_Panel_150" type="15" pos="-47.29021821473407,693.6013023169983">
+      <channellink input_channel_id="value" output_channel_id="Flat5Fader:color" />
+    </filter>
+    <filter id="universe-output_1-424_LED_Flood_Panel_150" type="11" pos="174.12715290963388,871.3093122612963">
+      <channellink input_channel_id="Dimmer" output_channel_id="dimmer2byte_0_1-424_LED_Flood_Panel_150:value_upper" />
+      <channellink input_channel_id="Red___Color_Presets___Program_Speed___Sound_Sensitivity" output_channel_id="color2rgb_1_1-424_LED_Flood_Panel_150:r" />
+      <channellink input_channel_id="Green" output_channel_id="color2rgb_1_1-424_LED_Flood_Panel_150:g" />
+      <channellink input_channel_id="Blue" output_channel_id="color2rgb_1_1-424_LED_Flood_Panel_150:b" />
+      <channellink input_channel_id="Strobe" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="Internal_Programs" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="ID_Select" output_channel_id="FloodPanels0:value" />
+      <channellink input_channel_id="Dimmer_Delay" output_channel_id="FloodPanels0:value" />
+      <filterConfiguration name="universe" value="1" />
+      <filterConfiguration name="Dimmer" value="424" />
+      <filterConfiguration name="Red___Color_Presets___Program_Speed___Sound_Sensitivity" value="425" />
+      <filterConfiguration name="Green" value="426" />
+      <filterConfiguration name="Blue" value="427" />
+      <filterConfiguration name="Strobe" value="428" />
+      <filterConfiguration name="Internal_Programs" value="429" />
+      <filterConfiguration name="ID_Select" value="430" />
+      <filterConfiguration name="Dimmer_Delay" value="431" />
+    </filter>
+    <filter id="dimmer_0_1-424_LED_Flood_Panel_150" type="49" pos="-208.90047755616547,777.2703662460011" />
+    <filter id="dimmer2byte_0_1-424_LED_Flood_Panel_150" type="8" pos="-18.176831033816768,809.3309673275392">
+      <channellink input_channel_id="value" output_channel_id="dimmer_0_1-424_LED_Flood_Panel_150:brightness" />
+    </filter>
+    <filter id="color2rgb_1_1-424_LED_Flood_Panel_150" type="15" pos="-111.80585544081441,863.0019172470136">
+      <channellink input_channel_id="value" output_channel_id="Flat6Fader:color" />
+    </filter>
+    <filter id="FloodPanels0" type="0" pos="629.8829088170879,418.3814371024774">
+      <initialParameters name="value" value="0" />
+    </filter>
+    <filter id="Flat1Fader" type="40" pos="-651.8584566955057,43.05136275742902">
+      <filterConfiguration name="set_id" value="1b12808e-73ab-4e01-a883-f8614e3cb3d0" />
+      <filterConfiguration name="column_id" value="e47942ac-372e-4450-96f8-51cfd87686db" />
+      <filterConfiguration name="ignore_main_brightness_control" value="true" />
+    </filter>
+    <filter id="Flat2Fader" type="40" pos="-619.1265751814824,193.0905098413443">
+      <filterConfiguration name="set_id" value="1b12808e-73ab-4e01-a883-f8614e3cb3d0" />
+      <filterConfiguration name="column_id" value="bb7fba4d-692b-416c-9d25-b519936411af" />
+      <filterConfiguration name="ignore_main_brightness_control" value="false" />
+    </filter>
+    <filter id="Flat3Fader" type="40" pos="-546.8360359426063,387.01275002182155">
+      <filterConfiguration name="set_id" value="1b12808e-73ab-4e01-a883-f8614e3cb3d0" />
+      <filterConfiguration name="column_id" value="da4f20a3-b2a4-489e-914c-c9d7e3ed24fb" />
+      <filterConfiguration name="ignore_main_brightness_control" value="false" />
+    </filter>
+    <filter id="Flat4Fader" type="40" pos="-564.0480690947197,561.4280192965706">
+      <filterConfiguration name="set_id" value="1b12808e-73ab-4e01-a883-f8614e3cb3d0" />
+      <filterConfiguration name="column_id" value="30c51ed3-faff-4ae0-8c2f-19eddd55923e" />
+      <filterConfiguration name="ignore_main_brightness_control" value="false" />
+    </filter>
+    <filter id="Flat5Fader" type="40" pos="-486.02018547180575,726.663537556859">
+      <filterConfiguration name="set_id" value="1b12808e-73ab-4e01-a883-f8614e3cb3d0" />
+      <filterConfiguration name="column_id" value="f14999f9-3bc6-4436-a4e1-d4fd100fc3db" />
+      <filterConfiguration name="ignore_main_brightness_control" value="false" />
+    </filter>
+    <filter id="Flat6Fader" type="40" pos="-453.89105692119404,855.1800517593058">
+      <filterConfiguration name="set_id" value="1b12808e-73ab-4e01-a883-f8614e3cb3d0" />
+      <filterConfiguration name="column_id" value="4a46ceb5-2644-452d-a36e-601151de4bea" />
+      <filterConfiguration name="ignore_main_brightness_control" value="false" />
+    </filter>
+    <filter id="LEDBarLuaScript" type="50" pos="63.062650602409605,-76.59704271631979">
+      <channellink input_channel_id="EffectColor" output_channel_id="LEDBarFader:color" />
+      <channellink input_channel_id="change_nr" output_channel_id="LEDChangeFader:secondary" />
+      <initialParameters name="script" value="-- Config paramters&#10;target_universe = 1&#10;start_address = 1&#10;nr_of_fix = 128&#10;nr_of_fix_on = 2&#10;channels_per_fixture = 3&#10;&#10;&#10;&#10;&#10;function shuffle()&#10;    shuffled_fix = {}&#10;    for i, v in ipairs(fix) do&#10;        local pos = math.random(1, #shuffled_fix+1)&#10;        table.insert(shuffled_fix, pos, v)&#10;    end&#10;    old_change_nr = change_nr&#10;end&#10;&#10;&#10;function update()&#10;    local r&#10;    local g&#10;    local b&#10;    if old_change_nr ~= change_nr then&#10;        shuffle()&#10;    end&#10;    for key,value in ipairs(shuffled_fix) do&#10;        if key &lt;= nr_of_fix_on then&#10;            r, g, b = hsi_to_rgb(EffectColor)&#10;        else&#10;            r = 0&#10;            g = 0&#10;            b = 0&#10;        end&#10;        output[value[&quot;uni&quot;]][value[&quot;red&quot;]] = r&#10;        output[value[&quot;uni&quot;]][value[&quot;green&quot;]] = g&#10;        output[value[&quot;uni&quot;]][value[&quot;blue&quot;]] = b&#10;    end&#10;end&#10;&#10;&#10;function scene_activated()&#10;    fix = {}&#10;    for i = 1,nr_of_fix,1 do&#10;        fix[i] = {uni= target_universe,&#10;                red = start_address+i*channels_per_fixture+0,&#10;                green = start_address+i*channels_per_fixture+1,&#10;                blue = start_address+i*channels_per_fixture+2}&#10;        output[target_universe] = {}&#10;    end&#10;    shuffle()&#10;end " />
+      <filterConfiguration name="in_mapping" value="EffectColor:color;change_nr:16bit" />
+      <filterConfiguration name="out_mapping" value="" />
+    </filter>
+    <filter id="LEDBarFader" type="40" pos="-86.08679744324445,-131.41919770773637">
+      <filterConfiguration name="set_id" value="1b12808e-73ab-4e01-a883-f8614e3cb3d0" />
+      <filterConfiguration name="column_id" value="5ac4d6c4-0813-4c95-b668-c93435c261f9" />
+      <filterConfiguration name="ignore_main_brightness_control" value="false" />
+    </filter>
+    <filter id="LEDChangeFader" type="39" pos="-132.34326647564475,-61.150429799427">
+      <filterConfiguration name="set_id" value="1b12808e-73ab-4e01-a883-f8614e3cb3d0" />
+      <filterConfiguration name="column_id" value="9e24e83b-b754-490e-b23b-35877ceffdbb" />
+      <filterConfiguration name="ignore_main_brightness_control" value="false" />
+    </filter>
+    <filterpage name="Tischbeleuchtung" parent="">
+      <filterid>universe-output_2-65_4-Channel_Dimmer_Pack</filterid>
+      <filterid>TableFader12</filterid>
+      <filterid>TableFader34</filterid>
+      <filterid>Float to 8 bit converter.0</filterid>
+      <filterid>MAC filter.0</filterid>
+      <filterid>16bit to Float converter.0</filterid>
+      <filterid>Table16bitscalingConstant</filterid>
+      <filterid>TableFloatZero</filterid>
+      <filterid>Float to 8 bit converter.1</filterid>
+      <filterid>16bit to Float converter.1</filterid>
+      <filterid>MAC filter.1</filterid>
+      <filterid>universe-output_2-66_4-Channel_Dimmer_Pack</filterid>
+      <filterid>16bit to Float converter.2</filterid>
+      <filterid>16bit to Float converter.3</filterid>
+      <filterid>MAC filter.2</filterid>
+      <filterid>MAC filter.3</filterid>
+      <filterid>Float to 8 bit converter.2</filterid>
+      <filterid>Float to 8 bit converter.3</filterid>
+      <filterid>universe-output_2-67_4-Channel_Dimmer_Pack</filterid>
+      <filterid>universe-output_2-68_4-Channel_Dimmer_Pack</filterid>
+    </filterpage>
+    <filterpage name="BarBeleuchtungUnten" parent="">
+      <filterid>universe-output_2-PlastikUnten1</filterid>
+      <filterid>dimmer_0_2-0_DRGBW_Fader</filterid>
+      <filterid>dimmer2byte_0_2-0_DRGBW_Fader</filterid>
+      <filterid>color2rgbw_1_2-0_DRGBW_Fader</filterid>
+      <filterid>universe-output_2-5_4-StrobePlastikUnten1</filterid>
+      <filterid>universe-output_2-PlastikUnten2</filterid>
+      <filterid>dimmer_0_2-8_DRGBW_Fader</filterid>
+      <filterid>dimmer2byte_0_2-8_DRGBW_Fader</filterid>
+      <filterid>color2rgbw_1_2-8_DRGBW_Fader</filterid>
+      <filterid>universe-output_2-13_4-StrobePlastikUnten2</filterid>
+      <filterid>universe-output_2-PlastikUnten3</filterid>
+      <filterid>dimmer_0_2-16_DRGBW_Fader</filterid>
+      <filterid>dimmer2byte_0_2-16_DRGBW_Fader</filterid>
+      <filterid>color2rgbw_1_2-16_DRGBW_Fader</filterid>
+      <filterid>universe-output_2-21_4-StrobePlastikUnten3</filterid>
+      <filterid>BarNoStrobe</filterid>
+      <filterid>universe-output_2-PlastikUnten4</filterid>
+      <filterid>dimmer_0_2-24_DRGBW_Fader</filterid>
+      <filterid>dimmer2byte_0_2-24_DRGBW_Fader</filterid>
+      <filterid>color2rgbw_1_2-24_DRGBW_Fader</filterid>
+      <filterid>universe-output_2-29_4-StrobePlastikUnten4</filterid>
+      <filterid>FaderColorBarUnten</filterid>
+    </filterpage>
+    <filterpage name="BarBeleuchtungOben" parent="">
+      <filterid>universe-output_2-PlastikOben1</filterid>
+      <filterid>dimmer2byte_0_2-32_DRGBW_Fader</filterid>
+      <filterid>color2rgbw_1_2-32_DRGBW_Fader</filterid>
+      <filterid>universe-output_2-37_4-StrobePlastikOben1</filterid>
+      <filterid>universe-output_2-PlastikOben2</filterid>
+      <filterid>dimmer2byte_0_2-40_DRGBW_Fader</filterid>
+      <filterid>color2rgbw_1_2-40_DRGBW_Fader</filterid>
+      <filterid>universe-output_2-45_4-StrobePlastikOben2</filterid>
+      <filterid>PlastikNoStrob2</filterid>
+      <filterid>universe-output_2-PlastikOben3</filterid>
+      <filterid>dimmer2byte_0_2-48_DRGBW_Fader</filterid>
+      <filterid>color2rgbw_1_2-48_DRGBW_Fader</filterid>
+      <filterid>universe-output_2-53_4-StrobePlastikOben3</filterid>
+      <filterid>universe-output_2-PlastikOben4</filterid>
+      <filterid>dimmer2byte_0_2-56_DRGBW_Fader</filterid>
+      <filterid>color2rgbw_1_2-56_DRGBW_Fader</filterid>
+      <filterid>universe-output_2-61_4-StrobePlastikOben4</filterid>
+      <filterid>BarCue</filterid>
+      <filterid>BarTime0</filterid>
+      <filterid>BarObenLightness</filterid>
+    </filterpage>
+    <filterpage name="FloodPanels" parent="">
+      <filterid>universe-output_1-384_LED_Flood_Panel_150</filterid>
+      <filterid>dimmer_0_1-384_LED_Flood_Panel_150</filterid>
+      <filterid>dimmer2byte_0_1-384_LED_Flood_Panel_150</filterid>
+      <filterid>color2rgb_1_1-384_LED_Flood_Panel_150</filterid>
+      <filterid>universe-output_1-392_LED_Flood_Panel_150</filterid>
+      <filterid>dimmer_0_1-392_LED_Flood_Panel_150</filterid>
+      <filterid>dimmer2byte_0_1-392_LED_Flood_Panel_150</filterid>
+      <filterid>color2rgb_1_1-392_LED_Flood_Panel_150</filterid>
+      <filterid>FaderFlatStrobe</filterid>
+      <filterid>FloodPanels16BitMappingConstant</filterid>
+      <filterid>FloodFloatZero</filterid>
+      <filterid>16bit to Float converter.0</filterid>
+      <filterid>MAC filter.0</filterid>
+      <filterid>Float to 8 bit converter.0</filterid>
+      <filterid>universe-output_1-400_LED_Flood_Panel_150</filterid>
+      <filterid>dimmer_0_1-400_LED_Flood_Panel_150</filterid>
+      <filterid>dimmer2byte_0_1-400_LED_Flood_Panel_150</filterid>
+      <filterid>color2rgb_1_1-400_LED_Flood_Panel_150</filterid>
+      <filterid>universe-output_1-408_LED_Flood_Panel_150</filterid>
+      <filterid>dimmer_0_1-408_LED_Flood_Panel_150</filterid>
+      <filterid>dimmer2byte_0_1-408_LED_Flood_Panel_150</filterid>
+      <filterid>color2rgb_1_1-408_LED_Flood_Panel_150</filterid>
+      <filterid>universe-output_1-416_LED_Flood_Panel_150</filterid>
+      <filterid>dimmer_0_1-416_LED_Flood_Panel_150</filterid>
+      <filterid>dimmer2byte_0_1-416_LED_Flood_Panel_150</filterid>
+      <filterid>color2rgb_1_1-416_LED_Flood_Panel_150</filterid>
+      <filterid>universe-output_1-424_LED_Flood_Panel_150</filterid>
+      <filterid>dimmer_0_1-424_LED_Flood_Panel_150</filterid>
+      <filterid>dimmer2byte_0_1-424_LED_Flood_Panel_150</filterid>
+      <filterid>color2rgb_1_1-424_LED_Flood_Panel_150</filterid>
+      <filterid>FloodPanels0</filterid>
+      <filterid>Flat1Fader</filterid>
+      <filterid>Flat2Fader</filterid>
+      <filterid>Flat3Fader</filterid>
+      <filterid>Flat4Fader</filterid>
+      <filterid>Flat5Fader</filterid>
+      <filterid>Flat6Fader</filterid>
+    </filterpage>
+    <filterpage name="LEDBarsScript" parent="">
+      <filterid>LEDBarLuaScript</filterid>
+      <filterid>LEDBarFader</filterid>
+      <filterid>LEDChangeFader</filterid>
+    </filterpage>
+    <uipage title="">
+      <widget posX="568" posY="453" sizeW="0" sizeH="0" filterID="BarCue" variante="">
+        <configurationEntry name="cue_names" value=":0" />
+      </widget>
+    </uipage>
+  </scene>
+  <bankset linked_by_default="true" id="1b12808e-73ab-4e01-a883-f8614e3cb3d0">
+    <bank>
+      <rawcolumn secondary_text_line="" fader_position="32800" encoder_position="32800" id="64dfc396-3073-4967-ab43-4da50d210181" display_name="Tisch 1,2" top_line_inverted="false" bottom_line_inverted="false" lcd_color="white" />
+      <rawcolumn secondary_text_line="" fader_position="32800" encoder_position="32800" id="a0b3c01f-a6e5-4652-a447-5fdfba5068cc" display_name="Tisch 3,4" top_line_inverted="false" bottom_line_inverted="false" lcd_color="white" />
+      <rawcolumn secondary_text_line="" fader_position="32800" encoder_position="0" id="b91059d6-4e63-4bcd-b913-178c66d28b06" display_name="Lightness Bar Oben" top_line_inverted="false" bottom_line_inverted="false" lcd_color="white" />
+      <hslcolumn color="7.0,0.5,0.7" id="87f987cb-e528-4f3d-9eca-48b9d244211a" display_name="Bar Unten" top_line_inverted="false" bottom_line_inverted="false" lcd_color="white" />
+    </bank>
+    <bank>
+      <hslcolumn color="0.0,0.0,0.0" id="e47942ac-372e-4450-96f8-51cfd87686db" display_name="Flat 1" top_line_inverted="false" bottom_line_inverted="false" lcd_color="white" />
+      <hslcolumn color="0.0,0.0,0.0" id="bb7fba4d-692b-416c-9d25-b519936411af" display_name="Flat 2" top_line_inverted="false" bottom_line_inverted="false" lcd_color="white" />
+      <hslcolumn color="0.0,0.0,0.0" id="da4f20a3-b2a4-489e-914c-c9d7e3ed24fb" display_name="Flat 3" top_line_inverted="false" bottom_line_inverted="false" lcd_color="white" />
+      <hslcolumn color="0.0,0.0,0.0" id="30c51ed3-faff-4ae0-8c2f-19eddd55923e" display_name="Flat 4" top_line_inverted="false" bottom_line_inverted="false" lcd_color="white" />
+      <hslcolumn color="0.0,0.0,0.0" id="f14999f9-3bc6-4436-a4e1-d4fd100fc3db" display_name="Flat 5" top_line_inverted="false" bottom_line_inverted="false" lcd_color="white" />
+      <hslcolumn color="0.0,0.0,0.0" id="4a46ceb5-2644-452d-a36e-601151de4bea" display_name="Flat 6" top_line_inverted="false" bottom_line_inverted="false" lcd_color="white" />
+      <rawcolumn secondary_text_line="" fader_position="65535" encoder_position="0" id="9e24e83b-b754-490e-b23b-35877ceffdbb" display_name="Flat Strobe | Bar Selection" top_line_inverted="false" bottom_line_inverted="false" lcd_color="white" />
+      <hslcolumn color="33.0,1.0,0.5" id="5ac4d6c4-0813-4c95-b668-c93435c261f9" display_name="LEDBars" top_line_inverted="false" bottom_line_inverted="false" lcd_color="white" />
+    </bank>
+  </bankset>
+  <universe id="1" name="Universe 1" description="Universe 1">
+    <artnet_location ip_address="10.0.15.1" udp_port="6454" device_universe_id="1" />
+    <patching>
+      <fixture start="0" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="3" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="6" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="9" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="12" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="15" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="18" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="21" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="24" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="27" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="30" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="33" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="36" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="39" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="42" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="45" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="48" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="51" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="54" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="57" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="60" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="63" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="66" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="69" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="72" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="75" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="78" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="81" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="84" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="87" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="90" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="93" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="96" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="99" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="102" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="105" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="108" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="111" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="114" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="117" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="120" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="123" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="126" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="129" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="132" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="135" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="138" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="141" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="144" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="147" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="150" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="153" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="156" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="159" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="162" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="165" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="168" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="171" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="174" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="177" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="180" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="183" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="186" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="189" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="192" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="195" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="198" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="201" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="204" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="207" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="210" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="213" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="216" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="219" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="222" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="225" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="228" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="231" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="234" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="237" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="240" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="243" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="246" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="249" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="252" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="255" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="258" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="261" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="264" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="267" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="270" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="273" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="276" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="279" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="282" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="285" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="288" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="291" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="294" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="297" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="300" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="303" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="306" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="309" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="312" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="315" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="318" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="321" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="324" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="327" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="330" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="333" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="336" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="339" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="342" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="345" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="348" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="351" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="354" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="357" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="360" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="363" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="366" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="369" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="372" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="375" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="378" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="381" fixture_file="generic/rgb-fader.json" mode="0" />
+      <fixture start="384" fixture_file="stairville/led-flood-panel-150.json" mode="2" />
+      <fixture start="392" fixture_file="stairville/led-flood-panel-150.json" mode="2" />
+      <fixture start="400" fixture_file="stairville/led-flood-panel-150.json" mode="2" />
+      <fixture start="408" fixture_file="stairville/led-flood-panel-150.json" mode="2" />
+      <fixture start="416" fixture_file="stairville/led-flood-panel-150.json" mode="2" />
+      <fixture start="424" fixture_file="stairville/led-flood-panel-150.json" mode="2" />
+    </patching>
+  </universe>
+  <universe id="2" name="Universe 2" description="Universe 2">
+    <artnet_location ip_address="10.0.15.1" udp_port="6454" device_universe_id="2" />
+    <patching>
+      <fixture start="0" fixture_file="generic/drgbw-fader.json" mode="0" />
+      <fixture start="5" fixture_file="generic/4-channel-dimmer-pack.json" mode="0" />
+      <fixture start="8" fixture_file="generic/drgbw-fader.json" mode="0" />
+      <fixture start="13" fixture_file="generic/4-channel-dimmer-pack.json" mode="0" />
+      <fixture start="16" fixture_file="generic/drgbw-fader.json" mode="0" />
+      <fixture start="21" fixture_file="generic/4-channel-dimmer-pack.json" mode="0" />
+      <fixture start="24" fixture_file="generic/drgbw-fader.json" mode="0" />
+      <fixture start="29" fixture_file="generic/4-channel-dimmer-pack.json" mode="0" />
+      <fixture start="32" fixture_file="generic/drgbw-fader.json" mode="0" />
+      <fixture start="37" fixture_file="generic/4-channel-dimmer-pack.json" mode="0" />
+      <fixture start="40" fixture_file="generic/drgbw-fader.json" mode="0" />
+      <fixture start="45" fixture_file="generic/4-channel-dimmer-pack.json" mode="0" />
+      <fixture start="48" fixture_file="generic/drgbw-fader.json" mode="0" />
+      <fixture start="53" fixture_file="generic/4-channel-dimmer-pack.json" mode="0" />
+      <fixture start="56" fixture_file="generic/drgbw-fader.json" mode="0" />
+      <fixture start="61" fixture_file="generic/4-channel-dimmer-pack.json" mode="0" />
+      <fixture start="65" fixture_file="generic/4-channel-dimmer-pack.json" mode="0" />
+      <fixture start="66" fixture_file="generic/4-channel-dimmer-pack.json" mode="0" />
+      <fixture start="67" fixture_file="generic/4-channel-dimmer-pack.json" mode="0" />
+      <fixture start="68" fixture_file="generic/4-channel-dimmer-pack.json" mode="0" />
+    </patching>
+  </universe>
+</bord_configuration>
