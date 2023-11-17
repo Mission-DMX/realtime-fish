@@ -257,11 +257,11 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_float_map_range_float:
                     sum += sizeof(filter_float_map_range_float);
                     break;
-                case filter_type::filter_dual_byte_to_16bit:
-                    sum += sizeof(filter_dual_byte_to_16bit);
+                case filter_type::filter_combine_bytes_to_16bit:
+                    sum += sizeof(filter_combine_bytes_to_16bit);
                     break;
-                case filter_type::filter_one_byte_to_16bit:
-                    sum += sizeof(filter_one_byte_to_16bit);
+                case filter_type::filter_map_8bit_to_16bit:
+                    sum += sizeof(filter_map_8bit_to_16bit);
                     break;
 				default: {
 						 std::stringstream ss;
@@ -405,10 +405,10 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_float_map_range_16bit>(pac);
             case filter_type::filter_float_map_range_float:
                 return calloc<filter_float_map_range_float>(pac);
-            case filter_type::filter_dual_byte_to_16bit:
-                return calloc<filter_dual_byte_to_16bit>(pac);
-            case filter_type::filter_one_byte_to_16bit:
-                return calloc<filter_one_byte_to_16bit>(pac);
+            case filter_type::filter_combine_bytes_to_16bit:
+                return calloc<filter_combine_bytes_to_16bit>(pac);
+            case filter_type::filter_map_8bit_to_16bit:
+                return calloc<filter_map_8bit_to_16bit>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}

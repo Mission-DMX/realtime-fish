@@ -577,14 +577,14 @@ COMPILER_SUPRESS("-Weffc++")
     using filter_float_map_range_16bit = float_map_range<uint16_t, filter_type::filter_float_map_range_16bit>;
     using filter_float_map_range_float = float_map_range<double, filter_type::filter_float_map_range_float>;
 
-    class filter_dual_byte_to_16bit : public filter {
+    class filter_combine_bytes_to_16bit : public filter {
     private:
         uint16_t output = 0;
         uint8_t* lower_input = nullptr;
         uint8_t* upper_input = nullptr;
     public:
-        filter_dual_byte_to_16bit() : filter() {}
-        virtual ~filter_dual_byte_to_16bit() {}
+        filter_combine_bytes_to_16bit() : filter() {}
+        virtual ~filter_combine_bytes_to_16bit() {}
 
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
@@ -592,13 +592,13 @@ COMPILER_SUPRESS("-Weffc++")
             if(!input_channels.eight_bit_channels.contains("lower")) {
                 throw filter_config_exception("Unable to link input of 8 bit merge to 16 bit filter: channel mapping does "
                                               "not contain channel 'lower' of type 'uint8_t'.",
-                                              filter_type::filter_dual_byte_to_16bit, own_id);
+                                              filter_type::filter_combine_bytes_to_16bit, own_id);
             }
             this->lower_input = input_channels.eight_bit_channels.at("lower");
             if(!input_channels.eight_bit_channels.contains("upper")) {
                 throw filter_config_exception("Unable to link input of 8 bit merge to 16 bit filter: channel mapping does "
                                               "not contain channel 'upper' of type 'uint8_t'.",
-                                              filter_type::filter_dual_byte_to_16bit, own_id);
+                                              filter_type::filter_combine_bytes_to_16bit, own_id);
             }
             this->upper_input = input_channels.eight_bit_channels.at("upper");
         }
@@ -621,13 +621,13 @@ COMPILER_SUPRESS("-Weffc++")
 
     };
 
-    class filter_one_byte_to_16bit : public filter {
+    class filter_map_8bit_to_16bit : public filter {
     private:
         uint16_t output = 0;
         uint8_t* input = nullptr;
     public:
-        filter_one_byte_to_16bit() : filter() {}
-        virtual ~filter_one_byte_to_16bit() {}
+        filter_map_8bit_to_16bit() : filter() {}
+        virtual ~filter_map_8bit_to_16bit() {}
 
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
@@ -635,7 +635,7 @@ COMPILER_SUPRESS("-Weffc++")
             if(!input_channels.eight_bit_channels.contains("value_in")) {
                 throw filter_config_exception("Unable to link input of 8 bit map to 16 bit filter: channel mapping does "
                                               "not contain channel 'value_in' of type 'uint8_t'.",
-                                              filter_type::filter_dual_byte_to_16bit, own_id);
+                                              filter_type::filter_map_8bit_to_16bit, own_id);
             }
             this->input = input_channels.eight_bit_channels.at("value_in");
         }

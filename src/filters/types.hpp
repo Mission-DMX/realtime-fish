@@ -59,7 +59,7 @@ namespace dmxfish::filters {
         filter_float_map_range_8bit = 54,
         filter_float_map_range_16bit = 55,
         filter_float_map_range_float = 56,
-        filter_dual_byte_to_16bit = 57,
-        filter_one_byte_to_16bit = 58
+        filter_combine_bytes_to_16bit = 57,
+        filter_map_8bit_to_16bit = 58
     };
 }

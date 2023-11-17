@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE(test_float_map_range_float) {
 
 BOOST_AUTO_TEST_CASE(test_split_and_merge_16bit) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_dual_byte_to_16bit fil_merge = filter_dual_byte_to_16bit();
+    dmxfish::filters::filter_combine_bytes_to_16bit fil_merge = filter_combine_bytes_to_16bit();
     dmxfish::filters::filter_16bit_to_dual_byte fil_split = filter_16bit_to_dual_byte();
 
     uint8_t lower = 0;
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(test_split_and_merge_16bit) {
 
 BOOST_AUTO_TEST_CASE(test_one_8bit_to_16bit) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_one_byte_to_16bit fil = filter_one_byte_to_16bit();
+    dmxfish::filters::filter_map_8bit_to_16bit fil = filter_map_8bit_to_16bit();
 
     uint8_t input = 0;
     uint16_t value = 0;
