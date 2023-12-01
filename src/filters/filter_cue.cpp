@@ -670,9 +670,9 @@ namespace dmxfish::filters {
         update_message.set_parameter_value(
                 std::to_string(this->running_state) +
                 std::string(";") +
-                std::to_string((*this->time - this->start_time + (this->frame > 0 ? cues.at(this->active_cue).timestamps.at(this->frame - 1) : 0)) * 1000) +
+                std::to_string((*this->time - this->start_time) / 1000) +
                 std::string(";") +
-                std::to_string(cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1) * 1000)
+                std::to_string(cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1) / 1000)
             );
         update_message.set_scene_id(this->active_cue);
         get_iomanager_instance()->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
