@@ -415,13 +415,13 @@ COMPILER_SUPRESS("-Weffc++")
         bool limit = false;
         T output = 0;
 
-        inline constexpr void setdefaultboundvalue(){
+        inline constexpr double setdefaultboundvalue(){
             if constexpr (std::is_same<T, uint8_t>::value) {
-                this->upper_bound_out = 255.0;
+                return 255.0;
             } else if constexpr (std::is_same<T, uint16_t>::value) {
-                this->upper_bound_out = 65535.0;
+                return 65535.0;
             } else {
-                this->upper_bound_out = 1.0;
+                return 1.0;
             }
         }
 
@@ -439,7 +439,7 @@ COMPILER_SUPRESS("-Weffc++")
             }
             this->input = input_channels.float_channels.at("value_in");
 
-            setdefaultboundvalue();
+            this->upper_bound_out = setdefaultboundvalue();
 
             if(configuration.contains("limit_range")) {
                 if (!(std::string("") == configuration.at("limit_range"))) {
