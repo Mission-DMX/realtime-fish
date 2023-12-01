@@ -3,11 +3,14 @@
 #include <cmath>
 #include <string>
 
+#include "main.hpp"
 #include "lib/macros.hpp"
 #include "lib/logging.hpp"
 #include "dmx/pixel.hpp"
 #include "filters/util.hpp"
 
+#include "proto_src/MessageTypes.pb.h"
+#include "proto_src/FilterMode.pb.h"
 
 int count_occurence_of(const std::string &base_string, std::string pattern, size_t start, size_t end) {
     int occurrences = 0;
@@ -410,6 +413,7 @@ namespace dmxfish::filters {
 
     void filter_cue::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& own_id) {
         MARK_UNUSED(initial_parameters);
+        this->own_id = own_id;
         if (!configuration.contains("mapping")) {
             throw filter_config_exception("cue filter: unable to setup the mapping", filter_type::filter_cue, own_id);
         }
@@ -660,7 +664,18 @@ namespace dmxfish::filters {
         }
 
         calc_values();
-
+        auto update_message = missiondmx::fish::ipcmessages::update_parameter();
+        update_message.set_filter_id(this->own_id);
+        update_message.set_parameter_key("actual_state");
+        update_message.set_parameter_value(
+                std::to_string(this->running_state) +
+                std::string(";") +
+                std::to_string((*this->time - this->start_time + (this->frame > 0 ? cues.at(this->active_cue).timestamps.at(this->frame - 1) : 0)) * 1000) +
+                std::string(";") +
+                std::to_string(cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1) * 1000)
+            );
+        update_message.set_scene_id(this->active_cue);
+        get_iomanager_instance()->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
     }
 
     void filter_cue::scene_activated() {
