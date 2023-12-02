@@ -52,7 +52,10 @@ namespace dmxfish::filters {
                 std::string(";") +
                 std::to_string(cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1) / 1000)
         );
-        get_iomanager_instance()->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
+        auto iomanager = get_iomanager_instance();
+        if (iomanager != nullptr) {
+            iomanager->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
+        }
     }
 
     template <typename T>
