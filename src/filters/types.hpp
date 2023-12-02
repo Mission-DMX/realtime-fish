@@ -55,6 +55,11 @@ namespace dmxfish::filters {
         filter_lua_script = 50,
         filter_8bit_to_float = 51,
         filter_16bit_to_float = 52,
-        filter_pixel_to_floats = 53
+        filter_pixel_to_floats = 53,
+        filter_float_map_range_8bit = 54,
+        filter_float_map_range_16bit = 55,
+        filter_float_map_range_float = 56,
+        filter_combine_bytes_to_16bit = 57,
+        filter_map_8bit_to_16bit = 58
     };
 }
