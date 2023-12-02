@@ -213,12 +213,12 @@ BOOST_AUTO_TEST_CASE(test_float_map_range_16) {
     input_channels.float_channels["value_in"] = &in_channel;
 
     std::map < std::string, std::string > configuration;
-    configuration["lower_bound_in"] = "-20";
-    configuration["upper_bound_in"] = "80";
     std::map < std::string, std::string > initial_parameters;
+    initial_parameters["lower_bound_in"] = "-20";
+    initial_parameters["upper_bound_in"] = "80";
 
     fil.setup_filter(configuration, initial_parameters, input_channels, "");
-    configuration["limit_range"] = "1";
+    initial_parameters["limit_range"] = "1";
     fil_limit.setup_filter(configuration, initial_parameters, input_channels, "");
 
     channel_mapping map = channel_mapping();
@@ -251,14 +251,14 @@ BOOST_AUTO_TEST_CASE(test_float_map_range_8) {
     input_channels.float_channels["value_in"] = &in_channel;
 
     std::map < std::string, std::string > configuration;
-    configuration["lower_bound_in"] = "-50";
-    configuration["upper_bound_in"] = "1450";
-    configuration["lower_bound_out"] = "20";
-    configuration["upper_bound_out"] = "170";
     std::map < std::string, std::string > initial_parameters;
+    initial_parameters["lower_bound_in"] = "-50";
+    initial_parameters["upper_bound_in"] = "1450";
+    initial_parameters["lower_bound_out"] = "20";
+    initial_parameters["upper_bound_out"] = "170";
 
     fil.setup_filter(configuration, initial_parameters, input_channels, "");
-    configuration["limit_range"] = "1";
+    initial_parameters["limit_range"] = "1";
     fil_limit.setup_filter(configuration, initial_parameters, input_channels, "");
 
     channel_mapping map = channel_mapping();
@@ -300,14 +300,14 @@ BOOST_AUTO_TEST_CASE(test_float_map_range_float) {
     input_channels.float_channels["value_in"] = &in_channel;
 
     std::map < std::string, std::string > configuration;
-    configuration["lower_bound_in"] = "";
-    configuration["upper_bound_in"] = "";
-    configuration["lower_bound_out"] = "-100";
-    configuration["upper_bound_out"] = "300";
     std::map < std::string, std::string > initial_parameters;
+    initial_parameters["lower_bound_in"] = "";
+    initial_parameters["upper_bound_in"] = "";
+    initial_parameters["lower_bound_out"] = "-100";
+    initial_parameters["upper_bound_out"] = "300";
 
     fil.setup_filter(configuration, initial_parameters, input_channels, "");
-    configuration["limit_range"] = "1";
+    initial_parameters["limit_range"] = "1";
     fil_limit.setup_filter(configuration, initial_parameters, input_channels, "");
 
     channel_mapping map = channel_mapping();
@@ -404,8 +404,8 @@ BOOST_AUTO_TEST_CASE(test_zero_range_for_filter_map_float) {
     input_channels.float_channels["value_in"] = &input;
     std::map < std::string, std::string > configuration;
     std::map < std::string, std::string > initial_parameters;
-    configuration["lower_bound_in"] = "3";
-    configuration["upper_bound_in"] = "3";
+    initial_parameters["lower_bound_in"] = "3";
+    initial_parameters["upper_bound_in"] = "3";
     try {
         fil.setup_filter(configuration, initial_parameters, input_channels, "");
         BOOST_TEST(false, "filter should throw an error because input range has size 0");
