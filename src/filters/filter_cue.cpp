@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <string>
+#include <sstream>
 
 #include "main.hpp"
 #include "lib/macros.hpp"
@@ -28,30 +29,31 @@ namespace dmxfish::filters {
         switch (this->running_state) {
             case STOP: {
                 run_state = "stop";
+                break;
             }
             case PLAY: {
                 run_state = "play";
+                break;
             }
             case PAUSE: {
                 run_state = "pause";
+                break;
             }
             default: {
                 run_state = "error";
+                break;
             }
         }
         auto update_message = missiondmx::fish::ipcmessages::update_parameter();
         update_message.set_filter_id(this->own_id);
         update_message.set_parameter_key("actual_state");
-
-        update_message.set_parameter_value(
-                run_state +
-                std::string(";") +
-                std::to_string(this->active_cue) +
-                std::string(";") +
-                std::to_string((*this->time - this->start_time) / 1000) +
-                std::string(";") +
-                std::to_string(cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1) / 1000)
-        );
+        std::stringstream params;
+        params <<
+                run_state << ";" <<
+                std::to_string(this->active_cue) << ";" <<
+                std::to_string((*this->time - this->start_time) / 1000) << ";" <<
+                std::to_string(cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1) / 1000);
+        update_message.set_parameter_value(params.str());
         auto iomanager = get_iomanager_instance();
         if (iomanager != nullptr) {
             iomanager->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
