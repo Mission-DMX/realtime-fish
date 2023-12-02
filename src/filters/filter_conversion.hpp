@@ -430,8 +430,7 @@ COMPILER_SUPRESS("-Weffc++")
         virtual ~float_map_range() {}
 
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
-            MARK_UNUSED(initial_parameters);
-//            MARK_UNUSED(configuration);
+            MARK_UNUSED(configuration);
             if(!input_channels.float_channels.contains("value_in")) {
                 throw filter_config_exception("Unable to link input of float map range filter conversion filter: channel mapping "
                                               "does not contain channel 'value_in' of type 'float'.",
@@ -441,41 +440,41 @@ COMPILER_SUPRESS("-Weffc++")
 
             this->upper_bound_out = setdefaultboundvalue();
 
-            if(configuration.contains("limit_range")) {
-                if (!(std::string("") == configuration.at("limit_range"))) {
-                    if(!receive_update_from_gui("limit_range", configuration.at("limit_range"))){
-                        throw filter_config_exception(std::string("Unable to set the parameter for limiting the tange to " + configuration.at("limit_range")), own_type, own_id);
+            if(initial_parameters.contains("limit_range")) {
+                if (!(std::string("") == initial_parameters.at("limit_range"))) {
+                    if(!receive_update_from_gui("limit_range", initial_parameters.at("limit_range"))){
+                        throw filter_config_exception(std::string("Unable to set the parameter for limiting the tange to " + initial_parameters.at("limit_range")), own_type, own_id);
                     }
                 }
             }
 
-            if(configuration.contains("lower_bound_in")) {
-                if (!(std::string("") == configuration.at("lower_bound_in"))) {
-                    if(!receive_update_from_gui("lower_bound_in", configuration.at("lower_bound_in"))){
+            if(initial_parameters.contains("lower_bound_in")) {
+                if (!(std::string("") == initial_parameters.at("lower_bound_in"))) {
+                    if(!receive_update_from_gui("lower_bound_in", initial_parameters.at("lower_bound_in"))){
                         throw filter_config_exception(std::string("Unable to parse lower_bound_in of float map range filter conversion filter "), own_type, own_id);
                     }
                 }
             }
 
-            if(configuration.contains("upper_bound_in")) {
-                if (!(std::string("") == configuration.at("upper_bound_in"))) {
-                    if(!receive_update_from_gui("upper_bound_in", configuration.at("upper_bound_in"))){
+            if(initial_parameters.contains("upper_bound_in")) {
+                if (!(std::string("") == initial_parameters.at("upper_bound_in"))) {
+                    if(!receive_update_from_gui("upper_bound_in", initial_parameters.at("upper_bound_in"))){
                         throw filter_config_exception(std::string("Unable to parse upper_bound_in of float map range filter conversion filter "), own_type, own_id);
                     }
                 }
             }
 
-            if(configuration.contains("lower_bound_out")) {
-                if (!(std::string("") == configuration.at("lower_bound_out"))) {
-                    if(!receive_update_from_gui("lower_bound_out", configuration.at("lower_bound_out"))){
+            if(initial_parameters.contains("lower_bound_out")) {
+                if (!(std::string("") == initial_parameters.at("lower_bound_out"))) {
+                    if(!receive_update_from_gui("lower_bound_out", initial_parameters.at("lower_bound_out"))){
                         throw filter_config_exception(std::string("Unable to parse lower_bound_out of float map range filter conversion filter "), own_type, own_id);
                     }
                 }
             }
 
-            if(configuration.contains("upper_bound_out")) {
-                if (!(std::string("") == configuration.at("upper_bound_out"))) {
-                    if(!receive_update_from_gui("upper_bound_out", configuration.at("upper_bound_out"))){
+            if(initial_parameters.contains("upper_bound_out")) {
+                if (!(std::string("") == initial_parameters.at("upper_bound_out"))) {
+                    if(!receive_update_from_gui("upper_bound_out", initial_parameters.at("upper_bound_out"))){
                         throw filter_config_exception(std::string("Unable to parse upper_bound_out of float map range filter conversion filter "), own_type, own_id);
                     }
                 }
@@ -486,8 +485,7 @@ COMPILER_SUPRESS("-Weffc++")
             if("lower_bound_in" == key) {
                 try {
                     double val = std::stod(_value);
-//                    if (this->upper_bound_in == val) {
-                    if (std::abs(val - this->lower_bound_in) < DBL_MIN) {
+                    if (std::abs(val - this->upper_bound_in) < DBL_MIN) {
                         ::spdlog::info("could not set the lower_bound_in to the value of the upper_bound_in");
                         return false;
                     }
@@ -505,7 +503,6 @@ COMPILER_SUPRESS("-Weffc++")
             if("upper_bound_in" == key) {
                 try {
                     double val = std::stod(_value);
-//                    if (val == this->lower_bound_in) {
                     if (std::abs(val - this->lower_bound_in) < DBL_MIN) {
                         ::spdlog::info("could not set the upper_bound_in to the value of the lower_bound_in");
                         return false;
