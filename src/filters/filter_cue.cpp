@@ -23,6 +23,38 @@ int count_occurence_of(const std::string &base_string, std::string pattern, size
 
 namespace dmxfish::filters {
 
+    void filter_cue::update_parameter_gui() {
+        std::string run_state;
+        switch (this->running_state) {
+            case STOP: {
+                run_state = "stop";
+            }
+            case PLAY: {
+                run_state = "play";
+            }
+            case PAUSE: {
+                run_state = "pause";
+            }
+            default: {
+                run_state = "error";
+            }
+        }
+        auto update_message = missiondmx::fish::ipcmessages::update_parameter();
+        update_message.set_filter_id(this->own_id);
+        update_message.set_parameter_key("actual_state");
+
+        update_message.set_parameter_value(
+                run_state +
+                std::string(";") +
+                std::to_string(this->active_cue) +
+                std::string(";") +
+                std::to_string((*this->time - this->start_time) / 1000) +
+                std::string(";") +
+                std::to_string(cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1) / 1000)
+        );
+        get_iomanager_instance()->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
+    }
+
     template <typename T>
     void filter_cue::reserve_init_out(int amount){
         if constexpr (std::is_same<T, uint8_t>::value) {
@@ -382,6 +414,7 @@ namespace dmxfish::filters {
                 start_new_cue();
                 cue_end_handling_real = cues.at(active_cue).end_handling;
             }
+            update_parameter_gui();
         }
         already_updated_last = false;
 
@@ -541,6 +574,7 @@ namespace dmxfish::filters {
                 if (!_value.compare("to_next_cue")) {
                     cue_end_handling_real = HOLD;
                 }
+                update_parameter_gui();
                 return true;
             }
             if (!_value.compare("pause")) {
@@ -556,10 +590,12 @@ namespace dmxfish::filters {
                 }
                 running_state = PAUSE;
                 pause_time = *time;
+                update_parameter_gui();
                 return true;
             }
             if (!_value.compare("stop")) {
                 running_state = STOP;
+                update_parameter_gui();
                 return true;
             }
         }
@@ -583,6 +619,7 @@ namespace dmxfish::filters {
             }
             start_new_cue();
             active_cue = next;
+            update_parameter_gui();
             return true;
         }
         if (!key.compare("next_cue")) {
@@ -604,6 +641,7 @@ namespace dmxfish::filters {
                 return false;
             }
             next_cue = next;
+            update_parameter_gui();
             return true;
         }
         if (!key.compare("set_default_cue")) {
@@ -648,7 +686,7 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::update() {
-        switch (running_state) {
+        switch (this->running_state) {
             case STOP: {
                 return;
             }
@@ -664,18 +702,6 @@ namespace dmxfish::filters {
         }
 
         calc_values();
-        auto update_message = missiondmx::fish::ipcmessages::update_parameter();
-        update_message.set_filter_id(this->own_id);
-        update_message.set_parameter_key("actual_state");
-        update_message.set_parameter_value(
-                std::to_string(this->running_state) +
-                std::string(";") +
-                std::to_string((*this->time - this->start_time) / 1000) +
-                std::string(";") +
-                std::to_string(cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1) / 1000)
-            );
-        update_message.set_scene_id(this->active_cue);
-        get_iomanager_instance()->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
     }
 
     void filter_cue::scene_activated() {

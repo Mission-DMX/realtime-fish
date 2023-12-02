@@ -126,19 +126,31 @@ int main_loop() {
 
 	setup_sigint_handler();
 
-	manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
-	manager->start();
+    construct_iomanager();
 
 	auto control_desk = std::make_unique<dmxfish::control_desk::desk>(dmxfish::control_desk::enumerate_control_devices());
 
 	::spdlog::info("Fish started. Press ENTER to close the server.");
 
 	perform_main_update(run_time_state, std::move(control_desk));
-	manager = nullptr;
+
+    destruct_iomanager();
+
 	run_time_state = nullptr;
 	return 0;
 }
 
 std::shared_ptr<dmxfish::io::IOManager> get_iomanager_instance() {
-	return manager;
+    return manager;
+}
+
+// only for testing purposes (and used in main_loop(), but only there!)
+void construct_iomanager() {
+    manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
+    manager->start();
+}
+
+// only for testing purposes (and used in main_loop(), but only there!)
+void destruct_iomanager() {
+    manager = nullptr;
 }
