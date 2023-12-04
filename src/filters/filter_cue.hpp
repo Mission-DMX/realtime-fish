@@ -74,6 +74,7 @@ namespace dmxfish::filters {
             channel_str(channel_t ch_t,  size_t i) : channel_type(ch_t), index(i) {}
         };
 
+        std::string own_id;
         double* time = nullptr;
         double start_time = 0;
         double pause_time = 0;
@@ -114,6 +115,8 @@ namespace dmxfish::filters {
         std::vector<std::string> channel_names_color;
 
 
+        void update_parameter_gui();
+
         inline bool do_with_substr(const std::string& str, size_t start, const size_t end, const char sep, size_t min_loops, const std::function<bool(const std::string&, size_t, size_t, size_t)> func);
 
         bool handle_frame(size_t cue, const std::string& str, size_t start, size_t end, size_t nr_channel);
@@ -134,7 +137,6 @@ namespace dmxfish::filters {
         void start_new_cue();
 
         void calc_values();
-
 
     public:
         filter_cue() : filter() {}
