@@ -146,6 +146,4 @@ BOOST_AUTO_TEST_CASE(helloworld) {
 	while (time(NULL) < start_time+1) {
 
 	}
-
-	BOOST_CHECK_EQUAL("abc", "abc");
 }

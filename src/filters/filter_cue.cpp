@@ -2,12 +2,16 @@
 
 #include <cmath>
 #include <string>
+#include <sstream>
 
+#include "main.hpp"
 #include "lib/macros.hpp"
 #include "lib/logging.hpp"
 #include "dmx/pixel.hpp"
 #include "filters/util.hpp"
 
+#include "proto_src/MessageTypes.pb.h"
+#include "proto_src/FilterMode.pb.h"
 
 int count_occurence_of(const std::string &base_string, std::string pattern, size_t start, size_t end) {
     int occurrences = 0;
@@ -19,6 +23,42 @@ int count_occurence_of(const std::string &base_string, std::string pattern, size
 }
 
 namespace dmxfish::filters {
+
+    void filter_cue::update_parameter_gui() {
+        std::string run_state;
+        switch (this->running_state) {
+            case STOP: {
+                run_state = "stop";
+                break;
+            }
+            case PLAY: {
+                run_state = "play";
+                break;
+            }
+            case PAUSE: {
+                run_state = "pause";
+                break;
+            }
+            default: {
+                run_state = "error";
+                break;
+            }
+        }
+        auto update_message = missiondmx::fish::ipcmessages::update_parameter();
+        update_message.set_filter_id(this->own_id);
+        update_message.set_parameter_key("actual_state");
+        std::stringstream params;
+        params <<
+                run_state << ";" <<
+                std::to_string(this->active_cue) << ";" <<
+                std::to_string((*this->time - this->start_time) / 1000) << ";" <<
+                std::to_string(cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1) / 1000);
+        update_message.set_parameter_value(params.str());
+        auto iomanager = get_iomanager_instance();
+        if (iomanager != nullptr) {
+            iomanager->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
+        }
+    }
 
     template <typename T>
     void filter_cue::reserve_init_out(int amount){
@@ -379,6 +419,7 @@ namespace dmxfish::filters {
                 start_new_cue();
                 cue_end_handling_real = cues.at(active_cue).end_handling;
             }
+            update_parameter_gui();
         }
         already_updated_last = false;
 
@@ -410,6 +451,7 @@ namespace dmxfish::filters {
 
     void filter_cue::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& own_id) {
         MARK_UNUSED(initial_parameters);
+        this->own_id = own_id;
         if (!configuration.contains("mapping")) {
             throw filter_config_exception("cue filter: unable to setup the mapping", filter_type::filter_cue, own_id);
         }
@@ -537,6 +579,7 @@ namespace dmxfish::filters {
                 if (!_value.compare("to_next_cue")) {
                     cue_end_handling_real = HOLD;
                 }
+                update_parameter_gui();
                 return true;
             }
             if (!_value.compare("pause")) {
@@ -552,10 +595,12 @@ namespace dmxfish::filters {
                 }
                 running_state = PAUSE;
                 pause_time = *time;
+                update_parameter_gui();
                 return true;
             }
             if (!_value.compare("stop")) {
                 running_state = STOP;
+                update_parameter_gui();
                 return true;
             }
         }
@@ -579,6 +624,7 @@ namespace dmxfish::filters {
             }
             start_new_cue();
             active_cue = next;
+            update_parameter_gui();
             return true;
         }
         if (!key.compare("next_cue")) {
@@ -600,6 +646,7 @@ namespace dmxfish::filters {
                 return false;
             }
             next_cue = next;
+            update_parameter_gui();
             return true;
         }
         if (!key.compare("set_default_cue")) {
@@ -644,7 +691,7 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::update() {
-        switch (running_state) {
+        switch (this->running_state) {
             case STOP: {
                 return;
             }
@@ -660,7 +707,6 @@ namespace dmxfish::filters {
         }
 
         calc_values();
-
     }
 
     void filter_cue::scene_activated() {
