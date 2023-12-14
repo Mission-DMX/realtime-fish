@@ -25,25 +25,8 @@ namespace dmxfish::events {
         if(!ev.is_valid()) {
             return os << "Invalid Event";
         }
-        os << "Event " << ev.get_event_id() << " Type: ";
-        switch (ev.get_type()) {
-            case event_type::SINGLE_TRIGGER:
-                os << "single From: ";
-                break;
-            case event_type::START:
-                os << "positive edge From: ";
-                break;
-            case event_type::RELEASE:
-                os << "negative edge From: ";
-                break;
-            case event_type::ONGOING_EVENT:
-                os << "continuous From: ";
-                break;
-            case event_type::INVALID:
-                os << "invalid From: ";
-                break;
-        }
-        os << ev.get_event_sender().decoded_representation.sender << ':';
+        os << "Event " << ev.get_event_id() << " Type: " << ev.get_type();
+        os << " From: " << ev.get_event_sender().decoded_representation.sender << ':';
         os << ev.get_event_sender().decoded_representation.sender_function;
         os << " ARGS:" << std::hex;
         for (auto& c : ev.get_args()) {

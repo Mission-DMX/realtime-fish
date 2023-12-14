@@ -4,6 +4,8 @@
 
 #include "event_storage.hpp"
 
+#include <limits>
+#include <stdexcept>
 #include "event_source.hpp"
 
 namespace dmxfish::events {
@@ -61,6 +63,10 @@ namespace dmxfish::events {
 
     event_sender_t event_storage::register_event_source(const std::shared_ptr<event_source>& self) {
         const unsigned long next_slot = this->senders.size();
+        if(next_slot > std::numeric_limits<uint32_t>::max()) [[unlikely]] {
+            throw std::range_error("The amount of event senders reached the limit that can be stored. "
+                                   "This seams to be a bug.");
+        }
         event_sender_t next_id{};
         next_id.decoded_representation.sender = next_slot;
         this->senders.emplace_back(self);

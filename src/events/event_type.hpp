@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstdint>
+#include <ostream>
 
 namespace dmxfish::events {
 
@@ -15,5 +16,7 @@ namespace dmxfish::events {
         ONGOING_EVENT = 3,
         INVALID = 255
     };
+
+    std::ostream& operator<<(std::ostream& os, const event_type& et);
 
 }

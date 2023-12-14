@@ -18,10 +18,13 @@ namespace dmxfish::events {
         struct decoded_sender_t {
             uint32_t sender;
             uint32_t sender_function;
+            decoded_sender_t(uint32_t s, uint32_t f) : sender(s), sender_function(f) {}
         };
         decoded_sender_t decoded_representation;
     public:
         event_sender_t() : encoded_sender_id(0) {};
+
+        event_sender_t(uint32_t sender, uint32_t function) : decoded_representation(sender, function) {}
 
         inline bool operator<(const event_sender_t& other) const {
             return this->encoded_sender_id < other.encoded_sender_id;
