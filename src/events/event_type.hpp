@@ -12,6 +12,7 @@ namespace dmxfish::events {
         SINGLE_TRIGGER = 0,
         START = 1,
         RELEASE = 2,
+        ONGOING_EVENT = 3,
         INVALID = 255
     };
 

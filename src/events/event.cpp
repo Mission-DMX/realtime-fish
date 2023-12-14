@@ -2,11 +2,14 @@
 // Created by doralitze on 11/14/23.
 //
 
+#include <ostream>
 #include "event.hpp"
 
 namespace dmxfish::events {
 
-    static event_id_t next_event_id = 0;
+    static event_id_t next_event_id = 1;
+
+    event::event() : type(event_type::INVALID), event_arguments{}, event_id(0), sender_id{} {}
 
     event::event(dmxfish::events::event_type _type, event_sender_t _sender_id) : type(_type), sender_id(_sender_id),
     event_id(next_event_id), event_arguments() {
@@ -17,5 +20,36 @@ namespace dmxfish::events {
                                        event_arguments(other.event_arguments) {
 
     }
-    // TODO implement out stream helpers and registry for senders
+
+    std::ostream& operator<<(std::ostream& os, const event& ev) {
+        if(!ev.is_valid()) {
+            return os << "Invalid Event";
+        }
+        os << "Event " << ev.get_event_id() << " Type: ";
+        switch (ev.get_type()) {
+            case event_type::SINGLE_TRIGGER:
+                os << "single From: ";
+                break;
+            case event_type::START:
+                os << "positive edge From: ";
+                break;
+            case event_type::RELEASE:
+                os << "negative edge From: ";
+                break;
+            case event_type::ONGOING_EVENT:
+                os << "continuous From: ";
+                break;
+            case event_type::INVALID:
+                os << "invalid From: ";
+                break;
+        }
+        os << ev.get_event_sender().decoded_representation.sender << ':';
+        os << ev.get_event_sender().decoded_representation.sender_function;
+        os << " ARGS:" << std::hex;
+        for (auto& c : ev.get_args()) {
+            os << " " << c;
+        }
+        os << std::dec;
+        return os;
+    }
 }

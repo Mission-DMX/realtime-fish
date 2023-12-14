@@ -6,7 +6,9 @@
 
 #include <cstddef>
 #include <vector>
+#include <map>
 #include <memory>
+#include <mutex>
 
 #include "event.hpp"
 
@@ -18,8 +20,9 @@ namespace dmxfish::events {
     private:
         std::vector<event> storage_a, storage_b;
         std::vector<std::shared_ptr<event_source>> senders;
-        // TODO think about good active events data structure
         bool current_read_storage_is_a = false;
+        std::mutex storage_swap_mutex;
+        std::map<event_sender_t, event> ongoing_events;
     public:
         friend class event_source;
 
@@ -27,13 +30,19 @@ namespace dmxfish::events {
         ~event_storage();
 
         /**
-         * This method stores an event inside the queue to be processed on the next cycle.
+         * This method tries to stores an event inside the queue to be processed on the next cycle. The return value
+         * of this method needs to be honored in order to check if the operation was successful. THis method will not
+         * block.
+         *
          * @param e The event to store
+         * @return True if the insert was successful at this time or false if this action needs to be repeated at a
+         * later time.
          */
-        void insert_event(const event& e);
+        [[nodiscard]] bool insert_event(const event& e);
 
         /**
-         * This method should be called prior to executing the next cycle as it will swap the event queues.
+         * This method should be called prior to executing the next cycle as it will swap the event queues. This method
+         * will block if required.
          */
         void swap_buffers();
 
