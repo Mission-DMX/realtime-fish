@@ -21,6 +21,11 @@ namespace dmxfish::events {
 
     }
 
+    event::event(event_type _type, const event& other) : type(_type), sender_id(other.sender_id),
+    event_id(next_event_id), event_arguments(other.event_arguments) {
+        next_event_id++;
+    }
+
     std::ostream& operator<<(std::ostream& os, const event& ev) {
         if(!ev.is_valid()) {
             return os << "Invalid Event";

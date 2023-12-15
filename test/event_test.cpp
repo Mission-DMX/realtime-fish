@@ -9,6 +9,7 @@
 
 #include "events/event.hpp"
 #include "events/event_storage.hpp"
+#include "events/event_source.hpp"
 
 BOOST_AUTO_TEST_CASE(default_constructor_yields_invalid_event) {
     using namespace dmxfish::events;
@@ -23,12 +24,14 @@ BOOST_AUTO_TEST_CASE(default_constructor_yields_invalid_event) {
 BOOST_AUTO_TEST_CASE(continous_event_insertion) {
     using namespace dmxfish::events;
     auto estorage = std::make_shared<event_storage>();
-    auto tesender = std::make_shared<event_source>(estorage);
+    auto tesender = event_source::create<event_source>(estorage);
 
-    event_sender_t s1{tesender->get_sender_id(), 0};
+    const uint32_t sid = tesender->get_sender_id();
+    event_sender_t s1(sid, 0);
     event e1{event_type::SINGLE_TRIGGER, s1};
-    event e2{event_type::START, event_sender_t{tesender->get_sender_id(), 1}};
-    event e3{event_type::RELEASE, event_sender_t{tesender->get_sender_id(), 1}};
+    event e2{event_type::START, event_sender_t{sid, 1}};
+    event e3{event_type::RELEASE, event_sender_t{sid, 1}};
+    BOOST_CHECK_EQUAL(e1.get_event_sender().decoded_representation.sender, sid);
     BOOST_CHECK(e1.get_event_sender() != e2.get_event_sender());
     BOOST_CHECK(e1.get_event_sender().is_same_sender(e2.get_event_sender()));
     BOOST_CHECK(e1.get_event_sender().is_same_sender(e3.get_event_sender()));

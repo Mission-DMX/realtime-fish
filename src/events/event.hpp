@@ -49,6 +49,7 @@ namespace dmxfish::events {
         event();
         event(event_type _type, event_sender_t sender_id);
         event(const event& other);
+        event(event_type _type, const event& other);
 
         [[nodiscard]] inline event_id_t get_event_id() const {
             return this->event_id;

@@ -48,7 +48,7 @@ namespace dmxfish::events {
                 default:
                     break;
                 case event_type::START:
-                    this->ongoing_events[ev.get_event_sender()] = ev;
+                    this->ongoing_events[ev.get_event_sender()] = event{event_type::ONGOING_EVENT, ev};
                     break;
                 case event_type::RELEASE:
                     this->ongoing_events.erase(ev.get_event_sender());
