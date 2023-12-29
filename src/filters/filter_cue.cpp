@@ -25,38 +25,43 @@ int count_occurence_of(const std::string &base_string, std::string pattern, size
 namespace dmxfish::filters {
 
     void filter_cue::update_parameter_gui() {
-        std::string run_state;
-        switch (this->running_state) {
-            case STOP: {
-                run_state = "stop";
-                break;
+        if (auto iomanager = get_iomanager_instance(); iomanager != nullptr) {
+            if (auto s = iomanager->get_active_show(); s != nullptr) {
+
+                std::string run_state;
+                switch (this->running_state) {
+                    case STOP: {
+                        run_state = "stop";
+                        break;
+                    }
+                    case PLAY: {
+                        run_state = "play";
+                        break;
+                    }
+                    case PAUSE: {
+                        run_state = "pause";
+                        break;
+                    }
+                    default: {
+                        run_state = "error";
+                        break;
+                    }
+                }
+
+                auto update_message = missiondmx::fish::ipcmessages::update_parameter();
+                update_message.set_filter_id(this->own_id);
+                update_message.set_parameter_key("actual_state");
+                update_message.set_scene_id(s->get_active_scene());
+                std::stringstream params;
+                params <<
+                       run_state << ";" <<
+                       std::to_string(this->active_cue) << ";" <<
+                       std::to_string((*this->time - this->start_time) / 1000) << ";" <<
+                       std::to_string((cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1)) / 1000);
+                update_message.set_parameter_value(params.str());
+
+                iomanager->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
             }
-            case PLAY: {
-                run_state = "play";
-                break;
-            }
-            case PAUSE: {
-                run_state = "pause";
-                break;
-            }
-            default: {
-                run_state = "error";
-                break;
-            }
-        }
-        auto update_message = missiondmx::fish::ipcmessages::update_parameter();
-        update_message.set_filter_id(this->own_id);
-        update_message.set_parameter_key("actual_state");
-        std::stringstream params;
-        params <<
-                run_state << ";" <<
-                std::to_string(this->active_cue) << ";" <<
-                std::to_string((*this->time - this->start_time) / 1000) << ";" <<
-                std::to_string(cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1) / 1000);
-        update_message.set_parameter_value(params.str());
-        auto iomanager = get_iomanager_instance();
-        if (iomanager != nullptr) {
-            iomanager->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
         }
     }
 
@@ -382,6 +387,7 @@ namespace dmxfish::filters {
                         pause_time = *time;
                         running_state = PAUSE;
                         cue_end_handling_real = HOLDING;
+                        update_parameter_gui();
                         return;
                     case HOLDING:
                         return;
@@ -394,7 +400,9 @@ namespace dmxfish::filters {
                                     active_cue = 0;
                                     break;
                                 case HOLD:
+                                    running_state = STOP;
                                     update_hold_values();
+                                    update_parameter_gui();
                                     return;
                                 case NEXT_CUE:
                                     ::spdlog::warn("should not have reached NEXT CUE at the end of the cuelist");
@@ -556,7 +564,7 @@ namespace dmxfish::filters {
                     case PAUSE:
                         start_time = start_time + (*time - pause_time);
                         last_timestamp = last_timestamp + (*time - pause_time);
-                        if(*time >= cues.at(active_cue).timestamps.at(cues.at(active_cue).timestamps.size() - 1) + start_time){
+                        if(*time >= cues.at(active_cue).timestamps.at(cues.at(active_cue).timestamps.size() - 1) + start_time){ // start new cue if cue was finished
                             if (cues.at(active_cue).end_handling == NEXT_CUE || cues.at(active_cue).end_handling == HOLD){
                                 if(active_cue < cues.size()-1){
                                     active_cue++;
@@ -624,6 +632,8 @@ namespace dmxfish::filters {
             }
             start_new_cue();
             active_cue = next;
+            running_state = PLAY;
+            cue_end_handling_real = cues.at(active_cue).end_handling;
             update_parameter_gui();
             return true;
         }
@@ -646,7 +656,6 @@ namespace dmxfish::filters {
                 return false;
             }
             next_cue = next;
-            update_parameter_gui();
             return true;
         }
         if (!key.compare("set_default_cue")) {
