@@ -46,12 +46,12 @@ namespace dmxfish::events {
             ptr->sender_id = storage_to_register_with->register_event_source(ptr->shared_from_this());
             return ptr;
         }
-    private:
+    protected:
 
         /**
          * This method needs to be called by the event storage if it is being taken down.
          */
-        void deregister();
+        virtual void deregister();
     };
 
 } // dmxfish
