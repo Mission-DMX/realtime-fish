@@ -140,7 +140,7 @@ all: ${BINDIR}/fish tools
 test: ${TEST_TARGETS} all
 	for a in ${TEST_TARGETS}; do \
 		echo $$a; \
-		$$a; \
+		$$a || exit 1; \
 	done
 
 tools: ${BINDIR}/tools/sample_xml_generator ${BINDIR}/tools/ftdi_test

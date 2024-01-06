@@ -34,6 +34,7 @@ COMPILER_RESTORE("-Wuseless-cast")
 #include "control_desk/device_enumeration.hpp"
 
 static std::shared_ptr<dmxfish::io::IOManager> manager = nullptr;
+static std::shared_ptr<dmxfish::events::event_storage> event_storage = nullptr;
 static std::shared_ptr<runtime_state_t> run_time_state = nullptr;
 
 void setup_sigint_handler() {
@@ -85,6 +86,7 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t, std::unique_ptr<dmx
 			// TODO apply data from input structure on show.
 			if(auto sptr = manager->get_active_show(); sptr != nullptr) {
 				try {
+                    event_storage->swap_buffers();
 					sptr->run_cycle_update();
 				} catch (const std::exception& e) {
 					manager->set_latest_error(e.what());
@@ -148,9 +150,11 @@ std::shared_ptr<dmxfish::io::IOManager> get_iomanager_instance() {
 void construct_iomanager() {
     manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
     manager->start();
+    event_storage = std::make_shared<dmxfish::events::event_storage>();
 }
 
 // only for testing purposes (and used in main_loop(), but only there!)
 void destruct_iomanager() {
+    event_storage = nullptr;
     manager = nullptr;
 }
