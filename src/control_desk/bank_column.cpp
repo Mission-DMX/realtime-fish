@@ -210,8 +210,9 @@ namespace dmxfish::control_desk {
 			case button_change::PRESS:
 				if(b_base == button::BTN_CH1_ENCODER_ROTARYMODE) {
 					if(current_bank_mode == bank_mode::DIRECT_INPUT_MODE) {
-						this->raw_working_on_primary = !this->raw_working_on_primary;
-                        update_display_text();
+						this->raw_working_on_primary = !this->raw_working_on_primary{
+						update_display_text();
+						update_physical_fader_position();
                         return;
 					}
 					switch(current_re_assignment) {
