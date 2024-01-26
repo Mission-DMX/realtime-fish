@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(test_one_8bit_to_16bit) {
     fil.get_output_channels(map, name);
 
     for (int i = 0; i < 256 ; i++){
-        value = (uint16_t) (i * 65535 / 255);
+        value = (uint16_t) ((uint32_t) i * 65535 / 255);
         input = (uint8_t) i;
 
         fil.update();

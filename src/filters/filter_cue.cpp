@@ -49,7 +49,7 @@ namespace dmxfish::filters {
                 }
 
                 auto update_message = missiondmx::fish::ipcmessages::update_parameter();
-                update_message.set_filter_id(this->own_id);
+                update_message.set_filter_id(this->_own_id);
                 update_message.set_parameter_key("actual_state");
                 update_message.set_scene_id(s->get_active_scene());
                 std::stringstream params;
@@ -301,11 +301,11 @@ namespace dmxfish::filters {
             float_channels.at(ind) = (end_value - start_value) * rel_time + start_value;
         } else if constexpr(std::is_same<T, dmxfish::dmx::pixel>::value)
         {
-            color_channels.at(ind) = dmxfish::dmx::pixel((end_value.getHue() - start_value.getHue()) * rel_time + start_value.getHue(),
-                                                         (end_value.getSaturation() - start_value.getSaturation()) * rel_time +
-                                                         start_value.getSaturation(),
-                                                         (end_value.getIluminance() - start_value.getIluminance()) * rel_time +
-                                                         start_value.getIluminance());
+            color_channels.at(ind) = dmxfish::dmx::pixel((end_value.getRed() - start_value.getRed()) * rel_time + start_value.getRed(),
+                                                         (end_value.getGreen() - start_value.getGreen()) * rel_time +
+                                                         start_value.getGreen(),
+                                                         (end_value.getBlue() - start_value.getBlue()) * rel_time +
+                                                         start_value.getBlue());
         }
         already_updated_act = false;
     }
@@ -459,7 +459,7 @@ namespace dmxfish::filters {
 
     void filter_cue::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& own_id) {
         MARK_UNUSED(initial_parameters);
-        this->own_id = own_id;
+        this->_own_id = own_id;
         if (!configuration.contains("mapping")) {
             throw filter_config_exception("cue filter: unable to setup the mapping", filter_type::filter_cue, own_id);
         }
