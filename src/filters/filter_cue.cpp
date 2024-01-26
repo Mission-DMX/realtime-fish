@@ -301,11 +301,11 @@ namespace dmxfish::filters {
             float_channels.at(ind) = (end_value - start_value) * rel_time + start_value;
         } else if constexpr(std::is_same<T, dmxfish::dmx::pixel>::value)
         {
-            color_channels.at(ind) = dmxfish::dmx::pixel((end_value.getRed() - start_value.getRed()) * rel_time + start_value.getRed(),
-                                                         (end_value.getGreen() - start_value.getGreen()) * rel_time +
-                                                         start_value.getGreen(),
-                                                         (end_value.getBlue() - start_value.getBlue()) * rel_time +
-                                                         start_value.getBlue());
+            color_channels.at(ind) = dmxfish::dmx::pixel((uint16_t)((end_value.getRed() - start_value.getRed()) * rel_time + start_value.getRed()),
+                                                         (uint16_t)((end_value.getGreen() - start_value.getGreen()) * rel_time +
+                                                         start_value.getGreen()),
+                                                         (uint16_t)((end_value.getBlue() - start_value.getBlue()) * rel_time +
+                                                         start_value.getBlue()));
         }
         already_updated_act = false;
     }
