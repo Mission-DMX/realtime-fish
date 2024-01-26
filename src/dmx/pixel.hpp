@@ -50,9 +50,9 @@ class pixel {
     double getHue();
     double getSaturation();
     double getIluminance();
-    double getRed();
-    double getGreen();
-    double getBlue();
+    uint16_t getRed();
+    uint16_t getGreen();
+    uint16_t getBlue();
 
     void setHue(double h);
     void setSaturation(double s);

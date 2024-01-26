@@ -92,12 +92,53 @@ namespace dmxfish::dmx {
         pixel_to_rgb16(red, green, blue);
     }
     void pixel::convert_rgb_to_hsi(){
-        this->hue = 120.;
-        this->saturation = 0.4;
-        this->iluminance = 0.6;
+        double r = this->red;
+        double g = this->green;
+        double b = this->blue;
+        double sum = r + g + b;
+        if (sum > 65535.0){
+            r = r * 65535.0 / sum;
+            g = g * 65535.0 / sum;
+            b = b * 65535.0 / sum;
+            sum = r + g + b;
+        }
+        if (sum <= 0.0){
+            this->hue = 0.0;
+            this->saturation = 0.0;
+            this->iluminance = 0.0;
+            return;
+        }
+        double min = std::min(std::min(r, g), b);
+        this->saturation = 1.0 - (min * 3.0 / sum);
+        this->iluminance = sum / 65535.0;
+        r = r - min;
+        g = g - min;
+        b = b - min;
+        if (std::max(std::max(r, g), b) <= 0.0){
+            this->hue = 0.0;
+            return;
+        }
+        if (r >= g && b == 0){
+            this->hue = 60.0 - (r - g)/r*60.0;
+        }
+        else if (g >= r && b == 0){
+            this->hue = 60.0 + (g - r)/g*60.0;
+        }
+        else if (g >= b && r == 0){
+            this->hue = 180.0 - (g - b)/g*60.0;
+        }
+        else if (b >= g && r == 0){
+            this->hue = 180.0 + (b - g)/b*60.0;
+        }
+        else if (b >= r && g == 0){
+            this->hue = 300.0 - (b - r)/r*60.0;
+        }
+        else if (r >= b && g == 0){
+            this->hue = 300.0 + (r - b)/r*60.0;
+        }
     }
     void pixel::convert_hsi_to_rgb_pre(){
-        if (this->red == 0 and this->green == 0 and this->blue == 0 and this->iluminance <= 0.){
+        if (this->red == 0 and this->green == 0 and this->blue == 0 and this->iluminance >= 0.){
             convert_hsi_to_rgb();
         }
     }
@@ -127,15 +168,15 @@ namespace dmxfish::dmx {
         convert_rgb_to_hsi_pre();
         return this->iluminance;
     }
-    double pixel::getRed(){
+    uint16_t pixel::getRed(){
         convert_hsi_to_rgb_pre();
         return this->red;
     }
-    double pixel::getGreen(){
+    uint16_t pixel::getGreen(){
         convert_hsi_to_rgb_pre();
         return this->green;
     }
-    double pixel::getBlue(){
+    uint16_t pixel::getBlue(){
         convert_hsi_to_rgb_pre();
         return this->blue;
     }
