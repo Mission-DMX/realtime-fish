@@ -547,11 +547,13 @@ namespace dmxfish::control_desk {
         col_ptr->set_display_text(msg.lower_display_text(), false);
         if(msg.has_plain_color()) {
             const auto& c = msg.plain_color();
-            col_ptr->set_color(dmxfish::dmx::pixel{c.hue(), c.saturation(), c.intensity()});
+            dmxfish::dmx::pixel new_color = dmxfish::dmx::pixel{c.hue(), c.saturation(), c.intensity()};
+            col_ptr->set_color(new_color);
         } else if(msg.has_color_with_uv()) {
             const auto& c = msg.color_with_uv().base();
             col_ptr->set_uv_value(msg.color_with_uv().uv());
-            col_ptr->set_color(dmxfish::dmx::pixel{c.hue(), c.saturation(), c.intensity()});
+            dmxfish::dmx::pixel new_color = dmxfish::dmx::pixel{c.hue(), c.saturation(), c.intensity()};
+            col_ptr->set_color(new_color);
         } else {
             raw_column_configuration rc = col_ptr->get_raw_configuration();
             const auto& raw_conf_msg = msg.raw_data();

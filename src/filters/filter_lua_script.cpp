@@ -23,9 +23,9 @@ namespace dmxfish::filters {
         }
         // we dont need pixel, because it was transmitted as reference
 //        for (size_t i = 0; i < in_color.size(); i++) {
-//            sol::table color = lua.create_table_with("h", in_color.at(i)->hue,
-//                                                     "s", in_color.at(i)->saturation,
-//                                                     "i", in_color.at(i)->iluminance
+//            sol::table color = lua.create_table_with("h", in_color.at(i)->getHue(),
+//                                                     "s", in_color.at(i)->getSaturation(),
+//                                                     "i", in_color.at(i)->getIluminance()
 //            );
 //            lua[names_in_color.at(i)] = color;
 //        }
@@ -46,9 +46,9 @@ namespace dmxfish::filters {
             out_float.at(i) = lua.get_or(names_out_float.at(i), out_float.at(i));
         }
         for (size_t i = 0; i < out_color.size(); i++) {
-            out_color.at(i).hue = lua[names_out_color.at(i)]["h"].get_or(out_color.at(i).hue);
-            out_color.at(i).saturation = lua[names_out_color.at(i)]["s"].get_or(out_color.at(i).saturation);
-            out_color.at(i).iluminance = lua[names_out_color.at(i)]["i"].get_or(out_color.at(i).iluminance);
+            out_color.at(i).setHue(lua[names_out_color.at(i)]["h"].get_or(out_color.at(i).getHue()));
+            out_color.at(i).setSaturation(lua[names_out_color.at(i)]["s"].get_or(out_color.at(i).getSaturation()));
+            out_color.at(i).setIluminance(lua[names_out_color.at(i)]["i"].get_or(out_color.at(i).getIluminance()));
         }
     }
 
@@ -154,7 +154,14 @@ namespace dmxfish::filters {
                                           filter_type::filter_lua_script, own_id);
         }
 
-        lua.new_usertype<dmxfish::dmx::pixel>("Pixel", "h", &dmxfish::dmx::pixel::hue, "s", &dmxfish::dmx::pixel::saturation, "i", &dmxfish::dmx::pixel::iluminance);
+        lua.new_usertype<dmxfish::dmx::pixel>( "Pixel",
+                                               "h", sol::property(&dmxfish::dmx::pixel::getHue, &dmxfish::dmx::pixel::setHue),
+                                               "s", sol::property(&dmxfish::dmx::pixel::getSaturation, &dmxfish::dmx::pixel::setSaturation),
+                                               "i", sol::property(&dmxfish::dmx::pixel::getIluminance, &dmxfish::dmx::pixel::setIluminance),
+                                               "r", sol::property(&dmxfish::dmx::pixel::getRed, &dmxfish::dmx::pixel::setRed),
+                                               "g", sol::property(&dmxfish::dmx::pixel::getGreen, &dmxfish::dmx::pixel::setGreen),
+                                               "b", sol::property(&dmxfish::dmx::pixel::getBlue, &dmxfish::dmx::pixel::setBlue)
+        );
 
         //::spdlog::debug("pre-setup: out_mapping: {}", out_mapping);
         util::init_mapping(

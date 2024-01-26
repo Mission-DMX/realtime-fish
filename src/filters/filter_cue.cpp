@@ -171,13 +171,13 @@ namespace dmxfish::filters {
                 case COLOR: {
                     cues.at(cue).color_frames.push_back(key_frame<dmxfish::dmx::pixel>(dmxfish::dmx::pixel(), tr));
                     const auto first_position = str.find(',', start);
-                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.hue = std::stod(
-                            str.substr(start, first_position - start));
+                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.setHue(std::stod(
+                            str.substr(start, first_position - start)));
                     const auto second_position = str.find(",", first_position + 1);
-                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.saturation = std::stod(
-                            str.substr(first_position + 1, second_position - first_position - 1));
-                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.iluminance = std::stod(
-                            str.substr(second_position + 1, end - second_position - 1));
+                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.setSaturation(std::stod(
+                            str.substr(first_position + 1, second_position - first_position - 1)));
+                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.setIluminance(std::stod(
+                            str.substr(second_position + 1, end - second_position - 1)));
                     break;
                 }
                 default: {
@@ -301,11 +301,11 @@ namespace dmxfish::filters {
             float_channels.at(ind) = (end_value - start_value) * rel_time + start_value;
         } else if constexpr(std::is_same<T, dmxfish::dmx::pixel>::value)
         {
-            color_channels.at(ind) = dmxfish::dmx::pixel((end_value.hue - start_value.hue) * rel_time + start_value.hue,
-                                                         (end_value.saturation - start_value.saturation) * rel_time +
-                                                         start_value.saturation,
-                                                         (end_value.iluminance - start_value.iluminance) * rel_time +
-                                                         start_value.iluminance);
+            color_channels.at(ind) = dmxfish::dmx::pixel((end_value.getHue() - start_value.getHue()) * rel_time + start_value.getHue(),
+                                                         (end_value.getSaturation() - start_value.getSaturation()) * rel_time +
+                                                         start_value.getSaturation(),
+                                                         (end_value.getIluminance() - start_value.getIluminance()) * rel_time +
+                                                         start_value.getIluminance());
         }
         already_updated_act = false;
     }

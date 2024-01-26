@@ -159,18 +159,18 @@ BOOST_AUTO_TEST_CASE(oneframeeachchanneltype) {
 
                 dmxfish::dmx::pixel testercol;
                 if (time_s < 2000){
-                    testercol = dmxfish::dmx::pixel(0,0,0);
+                    testercol = dmxfish::dmx::pixel(0.,0.,0.);
 //                } else if (time_s < 3000) {
 //                    testercol = 0.8 * ((double)time_s - 1000)/2000;
                 } else {
-                    testercol = dmxfish::dmx::pixel(120,1,1);
+                    testercol = dmxfish::dmx::pixel(120.,1.,1.);
                 }
                 std::string error = std::string("Channel ") + it->first + " should be " + testercol.str() +
                                     " , but is " + std::to_string(*it->second) + " at time: " +
                                     std::to_string(time_s);
-                BOOST_TEST(std::abs(map.color_channels["t:color"]->hue - testercol.hue) <= testercol.hue * 0.00001, error);
-                BOOST_TEST(std::abs(map.color_channels["t:color"]->saturation - testercol.saturation) <= testercol.saturation * 0.00001, error);
-                BOOST_TEST(std::abs(map.color_channels["t:color"]->iluminance - testercol.iluminance) <= testercol.iluminance * 0.00001, error);
+                BOOST_TEST(std::abs(map.color_channels["t:color"]->getHue() - testercol.getHue()) <= testercol.getHue() * 0.00001, error);
+                BOOST_TEST(std::abs(map.color_channels["t:color"]->getSaturation() - testercol.getSaturation()) <= testercol.getSaturation() * 0.00001, error);
+                BOOST_TEST(std::abs(map.color_channels["t:color"]->getIluminance() - testercol.getIluminance()) <= testercol.getIluminance() * 0.00001, error);
             }
         map.eight_bit_channels.clear();
         map.sixteen_bit_channels.clear();
