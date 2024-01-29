@@ -111,30 +111,27 @@ namespace dmxfish::dmx {
         double min = std::min(std::min(r, g), b);
         this->saturation = 1.0 - (min * 3.0 / sum);
         this->iluminance = sum / 65535.0;
-        r = r - min;
-        g = g - min;
-        b = b - min;
-        if (std::max(std::max(r, g), b) <= 0.0){
+
+        if (this->saturation <= 0.0){
             this->hue = 0.0;
             return;
         }
-        if (r >= g && b == 0){
-            this->hue = 60.0 - (r - g)/r*60.0;
+        // double hue_1 = -1.0;
+        //https://www.wolframalpha.com/input?i=solve+%5B%2F%2Fmath%3Acos%28x%29%2F%28cos%28pi%2F3-x%29%29%3Da%2F%2F%5D+for+%5B%2F%2Fmath%3Ax%2F%2F%5D
+        if (b <= 0.0){
+            double a = (3 * r / (65535.0 * this->iluminance)- 1) * (1/this->saturation);
+            // hue_1 = 2 * (std::atan((std::sqrt(3) * a - 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159;
+            this->hue = std::fmod(2 * (std::atan((std::sqrt(3) * a + 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159 + 180.0, 360.0);
         }
-        else if (g >= r && b == 0){
-            this->hue = 60.0 + (g - r)/g*60.0;
+        else if (r <= 0.0){
+            double a = (3 * g / (65535.0 * this->iluminance)- 1) * (1/this->saturation);
+            // hue_1 = 2 * (std::atan((std::sqrt(3) * a - 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159 + 120.0;
+            this->hue = std::fmod(2 * (std::atan((std::sqrt(3) * a + 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159 + 300.0, 360.0);
         }
-        else if (g >= b && r == 0){
-            this->hue = 180.0 - (g - b)/g*60.0;
-        }
-        else if (b >= g && r == 0){
-            this->hue = 180.0 + (b - g)/b*60.0;
-        }
-        else if (b >= r && g == 0){
-            this->hue = 300.0 - (b - r)/r*60.0;
-        }
-        else if (r >= b && g == 0){
-            this->hue = 300.0 + (r - b)/r*60.0;
+        else if (g <= 0.0){
+            double a = (3 * b / (65535.0 * this->iluminance)- 1) * (1/this->saturation);
+            // hue_1 = 2 * (std::atan((std::sqrt(3) * a - 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159 + 240.0;
+            this->hue = std::fmod(2 * (std::atan((std::sqrt(3) * a + 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159 + 420.0, 360.0);
         }
     }
     void pixel::convert_hsi_to_rgb_pre(){
