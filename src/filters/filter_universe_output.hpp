@@ -27,6 +27,9 @@ namespace dmxfish::filters {
 
         virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
             MARK_UNUSED(initial_parameters);
+	    if(configuration.size() < 1) {
+		    throw filter_config_exception("The configuration of a universe filter must not be empty.", filter_type::filter_universe_output, own_id);
+	    }
             this->mapping.reserve(configuration.size() - 1);
             if(!configuration.contains("universe")){
                 throw filter_config_exception("A universe id must be set in order to let the universe output filter do "
