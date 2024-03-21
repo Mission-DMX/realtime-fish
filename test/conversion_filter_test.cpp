@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(test_color_to_floats) {
     double testh = 355.0;
     double tests = 0.8;
     double testi = 0.2;
-    dmxfish::dmx::pixel in_channel = dmxfish::dmx::pixel(355, 0.8, 0.2);
+    dmxfish::dmx::pixel in_channel = dmxfish::dmx::pixel(355.0, 0.8, 0.2);
 
     channel_mapping input_channels = channel_mapping();
     input_channels.color_channels["input"] = &in_channel;
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(test_color_to_rgb) {
     uint8_t testr = 0;
     uint8_t testg = 127;
     uint8_t testb = 128;
-    dmxfish::dmx::pixel in_channel = dmxfish::dmx::pixel(180, 1, 1);
+    dmxfish::dmx::pixel in_channel = dmxfish::dmx::pixel(180.0, 1.0, 1.0);
 
     channel_mapping input_channels = channel_mapping();
     input_channels.color_channels["value"] = &in_channel;
@@ -112,8 +112,8 @@ BOOST_AUTO_TEST_CASE(test_color_to_rgb) {
     BOOST_TEST(*map.eight_bit_channels["test:g"] == testg, "value g in filter color_to_rgb should be " + std::to_string(testg) + " but is " + std::to_string(*map.eight_bit_channels["test:g"]));
     BOOST_TEST(*map.eight_bit_channels["test:b"] == testb, "value b in filter color_to_rgb should be " + std::to_string(testb) + " but is " + std::to_string(*map.eight_bit_channels["test:b"]));
 
-    in_channel.saturation = 0.5;
-    testr = 43;
+    in_channel.setSaturation(0.5);
+    testr = 42;
     testg = 106;
     testb = 106;
     fil.update();
@@ -121,8 +121,8 @@ BOOST_AUTO_TEST_CASE(test_color_to_rgb) {
     BOOST_TEST(*map.eight_bit_channels["test:g"] == testg, "value g in filter color_to_rgb should be " + std::to_string(testg) + " but is " + std::to_string(*map.eight_bit_channels["test:g"]));
     BOOST_TEST(*map.eight_bit_channels["test:b"] == testb, "value b in filter color_to_rgb should be " + std::to_string(testb) + " but is " + std::to_string(*map.eight_bit_channels["test:b"]));
 
-    in_channel.hue = 240;
-    testr = 43;
+    in_channel.setHue(240.0);
+    testr = 42;
     testg = 42;
     testb = 170;
     fil.update();
@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE(test_color_to_rgb) {
     BOOST_TEST(*map.eight_bit_channels["test:g"] == testg, "value g in filter color_to_rgb should be " + std::to_string(testg) + " but is " + std::to_string(*map.eight_bit_channels["test:g"]));
     BOOST_TEST(*map.eight_bit_channels["test:b"] == testb, "value b in filter color_to_rgb should be " + std::to_string(testb) + " but is " + std::to_string(*map.eight_bit_channels["test:b"]));
 
-    in_channel.iluminance = 0.2;
-    testr = 9;
+    in_channel.setIluminance(0.2);
+    testr = 8;
     testg = 8;
     testb = 34;
     fil.update();
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(test_color_to_rgbw) {
     uint8_t testg = 127;
     uint8_t testb = 128;
     uint8_t testw = 0;
-    dmxfish::dmx::pixel in_channel = dmxfish::dmx::pixel(180, 1, 1);
+    dmxfish::dmx::pixel in_channel = dmxfish::dmx::pixel(180.0, 1.0, 1.0);
 
     channel_mapping input_channels = channel_mapping();
     input_channels.color_channels["value"] = &in_channel;
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(test_color_to_rgbw) {
     BOOST_TEST(*map.eight_bit_channels["test:b"] == testb, "value b in filter color_to_rgbw should be " + std::to_string(testb) + " but is " + std::to_string(*map.eight_bit_channels["test:b"]));
     BOOST_TEST(*map.eight_bit_channels["test:w"] == testw, "value w in filter color_to_rgbw should be " + std::to_string(testw) + " but is " + std::to_string(*map.eight_bit_channels["test:w"]));
 
-    in_channel.saturation = 0.5;
+    in_channel.setSaturation(0.5);
     testr = 0;
     testg = 64;
     testb = 64;
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(test_color_to_rgbw) {
     BOOST_TEST(*map.eight_bit_channels["test:b"] == testb, "value b in filter color_to_rgbw should be " + std::to_string(testb) + " but is " + std::to_string(*map.eight_bit_channels["test:b"]));
     BOOST_TEST(*map.eight_bit_channels["test:w"] == testw, "value w in filter color_to_rgbw should be " + std::to_string(testw) + " but is " + std::to_string(*map.eight_bit_channels["test:w"]));
 
-    in_channel.hue = 240;
+    in_channel.setHue(240.0);
     testr = 0;
     testg = 0;
     testb = 128;
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(test_color_to_rgbw) {
     BOOST_TEST(*map.eight_bit_channels["test:b"] == testb, "value b in filter color_to_rgbw should be " + std::to_string(testb) + " but is " + std::to_string(*map.eight_bit_channels["test:b"]));
     BOOST_TEST(*map.eight_bit_channels["test:w"] == testw, "value w in filter color_to_rgbw should be " + std::to_string(testw) + " but is " + std::to_string(*map.eight_bit_channels["test:w"]));
 
-    in_channel.iluminance = 0.2;
+    in_channel.setIluminance(0.2);
     testr = 0;
     testg = 0;
     testb = 26;
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(test_one_8bit_to_16bit) {
     fil.get_output_channels(map, name);
 
     for (int i = 0; i < 256 ; i++){
-        value = (uint16_t) (i * 65535 / 255);
+        value = (uint16_t) ((uint32_t) i * 65535 / 255);
         input = (uint8_t) i;
 
         fil.update();

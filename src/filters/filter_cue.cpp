@@ -49,7 +49,7 @@ namespace dmxfish::filters {
                 }
 
                 auto update_message = missiondmx::fish::ipcmessages::update_parameter();
-                update_message.set_filter_id(this->own_id);
+                update_message.set_filter_id(this->_own_id);
                 update_message.set_parameter_key("actual_state");
                 update_message.set_scene_id(s->get_active_scene());
                 std::stringstream params;
@@ -171,13 +171,13 @@ namespace dmxfish::filters {
                 case COLOR: {
                     cues.at(cue).color_frames.push_back(key_frame<dmxfish::dmx::pixel>(dmxfish::dmx::pixel(), tr));
                     const auto first_position = str.find(',', start);
-                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.hue = std::stod(
-                            str.substr(start, first_position - start));
+                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.setHue(std::stod(
+                            str.substr(start, first_position - start)));
                     const auto second_position = str.find(",", first_position + 1);
-                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.saturation = std::stod(
-                            str.substr(first_position + 1, second_position - first_position - 1));
-                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.iluminance = std::stod(
-                            str.substr(second_position + 1, end - second_position - 1));
+                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.setSaturation(std::stod(
+                            str.substr(first_position + 1, second_position - first_position - 1)));
+                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.setIluminance(std::stod(
+                            str.substr(second_position + 1, end - second_position - 1)));
                     break;
                 }
                 default: {
@@ -301,11 +301,11 @@ namespace dmxfish::filters {
             float_channels.at(ind) = (end_value - start_value) * rel_time + start_value;
         } else if constexpr(std::is_same<T, dmxfish::dmx::pixel>::value)
         {
-            color_channels.at(ind) = dmxfish::dmx::pixel((end_value.hue - start_value.hue) * rel_time + start_value.hue,
-                                                         (end_value.saturation - start_value.saturation) * rel_time +
-                                                         start_value.saturation,
-                                                         (end_value.iluminance - start_value.iluminance) * rel_time +
-                                                         start_value.iluminance);
+            color_channels.at(ind) = dmxfish::dmx::pixel((uint16_t)((end_value.getRed() - start_value.getRed()) * rel_time + start_value.getRed()),
+                                                         (uint16_t)((end_value.getGreen() - start_value.getGreen()) * rel_time +
+                                                         start_value.getGreen()),
+                                                         (uint16_t)((end_value.getBlue() - start_value.getBlue()) * rel_time +
+                                                         start_value.getBlue()));
         }
         already_updated_act = false;
     }
@@ -459,7 +459,7 @@ namespace dmxfish::filters {
 
     void filter_cue::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& own_id) {
         MARK_UNUSED(initial_parameters);
-        this->own_id = own_id;
+        this->_own_id = own_id;
         if (!configuration.contains("mapping")) {
             throw filter_config_exception("cue filter: unable to setup the mapping", filter_type::filter_cue, own_id);
         }

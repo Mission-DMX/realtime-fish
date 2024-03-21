@@ -101,25 +101,25 @@ namespace dmxfish::control_desk {
             return this->current_bank_mode;
         }
 
-        [[nodiscard]] inline dmxfish::dmx::pixel get_color() const {
+        [[nodiscard]] inline dmxfish::dmx::pixel get_color() {
             if(black_active) {
-                return dmxfish::dmx::pixel{this->color.hue, this->color.saturation, 0.0};
+                return dmxfish::dmx::pixel{this->color.getHue(), this->color.getSaturation(), 0.0};
             } else if(flash_active) {
-                return dmxfish::dmx::pixel{this->color.hue, this->color.saturation, 1.0};
+                return dmxfish::dmx::pixel{this->color.getHue(), this->color.getSaturation(), 1.0};
             } else {
                 return this->color;
             }
         }
 
-        inline void set_color(const dmxfish::dmx::pixel& p) {
+        inline void set_color(dmxfish::dmx::pixel& p) {
             if(this->current_bank_mode != bank_mode::HSI_COLOR_MODE) {
                 return;
             }
             this->color = p;
             if(this->readymode_active) {
-                readymode_raw_configuration.primary_position = (uint16_t) p.iluminance * 65535;
+                readymode_raw_configuration.primary_position = (uint16_t) p.getIluminance() * 65535;
             } else {
-                raw_configuration.primary_position = (uint16_t) p.iluminance * 65535;
+                raw_configuration.primary_position = (uint16_t) p.getIluminance() * 65535;
             }
             update_physical_fader_position();
             update_encoder_leds();

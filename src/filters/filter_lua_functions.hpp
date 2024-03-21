@@ -16,7 +16,7 @@ namespace dmxfish::filters::lua {
     }
 
     std::tuple<uint8_t, uint8_t, uint8_t> hsi_to_rgb_table(sol::table color){
-        dmxfish::dmx::pixel color_local = dmxfish::dmx::pixel(color["h"], color["s"], color["i"]);
+        dmxfish::dmx::pixel color_local = dmxfish::dmx::pixel((double) color["h"], (double) color["s"], (double) color["i"]);
         return hsi_to_rgb_color(color_local);
     }
 
@@ -30,7 +30,7 @@ namespace dmxfish::filters::lua {
     }
 
     std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> hsi_to_rgbw_table(sol::table color){
-        dmxfish::dmx::pixel color_local = dmxfish::dmx::pixel(color["h"], color["s"], color["i"]);
+        dmxfish::dmx::pixel color_local = dmxfish::dmx::pixel((double) color["h"], (double) color["s"], (double) color["i"]);
         return hsi_to_rgbw_color(color_local);
     }
 

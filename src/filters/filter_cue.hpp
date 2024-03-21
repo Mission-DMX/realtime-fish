@@ -74,7 +74,7 @@ namespace dmxfish::filters {
             channel_str(channel_t ch_t,  size_t i) : channel_type(ch_t), index(i) {}
         };
 
-        std::string own_id;
+        std::string _own_id;
         double* time = nullptr;
         double start_time = 0;
         double pause_time = 0;

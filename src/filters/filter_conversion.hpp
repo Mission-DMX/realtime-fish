@@ -345,9 +345,9 @@ COMPILER_SUPRESS("-Weffc++")
         }
 
         virtual void update() override {
-            this->h = this->input->hue;
-            this->s = this->input->saturation;
-            this->i = this->input->iluminance;
+            this->h = this->input->getHue();
+            this->s = this->input->getSaturation();
+            this->i = this->input->getIluminance();
         }
 
         virtual void scene_activated() override {}

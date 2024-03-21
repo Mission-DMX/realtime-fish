@@ -203,12 +203,12 @@ BOOST_AUTO_TEST_CASE(testlua) {
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
     fil.update();
     BOOST_TEST(*map.eight_bit_channels["abc:out_dimmer"] == test_val, "out_dimmer has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:out_dimmer"]) + " instead of " + std::to_string(test_val));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->hue - testercol.hue) <= testercol.hue * 0.00001, "out_color:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->hue) + " instead of " + std::to_string(testercol.hue));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->saturation - testercol.saturation) <= testercol.saturation * 0.00001, "out_color:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->saturation) + " instead of " + std::to_string(testercol.saturation));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->iluminance - testercol.iluminance) <= testercol.iluminance * 0.00001, "out_color:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->iluminance) + " instead of " + std::to_string(testercol.iluminance));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->hue - testercol2.hue) <= testercol2.hue * 0.00001, "out_color2:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->hue) + " instead of " + std::to_string(testercol2.hue));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->saturation - testercol2.saturation) <= testercol2.saturation * 0.00001, "out_color2:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->saturation) + " instead of " + std::to_string(testercol2.saturation));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->iluminance - testercol2.iluminance) <= testercol2.iluminance * 0.00001, "out_color2:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->iluminance) + " instead of " + std::to_string(testercol2.iluminance));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->getHue() - testercol.getHue()) <= testercol.getHue() * 0.00001, "out_color:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->getHue()) + " instead of " + std::to_string(testercol.getHue()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->getSaturation() - testercol.getSaturation()) <= testercol.getSaturation() * 0.00001, "out_color:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->getSaturation()) + " instead of " + std::to_string(testercol.getSaturation()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->getIluminance() - testercol.getIluminance()) <= testercol.getIluminance() * 0.00001, "out_color:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->getIluminance()) + " instead of " + std::to_string(testercol.getIluminance()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->getHue() - testercol2.getHue()) <= testercol2.getHue() * 0.00001, "out_color2:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->getHue()) + " instead of " + std::to_string(testercol2.getHue()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->getSaturation() - testercol2.getSaturation()) <= testercol2.getSaturation() * 0.00001, "out_color2:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->getSaturation()) + " instead of " + std::to_string(testercol2.getSaturation()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->getIluminance() - testercol2.getIluminance()) <= testercol2.getIluminance() * 0.00001, "out_color2:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->getIluminance()) + " instead of " + std::to_string(testercol2.getIluminance()));
 
 
     in_dimmer = 24;
@@ -219,12 +219,12 @@ BOOST_AUTO_TEST_CASE(testlua) {
     fil.update();
 
     BOOST_TEST(*map.eight_bit_channels["abc:out_dimmer"] == test_val, "out_dimmer has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:out_dimmer"]) + " instead of " + std::to_string(test_val));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->hue - testercol.hue) <= testercol.hue * 0.00001, "out_color:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->hue) + " instead of " + std::to_string(testercol.hue));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->saturation - testercol.saturation) <= testercol.saturation * 0.00001, "out_color:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->saturation) + " instead of " + std::to_string(testercol.saturation));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->iluminance - testercol.iluminance) <= testercol.iluminance * 0.00001, "out_color:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->iluminance) + " instead of " + std::to_string(testercol.iluminance));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->hue - testercol2.hue) <= testercol2.hue * 0.00001, "out_color2:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->hue) + " instead of " + std::to_string(testercol2.hue));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->saturation - testercol2.saturation) <= testercol2.saturation * 0.00001, "out_color2:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->saturation) + " instead of " + std::to_string(testercol2.saturation));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->iluminance - testercol2.iluminance) <= testercol2.iluminance * 0.00001, "out_color2:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->iluminance) + " instead of " + std::to_string(testercol2.iluminance));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->getHue() - testercol.getHue()) <= testercol.getHue() * 0.00001, "out_color:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->getHue()) + " instead of " + std::to_string(testercol.getHue()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->getSaturation() - testercol.getSaturation()) <= testercol.getSaturation() * 0.00001, "out_color:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->getSaturation()) + " instead of " + std::to_string(testercol.getSaturation()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->getIluminance() - testercol.getIluminance()) <= testercol.getIluminance() * 0.00001, "out_color:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->getIluminance()) + " instead of " + std::to_string(testercol.getIluminance()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->getHue() - testercol2.getHue()) <= testercol2.getHue() * 0.00001, "out_color2:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->getHue()) + " instead of " + std::to_string(testercol2.getHue()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->getSaturation() - testercol2.getSaturation()) <= testercol2.getSaturation() * 0.00001, "out_color2:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->getSaturation()) + " instead of " + std::to_string(testercol2.getSaturation()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->getIluminance() - testercol2.getIluminance()) <= testercol2.getIluminance() * 0.00001, "out_color2:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->getIluminance()) + " instead of " + std::to_string(testercol2.getIluminance()));
 }
 
 
@@ -282,9 +282,9 @@ BOOST_AUTO_TEST_CASE(testlua_nil_value) {
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
     fil.update();
     BOOST_TEST(*map.eight_bit_channels["abc:out_dimmer"] == test_val, "out_dimmer has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:out_dimmer"]) + " instead of " + std::to_string(test_val));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->hue - testercol.hue) <= testercol.hue * 0.00001, "out_color:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->hue) + " instead of " + std::to_string(testercol.hue));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->saturation - testercol.saturation) <= testercol.saturation * 0.00001, "out_color:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->saturation) + " instead of " + std::to_string(testercol.saturation));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->iluminance - testercol.iluminance) <= testercol.iluminance * 0.00001, "out_color:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->iluminance) + " instead of " + std::to_string(testercol.iluminance));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->getHue() - testercol.getHue()) <= testercol.getHue() * 0.00001, "out_color:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->getHue()) + " instead of " + std::to_string(testercol.getHue()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->getSaturation() - testercol.getSaturation()) <= testercol.getSaturation() * 0.00001, "out_color:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->getSaturation()) + " instead of " + std::to_string(testercol.getSaturation()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->getIluminance() - testercol.getIluminance()) <= testercol.getIluminance() * 0.00001, "out_color:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->getIluminance()) + " instead of " + std::to_string(testercol.getIluminance()));
 }
 
 BOOST_AUTO_TEST_CASE(test_lua_wrong_type) {
@@ -319,12 +319,12 @@ BOOST_AUTO_TEST_CASE(test_lua_wrong_type) {
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
     fil.update();
     BOOST_TEST(*map.eight_bit_channels["abc:out_dimmer"] == test_val, "out_dimmer has wrong value: " + std::to_string((int) *map.eight_bit_channels["abc:out_dimmer"]) + " instead of " + std::to_string(test_val));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->hue - testercol.hue) <= testercol.hue * 0.00001, "out_color:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->hue) + " instead of " + std::to_string(testercol.hue));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->saturation - testercol.saturation) <= testercol.saturation * 0.00001, "out_color:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->saturation) + " instead of " + std::to_string(testercol.saturation));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->iluminance - testercol.iluminance) <= testercol.iluminance * 0.00001, "out_color:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->iluminance) + " instead of " + std::to_string(testercol.iluminance));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->hue - testercol2.hue) <= testercol2.hue * 0.00001, "out_color2:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->hue) + " instead of " + std::to_string(testercol2.hue));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->saturation - testercol2.saturation) <= testercol2.saturation * 0.00001, "out_color2:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->saturation) + " instead of " + std::to_string(testercol2.saturation));
-    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->iluminance - testercol2.iluminance) <= testercol2.iluminance * 0.00001, "out_color2:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->iluminance) + " instead of " + std::to_string(testercol2.iluminance));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->getHue() - testercol.getHue()) <= testercol.getHue() * 0.00001, "out_color:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->getHue()) + " instead of " + std::to_string(testercol.getHue()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->getSaturation() - testercol.getSaturation()) <= testercol.getSaturation() * 0.00001, "out_color:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->getSaturation()) + " instead of " + std::to_string(testercol.getSaturation()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color"]->getIluminance() - testercol.getIluminance()) <= testercol.getIluminance() * 0.00001, "out_color:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color"]->getIluminance()) + " instead of " + std::to_string(testercol.getIluminance()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->getHue() - testercol2.getHue()) <= testercol2.getHue() * 0.00001, "out_color2:hue has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->getHue()) + " instead of " + std::to_string(testercol2.getHue()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->getSaturation() - testercol2.getSaturation()) <= testercol2.getSaturation() * 0.00001, "out_color2:saturation has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->getSaturation()) + " instead of " + std::to_string(testercol2.getSaturation()));
+    BOOST_TEST(std::abs(map.color_channels["abc:out_color2"]->getIluminance() - testercol2.getIluminance()) <= testercol2.getIluminance() * 0.00001, "out_color2:iluminance has wrong value: " + std::to_string(map.color_channels["abc:out_color2"]->getIluminance()) + " instead of " + std::to_string(testercol2.getIluminance()));
 }
 
 
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(test_lua_color_conversion) {
     dmxfish::filters::filter_lua_script fil = filter_lua_script ();
 
     channel_mapping input_channels = channel_mapping();
-    dmxfish::dmx::pixel color = dmxfish::dmx::pixel(120,1,1);
+    dmxfish::dmx::pixel color = dmxfish::dmx::pixel(120.,1.,1.);
     uint8_t test_red1 = 0;
     uint8_t test_green1 = 255;
     uint8_t test_blue1 = 0;
@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(test_lua_color_conversion) {
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
 
-    color = dmxfish::dmx::pixel(240,0.5001,1);
+    color = dmxfish::dmx::pixel(240.,0.5001,1.);
     test_red1 = 42;
     test_green1 = 42;
     test_blue1 = 170;
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
     std::map<std::string, std::string> initial_parameters;
 
 
-    dmxfish::dmx::pixel color = dmxfish::dmx::pixel(120, 1, 1);
+    dmxfish::dmx::pixel color = dmxfish::dmx::pixel(120., 1., 1.);
     input_channels.color_channels["color"] = &color;
     double change_nr = 25.1;
     input_channels.float_channels["change_nr"] = &change_nr;
@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
     std::cout << std::endl;
 
 
-    color.hue = 180.0;
+    color.setHue(180.0);
     fil.update();
     std::cout << "universe ";
     if (auto uptr = dmxfish::io::get_universe(1); uptr != nullptr) {
@@ -550,7 +550,7 @@ BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
     }
     std::cout << std::endl;
 
-    color.hue = 180.0;
+    color.setHue(180.0);
     change_nr = 0.0;
     fil.update();
     std::cout << "universe ";
