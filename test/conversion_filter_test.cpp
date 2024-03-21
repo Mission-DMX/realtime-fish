@@ -84,9 +84,9 @@ BOOST_AUTO_TEST_CASE(test_color_to_floats) {
     const std::string name = "test";
     fil.get_output_channels(map, name);
     fil.update();
-    BOOST_TEST(*map.float_channels["test:hue"] == testh, "value h in filter color_to_floats should be " + std::to_string(testh) + " but is " + std::to_string(*map.float_channels["test:hue"]));
-    BOOST_TEST(*map.float_channels["test:saturation"] == tests, "value s in filter color_to_floats should be " + std::to_string(tests) + " but is " + std::to_string(*map.float_channels["test:saturation"]));
-    BOOST_TEST(*map.float_channels["test:iluminance"] == testi, "value i in filter color_to_floats should be " + std::to_string(testi) + " but is " + std::to_string(*map.float_channels["test:iluminance"]));
+    BOOST_TEST(*map.float_channels["test:h"] == testh, "value h in filter color_to_floats should be " + std::to_string(testh) + " but is " + std::to_string(*map.float_channels["test:h"]));
+    BOOST_TEST(*map.float_channels["test:s"] == tests, "value s in filter color_to_floats should be " + std::to_string(tests) + " but is " + std::to_string(*map.float_channels["test:s"]));
+    BOOST_TEST(*map.float_channels["test:i"] == testi, "value i in filter color_to_floats should be " + std::to_string(testi) + " but is " + std::to_string(*map.float_channels["test:i"]));
 }
 
 BOOST_AUTO_TEST_CASE(test_color_to_rgb) {

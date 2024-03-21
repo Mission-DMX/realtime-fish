@@ -339,9 +339,9 @@ COMPILER_SUPRESS("-Weffc++")
         }
 
         virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
-            map.float_channels[name + ":hue"] = &h;
-            map.float_channels[name + ":saturation"] = &s;
-            map.float_channels[name + ":iluminance"] = &i;
+            map.float_channels[name + ":h"] = &h;
+            map.float_channels[name + ":s"] = &s;
+            map.float_channels[name + ":i"] = &i;
         }
 
         virtual void update() override {
