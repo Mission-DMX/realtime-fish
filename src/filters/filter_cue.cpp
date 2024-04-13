@@ -535,7 +535,7 @@ namespace dmxfish::filters {
                 throw filter_config_exception("cue filter: unable to setup the cuelist. Property 'default_cue' was too large.",
                                               filter_type::filter_cue, own_id);
             }
-            if (new_default_cue > (long) cues.size()) {
+            if (new_default_cue >= (long) cues.size()) {
                 default_cue = -1;
             } else {
                 default_cue = new_default_cue;
@@ -678,7 +678,7 @@ namespace dmxfish::filters {
                 MARK_UNUSED(ex);
                 return false;
             }
-            if (new_default_cue > (long) cues.size()) {
+            if (new_default_cue >= (long) cues.size()) {
                 default_cue = -1;
                 ::spdlog::info("removed autoplay for this scene");
             } else {
