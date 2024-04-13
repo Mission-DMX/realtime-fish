@@ -351,7 +351,12 @@ namespace dmxfish::filters {
         update_last_values();
         start_time = *time;
         frame = 0;
-        cue_end_handling_real = cues.at(active_cue).end_handling;
+	if (active_cue >= cues.size()) {
+		active_cue = cues.size() - 1;
+	}
+	if(active_cue < cues.size()) {
+        	cue_end_handling_real = cues.at(active_cue).end_handling;
+	}
     }
 
     void filter_cue::calc_values() {
