@@ -351,7 +351,12 @@ namespace dmxfish::filters {
         update_last_values();
         start_time = *time;
         frame = 0;
-        cue_end_handling_real = cues.at(active_cue).end_handling;
+	if (active_cue >= cues.size()) {
+		active_cue = cues.size() - 1;
+	}
+	if(active_cue < cues.size()) {
+        	cue_end_handling_real = cues.at(active_cue).end_handling;
+	}
     }
 
     void filter_cue::calc_values() {
@@ -530,7 +535,7 @@ namespace dmxfish::filters {
                 throw filter_config_exception("cue filter: unable to setup the cuelist. Property 'default_cue' was too large.",
                                               filter_type::filter_cue, own_id);
             }
-            if (new_default_cue > (long) cues.size()) {
+            if (new_default_cue >= (long) cues.size()) {
                 default_cue = -1;
             } else {
                 default_cue = new_default_cue;
@@ -673,7 +678,7 @@ namespace dmxfish::filters {
                 MARK_UNUSED(ex);
                 return false;
             }
-            if (new_default_cue > (long) cues.size()) {
+            if (new_default_cue >= (long) cues.size()) {
                 default_cue = -1;
                 ::spdlog::info("removed autoplay for this scene");
             } else {

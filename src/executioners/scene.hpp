@@ -11,6 +11,8 @@
 #include "LinearAllocator.h"
 #pragma GCC diagnostic pop
 
+#include "lib/logging.hpp"
+
 namespace dmxfish::execution {
 
 using scene_filter_vector_t = std::vector<std::shared_ptr<dmxfish::filters::filter>>;
@@ -52,8 +54,14 @@ public:
 	 * This method gets called when the scene becomes visible.
 	 */
 	inline void on_start() {
+		size_t i = 0;
 		for(auto& filter: this->filters) {
-			filter->scene_activated();
+			try {
+				filter->scene_activated();
+			} catch(std::exception& e) {
+				::spdlog::error("Failed to perform scene_activated on filter {0:d}: {1}", i, e.what());
+			}
+			i++;
 		}
 	}
 
