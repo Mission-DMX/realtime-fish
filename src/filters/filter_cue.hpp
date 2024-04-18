@@ -138,6 +138,8 @@ namespace dmxfish::filters {
 
         void calc_values();
 
+        void last_frame_handling();
+
     public:
         filter_cue() : filter() {}
         virtual ~filter_cue() {}
