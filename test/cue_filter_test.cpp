@@ -16,177 +16,205 @@ struct Iomanager_Init {
 
 BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
 
+    struct cue_st_test{
+        std::vector<uint8_t> eight_bit_frames;
+        std::vector<uint16_t> sixteen_bit_frames;
+        std::vector<double> float_frames;
+        std::vector<dmxfish::dmx::pixel> color_frames;
+    };
+
+    struct cue_st_names{
+        std::vector<std::string> eight_bit_frames;
+        std::vector<std::string> sixteen_bit_frames;
+        std::vector<std::string> float_frames;
+        std::vector<std::string> color_frames;
+    };
+
+    void test_cue_function(
+                std::map <std::string,
+                std::string>& configuration,
+                std::map <std::string, std::string>& initial_parameters,
+                std::vector<int>& time_stamps,
+                std::map<int, cue_st_test>& test_values,
+                cue_st_names& channel_names,
+                std::map<int, std::vector<std::tuple<std::string, std::string>>>& update_commands
+                ){
+        spdlog::set_level(spdlog::level::debug);
+        dmxfish::filters::filter_cue fil = filter_cue();
+
+        channel_mapping input_channels = channel_mapping();
+        double time_s = 0;
+        input_channels.float_channels["time"] = &time_s;
+
+        fil.pre_setup(configuration, initial_parameters, "");
+        fil.setup_filter (configuration, initial_parameters, input_channels, "");
+
+
+        channel_mapping map = channel_mapping();
+        const std::string name = "t";
+        for (const int& i : time_stamps){
+            time_s = (double) i;
+            for (auto it = update_commands[i].begin();
+                 it != update_commands[i].end(); ++it) {
+                auto [key, value] = *it;
+                fil.receive_update_from_gui(key, value);
+            }
+
+
+            fil.update();
+            fil.get_output_channels(map, name);
+            int num = 0;
+            for (auto it = channel_names.eight_bit_frames.begin();
+                 it != channel_names.eight_bit_frames.end(); ++it) {
+                uint8_t tester = test_values[i].eight_bit_frames.at(num);
+                BOOST_REQUIRE_MESSAGE(map.eight_bit_channels.contains("t:" + *it), "Output does not contain the 8Bit channel: " + *it);
+                std::string error =
+                        std::string("Channel (8Bit) ") + *it + " should be " + std::to_string(tester) + " , but is " +
+                        std::to_string(*map.eight_bit_channels["t:" + *it]) + " at time: " + std::to_string(time_s);
+                BOOST_TEST(*map.eight_bit_channels["t:" + *it] == tester, error);
+                num++;
+            }
+            num = 0;
+            for (auto it = channel_names.sixteen_bit_frames.begin();
+                 it != channel_names.sixteen_bit_frames.end(); ++it) {
+                uint16_t tester = test_values[i].sixteen_bit_frames.at(num);
+                BOOST_REQUIRE_MESSAGE(map.sixteen_bit_channels.contains("t:" + *it), "Output does not contain the 16Bit channel: " + *it);
+                std::string error =
+                        std::string("Channel (16Bit) ") + *it + " should be " + std::to_string(tester) + " , but is " +
+                        std::to_string(*map.sixteen_bit_channels["t:" + *it]) + " at time: " + std::to_string(time_s);
+                BOOST_TEST(*map.sixteen_bit_channels["t:" + *it] == tester, error);
+                num++;
+            }
+            num = 0;
+            for (auto it = channel_names.float_frames.begin();
+                 it != channel_names.float_frames.end(); ++it) {
+                double tester = test_values[i].float_frames.at(num);
+                BOOST_REQUIRE_MESSAGE(map.float_channels.contains("t:" + *it), "Output does not contain the float channel: " + *it);
+                std::string error =
+                        std::string("Channel (float) ") + *it + " should be " + std::to_string(tester) + " , but is " +
+                        std::to_string(*map.float_channels["t:" + *it]) + " at time: " + std::to_string(time_s);
+                BOOST_TEST(std::abs(*map.float_channels["t:" + *it] - tester) <= tester * 0.00001, error);
+                num++;
+            }
+            num = 0;
+            for (auto it = channel_names.color_frames.begin();
+                 it != channel_names.color_frames.end(); ++it) {
+                dmxfish::dmx::pixel& tester = test_values[i].color_frames.at(num);
+                BOOST_REQUIRE_MESSAGE(map.color_channels.contains("t:" + *it), "Output does not contain the color channel: " + *it);
+                std::string error =
+                        std::string("Channel (Color.hue) ") + *it + " should be " + std::to_string(tester.hue) + " , but is " +
+                        std::to_string((*map.color_channels["t:" + *it]).hue) + " at time: " + std::to_string(time_s);
+                BOOST_TEST(std::abs((*map.color_channels["t:" + *it]).hue - tester.hue) <= tester.hue * 0.00001, error);
+                error =
+                        std::string("Channel (Color.sat) ") + *it + " should be " + std::to_string(tester.saturation) + " , but is " +
+                        std::to_string((*map.color_channels["t:" + *it]).saturation) + " at time: " + std::to_string(time_s);
+                BOOST_TEST(std::abs((*map.color_channels["t:" + *it]).saturation - tester.saturation) <= tester.saturation * 0.00001, error);
+                error =
+                        std::string("Channel (Color.ilu) ") + *it + " should be " + std::to_string(tester.iluminance) + " , but is " +
+                        std::to_string((*map.color_channels["t:" + *it]).iluminance) + " at time: " + std::to_string(time_s);
+                BOOST_TEST(std::abs((*map.color_channels["t:" + *it]).iluminance - tester.iluminance) <= tester.iluminance * 0.00001, error);
+                num++;
+            }
+            map.eight_bit_channels.clear();
+            map.sixteen_bit_channels.clear();
+            map.float_channels.clear();
+            map.color_channels.clear();
+
+        }
+    };
+
+
+
+
 BOOST_AUTO_TEST_CASE(onechannelonecueoneframe) {
+        std::map <std::string, std::string> configuration;
+        std::map <std::string, std::string> initial_parameters;
 
-    spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+        cue_st_names channel_names;
+        channel_names.eight_bit_frames.push_back("dimmer");
 
-    double time_s = 0;
+        configuration["mapping"] = "dimmer:8bit";
+        configuration["end_handling"] = "hold";
+        configuration["cuelist"] = "2:100@edg#hold#do_nothing";
 
-    channel_mapping input_channels = channel_mapping ();
-    input_channels.float_channels["time"] = &time_s;
-
-    std::map < std::string, std::string > configuration;
-    configuration["mapping"] = "dimmer:8bit";
-    configuration["end_handling"] = "hold";
-
-    configuration["cuelist"] =
-    "2:100@edg#hold#do_nothing";
-
-    std::map < std::string, std::string > initial_parameters;
-
-    fil.pre_setup(configuration, initial_parameters, "");
-    fil.setup_filter (configuration, initial_parameters, input_channels, "");
+        std::map<int, cue_st_test> test_values;
+        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
 
 
-
-    channel_mapping map = channel_mapping ();
-    const std::string name = "t";
-    for (int i = 0; i < 4000; i = i + 100){
-        time_s = (double) i;
-        if (i == 1000) {
-            const std::string key = "run_mode";
-            const std::string _value = "play";
-            fil.receive_update_from_gui(key, _value);
+        std::vector<int> time_s;
+        for (int tester_time = 0; tester_time < 4000; tester_time = tester_time+ 100) {
+            if (tester_time == 1000) {
+                update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
+            }
+            time_s.push_back(tester_time);
+            test_values[tester_time].eight_bit_frames.push_back((tester_time < 2000) ? 0 : 100);
         }
 
-        fil.update();
-        fil.get_output_channels(map, name);
-        for (auto it = map.eight_bit_channels.begin();
-             it != map.eight_bit_channels.end(); ++it) {
-            uint8_t tester = (time_s < 2000) ? 0 : 100;
-            std::string error =
-                    std::string("Channel ") + it->first + " should be " + std::to_string(tester) + " , but is " +
-                    std::to_string(*it->second) + " at time: " + std::to_string(time_s);
-            BOOST_TEST(*map.eight_bit_channels["t:dimmer"] == tester, error);
-        }
-        map.eight_bit_channels.clear();
-        map.sixteen_bit_channels.clear();
-        map.float_channels.clear();
-        map.color_channels.clear();
-
-    }
+        test_cue_function(configuration, initial_parameters, time_s, test_values, channel_names, update_key_values);
 }
 
 
 BOOST_AUTO_TEST_CASE(oneframeeachchanneltype) {
+        std::map <std::string, std::string> configuration;
+        std::map <std::string, std::string> initial_parameters;
+
+        cue_st_names channel_names;
+        channel_names.eight_bit_frames.push_back("dimmer");
+        channel_names.sixteen_bit_frames.push_back("xpos");
+        channel_names.float_frames.push_back("ypos");
+        channel_names.color_frames.push_back("color");
+
+        configuration["mapping"] = "dimmer:8bit;xpos:16bit;ypos:float;color:color";
+        configuration["end_handling"] = "hold";
+
+        configuration["cuelist"] =
+                "2:100@sig&16000@e_i&0.8@lin&120,1,1@edg#hold#do_nothing";
+
+        std::map<int, cue_st_test> test_values;
+        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
+
+
+        std::vector<int> time_s;
+        for (int tester_time= 0; tester_time < 4000; tester_time= tester_time + 100) {
+            if (tester_time== 1000) {
+                update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
+            }
+            time_s.push_back(tester_time);
+            uint8_t tester8;
+            uint16_t tester16;
+            double testerfloat;
+            dmxfish::dmx::pixel testercolor = (tester_time < 2000) ? dmxfish::dmx::pixel(0,0,0): dmxfish::dmx::pixel(120,1,1);
+            if (tester_time < 1000){
+                tester8 = 0;
+                tester16 = 0;
+                testerfloat = 0;
+            } else if (tester_time < 3000) {
+                tester8 = (uint8_t) std::round(100 * 1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 2000 * 12)));
+                tester16 = (uint16_t) std::round(16000 * (((double) tester_time - 1000) / 2000) * (((double) tester_time - 1000) / 2000));
+                testerfloat = 0.8 * (tester_time - 1000)/2000;
+                ::spdlog::debug(" 8 at {}: {}", tester_time, tester8);
+                ::spdlog::debug("16 at {}: {}", tester_time, tester16);
+            } else {
+                tester8 = 100;
+                tester16 = 16000;
+                testerfloat = 0.8;
+            }
+            test_values[tester_time].eight_bit_frames.push_back(tester8);
+            test_values[tester_time].sixteen_bit_frames.push_back(tester16);
+            test_values[tester_time].float_frames.push_back(testerfloat);
+            test_values[tester_time].color_frames.push_back(testercolor);
+        }
+        test_cue_function(configuration, initial_parameters, time_s, test_values, channel_names, update_key_values);
+}
+
+
+BOOST_AUTO_TEST_CASE(onechanneltwoframes) {
     spdlog::set_level(spdlog::level::debug);
     dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
     channel_mapping input_channels = channel_mapping();
-    input_channels.float_channels["time"] = &time_s;
-
-    std::map <std::string, std::string> configuration;
-    configuration["mapping"] = "dimmer:8bit;xpos:16bit;ypos:float;color:color";
-    configuration["end_handling"] = "hold";
-
-    configuration["cuelist"] =
-            "2:100@sig&16000@e_i&0.8@lin&120,1,1@edg#hold#do_nothing";
-
-    std::map <std::string, std::string> initial_parameters;
-
-    fil.pre_setup(configuration, initial_parameters, "");
-    fil.setup_filter(configuration, initial_parameters, input_channels, "");
-
-
-    channel_mapping map = channel_mapping();
-    const std::string name = "t";
-    for (int i = 0; i < 4000; i = i + 100) {
-        time_s = (double) i;
-        if (i == 1000) {
-            const std::string key = "run_mode";
-            const std::string _value = "play";
-            fil.receive_update_from_gui(key, _value);
-        }
-
-        fil.update();
-        fil.get_output_channels(map, name);
-        for (auto it = map.eight_bit_channels.begin();
-             it != map.eight_bit_channels.end(); ++it) {
-
-            uint8_t tester8;
-            if (time_s < 1000){
-                tester8 = 0;
-            } else if (time_s < 3000) {
-                tester8 = (uint8_t) std::round(100 * 1.0 / (1 + std::exp(6 - (time_s - 1000)/2000 *12)));
-            } else {
-                tester8 = 100;
-            }
-            std::string error = std::string("Channel ") + it->first + " should be " + std::to_string(tester8) +
-                                " , but is " + std::to_string(*it->second) + " at time: " +
-                                std::to_string(time_s);
-            BOOST_TEST(*map.eight_bit_channels["t:dimmer"] == tester8, error);
-        }
-
-            for (auto it = map.sixteen_bit_channels.begin();
-                 it != map.sixteen_bit_channels.end(); ++it) {
-
-                uint16_t tester16;
-                if (time_s < 1000){
-                    tester16 = 0;
-                } else if (time_s < 3000) {
-                    tester16 = (uint16_t) std::round(16000 * ((time_s - 1000)/2000)*((time_s - 1000)/2000));
-                } else {
-                    tester16 = 16000;
-                }
-                std::string error = std::string("Channel ") + it->first + " should be " + std::to_string(tester16) +
-                                    " , but is " + std::to_string(*it->second) + " at time: " +
-                                    std::to_string(time_s);
-                BOOST_TEST(*map.sixteen_bit_channels["t:xpos"] == tester16, error);
-            }
-
-            for (auto it = map.float_channels.begin();
-                 it != map.float_channels.end(); ++it) {
-
-                double testerfl;
-                if (time_s < 1000){
-                    testerfl = 0;
-                } else if (time_s < 3000) {
-                    testerfl = 0.8 * (time_s - 1000)/2000;
-                } else {
-                    testerfl = 0.8;
-                }
-                std::string error = std::string("Channel ") + it->first + " should be " + std::to_string(testerfl) +
-                                    " , but is " + std::to_string(*it->second) + " at time: " +
-                                    std::to_string(time_s);
-                BOOST_TEST(std::abs(*map.float_channels["t:ypos"] - testerfl) <= testerfl * 0.00001, error);
-            }
-
-            for (auto it = map.float_channels.begin();
-                 it != map.float_channels.end(); ++it) {
-
-                dmxfish::dmx::pixel testercol;
-                if (time_s < 2000){
-                    testercol = dmxfish::dmx::pixel(0,0,0);
-//                } else if (time_s < 3000) {
-//                    testercol = 0.8 * (time_s - 1000)/2000;
-                } else {
-                    testercol = dmxfish::dmx::pixel(120,1,1);
-                }
-                std::string error = std::string("Channel ") + it->first + " should be " + testercol.str() +
-                                    " , but is " + std::to_string(*it->second) + " at time: " +
-                                    std::to_string(time_s);
-                BOOST_TEST(std::abs(map.color_channels["t:color"]->hue - testercol.hue) <= testercol.hue * 0.00001, error);
-                BOOST_TEST(std::abs(map.color_channels["t:color"]->saturation - testercol.saturation) <= testercol.saturation * 0.00001, error);
-                BOOST_TEST(std::abs(map.color_channels["t:color"]->iluminance - testercol.iluminance) <= testercol.iluminance * 0.00001, error);
-            }
-        map.eight_bit_channels.clear();
-        map.sixteen_bit_channels.clear();
-        map.float_channels.clear();
-        map.color_channels.clear();
-    }
-}
-
-
-BOOST_AUTO_TEST_CASE(onechanneltwoframes) {
-    spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
-
-    double time_s = 0;
-
-    channel_mapping input_channels = channel_mapping ();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -202,7 +230,7 @@ BOOST_AUTO_TEST_CASE(onechanneltwoframes) {
 
 
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 6000; i = i + 100){
         time_s = (double) i;
@@ -242,11 +270,11 @@ BOOST_AUTO_TEST_CASE(onechanneltwoframes) {
 
 BOOST_AUTO_TEST_CASE(teststop) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -263,7 +291,7 @@ BOOST_AUTO_TEST_CASE(teststop) {
 
 
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 12000; i = i + 100){
         time_s = (double) i;
@@ -314,11 +342,11 @@ BOOST_AUTO_TEST_CASE(teststop) {
 
 BOOST_AUTO_TEST_CASE(testpause) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -335,7 +363,7 @@ BOOST_AUTO_TEST_CASE(testpause) {
 
 
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 8000; i = i + 100){
         time_s = (double) i;
@@ -393,11 +421,11 @@ BOOST_AUTO_TEST_CASE(testpause) {
 
 BOOST_AUTO_TEST_CASE(test_restart) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -414,7 +442,7 @@ BOOST_AUTO_TEST_CASE(test_restart) {
 
 
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 10000; i = i + 100){
         time_s = (double) i;
@@ -462,11 +490,11 @@ BOOST_AUTO_TEST_CASE(test_restart) {
 
 BOOST_AUTO_TEST_CASE(test_restart_2nd_cue) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -481,7 +509,7 @@ BOOST_AUTO_TEST_CASE(test_restart_2nd_cue) {
 	fil.pre_setup(configuration, initial_parameters, "");
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 18000; i = i + 100){
         time_s = (double) i;
@@ -532,11 +560,11 @@ BOOST_AUTO_TEST_CASE(test_restart_2nd_cue) {
 
 BOOST_AUTO_TEST_CASE(test_start_again_whole_cuelist) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -551,7 +579,7 @@ BOOST_AUTO_TEST_CASE(test_start_again_whole_cuelist) {
 	fil.pre_setup(configuration, initial_parameters, "");
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 24000; i = i + 100){
         time_s = (double) i;
@@ -608,11 +636,11 @@ BOOST_AUTO_TEST_CASE(test_start_again_whole_cuelist) {
 
 BOOST_AUTO_TEST_CASE(test_to_next_cue) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -627,7 +655,7 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue) {
 	fil.pre_setup(configuration, initial_parameters, "");
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 24000; i = i + 100){
         time_s = (double) i;
@@ -691,11 +719,11 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue) {
 
 BOOST_AUTO_TEST_CASE(test_to_next_cue_twice) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -710,7 +738,7 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue_twice) {
 	fil.pre_setup(configuration, initial_parameters, "");
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 29000; i = i + 100){
         time_s = (double) i;
@@ -792,11 +820,11 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue_twice) {
 
 BOOST_AUTO_TEST_CASE(twocuestwoframesnext) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -811,7 +839,7 @@ BOOST_AUTO_TEST_CASE(twocuestwoframesnext) {
 	fil.pre_setup(configuration, initial_parameters, "");
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 16000; i = i + 100){
         time_s = (double) i;
@@ -858,11 +886,11 @@ BOOST_AUTO_TEST_CASE(twocuestwoframesnext) {
 
 BOOST_AUTO_TEST_CASE(twocuestwoframestart_again) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -879,7 +907,7 @@ BOOST_AUTO_TEST_CASE(twocuestwoframestart_again) {
 
 
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 16000; i = i + 100){
         time_s = (double) i;
@@ -933,11 +961,11 @@ BOOST_AUTO_TEST_CASE(twocuestwoframestart_again) {
 
 BOOST_AUTO_TEST_CASE(twocuestwoframeshold) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -954,7 +982,7 @@ BOOST_AUTO_TEST_CASE(twocuestwoframeshold) {
 
 
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 16000; i = i + 100){
         time_s = (double) i;
@@ -1001,11 +1029,11 @@ BOOST_AUTO_TEST_CASE(twocuestwoframeshold) {
 
 BOOST_AUTO_TEST_CASE(anothercuenext) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -1020,7 +1048,7 @@ BOOST_AUTO_TEST_CASE(anothercuenext) {
 	fil.pre_setup(configuration, initial_parameters, "");
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 16000; i = i + 100){
         time_s = (double) i;
@@ -1070,11 +1098,11 @@ BOOST_AUTO_TEST_CASE(anothercuenext) {
 
 BOOST_AUTO_TEST_CASE(runcueimmidiatly) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -1089,7 +1117,7 @@ BOOST_AUTO_TEST_CASE(runcueimmidiatly) {
 	fil.pre_setup(configuration, initial_parameters, "");
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 16000; i = i + 100){
         time_s = (double) i;
@@ -1141,11 +1169,11 @@ BOOST_AUTO_TEST_CASE(runcueimmidiatly) {
 
 BOOST_AUTO_TEST_CASE(alotofstuff) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -1160,7 +1188,7 @@ BOOST_AUTO_TEST_CASE(alotofstuff) {
 	fil.pre_setup(configuration, initial_parameters, "");
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     for (int i = 0; i < 60000; i = i + 100){
         time_s = (double) i;
@@ -1252,11 +1280,11 @@ BOOST_AUTO_TEST_CASE(alotofstuff) {
 
 BOOST_AUTO_TEST_CASE(startdefaultcue) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -1273,7 +1301,7 @@ BOOST_AUTO_TEST_CASE(startdefaultcue) {
     fil.pre_setup(configuration, initial_parameters, "");
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     fil.scene_activated();
     for (int i = 0; i < 60000; i = i + 100){
@@ -1365,11 +1393,11 @@ BOOST_AUTO_TEST_CASE(startdefaultcue) {
 
 BOOST_AUTO_TEST_CASE(startanothercuefromstart) {
     spdlog::set_level(spdlog::level::debug);
-    dmxfish::filters::filter_cue fil = filter_cue ();
+    dmxfish::filters::filter_cue fil = filter_cue();
 
     double time_s = 0;
 
-    channel_mapping input_channels = channel_mapping ();
+    channel_mapping input_channels = channel_mapping();
     input_channels.float_channels["time"] = &time_s;
 
     std::map < std::string, std::string > configuration;
@@ -1384,7 +1412,7 @@ BOOST_AUTO_TEST_CASE(startanothercuefromstart) {
     fil.pre_setup(configuration, initial_parameters, "");
     fil.setup_filter (configuration, initial_parameters, input_channels, "");
 
-    channel_mapping map = channel_mapping ();
+    channel_mapping map = channel_mapping();
     const std::string name = "t";
     fil.scene_activated();
     for (int i = 0; i < 60000; i = i + 100){
