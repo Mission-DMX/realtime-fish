@@ -371,7 +371,7 @@ namespace dmxfish::filters {
         }
     }
 
-    void filter_cue::last_frame_handling() {
+    bool filter_cue::last_frame_handling() {
         switch (cue_end_handling_real) { // end of cue handling
             case START_AGAIN:
                 break;
@@ -381,9 +381,9 @@ namespace dmxfish::filters {
                 running_state = PAUSE;
                 cue_end_handling_real = HOLDING;
                 update_parameter_gui();
-                return;
+                return false;
             case HOLDING:
-                return;
+                return false;
             case NEXT_CUE:
                 if (active_cue < cues.size() - 1) { // Not last cue?
                     active_cue++;
@@ -396,22 +396,22 @@ namespace dmxfish::filters {
                             running_state = STOP;
                             update_hold_values();
                             update_parameter_gui();
-                            return;
+                            return false;
                         case NEXT_CUE:
                             ::spdlog::warn("should not have reached NEXT CUE at the end of the cuelist");
-                            return;
+                            return false;
                         case HOLDING:
                             ::spdlog::warn("should not have reached HOLDING at the end of the cuelist");
-                            return;
+                            return false;
                         default:
                             ::spdlog::warn("should not have reached default end_handling at the end of the cuelist");
-                            return;
+                            return false;
                     }
                 }
                 break;
             default:
                 ::spdlog::warn("should not have reached default end_handling at the end of the cue");
-                return;
+                return false;
         }
         if (next_cue < cues.size()) { // if next cue is set, start this cue
             active_cue = next_cue;
@@ -419,6 +419,7 @@ namespace dmxfish::filters {
         }
         start_new_cue();
         cue_end_handling_real = cues.at(active_cue).end_handling;
+        return true;
     }
 
     void filter_cue::calc_values() {
@@ -450,7 +451,9 @@ namespace dmxfish::filters {
             if (frame < cues.at(active_cue).timestamps.size() - 1) { // Not the last Frame of the cue?
                 frame++;
             } else { // last frame of cue
-                last_frame_handling();
+                if (!last_frame_handling()){
+                    return;
+                }
             }
             update_parameter_gui();
         }
