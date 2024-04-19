@@ -56,8 +56,14 @@ namespace dmxfish::filters {
                 params <<
                        run_state << ";" <<
                        std::to_string(this->active_cue) << ";" <<
-                       std::to_string((*this->time - this->start_time) / 1000) << ";" <<
-                       std::to_string((cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1)) / 1000);
+                       std::to_string((*this->time - this->start_time) / 1000) << ";";
+                if (cues.at(this->active_cue).timestamps.size() > 0) {
+                    params << std::to_string(
+                            (cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1)) /
+                            1000);
+                } else {
+                    params << std::to_string(0);
+                }
                 update_message.set_parameter_value(params.str());
 
                 iomanager->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
@@ -197,18 +203,24 @@ namespace dmxfish::filters {
     bool filter_cue::handle_timestamps(size_t cue, const std::string &str, size_t start, size_t end, size_t nr_timestamp) {
         MARK_UNUSED(nr_timestamp);
         const size_t end_ts = str.find(':', start);
-        try {
-            cues.at(cue).timestamps.push_back(std::stod(str.substr(start, end_ts - start)) * 1000);
-        } catch (const std::invalid_argument &ex) {
-            MARK_UNUSED(ex);
-            return false;
-        } catch (const std::out_of_range &ex) {
-            MARK_UNUSED(ex);
-            return false;
+        if (start < end) {
+            try {
+                cues.at(cue).timestamps.push_back(std::stod(str.substr(start, end_ts - start)) * 1000);
+            } catch (const std::invalid_argument &ex) {
+                MARK_UNUSED(ex);
+                return false;
+            } catch (const std::out_of_range &ex) {
+                MARK_UNUSED(ex);
+                return false;
+            }
+            return do_with_substr(str, end_ts + 1, end, '&', channel.size(),
+                        std::bind(&dmxfish::filters::filter_cue::handle_frame, this, cue, std::placeholders::_1,
+                        std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
         }
-        return do_with_substr(str, end_ts + 1, end, '&', channel.size(),
-                              std::bind(&dmxfish::filters::filter_cue::handle_frame, this, cue, std::placeholders::_1,
-                                        std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+        else {
+            ::spdlog::warn("cue " + std::to_string(cue) + " of filter " + this->own_id + " is empty");
+            return true;
+        }
     }
 
     bool filter_cue::handle_cue_conf(size_t cue, const std::string &str, size_t start, size_t end, size_t number) {
@@ -351,15 +363,70 @@ namespace dmxfish::filters {
         update_last_values();
         start_time = *time;
         frame = 0;
-	if (active_cue >= cues.size()) {
-		active_cue = cues.size() - 1;
-	}
-	if(active_cue < cues.size()) {
-        	cue_end_handling_real = cues.at(active_cue).end_handling;
-	}
+        if (active_cue >= cues.size()) {
+            active_cue = cues.size() - 1;
+        }
+        if(active_cue < cues.size()) {
+                cue_end_handling_real = cues.at(active_cue).end_handling;
+        }
+    }
+
+    bool filter_cue::last_frame_handling() {
+        switch (cue_end_handling_real) { // end of cue handling
+            case START_AGAIN:
+                break;
+            case HOLD:
+                update_hold_values();
+                pause_time = *time;
+                running_state = PAUSE;
+                cue_end_handling_real = HOLDING;
+                update_parameter_gui();
+                return false;
+            case HOLDING:
+                return false;
+            case NEXT_CUE:
+                if (active_cue < cues.size() - 1) { // Not last cue?
+                    active_cue++;
+                } else {
+                    switch (handle_end) { // end of cuelist handling
+                        case START_AGAIN:
+                            active_cue = 0;
+                            break;
+                        case HOLD:
+                            running_state = STOP;
+                            update_hold_values();
+                            update_parameter_gui();
+                            return false;
+                        case NEXT_CUE:
+                            ::spdlog::warn("should not have reached NEXT CUE at the end of the cuelist");
+                            return false;
+                        case HOLDING:
+                            ::spdlog::warn("should not have reached HOLDING at the end of the cuelist");
+                            return false;
+                        default:
+                            ::spdlog::warn("should not have reached default end_handling at the end of the cuelist");
+                            return false;
+                    }
+                }
+                break;
+            default:
+                ::spdlog::warn("should not have reached default end_handling at the end of the cue");
+                return false;
+        }
+        if (next_cue < cues.size()) { // if next cue is set, start this cue
+            active_cue = next_cue;
+            next_cue = 0xffff;
+        }
+        start_new_cue();
+        cue_end_handling_real = cues.at(active_cue).end_handling;
+        return true;
     }
 
     void filter_cue::calc_values() {
+        if (frame >= cues.at(active_cue).timestamps.size()){
+            last_frame_handling();
+            return;
+        }
         if (*time >= cues.at(active_cue).timestamps.at(frame) + start_time) { // Next Frame?
             if (!already_updated_last) {
                 for (size_t i = 0; i < eight_bit_channels.size(); i++) {
@@ -384,80 +451,45 @@ namespace dmxfish::filters {
             if (frame < cues.at(active_cue).timestamps.size() - 1) { // Not the last Frame of the cue?
                 frame++;
             } else { // last frame of cue
-                switch (cue_end_handling_real) { // end of cue handling
-                    case START_AGAIN:
-                        break;
-                    case HOLD:
-                        update_hold_values();
-                        pause_time = *time;
-                        running_state = PAUSE;
-                        cue_end_handling_real = HOLDING;
-                        update_parameter_gui();
-                        return;
-                    case HOLDING:
-                        return;
-                    case NEXT_CUE:
-                        if (active_cue < cues.size() - 1) { // Not last cue?
-                            active_cue++;
-                        } else {
-                            switch (handle_end) { // end of cuelist handling
-                                case START_AGAIN:
-                                    active_cue = 0;
-                                    break;
-                                case HOLD:
-                                    running_state = STOP;
-                                    update_hold_values();
-                                    update_parameter_gui();
-                                    return;
-                                case NEXT_CUE:
-                                    ::spdlog::warn("should not have reached NEXT CUE at the end of the cuelist");
-                                    return;
-                                case HOLDING:
-                                    ::spdlog::warn("should not have reached HOLDING at the end of the cuelist");
-                                    return;
-                                default:
-                                    ::spdlog::warn("should not have reached default end_handling at the end of the cuelist");
-                                    return;
-                            }
-                        }
-                        break;
-                    default:
-                        ::spdlog::warn("should not have reached default end_handling at the end of the cue");
-                        return;
+                if (!last_frame_handling()){
+                    return;
                 }
-                if (next_cue < cues.size()) { // if next cue is set, start this cue
-                    active_cue = next_cue;
-                    next_cue = 0xffff;
-                }
-                start_new_cue();
-                cue_end_handling_real = cues.at(active_cue).end_handling;
             }
             update_parameter_gui();
         }
-        already_updated_last = false;
+        if (frame < cues.at(active_cue).timestamps.size()) {
+            already_updated_last = false;
+            double rel_time =
+                    (*time - last_timestamp) / (cues.at(active_cue).timestamps.at(frame) - last_timestamp + start_time);
 
-        double rel_time =
-                (*time - last_timestamp) / (cues.at(active_cue).timestamps.at(frame) - last_timestamp + start_time);
-
-        for (size_t i = 0; i < eight_bit_channels.size(); i++) {
-            size_t frame_index = frame * eight_bit_channels.size() + i;
-            calc_transition<uint8_t>(rel_time, cues.at(active_cue).eight_bit_frames.at(frame_index).transition, last_eight_bit_channels.at(i),
-                                     cues.at(active_cue).eight_bit_frames.at(frame_index).value, i);
-        }
-        for (size_t i = 0; i < sixteen_bit_channels.size(); i++) {
-            size_t frame_index = frame * sixteen_bit_channels.size() + i;
-            calc_transition<uint16_t>(rel_time, cues.at(active_cue).sixteen_bit_frames.at(frame_index).transition, last_sixteen_bit_channels.at(i),
-                                      cues.at(active_cue).sixteen_bit_frames.at(frame_index).value, i);
-        }
-        for (size_t i = 0; i < float_channels.size(); i++) {
-            size_t frame_index = frame * float_channels.size() + i;
-            calc_transition<double>(rel_time, cues.at(active_cue).float_frames.at(frame_index).transition, last_float_channels.at(i),
-                                    cues.at(active_cue).float_frames.at(frame_index).value, i);
-        }
-        for (size_t i = 0; i < color_channels.size(); i++) {
-            size_t frame_index = frame * color_channels.size() + i;
-            calc_transition<dmxfish::dmx::pixel>(rel_time, cues.at(active_cue).color_frames.at(frame_index).transition, last_color_channels.at(i),
-                                                 cues.at(active_cue).color_frames.at(frame_index).value, i);
+            for (size_t i = 0; i < eight_bit_channels.size(); i++) {
+                size_t frame_index = frame * eight_bit_channels.size() + i;
+                calc_transition<uint8_t>(rel_time,
+                                         cues.at(active_cue).eight_bit_frames.at(frame_index).transition,
+                                         last_eight_bit_channels.at(i),
+                                         cues.at(active_cue).eight_bit_frames.at(frame_index).value, i);
+            }
+            for (size_t i = 0; i < sixteen_bit_channels.size(); i++) {
+                size_t frame_index = frame * sixteen_bit_channels.size() + i;
+                calc_transition<uint16_t>(rel_time,
+                                          cues.at(active_cue).sixteen_bit_frames.at(frame_index).transition,
+                                          last_sixteen_bit_channels.at(i),
+                                          cues.at(active_cue).sixteen_bit_frames.at(frame_index).value, i);
+            }
+            for (size_t i = 0; i < float_channels.size(); i++) {
+                size_t frame_index = frame * float_channels.size() + i;
+                calc_transition<double>(rel_time,
+                                        cues.at(active_cue).float_frames.at(frame_index).transition,
+                                        last_float_channels.at(i),
+                                        cues.at(active_cue).float_frames.at(frame_index).value, i);
+            }
+            for (size_t i = 0; i < color_channels.size(); i++) {
+                size_t frame_index = frame * color_channels.size() + i;
+                calc_transition<dmxfish::dmx::pixel>(rel_time,
+                                                     cues.at(active_cue).color_frames.at(frame_index).transition,
+                                                     last_color_channels.at(i),
+                                                     cues.at(active_cue).color_frames.at(frame_index).value, i);
+            }
         }
     }
 
@@ -719,7 +751,6 @@ namespace dmxfish::filters {
                 break;
             }
         }
-
         calc_values();
     }
 
