@@ -190,7 +190,7 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
 
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
-        configuration["cuelist"] = "2:100@lin|6:200@lin#next_cue#do_nothing$#next_cue#do_nothing$1:10@lin|3:150@lin#next_cue#do_nothing$2:0@lin|4:240@lin#next_cue#do_nothing$#hold#do_nothing";
+        configuration["cuelist"] = "2:100@lin|6:200@lin#next_cue#do_nothing$#next_cue#do_nothing$#next_cue#do_nothing$1:10@lin|3:150@lin#next_cue#do_nothing$2:0@lin|4:240@lin#next_cue#do_nothing$#hold#do_nothing";
 
         std::map<int, cue_st_test> test_values;
         std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
@@ -209,20 +209,20 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
                 tester8 = (uint8_t) std::round((double) 100 * ((double) tester_time - 1000) / 2000);
             } else if (tester_time < 7000){
                 tester8 = (uint8_t) std::round((double) 100 + (double) 100 * ((double) tester_time - 3000) / 4000);
-            } else if (tester_time < 7020){
+            } else if (tester_time < 7040){
                 tester8 = 200; // due to the fact that i dont check on one update call iterative which cue has valid data
-            } else if (tester_time < 8020){
-                tester8 = (uint8_t) std::round((double) 200 - (double) 190 * ((double) tester_time - 7020) / 1000);
-            } else if (tester_time < 10020){
-                tester8 = (uint8_t) std::round((double) 10 + (double) 140 * ((double) tester_time - 8020) / 2000);
-            } else if (tester_time == 11640) {
+            } else if (tester_time < 8040){
+                tester8 = (uint8_t) std::round((double) 200 - (double) 190 * ((double) tester_time - 7040) / 1000);
+            } else if (tester_time < 10040){
+                tester8 = (uint8_t) std::round((double) 10 + (double) 140 * ((double) tester_time - 8040) / 2000);
+            } else if (tester_time == 11660) {
                 tester8 = 28;
-            } else if (tester_time < 12020){
-                tester8 = (uint8_t) std::round((double) 150 - (double) 150 * ((double) tester_time - 10020) / 2000);
-            } else if (tester_time < 14020){
-                tester8 = (uint8_t) std::round((double) 0 + (double) 240 * ((double) tester_time - 12020) / 2000);
-            } else if (tester_time < 14040) {
-                tester8 = test_values[14000].eight_bit_frames.at(test_values[tester_time].eight_bit_frames.size());
+            } else if (tester_time < 12040){
+                tester8 = (uint8_t) std::round((double) 150 - (double) 150 * ((double) tester_time - 10040) / 2000);
+            } else if (tester_time < 14040){
+                tester8 = (uint8_t) std::round((double) 0 + (double) 240 * ((double) tester_time - 12040) / 2000);
+            } else if (tester_time < 14060) {
+                tester8 = test_values[14020].eight_bit_frames.at(test_values[tester_time].eight_bit_frames.size());
             } else {
                 tester8 = 240;
             }
