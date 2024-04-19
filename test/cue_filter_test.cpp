@@ -59,11 +59,12 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
 
         channel_mapping map = channel_mapping();
         const std::string name = "t";
+        fil.get_output_channels(map, name);
         for (const int& i : time_stamps){
             time_s = (double) i;
 
             fil.update();
-            fil.get_output_channels(map, name);
+
             int num = 0;
             for (auto it = channel_names.eight_bit_frames.begin();
                  it != channel_names.eight_bit_frames.end(); ++it) {
@@ -116,17 +117,13 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
                 BOOST_TEST(std::abs((*map.color_channels["t:" + *it]).iluminance - tester.iluminance) <= tester.iluminance * 0.00001, error);
                 num++;
             }
-            map.eight_bit_channels.clear();
-            map.sixteen_bit_channels.clear();
-            map.float_channels.clear();
-            map.color_channels.clear();
-//            if (std::find(activate_scenes.begin(), activate_scenes.end(), i) != activate_scenes.end()){
-//                fil.scene_activated();
-//            }
             for (auto it = update_commands[i].begin();
                  it != update_commands[i].end(); ++it) {
                 auto [key, value] = *it;
                 fil.receive_update_from_gui(key, value);
+            }
+            if (std::find(activate_scenes.begin(), activate_scenes.end(), i) != activate_scenes.end()){
+                fil.scene_activated();
             }
         }
     };
@@ -134,7 +131,7 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
 
 
 
-BOOST_AUTO_TEST_CASE(onechannelonecueoneframe) {
+    BOOST_AUTO_TEST_CASE(onechannelonecueoneframe) {
         std::map <std::string, std::string> configuration;
 
         cue_st_names channel_names;
@@ -149,7 +146,7 @@ BOOST_AUTO_TEST_CASE(onechannelonecueoneframe) {
 
 
         std::vector<int> time_s;
-        for (int tester_time = 0; tester_time < 4000; tester_time = tester_time+ 100) {
+        for (int tester_time = 0; tester_time < 4000; tester_time = tester_time + 100) {
             time_s.push_back(tester_time);
             if (tester_time == 1000) {
                 update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
@@ -158,10 +155,133 @@ BOOST_AUTO_TEST_CASE(onechannelonecueoneframe) {
         }
 
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
+
+    BOOST_AUTO_TEST_CASE(emptycue) {
+        std::map <std::string, std::string> configuration;
+
+        cue_st_names channel_names;
+        channel_names.eight_bit_frames.push_back("dimmer");
+
+        configuration["mapping"] = "dimmer:8bit";
+        configuration["end_handling"] = "hold";
+        configuration["cuelist"] = "#hold#do_nothing";
+
+        std::map<int, cue_st_test> test_values;
+        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
 
 
-BOOST_AUTO_TEST_CASE(oneframeeachchanneltype) {
+        std::vector<int> time_s;
+        for (int tester_time = 0; tester_time < 4000; tester_time = tester_time + 100) {
+            time_s.push_back(tester_time);
+            if (tester_time == 1000) {
+                update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
+            }
+            test_values[tester_time].eight_bit_frames.push_back(0);
+        }
+
+        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
+    }
+    BOOST_AUTO_TEST_CASE(betweenemptycues) {
+        std::map <std::string, std::string> configuration;
+
+        cue_st_names channel_names;
+        channel_names.eight_bit_frames.push_back("dimmer");
+
+        configuration["mapping"] = "dimmer:8bit";
+        configuration["end_handling"] = "hold";
+        configuration["cuelist"] = "2:100@lin|6:200@lin#next_cue#do_nothing$#next_cue#do_nothing$1:10@lin|3:150@lin#next_cue#do_nothing$2:0@lin|4:240@lin#next_cue#do_nothing$#hold#do_nothing";
+
+        std::map<int, cue_st_test> test_values;
+        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
+
+
+        std::vector<int> time_s;
+        for (int tester_time = 0; tester_time < 16000; tester_time = tester_time + 20) {
+            time_s.push_back(tester_time);
+            if (tester_time == 1000) {
+                update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
+            }
+            uint8_t tester8;
+            if (tester_time < 1000){
+                tester8 = 0;
+            } else if (tester_time < 3000){
+                tester8 = (uint8_t) std::round((double) 100 * ((double) tester_time - 1000) / 2000);
+            } else if (tester_time < 7000){
+                tester8 = (uint8_t) std::round((double) 100 + (double) 100 * ((double) tester_time - 3000) / 4000);
+            } else if (tester_time < 7020){
+                tester8 = 200; // due to the fact that i dont check on one update call iterative which cue has valid data
+            } else if (tester_time < 8020){
+                tester8 = (uint8_t) std::round((double) 200 - (double) 190 * ((double) tester_time - 7020) / 1000);
+            } else if (tester_time < 10020){
+                tester8 = (uint8_t) std::round((double) 10 + (double) 140 * ((double) tester_time - 8020) / 2000);
+            } else if (tester_time == 11640) {
+                tester8 = 28;
+            } else if (tester_time < 12020){
+                tester8 = (uint8_t) std::round((double) 150 - (double) 150 * ((double) tester_time - 10020) / 2000);
+            } else if (tester_time < 14020){
+                tester8 = (uint8_t) std::round((double) 0 + (double) 240 * ((double) tester_time - 12020) / 2000);
+            } else if (tester_time < 14040) {
+                tester8 = test_values[14000].eight_bit_frames.at(test_values[tester_time].eight_bit_frames.size());
+            } else {
+                tester8 = 240;
+            }
+            test_values[tester_time].eight_bit_frames.push_back(tester8);
+        }
+
+        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
+    }
+
+    BOOST_AUTO_TEST_CASE(emptycuestring) {
+        std::map <std::string, std::string> configuration;
+
+        cue_st_names channel_names;
+        channel_names.eight_bit_frames.push_back("dimmer");
+
+        configuration["mapping"] = "dimmer:8bit";
+        configuration["end_handling"] = "hold";
+        configuration["cuelist"] = "";
+
+        std::map<int, cue_st_test> test_values;
+        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
+
+
+        std::vector<int> time_s;
+        for (int tester_time = 0; tester_time < 4000; tester_time = tester_time + 100) {
+            time_s.push_back(tester_time);
+            if (tester_time == 1000) {
+                update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
+            }
+            test_values[tester_time].eight_bit_frames.push_back(0);
+        }
+
+        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
+    }
+
+//    BOOST_AUTO_TEST_CASE(emptychannel) {
+//        std::map <std::string, std::string> configuration;
+//
+//        cue_st_names channel_names;
+//        channel_names.eight_bit_frames.push_back("");
+//
+//        configuration["mapping"] = "";
+//        configuration["end_handling"] = "hold";
+//        configuration["cuelist"] = "3:|7:#hold#do_nothing";
+//
+//        std::map<int, cue_st_test> test_values;
+//        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
+//
+//
+//        std::vector<int> time_s;
+//        for (int tester_time = 0; tester_time < 4000; tester_time = tester_time + 100) {
+//            time_s.push_back(tester_time);
+//        }
+//
+//        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
+//    }
+
+
+    BOOST_AUTO_TEST_CASE(oneframeeachchanneltype) {
         std::map <std::string, std::string> configuration;
 
         cue_st_names channel_names;
@@ -209,10 +329,10 @@ BOOST_AUTO_TEST_CASE(oneframeeachchanneltype) {
             test_values[tester_time].color_frames.push_back(testercolor);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
 
-BOOST_AUTO_TEST_CASE(onechanneltwoframes) {
+    BOOST_AUTO_TEST_CASE(onechanneltwoframes) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
@@ -245,10 +365,10 @@ BOOST_AUTO_TEST_CASE(onechanneltwoframes) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
 
-BOOST_AUTO_TEST_CASE(teststop) {
+    BOOST_AUTO_TEST_CASE(teststop) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
@@ -290,9 +410,9 @@ BOOST_AUTO_TEST_CASE(teststop) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
-BOOST_AUTO_TEST_CASE(testpause) {
+    BOOST_AUTO_TEST_CASE(testpause) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
@@ -334,9 +454,9 @@ BOOST_AUTO_TEST_CASE(testpause) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
-BOOST_AUTO_TEST_CASE(test_restart) {
+    BOOST_AUTO_TEST_CASE(test_restart) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
@@ -373,11 +493,11 @@ BOOST_AUTO_TEST_CASE(test_restart) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
 
 
-BOOST_AUTO_TEST_CASE(test_restart_2nd_cue) {
+    BOOST_AUTO_TEST_CASE(test_restart_2nd_cue) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
@@ -418,10 +538,10 @@ BOOST_AUTO_TEST_CASE(test_restart_2nd_cue) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
 
-BOOST_AUTO_TEST_CASE(test_start_again_whole_cuelist) {
+    BOOST_AUTO_TEST_CASE(test_start_again_whole_cuelist) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "start_again";
@@ -468,10 +588,10 @@ BOOST_AUTO_TEST_CASE(test_start_again_whole_cuelist) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
 
-BOOST_AUTO_TEST_CASE(test_to_next_cue) {
+    BOOST_AUTO_TEST_CASE(test_to_next_cue) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "start_again";
@@ -525,9 +645,9 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
-BOOST_AUTO_TEST_CASE(test_to_next_cue_twice) {
+    BOOST_AUTO_TEST_CASE(test_to_next_cue_twice) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "start_again";
@@ -585,11 +705,11 @@ BOOST_AUTO_TEST_CASE(test_to_next_cue_twice) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
 
 
-BOOST_AUTO_TEST_CASE(twocuestwoframesnext) {
+    BOOST_AUTO_TEST_CASE(twocuestwoframesnext) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
@@ -628,11 +748,11 @@ BOOST_AUTO_TEST_CASE(twocuestwoframesnext) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
 
 
-BOOST_AUTO_TEST_CASE(twocuestwoframestart_again) {
+    BOOST_AUTO_TEST_CASE(twocuestwoframestart_again) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
@@ -647,9 +767,9 @@ BOOST_AUTO_TEST_CASE(twocuestwoframestart_again) {
         std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
 
         std::vector<int> time_s;
-        for (int tester_time= 0; tester_time < 16000; tester_time= tester_time + 7000) {
+        for (int tester_time= 0; tester_time < 16000; tester_time = tester_time + 100) {
             time_s.push_back(tester_time);
-            if (tester_time == 1000 || tester_time == 4000) {
+            if (tester_time == 1000 || tester_time == 7000) {
                 update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
             }
             uint8_t tester8;
@@ -677,12 +797,12 @@ BOOST_AUTO_TEST_CASE(twocuestwoframestart_again) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
 
 
 
-BOOST_AUTO_TEST_CASE(twocuestwoframeshold) {
+    BOOST_AUTO_TEST_CASE(twocuestwoframeshold) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
@@ -721,10 +841,10 @@ BOOST_AUTO_TEST_CASE(twocuestwoframeshold) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
 
-BOOST_AUTO_TEST_CASE(anothercuenext) {
+    BOOST_AUTO_TEST_CASE(anothercuenext) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
@@ -764,10 +884,10 @@ BOOST_AUTO_TEST_CASE(anothercuenext) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
 
-BOOST_AUTO_TEST_CASE(runcueimmidiatly) {
+    BOOST_AUTO_TEST_CASE(runcueimmidiatly) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
@@ -787,7 +907,7 @@ BOOST_AUTO_TEST_CASE(runcueimmidiatly) {
             if (tester_time == 1000) {
                 update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
             }
-            if (tester_time == 7000) {
+            if (tester_time == 4000) {
                 update_key_values[tester_time].push_back(std::tuple("run_cue", "2"));
             }
             uint8_t tester8;
@@ -807,12 +927,12 @@ BOOST_AUTO_TEST_CASE(runcueimmidiatly) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
 
 
 
-BOOST_AUTO_TEST_CASE(alotofstuff) {
+    BOOST_AUTO_TEST_CASE(alotofstuff) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
@@ -829,7 +949,7 @@ BOOST_AUTO_TEST_CASE(alotofstuff) {
         std::vector<int> time_s;
         for (int tester_time= 0; tester_time < 60000; tester_time= tester_time + 100) {
             time_s.push_back(tester_time);
-            if (tester_time == 1000) {
+            if (tester_time == 1000 || tester_time == 4000 || tester_time == 16000) {
                 update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
             }
             if (tester_time == 43000) {
@@ -886,10 +1006,10 @@ BOOST_AUTO_TEST_CASE(alotofstuff) {
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+    }
 
 
-BOOST_AUTO_TEST_CASE(startdefaultcue) {
+    BOOST_AUTO_TEST_CASE(startdefaultcue) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
@@ -921,7 +1041,7 @@ BOOST_AUTO_TEST_CASE(startdefaultcue) {
             if (tester_time == 54000 || tester_time == 58000) {
                 update_key_values[tester_time].push_back(std::tuple("set_default_cue", "0"));
             }
-            if (tester_time == 20000 || tester_time == 47000 || tester_time == 57000 || tester_time == 60000) {
+            if (tester_time == 0 || tester_time == 20000 || tester_time == 47000 || tester_time == 57000 || tester_time == 60000) {
                 scene_activations.push_back(tester_time);
             }
             uint8_t tester8;
@@ -972,11 +1092,11 @@ BOOST_AUTO_TEST_CASE(startdefaultcue) {
             }
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
-        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values, scene_activations);
+    }
 
 
-BOOST_AUTO_TEST_CASE(startanothercuefromstart) {
+    BOOST_AUTO_TEST_CASE(startanothercuefromstart) {
         std::map <std::string, std::string> configuration;
         configuration["mapping"] = "dimmer:8bit";
         configuration["end_handling"] = "hold";
@@ -992,7 +1112,7 @@ BOOST_AUTO_TEST_CASE(startanothercuefromstart) {
         static std::vector<int> scene_activations;
 
         std::vector<int> time_s;
-        for (int tester_time= -100; tester_time < 60000; tester_time= tester_time + 100) {
+        for (int tester_time= 0; tester_time < 60000; tester_time= tester_time + 100) {
             time_s.push_back(tester_time);
             if (tester_time == 3000 || tester_time == 12000 || tester_time == 19000 || tester_time == 23000 || tester_time == 30000) {
                 update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
@@ -1004,15 +1124,15 @@ BOOST_AUTO_TEST_CASE(startanothercuefromstart) {
                 update_key_values[tester_time].push_back(std::tuple("run_mode", "stop"));
             }
             if (tester_time == 19500) {
-                update_key_values[tester_time].push_back(std::tuple("run_mode", "0"));
+                update_key_values[tester_time].push_back(std::tuple("next_cue", "0"));
             }
             if (tester_time == 4000) {
-                update_key_values[tester_time].push_back(std::tuple("run_mode", "1"));
+                update_key_values[tester_time].push_back(std::tuple("next_cue", "1"));
             }
             if (tester_time == 1000 || tester_time == 28000) {
-                update_key_values[tester_time].push_back(std::tuple("run_mode", "2"));
+                update_key_values[tester_time].push_back(std::tuple("next_cue", "2"));
             }
-            if (tester_time == -100) {
+            if (tester_time == 0) {
                 scene_activations.push_back(tester_time);
             }
             uint8_t tester8;
@@ -1049,7 +1169,7 @@ BOOST_AUTO_TEST_CASE(startanothercuefromstart) {
             }
             test_values[tester_time].eight_bit_frames.push_back(tester8);
         }
-        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-}
+        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values, scene_activations);
+    }
 
 BOOST_AUTO_TEST_SUITE_END()
