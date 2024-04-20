@@ -290,7 +290,13 @@ namespace dmxfish::filters {
             case LINEAR:
                 break;
             case SIGMOIDAL:
-                rel_time = 1.0 / (1 + std::exp(6 - rel_time * 12));
+                if (rel_time < 0.0838986509460080809378438479763314803779005525288113737042917756) {
+                    rel_time = 0.0803123920079019164531020712843555220907788534193118405449594794 * rel_time;
+                } else if (rel_time > (1-0.0838986509460080809378438479763314803779005525288113737042917756)) {
+                    rel_time = (1-0.0803123920079019164531020712843555220907788534193118405449594794 * (1-rel_time));
+                } else {
+                    rel_time = 1.0 / (1 + std::exp(6 - rel_time * 12));
+                }
                 break;
             case EASE_IN:
                 rel_time = rel_time * rel_time;
