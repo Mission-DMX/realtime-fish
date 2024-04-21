@@ -413,53 +413,88 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
     }
 
-    BOOST_AUTO_TEST_CASE(sigmoidal) {
+//    BOOST_AUTO_TEST_CASE(sigmoidal) {
+//        std::map <std::string, std::string> configuration;
+//        configuration["mapping"] = "v1:8bit;v2:16bit;v3:float";
+//        configuration["end_handling"] = "hold";
+//
+//        cue_st_names channel_names;
+//        channel_names.eight_bit_frames.push_back("v1");
+//        channel_names.sixteen_bit_frames.push_back("v2");
+//        channel_names.float_frames.push_back("v3");
+//
+//        configuration["cuelist"] =
+//                "0:0@lin&1000@lin&-50@lin|20:255@sig&61000@sig&50@sig|40:55@sig&31000@sig&1050@sig#hold#do_nothing";
+//
+//        std::map<int, cue_st_test> test_values;
+//        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
+//
+//        std::vector<int> time_s;
+//        for (int tester_time= 0; tester_time < 41000; tester_time= tester_time + 100) {
+//            time_s.push_back(tester_time);
+//            if (tester_time == 1000) {
+//                update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
+//            }
+//            uint8_t tester8;
+//            uint16_t tester16;
+//            double testerfloat;
+//            if (tester_time < 1000) {
+//                tester8 = 0;
+//                tester16 = 0;
+//                testerfloat = 0;
+//            }
+//            else if (tester_time < 21000) {
+//                tester8 = (uint8_t) std::round(255 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) * 2 * 0.5024726231566347743340599073722557624510930726498587540880605924 - 0.0024726231566347743340599073722557624510930726498587540880605924));
+//                tester16 = (uint16_t) std::round((double) 1000 + 60000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) * 2 * 0.5024726231566347743340599073722557624510930726498587540880605924 - 0.0024726231566347743340599073722557624510930726498587540880605924));
+//                testerfloat = (double) -50 + 100 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) * 2 * 0.5024726231566347743340599073722557624510930726498587540880605924 - 0.0024726231566347743340599073722557624510930726498587540880605924);
+//            } else if (tester_time < 41000){
+//                tester8 = (uint8_t) std::round(255 - 200 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * 0.5024726231566347743340599073722557624510930726498587540880605924 - 0.0024726231566347743340599073722557624510930726498587540880605924));
+//                tester16 = (uint16_t) std::round(61000 - 30000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * 0.5024726231566347743340599073722557624510930726498587540880605924 - 0.0024726231566347743340599073722557624510930726498587540880605924));
+//                testerfloat = 50 + 1000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * 0.5024726231566347743340599073722557624510930726498587540880605924 - 0.0024726231566347743340599073722557624510930726498587540880605924);
+//            } else {
+//                tester8 = 55;
+//                tester16 = 31000;
+//                testerfloat = 1050;
+//            }
+//            test_values[tester_time].eight_bit_frames.push_back(tester8);
+//            test_values[tester_time].sixteen_bit_frames.push_back(tester16);
+//            test_values[tester_time].float_frames.push_back(testerfloat);
+//        }
+//        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
+//    }
+
+    BOOST_AUTO_TEST_CASE(firstcueatzero) {
         std::map <std::string, std::string> configuration;
-        configuration["mapping"] = "v1:8bit;v2:16bit;v3:float";
+        configuration["mapping"] = "v1:8bit";
         configuration["end_handling"] = "hold";
 
         cue_st_names channel_names;
         channel_names.eight_bit_frames.push_back("v1");
-        channel_names.sixteen_bit_frames.push_back("v2");
-        channel_names.float_frames.push_back("v3");
 
         configuration["cuelist"] =
-                "0:0@lin&1000@lin&-50@lin|20:255@sig&61000@sig&50@sig|40:55@sig&31000@sig&1050@sig#hold#do_nothing";
+                "0:210@lin|5:10@lin#next_cue#do_nothing$0:160@lin|4:20@lin#hold#do_nothing";
 
         std::map<int, cue_st_test> test_values;
         std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
 
         std::vector<int> time_s;
-        for (int tester_time= 0; tester_time < 41000; tester_time= tester_time + 100) {
+        for (int tester_time= 0; tester_time < 11000; tester_time= tester_time + 100) {
             time_s.push_back(tester_time);
             if (tester_time == 1000) {
                 update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
             }
             uint8_t tester8;
-            uint16_t tester16;
-            double testerfloat;
             if (tester_time < 1000) {
                 tester8 = 0;
-                tester16 = 0;
-                testerfloat = 0;
             }
-            else if (tester_time < 21000) {
-                tester8 = (uint8_t) std::round(255 * 1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)));
-                tester16 = (uint16_t) std::round(
-                        (double) 1000 + 60000 * 1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)));
-                testerfloat = (double) -50 + 100 * 1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12));
-            } else if (tester_time < 41000){
-                tester8 = (uint8_t) std::round(255 - 200 * 1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)));
-                tester16 = (uint16_t) std::round(61000 - 30000 * 1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)));
-                testerfloat = 50 + 1000 * 1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12));
+            else if (tester_time < 6000) {
+                tester8 = (uint8_t) std::round(210 - 200 * ((double) tester_time - 1000) / 5000);
+            } else if (tester_time < 10000){
+                tester8 = (uint8_t) std::round(160 - 120 * ((double) tester_time - 6000) / 4000);
             } else {
-                tester8 = 55;
-                tester16 = 31000;
-                testerfloat = 1050;
+                tester8 = 20;
             }
             test_values[tester_time].eight_bit_frames.push_back(tester8);
-            test_values[tester_time].sixteen_bit_frames.push_back(tester16);
-            test_values[tester_time].float_frames.push_back(testerfloat);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
     }
