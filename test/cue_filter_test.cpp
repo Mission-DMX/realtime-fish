@@ -331,6 +331,64 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
     }
 
+    BOOST_AUTO_TEST_CASE(testcolor) {
+        std::map <std::string, std::string> configuration;
+
+        cue_st_names channel_names;
+        channel_names.color_frames.push_back("color");
+        channel_names.sixteen_bit_frames.push_back("dimmer");
+
+        configuration["mapping"] = "color:color;dimmer:16bit";
+        configuration["end_handling"] = "hold";
+
+        configuration["cuelist"] =
+                "2:0,1,0.5@lin&400@lin|7:120,1,1@lin&60000@lin#next_cue#do_nothing$3:180,0.2,0.8@lin&20000@lin|6:210,0.8,0.3@lin&0@lin#hold#do_nothing";
+
+        std::map<int, cue_st_test> test_values;
+        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
+
+
+        std::vector<int> time_s;
+        for (int tester_time= 0; tester_time < 15000; tester_time = tester_time + 100) {
+            time_s.push_back(tester_time);
+            if (tester_time == 1000) {
+                update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
+            }
+            uint16_t tester16;
+            dmxfish::dmx::pixel testercolor;
+            if (tester_time < 1000){
+                testercolor = dmxfish::dmx::pixel(0,0,0);
+                tester16 = 0;
+            } else if (tester_time < 3000) {
+                testercolor = dmxfish::dmx::pixel(0,
+                                                  0 + 1 * (double) (tester_time - 1000) / 2000,
+                                                  0 + 0.5 * (double) (tester_time - 1000) / 2000);
+                tester16 = (uint16_t) std::round(400 * (double) (tester_time - 1000) / 2000);
+            } else if (tester_time < 8000) {
+                testercolor = dmxfish::dmx::pixel(0 + 120 * (double) (tester_time - 3000) / 5000,
+                                                  1 + 0 * (double) (tester_time - 3000) / 5000,
+                                                  0.5 + 0.5 * (double) (tester_time - 3000) / 5000);
+                tester16 = (uint16_t) std::round(400 + 59600 * (double) (tester_time - 3000) / 5000);
+            } else if (tester_time < 11000) {
+                testercolor = dmxfish::dmx::pixel(120 + 60 * (double) (tester_time - 8000) / 3000,
+                                                  1 - 0.8 * (double) (tester_time - 8000) / 3000,
+                                                  1 - 0.2 * (double) (tester_time - 8000) / 3000);
+                tester16 = (uint16_t) std::round(60000 - 40000 * ((double) tester_time - 8000) / 3000);
+            } else if (tester_time < 14000) {
+                testercolor = dmxfish::dmx::pixel(180 + 30 * (double) (tester_time - 11000) /3000,
+                                                  0.2 + 0.6 * (double) (tester_time - 11000) / 3000,
+                                                  0.8 - 0.5 * (double) (tester_time - 11000) / 3000);
+                tester16 = (uint16_t) std::round(20000 - 20000 * (double) (tester_time - 11000) / 3000);
+            } else {
+                testercolor = dmxfish::dmx::pixel(210, 0.8, 0.3);
+                tester16 = 0;
+            }
+            test_values[tester_time].color_frames.push_back(testercolor);
+            test_values[tester_time].sixteen_bit_frames.push_back(tester16);
+        }
+        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
+    }
+
 
     BOOST_AUTO_TEST_CASE(onechanneltwoframes) {
         std::map <std::string, std::string> configuration;
