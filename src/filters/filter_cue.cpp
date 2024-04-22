@@ -57,9 +57,9 @@ namespace dmxfish::filters {
                        run_state << ";" <<
                        std::to_string(this->active_cue) << ";" <<
                        std::to_string((*this->time - this->start_time) / 1000) << ";";
-                if (cues.at(this->active_cue).timestamps.size() > 0) {
+                if (this->cues.at(this->active_cue).timestamps.size() > 0) {
                     params << std::to_string(
-                            (cues.at(this->active_cue).timestamps.at(cues.at(this->active_cue).timestamps.size() - 1)) /
+                            (this->cues.at(this->active_cue).timestamps.at(this->cues.at(this->active_cue).timestamps.size() - 1)) /
                             1000);
                 } else {
                     params << std::to_string(0);
@@ -74,46 +74,46 @@ namespace dmxfish::filters {
     template <typename T>
     void filter_cue::reserve_init_out(int amount){
         if constexpr (std::is_same<T, uint8_t>::value) {
-            channel_names_eight.reserve(amount);
-            eight_bit_channels.reserve(amount);
-            last_eight_bit_channels.reserve(amount);
+            this->channel_names_eight.reserve(amount);
+            this->eight_bit_channels.reserve(amount);
+            this->last_eight_bit_channels.reserve(amount);
         } else if constexpr (std::is_same<T, uint16_t>::value) {
-            channel_names_sixteen.reserve(amount);
-            sixteen_bit_channels.reserve(amount);
-            last_sixteen_bit_channels.reserve(amount);
+            this->channel_names_sixteen.reserve(amount);
+            this->sixteen_bit_channels.reserve(amount);
+            this->last_sixteen_bit_channels.reserve(amount);
         } else if constexpr (std::is_same<T, double>::value) {
-            channel_names_float.reserve(amount);
-            float_channels.reserve(amount);
-            last_float_channels.reserve(amount);
+            this->channel_names_float.reserve(amount);
+            this->float_channels.reserve(amount);
+            this->last_float_channels.reserve(amount);
         } else {
-            channel_names_color.reserve(amount);
-            color_channels.reserve(amount);
-            last_color_channels.reserve(amount);
+            this->channel_names_color.reserve(amount);
+            this->color_channels.reserve(amount);
+            this->last_color_channels.reserve(amount);
         }
     }
 
     template <typename T>
     void filter_cue::init_values_out(std::string &channel_name){
         if constexpr (std::is_same<T, uint8_t>::value) {
-            channel.push_back(channel_str(EIGHT_BIT, eight_bit_channels.size()));
-            channel_names_eight.push_back(channel_name);
-            eight_bit_channels.push_back(0);
-            last_eight_bit_channels.push_back(0);
+            this->channel.push_back(channel_str(EIGHT_BIT, this->eight_bit_channels.size()));
+            this->channel_names_eight.push_back(channel_name);
+            this->eight_bit_channels.push_back(0);
+            this->last_eight_bit_channels.push_back(0);
         } else if constexpr (std::is_same<T, uint16_t>::value) {
-            channel.push_back(channel_str(SIXTEEN_BIT, sixteen_bit_channels.size()));
-            channel_names_sixteen.push_back(channel_name);
-            sixteen_bit_channels.push_back(0);
-            last_sixteen_bit_channels.push_back(0);
+            this->channel.push_back(channel_str(SIXTEEN_BIT, this->sixteen_bit_channels.size()));
+            this->channel_names_sixteen.push_back(channel_name);
+            this->sixteen_bit_channels.push_back(0);
+            this->last_sixteen_bit_channels.push_back(0);
         } else if constexpr (std::is_same<T, double>::value) {
-            channel.push_back(channel_str(FLOAT, float_channels.size()));
-            channel_names_float.push_back(channel_name);
-            float_channels.push_back(0);
-            last_float_channels.push_back(0);
+            this->channel.push_back(channel_str(FLOAT, this->float_channels.size()));
+            this->channel_names_float.push_back(channel_name);
+            this->float_channels.push_back(0);
+            this->last_float_channels.push_back(0);
         } else {
-            channel.push_back(channel_str(COLOR, color_channels.size()));
-            channel_names_color.push_back(channel_name);
-            color_channels.push_back(dmxfish::dmx::pixel());
-            last_color_channels.push_back(dmxfish::dmx::pixel());
+            this->channel.push_back(channel_str(COLOR, this->color_channels.size()));
+            this->channel_names_color.push_back(channel_name);
+            this->color_channels.push_back(dmxfish::dmx::pixel());
+            this->last_color_channels.push_back(dmxfish::dmx::pixel());
         }
     }
 
@@ -142,7 +142,7 @@ namespace dmxfish::filters {
 
     bool filter_cue::handle_frame(size_t cue, const std::string &str, size_t start, size_t end, size_t nr_channel) {
         const size_t sep = str.find('@', start);
-        if (nr_channel >= channel.size()) {
+        if (nr_channel >= this->channel.size()) {
             return false;
         }
         transition_t tr = LINEAR;
@@ -158,31 +158,31 @@ namespace dmxfish::filters {
             tr = EASE_OUT;
         }
         try {
-            switch (channel.at(nr_channel).channel_type) {
+            switch (this->channel.at(nr_channel).channel_type) {
                 case EIGHT_BIT: {
-                    cues.at(cue).eight_bit_frames.push_back(
+                    this->cues.at(cue).eight_bit_frames.push_back(
                             key_frame<uint8_t>((uint8_t) std::max(std::min(std::stoi(str.substr(start, sep - start)),(int) std::numeric_limits<uint8_t>::max()), 0), tr));
                     break;
                 }
                 case SIXTEEN_BIT: {
-                    cues.at(cue).sixteen_bit_frames.push_back(
+                    this->cues.at(cue).sixteen_bit_frames.push_back(
                             key_frame<uint16_t>((uint16_t) std::max(std::min(std::stoi(str.substr(start, sep - start)),(int) std::numeric_limits<uint16_t>::max()), 0), tr));
                     break;
                 }
                 case FLOAT: {
-                    cues.at(cue).float_frames.push_back(
+                    this->cues.at(cue).float_frames.push_back(
                             key_frame<double>(std::stod(str.substr(start, sep - start)), tr));
                     break;
                 }
                 case COLOR: {
-                    cues.at(cue).color_frames.push_back(key_frame<dmxfish::dmx::pixel>(dmxfish::dmx::pixel(), tr));
+                    this->cues.at(cue).color_frames.push_back(key_frame<dmxfish::dmx::pixel>(dmxfish::dmx::pixel(), tr));
                     const auto first_position = str.find(',', start);
-                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.hue = std::stod(
+                    this->cues.at(cue).color_frames.at(this->channel.at(nr_channel).index).value.hue = std::stod(
                             str.substr(start, first_position - start));
                     const auto second_position = str.find(",", first_position + 1);
-                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.saturation = std::stod(
+                    this->cues.at(cue).color_frames.at(this->channel.at(nr_channel).index).value.saturation = std::stod(
                             str.substr(first_position + 1, second_position - first_position - 1));
-                    cues.at(cue).color_frames.at(channel.at(nr_channel).index).value.iluminance = std::stod(
+                    this->cues.at(cue).color_frames.at(this->channel.at(nr_channel).index).value.iluminance = std::stod(
                             str.substr(second_position + 1, end - second_position - 1));
                     break;
                 }
@@ -205,7 +205,7 @@ namespace dmxfish::filters {
         const size_t end_ts = str.find(':', start);
         if (start < end) {
             try {
-                cues.at(cue).timestamps.push_back(std::stod(str.substr(start, end_ts - start)) * 1000);
+                this->cues.at(cue).timestamps.push_back(std::stod(str.substr(start, end_ts - start)) * 1000);
             } catch (const std::invalid_argument &ex) {
                 MARK_UNUSED(ex);
                 return false;
@@ -213,7 +213,7 @@ namespace dmxfish::filters {
                 MARK_UNUSED(ex);
                 return false;
             }
-            return do_with_substr(str, end_ts + 1, end, '&', channel.size(),
+            return do_with_substr(str, end_ts + 1, end, '&', this->channel.size(),
                         std::bind(&dmxfish::filters::filter_cue::handle_frame, this, cue, std::placeholders::_1,
                         std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
         }
@@ -226,15 +226,15 @@ namespace dmxfish::filters {
     bool filter_cue::handle_cue_conf(size_t cue, const std::string &str, size_t start, size_t end, size_t number) {
         MARK_UNUSED(number);
         if (!str.substr(start, end - start).compare("hold")) {
-            cues.at(cue).end_handling = HOLD;
+            this->cues.at(cue).end_handling = HOLD;
         } else if (!str.substr(start, end - start).compare("start_again")) {
-            cues.at(cue).end_handling = START_AGAIN;
+            this->cues.at(cue).end_handling = START_AGAIN;
         } else if (!str.substr(start, end - start).compare("next_cue")) {
-            cues.at(cue).end_handling = NEXT_CUE;
+            this->cues.at(cue).end_handling = NEXT_CUE;
         } else if (!str.substr(start, end - start).compare("do_nothing")) {
-            cues.at(cue).restart_handling = DO_NOTHING;
+            this->cues.at(cue).restart_handling = DO_NOTHING;
         } else if (!str.substr(start, end - start).compare("restart")) {
-            cues.at(cue).restart_handling = START_FROM_BEGIN;
+            this->cues.at(cue).restart_handling = START_FROM_BEGIN;
         } else {
             return false;
         }
@@ -242,16 +242,16 @@ namespace dmxfish::filters {
     }
 
     bool filter_cue::handle_cue(const std::string &str, size_t start, size_t end, size_t cue) {
-        cues.push_back(cue_st());
-        cues.at(cue).end_handling = NEXT_CUE;
-        cues.at(cue).restart_handling = DO_NOTHING;
+        this->cues.push_back(cue_st());
+        this->cues.at(cue).end_handling = NEXT_CUE;
+        this->cues.at(cue).restart_handling = DO_NOTHING;
         const size_t end_conf = str.find('#', start);
         const size_t nr_of_ts = count_occurence_of(str, "|", start, end_conf) + 1;
-        cues.at(cue).timestamps.reserve(nr_of_ts);
-        cues.at(cue).eight_bit_frames.reserve(nr_of_ts * eight_bit_channels.size());
-        cues.at(cue).sixteen_bit_frames.reserve(nr_of_ts * sixteen_bit_channels.size());
-        cues.at(cue).float_frames.reserve(nr_of_ts * float_channels.size());
-        cues.at(cue).color_frames.reserve(nr_of_ts * color_channels.size());
+        this->cues.at(cue).timestamps.reserve(nr_of_ts);
+        this->cues.at(cue).eight_bit_frames.reserve(nr_of_ts * this->eight_bit_channels.size());
+        this->cues.at(cue).sixteen_bit_frames.reserve(nr_of_ts * this->sixteen_bit_channels.size());
+        this->cues.at(cue).float_frames.reserve(nr_of_ts * this->float_channels.size());
+        this->cues.at(cue).color_frames.reserve(nr_of_ts * this->color_channels.size());
         if (!do_with_substr(str, start, std::min(end_conf, end), '|', 1,
                             std::bind(&dmxfish::filters::filter_cue::handle_timestamps, this, cue,
                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
@@ -274,18 +274,18 @@ namespace dmxfish::filters {
             case EDGE:
                 if constexpr(std::is_same<T, uint8_t>::value)
                 {
-                    eight_bit_channels.at(ind) = (rel_time < 0.5) ? start_value : end_value;
+                    this->eight_bit_channels.at(ind) = (rel_time < 0.5) ? start_value : end_value;
                 } else if constexpr(std::is_same<T, uint16_t>::value)
                 {
-                    sixteen_bit_channels.at(ind) = (rel_time < 0.5) ? start_value : end_value;
+                    this->sixteen_bit_channels.at(ind) = (rel_time < 0.5) ? start_value : end_value;
                 } else if constexpr(std::is_same<T, double>::value)
                 {
-                    float_channels.at(ind) = (rel_time < 0.5) ? start_value : end_value;
+                    this->float_channels.at(ind) = (rel_time < 0.5) ? start_value : end_value;
                 } else if constexpr(std::is_same<T, dmxfish::dmx::pixel>::value)
                 {
-                    color_channels.at(ind) = (rel_time < 0.5) ? start_value : end_value;
+                    this->color_channels.at(ind) = (rel_time < 0.5) ? start_value : end_value;
                 }
-                already_updated_act = false;
+                this->already_updated_act = false;
                 return;
             case LINEAR:
                 break;
@@ -304,96 +304,96 @@ namespace dmxfish::filters {
         }
         if constexpr(std::is_same<T, uint8_t>::value)
         {
-            eight_bit_channels.at(ind) = (uint8_t) std::round((end_value - start_value) * rel_time + start_value);
+            this->eight_bit_channels.at(ind) = (uint8_t) std::round((end_value - start_value) * rel_time + start_value);
         } else if constexpr(std::is_same<T, uint16_t>::value)
         {
-            sixteen_bit_channels.at(ind) = (uint16_t) std::round((end_value - start_value) * rel_time + start_value);
+            this->sixteen_bit_channels.at(ind) = (uint16_t) std::round((end_value - start_value) * rel_time + start_value);
         } else if constexpr(std::is_same<T, double>::value)
         {
-            float_channels.at(ind) = (end_value - start_value) * rel_time + start_value;
+            this->float_channels.at(ind) = (end_value - start_value) * rel_time + start_value;
         } else if constexpr(std::is_same<T, dmxfish::dmx::pixel>::value)
         {
-            color_channels.at(ind) = dmxfish::dmx::pixel((end_value.hue - start_value.hue) * rel_time + start_value.hue,
+            this->color_channels.at(ind) = dmxfish::dmx::pixel((end_value.hue - start_value.hue) * rel_time + start_value.hue,
                                                          (end_value.saturation - start_value.saturation) * rel_time +
                                                          start_value.saturation,
                                                          (end_value.iluminance - start_value.iluminance) * rel_time +
                                                          start_value.iluminance);
         }
-        already_updated_act = false;
+        this->already_updated_act = false;
     }
 
     void filter_cue::update_hold_values() {
-        if (!already_updated_act) {
-            for (size_t i = 0; i < eight_bit_channels.size(); i++) {
-                eight_bit_channels.at(i) = last_eight_bit_channels.at(i);
+        if (!this->already_updated_act) {
+            for (size_t i = 0; i < this->eight_bit_channels.size(); i++) {
+                this->eight_bit_channels.at(i) = this->last_eight_bit_channels.at(i);
             }
-            for (size_t i = 0; i < sixteen_bit_channels.size(); i++) {
-                sixteen_bit_channels.at(i) = last_sixteen_bit_channels.at(i);
+            for (size_t i = 0; i < this->sixteen_bit_channels.size(); i++) {
+                this->sixteen_bit_channels.at(i) = this->last_sixteen_bit_channels.at(i);
             }
-            for (size_t i = 0; i < float_channels.size(); i++) {
-                float_channels.at(i) = last_float_channels.at(i);
+            for (size_t i = 0; i < this->float_channels.size(); i++) {
+                this->float_channels.at(i) = this->last_float_channels.at(i);
             }
-            for (size_t i = 0; i < color_channels.size(); i++) {
-                color_channels.at(i) = last_color_channels.at(i);
+            for (size_t i = 0; i < this->color_channels.size(); i++) {
+                this->color_channels.at(i) = this->last_color_channels.at(i);
             }
-            already_updated_act = true;
+            this->already_updated_act = true;
         }
     }
 
     inline void filter_cue::update_last_values() {
-        last_timestamp = *time;
-        if (!already_updated_last) {
-            for (size_t i = 0; i < eight_bit_channels.size(); i++) {
-                last_eight_bit_channels.at(i) = eight_bit_channels.at(i);
+        this->last_timestamp = *this->time;
+        if (!this->already_updated_last) {
+            for (size_t i = 0; i < this->eight_bit_channels.size(); i++) {
+                this->last_eight_bit_channels.at(i) = this->eight_bit_channels.at(i);
             }
-            for (size_t i = 0; i < sixteen_bit_channels.size(); i++) {
-                last_sixteen_bit_channels.at(i) = sixteen_bit_channels.at(i);
+            for (size_t i = 0; i < this->sixteen_bit_channels.size(); i++) {
+                this->last_sixteen_bit_channels.at(i) = this->sixteen_bit_channels.at(i);
             }
-            for (size_t i = 0; i < float_channels.size(); i++) {
-                last_float_channels.at(i) = float_channels.at(i);
+            for (size_t i = 0; i < this->float_channels.size(); i++) {
+                this->last_float_channels.at(i) = this->float_channels.at(i);
             }
-            for (size_t i = 0; i < color_channels.size(); i++) {
-                last_color_channels.at(i) = color_channels.at(i);
+            for (size_t i = 0; i < this->color_channels.size(); i++) {
+                this->last_color_channels.at(i) = this->color_channels.at(i);
             }
-            already_updated_last = true;
+            this->already_updated_last = true;
         }
     }
 
     void filter_cue::start_new_cue() {
         update_last_values();
-        start_time = *time;
-        frame = 0;
-        if (active_cue >= cues.size()) {
-            active_cue = cues.size() - 1;
+        this->start_time = *this->time;
+        this->frame = 0;
+        if (this->active_cue >= this->cues.size()) {
+            this->active_cue = this->cues.size() - 1;
         }
-        if(active_cue < cues.size()) {
-                cue_end_handling_real = cues.at(active_cue).end_handling;
+        if(this->active_cue < this->cues.size()) {
+                this->cue_end_handling_real = this->cues.at(this->active_cue).end_handling;
         }
     }
 
     bool filter_cue::last_frame_handling() {
-        switch (cue_end_handling_real) { // end of cue handling
+        switch (this->cue_end_handling_real) { // end of cue handling
             case START_AGAIN:
                 break;
             case HOLD:
                 update_hold_values();
-                pause_time = *time;
-                running_state = PAUSE;
-                cue_end_handling_real = HOLDING;
+                this->pause_time = *this->time;
+                this->running_state = PAUSE;
+                this->cue_end_handling_real = HOLDING;
                 update_parameter_gui();
                 return false;
             case HOLDING:
                 return false;
             case NEXT_CUE:
-                if (active_cue < cues.size() - 1) { // Not last cue?
-                    active_cue++;
+                if (this->active_cue < this->cues.size() - 1) { // Not last cue?
+                    this->active_cue++;
                 } else {
-                    switch (handle_end) { // end of cuelist handling
+                    switch (this->handle_end) { // end of cuelist handling
                         case START_AGAIN:
-                            active_cue = 0;
+                            this->active_cue = 0;
                             break;
                         case HOLD:
-                            running_state = STOP;
+                            this->running_state = STOP;
                             update_hold_values();
                             update_parameter_gui();
                             return false;
@@ -413,43 +413,43 @@ namespace dmxfish::filters {
                 ::spdlog::warn("should not have reached default end_handling at the end of the cue");
                 return false;
         }
-        if (next_cue < cues.size()) { // if next cue is set, start this cue
-            active_cue = next_cue;
-            next_cue = 0xffff;
+        if (this->next_cue < this->cues.size()) { // if next cue is set, start this cue
+            this->active_cue = this->next_cue;
+            this->next_cue = 0xffff;
         }
         start_new_cue();
-        cue_end_handling_real = cues.at(active_cue).end_handling;
+        this->cue_end_handling_real = this->cues.at(this->active_cue).end_handling;
         return true;
     }
 
     void filter_cue::calc_values() {
-        if (frame >= cues.at(active_cue).timestamps.size()){
+        if (this->frame >= this->cues.at(this->active_cue).timestamps.size()){
             last_frame_handling();
             return;
         }
-        if (*time >= cues.at(active_cue).timestamps.at(frame) + start_time) { // Next Frame?
-            if (!already_updated_last) {
-                for (size_t i = 0; i < eight_bit_channels.size(); i++) {
-                    last_eight_bit_channels.at(i) = cues.at(active_cue).eight_bit_frames.at(
-                            eight_bit_channels.size() * frame + i).value;
+        if (*this->time >= this->cues.at(this->active_cue).timestamps.at(this->frame) + this->start_time) { // Next Frame?
+            if (!this->already_updated_last) {
+                for (size_t i = 0; i < this->eight_bit_channels.size(); i++) {
+                    this->last_eight_bit_channels.at(i) = this->cues.at(this->active_cue).eight_bit_frames.at(
+                            this->eight_bit_channels.size() * this->frame + i).value;
                 }
-                for (size_t i = 0; i < sixteen_bit_channels.size(); i++) {
-                    last_sixteen_bit_channels.at(i) = cues.at(active_cue).sixteen_bit_frames.at(
-                            sixteen_bit_channels.size() * frame + i).value;
+                for (size_t i = 0; i < this->sixteen_bit_channels.size(); i++) {
+                    this->last_sixteen_bit_channels.at(i) = this->cues.at(this->active_cue).sixteen_bit_frames.at(
+                            this->sixteen_bit_channels.size() * this->frame + i).value;
                 }
-                for (size_t i = 0; i < float_channels.size(); i++) {
-                    last_float_channels.at(i) = cues.at(active_cue).float_frames.at(
-                            float_channels.size() * frame + i).value;
+                for (size_t i = 0; i < this->float_channels.size(); i++) {
+                    this->last_float_channels.at(i) = this->cues.at(this->active_cue).float_frames.at(
+                            this->float_channels.size() * this->frame + i).value;
                 }
-                for (size_t i = 0; i < color_channels.size(); i++) {
-                    last_color_channels.at(i) = cues.at(active_cue).color_frames.at(
-                            color_channels.size() * frame + i).value;
+                for (size_t i = 0; i < this->color_channels.size(); i++) {
+                    this->last_color_channels.at(i) = this->cues.at(this->active_cue).color_frames.at(
+                            this->color_channels.size() * this->frame + i).value;
                 }
-                already_updated_last = true;
+                this->already_updated_last = true;
             }
-            last_timestamp = *time;
-            if (frame < cues.at(active_cue).timestamps.size() - 1) { // Not the last Frame of the cue?
-                frame++;
+            this->last_timestamp = *this->time;
+            if (this->frame < this->cues.at(this->active_cue).timestamps.size() - 1) { // Not the last Frame of the cue?
+                this->frame++;
             } else { // last frame of cue
                 if (!last_frame_handling()){
                     return;
@@ -457,38 +457,38 @@ namespace dmxfish::filters {
             }
             update_parameter_gui();
         }
-        if (frame < cues.at(active_cue).timestamps.size()) {
-            already_updated_last = false;
+        if (this->frame < this->cues.at(this->active_cue).timestamps.size()) {
+            this->already_updated_last = false;
             double rel_time =
-                    (*time - last_timestamp) / (cues.at(active_cue).timestamps.at(frame) - last_timestamp + start_time);
+                    (*this->time - this->last_timestamp) / (this->cues.at(this->active_cue).timestamps.at(this->frame) - this->last_timestamp + this->start_time);
 
-            for (size_t i = 0; i < eight_bit_channels.size(); i++) {
-                size_t frame_index = frame * eight_bit_channels.size() + i;
+            for (size_t i = 0; i < this->eight_bit_channels.size(); i++) {
+                size_t frame_index = this->frame * this->eight_bit_channels.size() + i;
                 calc_transition<uint8_t>(rel_time,
-                                         cues.at(active_cue).eight_bit_frames.at(frame_index).transition,
-                                         last_eight_bit_channels.at(i),
-                                         cues.at(active_cue).eight_bit_frames.at(frame_index).value, i);
+                                         this->cues.at(this->active_cue).eight_bit_frames.at(frame_index).transition,
+                                         this->last_eight_bit_channels.at(i),
+                                         this->cues.at(this->active_cue).eight_bit_frames.at(frame_index).value, i);
             }
-            for (size_t i = 0; i < sixteen_bit_channels.size(); i++) {
-                size_t frame_index = frame * sixteen_bit_channels.size() + i;
+            for (size_t i = 0; i < this->sixteen_bit_channels.size(); i++) {
+                size_t frame_index = this->frame * this->sixteen_bit_channels.size() + i;
                 calc_transition<uint16_t>(rel_time,
-                                          cues.at(active_cue).sixteen_bit_frames.at(frame_index).transition,
-                                          last_sixteen_bit_channels.at(i),
-                                          cues.at(active_cue).sixteen_bit_frames.at(frame_index).value, i);
+                                          this->cues.at(this->active_cue).sixteen_bit_frames.at(frame_index).transition,
+                                          this->last_sixteen_bit_channels.at(i),
+                                          this->cues.at(this->active_cue).sixteen_bit_frames.at(frame_index).value, i);
             }
-            for (size_t i = 0; i < float_channels.size(); i++) {
-                size_t frame_index = frame * float_channels.size() + i;
+            for (size_t i = 0; i < this->float_channels.size(); i++) {
+                size_t frame_index = this->frame * this->float_channels.size() + i;
                 calc_transition<double>(rel_time,
-                                        cues.at(active_cue).float_frames.at(frame_index).transition,
-                                        last_float_channels.at(i),
-                                        cues.at(active_cue).float_frames.at(frame_index).value, i);
+                                        this->cues.at(this->active_cue).float_frames.at(frame_index).transition,
+                                        this->last_float_channels.at(i),
+                                        this->cues.at(this->active_cue).float_frames.at(frame_index).value, i);
             }
-            for (size_t i = 0; i < color_channels.size(); i++) {
-                size_t frame_index = frame * color_channels.size() + i;
+            for (size_t i = 0; i < this->color_channels.size(); i++) {
+                size_t frame_index = this->frame * this->color_channels.size() + i;
                 calc_transition<dmxfish::dmx::pixel>(rel_time,
-                                                     cues.at(active_cue).color_frames.at(frame_index).transition,
-                                                     last_color_channels.at(i),
-                                                     cues.at(active_cue).color_frames.at(frame_index).value, i);
+                                                     this->cues.at(this->active_cue).color_frames.at(frame_index).transition,
+                                                     this->last_color_channels.at(i),
+                                                     this->cues.at(this->active_cue).color_frames.at(frame_index).value, i);
             }
         }
     }
@@ -542,7 +542,7 @@ namespace dmxfish::filters {
         }
 
         const std::string frames = configuration.at("cuelist");
-        cues.reserve(count_occurence_of(frames, "$", 0, frames.size()) + 1);
+        this->cues.reserve(count_occurence_of(frames, "$", 0, frames.size()) + 1);
         if (!do_with_substr(frames, 0, frames.length(), '$', 1,
                             std::bind(&dmxfish::filters::filter_cue::handle_cue,
                                       this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
@@ -567,10 +567,10 @@ namespace dmxfish::filters {
                 throw filter_config_exception("cue filter: unable to setup the cuelist. Property 'default_cue' was too large.",
                                               filter_type::filter_cue, own_id);
             }
-            if (new_default_cue >= (long) cues.size()) {
-                default_cue = -1;
+            if (new_default_cue >= (long) this->cues.size()) {
+                this->default_cue = -1;
             } else {
-                default_cue = new_default_cue;
+                this->default_cue = new_default_cue;
             }
         }
     }
@@ -578,17 +578,17 @@ namespace dmxfish::filters {
     bool filter_cue::receive_update_from_gui(const std::string &key, const std::string &_value) {
         if (!key.compare("run_mode")) {
             if (!_value.compare("play") || !_value.compare("to_next_cue")) {
-                switch (running_state) {
+                switch (this->running_state) {
                     case STOP:
-                        active_cue = 0;
-                        if (next_cue < cues.size()) { // if next cue is set, start this cue
-                            active_cue = next_cue;
-                            next_cue = 0xffff;
+                        this->active_cue = 0;
+                        if (this->next_cue < this->cues.size()) { // if next cue is set, start this cue
+                            this->active_cue = this->next_cue;
+                            this->next_cue = 0xffff;
                         }
                         start_new_cue();
                         break;
                     case PLAY:
-                        switch (cues.at(active_cue).restart_handling) {
+                        switch (this->cues.at(this->active_cue).restart_handling) {
                             case DO_NOTHING:
                                 break;
                             case START_FROM_BEGIN:
@@ -599,18 +599,18 @@ namespace dmxfish::filters {
                         }
                         break;
                     case PAUSE:
-                        start_time = start_time + (*time - pause_time);
-                        last_timestamp = last_timestamp + (*time - pause_time);
-                        if(*time >= cues.at(active_cue).timestamps.at(cues.at(active_cue).timestamps.size() - 1) + start_time){ // start new cue if cue was finished
-                            if (cues.at(active_cue).end_handling == NEXT_CUE || cues.at(active_cue).end_handling == HOLD){
-                                if(active_cue < cues.size()-1){
-                                    active_cue++;
+                        this->start_time = this->start_time + (*this->time - this->pause_time);
+                        this->last_timestamp = this->last_timestamp + (*this->time - this->pause_time);
+                        if(*this->time >= this->cues.at(this->active_cue).timestamps.at(this->cues.at(this->active_cue).timestamps.size() - 1) + this->start_time){ // start new cue if cue was finished
+                            if (this->cues.at(this->active_cue).end_handling == NEXT_CUE || this->cues.at(this->active_cue).end_handling == HOLD){
+                                if(this->active_cue < this->cues.size()-1){
+                                    this->active_cue++;
                                 } else {
-                                    active_cue = 0;
+                                    this->active_cue = 0;
                                 }
-                                if (next_cue < cues.size()) { // if next cue is set, start this cue
-                                    active_cue = next_cue;
-                                    next_cue = 0xffff;
+                                if (this->next_cue < this->cues.size()) { // if next cue is set, start this cue
+                                    this->active_cue = this->next_cue;
+                                    this->next_cue = 0xffff;
                                 }
                             }
                             start_new_cue();
@@ -619,16 +619,16 @@ namespace dmxfish::filters {
                     default:
                         return false;
                 }
-                running_state = PLAY;
-                cue_end_handling_real = cues.at(active_cue).end_handling;
+                this->running_state = PLAY;
+                this->cue_end_handling_real = this->cues.at(this->active_cue).end_handling;
                 if (!_value.compare("to_next_cue")) {
-                    cue_end_handling_real = HOLD;
+                    this->cue_end_handling_real = HOLD;
                 }
                 update_parameter_gui();
                 return true;
             }
             if (!_value.compare("pause")) {
-                switch (running_state) {
+                switch (this->running_state) {
                     case STOP:
                         return false;
                     case PLAY:
@@ -638,13 +638,13 @@ namespace dmxfish::filters {
                     default:
                         return false;
                 }
-                running_state = PAUSE;
-                pause_time = *time;
+                this->running_state = PAUSE;
+                this->pause_time = *this->time;
                 update_parameter_gui();
                 return true;
             }
             if (!_value.compare("stop")) {
-                running_state = STOP;
+                this->running_state = STOP;
                 update_parameter_gui();
                 return true;
             }
@@ -664,13 +664,13 @@ namespace dmxfish::filters {
                 MARK_UNUSED(ex);
                 return false;
             }
-            if (next > cues.size()) {
+            if (next > this->cues.size()) {
                 return false;
             }
             start_new_cue();
-            active_cue = next;
-            running_state = PLAY;
-            cue_end_handling_real = cues.at(active_cue).end_handling;
+            this->active_cue = next;
+            this->running_state = PLAY;
+            this->cue_end_handling_real = this->cues.at(this->active_cue).end_handling;
             update_parameter_gui();
             return true;
         }
@@ -689,10 +689,10 @@ namespace dmxfish::filters {
                 MARK_UNUSED(ex);
                 return false;
             }
-            if (next > cues.size()) {
+            if (next > this->cues.size()) {
                 return false;
             }
-            next_cue = next;
+            this->next_cue = next;
             return true;
         }
         if (!key.compare("set_default_cue")) {
@@ -710,11 +710,11 @@ namespace dmxfish::filters {
                 MARK_UNUSED(ex);
                 return false;
             }
-            if (new_default_cue >= (long) cues.size()) {
-                default_cue = -1;
+            if (new_default_cue >= (long) this->cues.size()) {
+                this->default_cue = -1;
                 ::spdlog::info("removed autoplay for this scene");
             } else {
-                default_cue = new_default_cue;
+                this->default_cue = new_default_cue;
             }
             return true;
         }
@@ -722,17 +722,17 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::get_output_channels(channel_mapping &map, const std::string &name) {
-        for (size_t i = 0; i < eight_bit_channels.size(); i++) {
-            map.eight_bit_channels[name + ":" + channel_names_eight.at(i)] = &eight_bit_channels.at(i);
+        for (size_t i = 0; i < this->eight_bit_channels.size(); i++) {
+            map.eight_bit_channels[name + ":" + this->channel_names_eight.at(i)] = &this->eight_bit_channels.at(i);
         }
-        for (size_t i = 0; i < sixteen_bit_channels.size(); i++) {
-            map.sixteen_bit_channels[name + ":" + channel_names_sixteen.at(i)] = &sixteen_bit_channels.at(i);
+        for (size_t i = 0; i < this->sixteen_bit_channels.size(); i++) {
+            map.sixteen_bit_channels[name + ":" + this->channel_names_sixteen.at(i)] = &this->sixteen_bit_channels.at(i);
         }
-        for (size_t i = 0; i < float_channels.size(); i++) {
-            map.float_channels[name + ":" + channel_names_float.at(i)] = &float_channels.at(i);
+        for (size_t i = 0; i < this->float_channels.size(); i++) {
+            map.float_channels[name + ":" + this->channel_names_float.at(i)] = &this->float_channels.at(i);
         }
-        for (size_t i = 0; i < color_channels.size(); i++) {
-            map.color_channels[name + ":" + channel_names_color.at(i)] = &color_channels.at(i);
+        for (size_t i = 0; i < this->color_channels.size(); i++) {
+            map.color_channels[name + ":" + this->channel_names_color.at(i)] = &this->color_channels.at(i);
         }
     }
 
@@ -756,7 +756,7 @@ namespace dmxfish::filters {
 
     void filter_cue::scene_activated() {
         if (this->default_cue > -1) {
-            running_state = PLAY;
+            this->running_state = PLAY;
             this->active_cue = (uint16_t) this->default_cue;
             start_new_cue();
             ::spdlog::info("Switched to Cue {}.", this->default_cue);

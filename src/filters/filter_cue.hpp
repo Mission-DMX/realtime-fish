@@ -68,16 +68,34 @@ namespace dmxfish::filters {
         };
 
         struct channel_str{
-//            std::string name;
             channel_t channel_type;
             size_t index;
             channel_str(channel_t ch_t,  size_t i) : channel_type(ch_t), index(i) {}
+        };
+
+        struct frame_actual{
+            bool updated;
+            double time_stamp;
+            uint16_t cue{};
+            uint16_t frame{};
+            std::vector<uint8_t> eight_bit_channnel{};
+            std::vector<uint16_t> sixteen_bit_channnel{};
+            std::vector<double> float_channnel{};
+            std::vector<dmxfish::dmx::pixel> color_channnel{};
+            frame_actual() :
+                    updated(false),
+                    time_stamp(0),
+                    cue(0),
+                    frame(0) {}
         };
 
         std::string own_id;
         double* time = nullptr;
         double start_time = 0;
         double pause_time = 0;
+        frame_actual last_values = frame_actual();
+        frame_actual actual_values = frame_actual();
+
         uint16_t frame = 0;
         bool already_updated_last = false;
         bool already_updated_act = false;
