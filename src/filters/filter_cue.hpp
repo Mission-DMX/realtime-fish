@@ -78,10 +78,10 @@ namespace dmxfish::filters {
             double time_stamp;
             uint16_t cue{};
             uint16_t frame{};
-            std::vector<uint8_t> eight_bit_channnel{};
-            std::vector<uint16_t> sixteen_bit_channnel{};
-            std::vector<double> float_channnel{};
-            std::vector<dmxfish::dmx::pixel> color_channnel{};
+            std::vector<uint8_t> eight_bit_channels{};
+            std::vector<uint16_t> sixteen_bit_channels{};
+            std::vector<double> float_channels{};
+            std::vector<dmxfish::dmx::pixel> color_channels{};
             frame_actual() :
                     updated(false),
                     time_stamp(0),
@@ -96,11 +96,6 @@ namespace dmxfish::filters {
         frame_actual last_values = frame_actual();
         frame_actual actual_values = frame_actual();
 
-        uint16_t frame = 0;
-        bool already_updated_last = false;
-        bool already_updated_act = false;
-        uint16_t active_cue = 0;
-
         uint16_t next_cue = 0xffff;
 	    long default_cue = -1;
         handling_at_the_end cue_end_handling_real = START_AGAIN;
@@ -112,19 +107,6 @@ namespace dmxfish::filters {
 
         // containing the cues, incl, frames and transition types
         std::vector<cue_st> cues;
-
-        // values for the output
-        std::vector<uint8_t> eight_bit_channels;
-        std::vector<uint16_t> sixteen_bit_channels;
-        std::vector<double> float_channels;
-        std::vector<dmxfish::dmx::pixel> color_channels;
-
-        // last values, for calculating the transition
-        double last_timestamp = 0;
-        std::vector<uint8_t> last_eight_bit_channels;
-        std::vector<uint16_t> last_sixteen_bit_channels;
-        std::vector<double> last_float_channels;
-        std::vector<dmxfish::dmx::pixel> last_color_channels;
 
         // channel names for the output map
         std::vector<std::string> channel_names_eight;
