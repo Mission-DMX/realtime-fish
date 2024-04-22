@@ -4,8 +4,10 @@
 #include "filters/filter_cue.hpp"
 #include "lib/logging.hpp"
 #include "main.hpp"
+#include <cmath>
 
 #include <sstream>
+#define SIGSTRECH 0.0024726231566347743340599073722557624510930726498587540880605924
 
 using namespace dmxfish::filters;
 
@@ -95,9 +97,8 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
                 std::string error =
                         std::string("Channel (float) ") + *it + " should be " + std::to_string(tester) + " , but is " +
                         std::to_string(*map.float_channels["t:" + *it]) + " at time: " + std::to_string(time_s);
-                BOOST_TEST(std::abs(*map.float_channels["t:" + *it] - tester) <= tester * 0.00001, error);
+                BOOST_TEST(std::abs(*map.float_channels["t:" + *it] - tester) <= std::abs(tester) * 0.00001, error);
                 num++;
-                ::spdlog::warn("float has val: {} but should be {}", *map.float_channels["t:" + *it], tester);
             }
             num = 0;
             for (auto it = channel_names.color_frames.begin();
@@ -152,7 +153,7 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
             if (tester_time == 1000) {
                 update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
             }
-            test_values[tester_time].eight_bit_frames.push_back((tester_time < 2000) ? 0 : 100);
+            test_values[tester_time].eight_bit_frames.push_back((tester_time < 3000) ? 0 : 100);
         }
 
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
@@ -310,13 +311,13 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
             uint8_t tester8;
             uint16_t tester16;
             double testerfloat;
-            dmxfish::dmx::pixel testercolor = (tester_time < 2000) ? dmxfish::dmx::pixel(0,0,0): dmxfish::dmx::pixel(120,1,1);
+            dmxfish::dmx::pixel testercolor = (tester_time < 3000) ? dmxfish::dmx::pixel(0,0,0): dmxfish::dmx::pixel(120,1,1);
             if (tester_time < 1000){
                 tester8 = 0;
                 tester16 = 0;
                 testerfloat = 0;
             } else if (tester_time < 3000) {
-                tester8 = (uint8_t) std::round(100 * 1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 2000 * 12)));
+                tester8 = (uint8_t) std::round(100 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 2000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
                 tester16 = (uint16_t) std::round(16000 * (((double) tester_time - 1000) / 2000) * (((double) tester_time - 1000) / 2000));
                 testerfloat = 0.8 * ((double) tester_time - 1000)/2000;
             } else {
@@ -378,7 +379,7 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
         channel_names.eight_bit_frames.push_back("dimmer");
 
         configuration["cuelist"] =
-        "2:250@lin|4:50@lin#hold#do_nothing";
+                "2:250@lin|4:50@lin#hold#do_nothing";
 
         std::map<int, cue_st_test> test_values;
         std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
@@ -413,66 +414,119 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
     }
 
-//    BOOST_AUTO_TEST_CASE(sigmoidal) {
-//        std::map <std::string, std::string> configuration;
-//        configuration["mapping"] = "v1:8bit;v2:16bit;v3:float";
-//        configuration["end_handling"] = "hold";
-//
-//        cue_st_names channel_names;
-//        channel_names.eight_bit_frames.push_back("v1");
-//        channel_names.sixteen_bit_frames.push_back("v2");
-//        channel_names.float_frames.push_back("v3");
-//
-//        configuration["cuelist"] =
-//                "0:0@lin&1000@lin&-50@lin|20:255@sig&61000@sig&50@sig|40:55@sig&31000@sig&1050@sig#hold#do_nothing";
-//
-//        std::map<int, cue_st_test> test_values;
-//        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
-//
-//        std::vector<int> time_s;
-//        for (int tester_time= 0; tester_time < 41000; tester_time= tester_time + 100) {
-//            time_s.push_back(tester_time);
-//            if (tester_time == 1000) {
-//                update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
-//            }
-//            uint8_t tester8;
-//            uint16_t tester16;
-//            double testerfloat;
-//            if (tester_time < 1000) {
-//                tester8 = 0;
-//                tester16 = 0;
-//                testerfloat = 0;
-//            }
-//            else if (tester_time < 21000) {
-//                tester8 = (uint8_t) std::round(255 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) * 2 * 0.5024726231566347743340599073722557624510930726498587540880605924 - 0.0024726231566347743340599073722557624510930726498587540880605924));
-//                tester16 = (uint16_t) std::round((double) 1000 + 60000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) * 2 * 0.5024726231566347743340599073722557624510930726498587540880605924 - 0.0024726231566347743340599073722557624510930726498587540880605924));
-//                testerfloat = (double) -50 + 100 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) * 2 * 0.5024726231566347743340599073722557624510930726498587540880605924 - 0.0024726231566347743340599073722557624510930726498587540880605924);
-//            } else if (tester_time < 41000){
-//                tester8 = (uint8_t) std::round(255 - 200 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * 0.5024726231566347743340599073722557624510930726498587540880605924 - 0.0024726231566347743340599073722557624510930726498587540880605924));
-//                tester16 = (uint16_t) std::round(61000 - 30000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * 0.5024726231566347743340599073722557624510930726498587540880605924 - 0.0024726231566347743340599073722557624510930726498587540880605924));
-//                testerfloat = 50 + 1000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * 0.5024726231566347743340599073722557624510930726498587540880605924 - 0.0024726231566347743340599073722557624510930726498587540880605924);
-//            } else {
-//                tester8 = 55;
-//                tester16 = 31000;
-//                testerfloat = 1050;
-//            }
-//            test_values[tester_time].eight_bit_frames.push_back(tester8);
-//            test_values[tester_time].sixteen_bit_frames.push_back(tester16);
-//            test_values[tester_time].float_frames.push_back(testerfloat);
-//        }
-//        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-//    }
-
-    BOOST_AUTO_TEST_CASE(firstcueatzero) {
+    BOOST_AUTO_TEST_CASE(sigmoidal) {
         std::map <std::string, std::string> configuration;
-        configuration["mapping"] = "v1:8bit";
+        configuration["mapping"] = "v1:8bit;v2:16bit;v3:float";
         configuration["end_handling"] = "hold";
 
         cue_st_names channel_names;
         channel_names.eight_bit_frames.push_back("v1");
+        channel_names.sixteen_bit_frames.push_back("v2");
+        channel_names.float_frames.push_back("v3");
 
         configuration["cuelist"] =
-                "0:210@lin|5:10@lin#next_cue#do_nothing$0:160@lin|4:20@lin#hold#do_nothing";
+                "10:0@sig&1000@sig&-50@sig|20:255@sig&61000@sig&50@sig|40:55@sig&31000@sig&1050@sig#hold#do_nothing";
+
+        std::map<int, cue_st_test> test_values;
+        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
+
+        std::vector<int> time_s;
+        for (int tester_time= 0; tester_time < 43000; tester_time= tester_time + 100) {
+            time_s.push_back(tester_time);
+            if (tester_time == 1000) {
+                update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
+            }
+            uint8_t tester8;
+            uint16_t tester16;
+            double testerfloat;
+            if (tester_time < 1100) {
+                tester8 = 0;
+                tester16 = 0;
+                testerfloat = 0;
+            } else if (tester_time < 11000) {
+                tester8 = (uint8_t) std::round(0 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 10000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
+                tester16 = (uint16_t) std::round((double) 1000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 10000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
+                testerfloat = (double) -50 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 10000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH);
+            } else if (tester_time < 21000) {
+                tester8 = (uint8_t) std::round(255 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 11000) / 10000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
+                tester16 = (uint16_t) std::round((double) 1000 + 60000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 11000) / 10000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
+                testerfloat = (double) -50 + 100 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 11000) / 10000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH);
+            } else if (tester_time < 41000){
+                tester8 = (uint8_t) std::round(255 - 200 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
+                tester16 = (uint16_t) std::round(61000 - 30000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
+                testerfloat = 50 + 1000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH);
+            } else {
+                tester8 = 55;
+                tester16 = 31000;
+                testerfloat = 1050;
+            }
+            test_values[tester_time].eight_bit_frames.push_back(tester8);
+            test_values[tester_time].sixteen_bit_frames.push_back(tester16);
+            test_values[tester_time].float_frames.push_back(testerfloat);
+        }
+        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
+    }
+
+    BOOST_AUTO_TEST_CASE(sigmoidalzerofirst) {
+        std::map <std::string, std::string> configuration;
+        configuration["mapping"] = "v1:8bit;v2:16bit;v3:float";
+        configuration["end_handling"] = "hold";
+
+        cue_st_names channel_names;
+        channel_names.eight_bit_frames.push_back("v1");
+        channel_names.sixteen_bit_frames.push_back("v2");
+        channel_names.float_frames.push_back("v3");
+
+        configuration["cuelist"] =
+                "0:0@sig&1000@sig&-50@sig|20:255@sig&61000@sig&50@sig|40:55@sig&31000@sig&1050@sig#hold#do_nothing";
+
+        std::map<int, cue_st_test> test_values;
+        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
+
+        std::vector<int> time_s;
+        for (int tester_time= 0; tester_time < 43000; tester_time= tester_time + 100) {
+            time_s.push_back(tester_time);
+            if (tester_time == 1000) {
+                update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
+            }
+            uint8_t tester8;
+            uint16_t tester16;
+            double testerfloat;
+            if (tester_time < 1100) {
+                tester8 = 0;
+                tester16 = 0;
+                testerfloat = 0;
+            } else if (tester_time < 21000) {
+                tester8 = (uint8_t) std::round(255 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
+                tester16 = (uint16_t) std::round((double) 1000 + 60000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
+                testerfloat = (double) -50 + 100 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH);
+            } else if (tester_time < 41000){
+                tester8 = (uint8_t) std::round(255 - 200 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
+                tester16 = (uint16_t) std::round(61000 - 30000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
+                testerfloat = 50 + 1000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH);
+            } else {
+                tester8 = 55;
+                tester16 = 31000;
+                testerfloat = 1050;
+            }
+            test_values[tester_time].eight_bit_frames.push_back(tester8);
+            test_values[tester_time].sixteen_bit_frames.push_back(tester16);
+            test_values[tester_time].float_frames.push_back(testerfloat);
+        }
+        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
+    }
+
+
+    BOOST_AUTO_TEST_CASE(seccueatzero) {
+        std::map <std::string, std::string> configuration;
+        configuration["mapping"] = "v1:16bit";
+        configuration["end_handling"] = "hold";
+
+        cue_st_names channel_names;
+        channel_names.sixteen_bit_frames.push_back("v1");
+
+        configuration["cuelist"] =
+                "2:61000@lin|5:10@lin#next_cue#do_nothing$0:16000@lin|4:200@lin#hold#do_nothing";
 
         std::map<int, cue_st_test> test_values;
         std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
@@ -483,18 +537,54 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
             if (tester_time == 1000) {
                 update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
             }
-            uint8_t tester8;
+            uint16_t tester16;
             if (tester_time < 1000) {
-                tester8 = 0;
-            }
-            else if (tester_time < 6000) {
-                tester8 = (uint8_t) std::round(210 - 200 * ((double) tester_time - 1000) / 5000);
+                tester16 = 0;
+            } else if (tester_time < 3000) {
+                tester16 = (uint16_t) std::round(61000 * ((double) tester_time - 1000) / 2000);
+            } else if (tester_time < 6000) {
+                tester16 = (uint16_t) std::round(61000 - 60990 * ((double) tester_time - 3000) / 3000);
             } else if (tester_time < 10000){
-                tester8 = (uint8_t) std::round(160 - 120 * ((double) tester_time - 6000) / 4000);
+                tester16 = (uint16_t) std::round(16000 - 15800 * ((double) tester_time - 6000) / 4000);
             } else {
-                tester8 = 20;
+                tester16 = 200;
             }
-            test_values[tester_time].eight_bit_frames.push_back(tester8);
+            test_values[tester_time].sixteen_bit_frames.push_back(tester16);
+        }
+        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
+    }
+
+    BOOST_AUTO_TEST_CASE(firstcueatzero) {
+        std::map <std::string, std::string> configuration;
+        configuration["mapping"] = "v1:16bit";
+        configuration["end_handling"] = "hold";
+
+        cue_st_names channel_names;
+        channel_names.sixteen_bit_frames.push_back("v1");
+
+        configuration["cuelist"] =
+                "0:61000@lin|5:10@lin#next_cue#do_nothing$0:16000@lin|4:200@lin#hold#do_nothing";
+
+        std::map<int, cue_st_test> test_values;
+        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
+
+        std::vector<int> time_s;
+        for (int tester_time= 0; tester_time < 11000; tester_time= tester_time + 100) {
+            time_s.push_back(tester_time);
+            if (tester_time == 1000) {
+                update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
+            }
+            uint16_t tester16;
+            if (tester_time < 1100) { // here it also needs one step for the update
+                tester16 = 0;
+            } else if (tester_time < 6000) {
+                tester16 = (uint16_t) std::round(61000 - 60990 * ((double) tester_time - 1000) / 5000);
+            } else if (tester_time < 10000){
+                tester16 = (uint16_t) std::round(16000 - 15800 * ((double) tester_time - 6000) / 4000);
+            } else {
+                tester16 = 200;
+            }
+            test_values[tester_time].sixteen_bit_frames.push_back(tester16);
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
     }

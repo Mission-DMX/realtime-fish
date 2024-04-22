@@ -85,8 +85,8 @@ namespace dmxfish::filters {
             frame_actual() :
                     updated(false),
                     time_stamp(0),
-                    cue(0),
-                    frame(0) {}
+                    cue(65535),
+                    frame(65535) {}
         };
 
         std::string own_id;

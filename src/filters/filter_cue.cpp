@@ -274,16 +274,15 @@ namespace dmxfish::filters {
             case EDGE:
                 if constexpr(std::is_same<T, uint8_t>::value)
                 {
-                    this->actual_values.eight_bit_channels.at(ind) = (rel_time < 0.5) ? start_value : end_value;
+                    this->actual_values.eight_bit_channels.at(ind) = (rel_time < 1) ? start_value : end_value;
                 } else if constexpr(std::is_same<T, uint16_t>::value)
                 {
-                    this->actual_values.sixteen_bit_channels.at(ind) = (rel_time < 0.5) ? start_value : end_value;
-                } else if constexpr(std::is_same<T, double>::value)
+                    this->actual_values.sixteen_bit_channels.at(ind) = (rel_time < 1) ? start_value : end_value;                } else if constexpr(std::is_same<T, double>::value)
                 {
-                    this->actual_values.float_channels.at(ind) = (rel_time < 0.5) ? start_value : end_value;
+                    this->actual_values.float_channels.at(ind) = (rel_time < 1) ? start_value : end_value;
                 } else if constexpr(std::is_same<T, dmxfish::dmx::pixel>::value)
                 {
-                    this->actual_values.color_channels.at(ind) = (rel_time < 0.5) ? start_value : end_value;
+                    this->actual_values.color_channels.at(ind) = (rel_time < 1) ? start_value : end_value;
                 }
                 this->actual_values.updated = false;
                 return;
@@ -355,6 +354,8 @@ namespace dmxfish::filters {
             for (size_t i = 0; i < this->actual_values.color_channels.size(); i++) {
                 this->last_values.color_channels.at(i) = this->actual_values.color_channels.at(i);
             }
+            this->last_values.frame = this->actual_values.frame;
+            this->last_values.cue = this->actual_values.cue;
             this->last_values.updated = true;
         }
     }
@@ -427,6 +428,9 @@ namespace dmxfish::filters {
             last_frame_handling();
             return;
         }
+        if (this->last_values.frame != this->actual_values.frame - 1 || this->last_values.cue != this->actual_values.cue) {
+            this->last_values.updated = false;
+        }
         if (*this->time >= this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) + this->start_time) { // Next Frame?
             if (!this->last_values.updated) {
                 for (size_t i = 0; i < this->actual_values.eight_bit_channels.size(); i++) {
@@ -445,9 +449,12 @@ namespace dmxfish::filters {
                     this->last_values.color_channels.at(i) = this->cues.at(this->actual_values.cue).color_frames.at(
                             this->actual_values.color_channels.size() * this->actual_values.frame + i).value;
                 }
+                this->last_values.frame = this->actual_values.frame;
+                this->last_values.cue = this->actual_values.cue;
                 this->last_values.updated = true;
             }
-            this->last_values.time_stamp = *this->time;
+            this->last_values.time_stamp = this->start_time + this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame);
+//            this->last_values.time_stamp = *this->time;
             if (this->actual_values.frame < this->cues.at(this->actual_values.cue).timestamps.size() - 1) { // Not the last Frame of the cue?
                 this->actual_values.frame++;
             } else { // last frame of cue
@@ -459,7 +466,7 @@ namespace dmxfish::filters {
         }
         if (this->actual_values.frame < this->cues.at(this->actual_values.cue).timestamps.size()) {
             this->last_values.updated = false;
-            double rel_time =
+            double rel_time = (this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) - this->last_values.time_stamp + this->start_time) <= 0 ? 1 :
                     (*this->time - this->last_values.time_stamp) / (this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) - this->last_values.time_stamp + this->start_time);
 
             for (size_t i = 0; i < this->actual_values.eight_bit_channels.size(); i++) {
