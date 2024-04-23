@@ -1368,7 +1368,7 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
         channel_names.sixteen_bit_frames.push_back("v1");
 
         configuration["cuelist"] =
-                "2:61000@lin|5:10@lin#next_cue#do_nothing$3:16000@lin|4:200@lin#hold#do_nothing";
+                "2:61000@lin|6:10@lin#next_cue#do_nothing$3:16000@lin|4:200@lin#hold#do_nothing";
 
         std::map<int, cue_st_test> test_values;
         std::map<int, double> time_scale;
@@ -1389,14 +1389,14 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
             if (tester_time == 4000) {
                 time_scale[tester_time] = 0.2;
             }
-            if (tester_time == 6000) {
-                time_scale[tester_time] = 0.5;
-            }
-            if (tester_time == 8000) {
+            if (tester_time == 9000) {
                 time_scale[tester_time] = 1.5;
             }
-            if (tester_time == 10500) {
+            if (tester_time == 11000) {
                 time_scale[tester_time] = 2;
+            }
+            if (tester_time == 12800) {
+                time_scale[tester_time] = 0.1;
             }
             uint16_t tester16;
             if (tester_time < 1000) {
@@ -1404,11 +1404,17 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
             } else if (tester_time < 2000) {
                 tester16 = (uint16_t) std::round(61000 * ((double) tester_time - 1000) / 2000);
             } else if (tester_time < 4000) {
-                tester16 = (uint16_t) std::round(30500 + 30500 * ((double) tester_time - 2000) / 4000);
-            } else if (tester_time < 6000) {
-                tester16 = (uint16_t) std::round(61000 - 60990 * ((double) tester_time - 3000) / 3000);
-            } else if (tester_time < 10000){
-                tester16 = (uint16_t) std::round(16000 - 15800 * ((double) tester_time - 6000) / 4000);
+                tester16 = (uint16_t) std::round(30500 + 30500 * ((double) tester_time - 2000) / 2000);
+            } else if (tester_time < 9000) {
+                tester16 = (uint16_t) std::round(61000 - 60990 * ((double) tester_time - 4000) / 20000);
+            } else if (tester_time < 11000){
+                tester16 = (uint16_t) std::round(45752.5 - 45742.5 * ((double) tester_time - 9000) / 2000);
+            } else if (tester_time < 12500){
+                tester16 = (uint16_t) std::round(10 + 15990 * ((double) tester_time - 11000) / 1500);
+            } else if (tester_time < 12800){
+                tester16 = (uint16_t) std::round(16000 - 15800 * ((double) tester_time - 12500) / 500);
+            } else if (tester_time < 16800){
+                tester16 = (uint16_t) std::round(6520 - 6320 * ((double) tester_time - 12800) / 4000);
             } else {
                 tester16 = 200;
             }
