@@ -91,6 +91,8 @@ namespace dmxfish::filters {
 
         std::string own_id;
         double* time = nullptr;
+        double* time_scale_input = nullptr;
+        double time_scale = 1;
         double start_time = 0;
         double pause_time = 0;
         frame_actual last_values = frame_actual();

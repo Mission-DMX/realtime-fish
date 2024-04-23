@@ -38,6 +38,7 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
     static std::map<std::string, std::string> INIT_PARAMS;
     static std::map<int, std::vector<std::tuple<std::string, std::string>>> UPDATES;
     static std::vector<int> ACTIVATIONS;
+    static std::map<int, double> TIME_SCALE;
 
     void test_cue_function(
             std::vector<int>& time_stamps,
@@ -46,14 +47,18 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
             std::map<std::string, std::string>& configuration = CONFIGS,
             std::map<int, std::vector<std::tuple<std::string, std::string>>>& update_commands = UPDATES,
             std::vector<int>& activate_scenes = ACTIVATIONS,
+            std::map<int, double>& time_scale = TIME_SCALE,
             std::map<std::string, std::string>& initial_parameters = INIT_PARAMS
             ){
         spdlog::set_level(spdlog::level::debug);
         dmxfish::filters::filter_cue fil = filter_cue();
 
         channel_mapping input_channels = channel_mapping();
+
         double time_s = 0;
+        double factor = 1;
         input_channels.float_channels["time"] = &time_s;
+        input_channels.float_channels["time_scale"] = &factor;
 
         fil.pre_setup(configuration, initial_parameters, "");
         fil.setup_filter (configuration, initial_parameters, input_channels, "");
@@ -64,6 +69,10 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
         fil.get_output_channels(map, name);
         for (const int& i : time_stamps){
             time_s = (double) i;
+            if(std::map<int, double>::iterator it = time_scale.find(i); it != time_scale.end())
+            {
+                factor = it->second;
+            }
 
             fil.update();
 
@@ -1348,5 +1357,67 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
         }
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values, scene_activations);
     }
+
+
+    BOOST_AUTO_TEST_CASE(changinginput) {
+        std::map <std::string, std::string> configuration;
+        configuration["mapping"] = "v1:16bit";
+        configuration["end_handling"] = "hold";
+
+        cue_st_names channel_names;
+        channel_names.sixteen_bit_frames.push_back("v1");
+
+        configuration["cuelist"] =
+                "2:61000@lin|5:10@lin#next_cue#do_nothing$3:16000@lin|4:200@lin#hold#do_nothing";
+
+        std::map<int, cue_st_test> test_values;
+        std::map<int, double> time_scale;
+        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
+
+        std::vector<int> time_s;
+        for (int tester_time= 0; tester_time < 20000; tester_time= tester_time + 100) {
+            time_s.push_back(tester_time);
+            if (tester_time == 1000) {
+                update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
+            }
+            if (tester_time == 1000) {
+                time_scale[tester_time] = 1;
+            }
+            if (tester_time == 2000) {
+                time_scale[tester_time] = 0.5;
+            }
+            if (tester_time == 4000) {
+                time_scale[tester_time] = 0.2;
+            }
+            if (tester_time == 6000) {
+                time_scale[tester_time] = 0.5;
+            }
+            if (tester_time == 8000) {
+                time_scale[tester_time] = 1.5;
+            }
+            if (tester_time == 10500) {
+                time_scale[tester_time] = 2;
+            }
+            uint16_t tester16;
+            if (tester_time < 1000) {
+                tester16 = 0;
+            } else if (tester_time < 2000) {
+                tester16 = (uint16_t) std::round(61000 * ((double) tester_time - 1000) / 2000);
+            } else if (tester_time < 4000) {
+                tester16 = (uint16_t) std::round(30500 + 30500 * ((double) tester_time - 2000) / 4000);
+            } else if (tester_time < 6000) {
+                tester16 = (uint16_t) std::round(61000 - 60990 * ((double) tester_time - 3000) / 3000);
+            } else if (tester_time < 10000){
+                tester16 = (uint16_t) std::round(16000 - 15800 * ((double) tester_time - 6000) / 4000);
+            } else {
+                tester16 = 200;
+            }
+            test_values[tester_time].sixteen_bit_frames.push_back(tester16);
+        }
+        std::vector<int> activations;
+        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values, activations, time_scale);
+    }
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
