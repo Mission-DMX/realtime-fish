@@ -13,6 +13,8 @@
 #include "proto_src/MessageTypes.pb.h"
 #include "proto_src/FilterMode.pb.h"
 
+// Todo: Color Transisiton via RGB colorspace not with HSI
+
 int count_occurence_of(const std::string &base_string, std::string pattern, size_t start, size_t end) {
     int occurrences = 0;
     while ((start = base_string.find(pattern, start)) != std::string::npos && start <= end) {
@@ -176,15 +178,12 @@ namespace dmxfish::filters {
                     break;
                 }
                 case COLOR: {
-                    this->cues.at(cue).color_frames.push_back(key_frame<dmxfish::dmx::pixel>(dmxfish::dmx::pixel(), tr));
                     const auto first_position = str.find(',', start);
-                    this->cues.at(cue).color_frames.at(this->channel.at(nr_channel).index).value.hue = std::stod(
-                            str.substr(start, first_position - start));
                     const auto second_position = str.find(",", first_position + 1);
-                    this->cues.at(cue).color_frames.at(this->channel.at(nr_channel).index).value.saturation = std::stod(
-                            str.substr(first_position + 1, second_position - first_position - 1));
-                    this->cues.at(cue).color_frames.at(this->channel.at(nr_channel).index).value.iluminance = std::stod(
-                            str.substr(second_position + 1, end - second_position - 1));
+                    this->cues.at(cue).color_frames.push_back(key_frame<dmxfish::dmx::pixel>(dmxfish::dmx::pixel(std::stod(
+                            str.substr(start, first_position - start)), std::stod(
+                            str.substr(first_position + 1, second_position - first_position - 1)), std::stod(
+                            str.substr(second_position + 1, end - second_position - 1))), tr));
                     break;
                 }
                 default: {
