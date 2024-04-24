@@ -28,33 +28,33 @@ namespace dmxfish::filters {
         if (auto iomanager = get_iomanager_instance(); iomanager != nullptr) {
             if (auto s = iomanager->get_active_show(); s != nullptr) {
 
-                std::string run_state;
+                std::string run_state_str;
                 switch (this->running_state) {
                     case STOP: {
-                        run_state = "stop";
+                        run_state_str = "stop";
                         break;
                     }
                     case PLAY: {
-                        run_state = "play";
+                        run_state_str = "play";
                         break;
                     }
                     case PAUSE: {
-                        run_state = "pause";
+                        run_state_str = "pause";
                         break;
                     }
                     default: {
-                        run_state = "error";
+                        run_state_str = "error";
                         break;
                     }
                 }
 
                 auto update_message = missiondmx::fish::ipcmessages::update_parameter();
-                update_message.set_filter_id(this->own_id);
+                update_message.set_filter_id(this->own_filter_id);
                 update_message.set_parameter_key("actual_state");
                 update_message.set_scene_id(s->get_active_scene());
                 std::stringstream params;
                 params <<
-                       run_state << ";" <<
+                       run_state_str << ";" <<
                        std::to_string(this->actual_values.cue) << ";" <<
                        std::to_string((*this->time - this->start_time) / 1000) << ";";
                 if (this->cues.at(this->actual_values.cue).timestamps.size() > 0) {
@@ -64,8 +64,9 @@ namespace dmxfish::filters {
                 } else {
                     params << std::to_string(0);
                 }
-                update_message.set_parameter_value(params.str());
+                params << ";" << std::to_string(this->time_scale);
 
+                update_message.set_parameter_value(params.str());
                 iomanager->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
             }
         }
@@ -218,7 +219,7 @@ namespace dmxfish::filters {
                         std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
         }
         else {
-            ::spdlog::warn("cue " + std::to_string(cue) + " of filter " + this->own_id + " is empty");
+            ::spdlog::warn("cue " + std::to_string(cue) + " of filter " + this->own_filter_id + " is empty");
             return true;
         }
     }
@@ -502,7 +503,7 @@ namespace dmxfish::filters {
 
     void filter_cue::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& own_id) {
         MARK_UNUSED(initial_parameters);
-        this->own_id = own_id;
+        this->own_filter_id = own_id;
         if (!configuration.contains("mapping")) {
             throw filter_config_exception("cue filter: unable to setup the mapping", filter_type::filter_cue, own_id);
         }
@@ -589,7 +590,7 @@ namespace dmxfish::filters {
 
     bool filter_cue::receive_update_from_gui(const std::string &key, const std::string &_value) {
         if (!key.compare("run_mode")) {
-            if ((!_value.compare("play") || !_value.compare("to_next_cue")) && this->time_scale > 0) {
+            if ((!_value.compare("play") || !_value.compare("to_next_cue")) && this->scale_valid) {
                 switch (this->running_state) {
                     case STOP:
                         this->actual_values.cue = 0;
@@ -749,16 +750,34 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::update() {
-        if (*this->time_scale_input != this->time_scale) {
-            if(*this->time_scale_input <= 0){
-                spdlog::info("cue list paused cause scale factor is <=0");
-                this->time_scale == 0;
-                return;
-            } else {
-                if (this->time_scale == 0) {
-                    this->time_scale = *this->time_scale_input;
-                    spdlog::info("cue list started again cause scale factor is >0");
+        switch (this->running_state) {
+            case STOP: {
+                break;
+            }
+            case PLAY: {
+                calc_values();
+                break;
+            }
+            case PAUSE: {
+                break;
+            }
+            default: {
+                calc_values();
+                break;
+            }
+        }
 
+        if (*this->time_scale_input != this->time_scale) {
+            if(*this->time_scale_input <= 0 && this->scale_valid){
+                spdlog::info("cue list paused cause scale factor is <=0");
+                receive_update_from_gui("run_mode", "pause");
+                this->scale_valid = false;
+                return;
+            } else if (*this->time_scale_input > 0) {
+                if (!this->scale_valid) {
+                    spdlog::info("cue list started again cause scale factor is >0");
+                    this->scale_valid = true;
+                    receive_update_from_gui("run_mode", "play");
                 }
                 this->start_time = *this->time - (*this->time - this->start_time) * this->time_scale / *this->time_scale_input;
                 this->pause_time = *this->time - (*this->time - this->pause_time) * this->time_scale / *this->time_scale_input;
@@ -766,21 +785,6 @@ namespace dmxfish::filters {
                 this->time_scale = *this->time_scale_input;
             }
         }
-        switch (this->running_state) {
-            case STOP: {
-                return;
-            }
-            case PLAY: {
-                break;
-            }
-            case PAUSE: {
-                return;
-            }
-            default: {
-                break;
-            }
-        }
-        calc_values();
     }
 
     void filter_cue::scene_activated() {

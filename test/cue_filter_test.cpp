@@ -1375,10 +1375,13 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
         std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
 
         std::vector<int> time_s;
-        for (int tester_time= 0; tester_time < 20000; tester_time= tester_time + 100) {
+        for (int tester_time= 0; tester_time < 22000; tester_time= tester_time + 100) {
             time_s.push_back(tester_time);
-            if (tester_time == 1000) {
+            if (tester_time == 1000 || tester_time == 11000) {
                 update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
+            }
+            if (tester_time == 9000) {
+                update_key_values[tester_time].push_back(std::tuple("run_mode", "pause"));
             }
             if (tester_time == 1000) {
                 time_scale[tester_time] = 1;
@@ -1389,13 +1392,16 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
             if (tester_time == 4000) {
                 time_scale[tester_time] = 0.2;
             }
-            if (tester_time == 9000) {
+            if (tester_time == 10000) {
                 time_scale[tester_time] = 1.5;
             }
-            if (tester_time == 11000) {
+            if (tester_time == 13000) {
                 time_scale[tester_time] = 2;
             }
-            if (tester_time == 12800) {
+            if (tester_time == 14800) {
+                time_scale[tester_time] = 0;
+            }
+            if (tester_time == 16000) {
                 time_scale[tester_time] = 0.1;
             }
             uint16_t tester16;
@@ -1408,13 +1414,17 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
             } else if (tester_time < 9000) {
                 tester16 = (uint16_t) std::round(61000 - 60990 * ((double) tester_time - 4000) / 20000);
             } else if (tester_time < 11000){
-                tester16 = (uint16_t) std::round(45752.5 - 45742.5 * ((double) tester_time - 9000) / 2000);
-            } else if (tester_time < 12500){
-                tester16 = (uint16_t) std::round(10 + 15990 * ((double) tester_time - 11000) / 1500);
-            } else if (tester_time < 12800){
-                tester16 = (uint16_t) std::round(16000 - 15800 * ((double) tester_time - 12500) / 500);
-            } else if (tester_time < 16800){
-                tester16 = (uint16_t) std::round(6520 - 6320 * ((double) tester_time - 12800) / 4000);
+                tester16 = (uint16_t) std::round(45752.5);
+            } else if (tester_time < 13000){
+                tester16 = (uint16_t) std::round(45752.5 - 45742.5 * ((double) tester_time - 11000) / 2000);
+            } else if (tester_time < 14500){
+                tester16 = (uint16_t) std::round(10 + 15990 * ((double) tester_time - 13000) / 1500);
+            } else if (tester_time < 14800){
+                tester16 = (uint16_t) std::round(16000 - 15800 * ((double) tester_time - 14500) / 500);
+            } else if (tester_time < 16000){
+                tester16 = 6520;
+            } else if (tester_time < 20000){
+                tester16 = (uint16_t) std::round(6520 - 6320 * ((double) tester_time - 16000) / 4000);
             } else {
                 tester16 = 200;
             }

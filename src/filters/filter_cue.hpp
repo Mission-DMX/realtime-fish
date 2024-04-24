@@ -76,8 +76,8 @@ namespace dmxfish::filters {
         struct frame_actual{
             bool updated;
             double time_stamp;
-            uint16_t cue{};
-            uint16_t frame{};
+            size_t cue{};
+            size_t frame{};
             std::vector<uint8_t> eight_bit_channels{};
             std::vector<uint16_t> sixteen_bit_channels{};
             std::vector<double> float_channels{};
@@ -89,10 +89,11 @@ namespace dmxfish::filters {
                     frame(65535) {}
         };
 
-        std::string own_id;
+        std::string own_filter_id;
         double* time = nullptr;
         double* time_scale_input = nullptr;
         double time_scale = 1;
+        bool scale_valid = true;
         double start_time = 0;
         double pause_time = 0;
         frame_actual last_values = frame_actual();
