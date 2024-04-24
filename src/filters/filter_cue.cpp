@@ -766,7 +766,6 @@ namespace dmxfish::filters {
                 break;
             }
         }
-
         if (*this->time_scale_input != this->time_scale) {
             if(*this->time_scale_input <= 0 && this->scale_valid){
                 spdlog::info("cue list paused cause scale factor is <=0");

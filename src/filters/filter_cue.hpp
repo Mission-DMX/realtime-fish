@@ -144,7 +144,7 @@ namespace dmxfish::filters {
         bool last_frame_handling();
 
     public:
-        filter_cue() : filter() {}
+        filter_cue() : filter() {this->scale_valid = true;}
         virtual ~filter_cue() {}
 
         virtual void pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& own_id) override;
