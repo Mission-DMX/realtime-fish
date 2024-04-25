@@ -365,28 +365,33 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
             }
             uint16_t tester16;
             dmxfish::dmx::pixel testercolor;
+            dmxfish::dmx::pixel testercolor1 = dmxfish::dmx::pixel((float) 0, (float) 0, (float) 0);
+            dmxfish::dmx::pixel testercolor2 = dmxfish::dmx::pixel((float) 0, (float) 1, (float) 0.5);
+            dmxfish::dmx::pixel testercolor3 = dmxfish::dmx::pixel((float) 120, (float) 1, (float) 1);
+            dmxfish::dmx::pixel testercolor4 = dmxfish::dmx::pixel((float) 180, (float) 0.2, (float) 0.8);
+            dmxfish::dmx::pixel testercolor5 = dmxfish::dmx::pixel((float) 210, (float) 0.8, (float) 0.3);
             if (tester_time < 1000){
                 testercolor = dmxfish::dmx::pixel((float) 0, (float) 0, (float) 0);
                 tester16 = 0;
             } else if (tester_time < 3000) {
-                testercolor = dmxfish::dmx::pixel(0,
-                                                  0 + 1 * (double) (tester_time - 1000) / 2000,
-                                                  0 + 0.5 * (double) (tester_time - 1000) / 2000);
+                testercolor = dmxfish::dmx::pixel((uint16_t) (testercolor1.getRed() + (testercolor2.getRed() - testercolor1.getRed()) * (double) (tester_time - 1000) / 2000),
+                                                  (uint16_t) (testercolor1.getGreen() + (testercolor2.getGreen() - testercolor1.getGreen()) * (double) (tester_time - 1000) / 2000),
+                                                  (uint16_t) (testercolor1.getBlue() + (testercolor2.getBlue() - testercolor1.getBlue()) * (double) (tester_time - 1000) / 2000));
                 tester16 = (uint16_t) std::round(400 * (double) (tester_time - 1000) / 2000);
             } else if (tester_time < 8000) {
-                testercolor = dmxfish::dmx::pixel(0 + 120 * (double) (tester_time - 3000) / 5000,
-                                                  1 + 0 * (double) (tester_time - 3000) / 5000,
-                                                  0.5 + 0.5 * (double) (tester_time - 3000) / 5000);
+                testercolor = dmxfish::dmx::pixel((uint16_t) (testercolor2.getRed() + (testercolor3.getRed() - testercolor2.getRed()) * (double) (tester_time - 3000) / 5000),
+                                                  (uint16_t) (testercolor2.getGreen() + (testercolor3.getGreen() - testercolor2.getGreen()) * (double) (tester_time - 3000) / 5000),
+                                                  (uint16_t) (testercolor2.getBlue() + (testercolor3.getBlue() - testercolor2.getBlue()) * (double) (tester_time - 3000) / 5000));
                 tester16 = (uint16_t) std::round(400 + 59600 * (double) (tester_time - 3000) / 5000);
             } else if (tester_time < 11000) {
-                testercolor = dmxfish::dmx::pixel(120 + 60 * (double) (tester_time - 8000) / 3000,
-                                                  1 - 0.8 * (double) (tester_time - 8000) / 3000,
-                                                  1 - 0.2 * (double) (tester_time - 8000) / 3000);
+                testercolor = dmxfish::dmx::pixel((uint16_t) (testercolor3.getRed() + (testercolor4.getRed() - testercolor3.getRed()) * (double) (tester_time - 8000) / 3000),
+                                                  (uint16_t) (testercolor3.getGreen() + (testercolor4.getGreen() - testercolor3.getGreen()) * (double) (tester_time - 8000) / 3000),
+                                                  (uint16_t) (testercolor3.getBlue() + (testercolor4.getBlue() - testercolor3.getBlue()) * (double) (tester_time - 8000) / 3000));
                 tester16 = (uint16_t) std::round(60000 - 40000 * ((double) tester_time - 8000) / 3000);
             } else if (tester_time < 14000) {
-                testercolor = dmxfish::dmx::pixel(180 + 30 * (double) (tester_time - 11000) /3000,
-                                                  0.2 + 0.6 * (double) (tester_time - 11000) / 3000,
-                                                  0.8 - 0.5 * (double) (tester_time - 11000) / 3000);
+                testercolor = dmxfish::dmx::pixel((uint16_t) (testercolor4.getRed() + (testercolor5.getRed() - testercolor4.getRed()) * (double) (tester_time - 11000) / 3000),
+                                                  (uint16_t) (testercolor4.getGreen() + (testercolor5.getGreen() - testercolor4.getGreen()) * (double) (tester_time - 11000) / 3000),
+                                                  (uint16_t) (testercolor4.getBlue() + (testercolor5.getBlue() - testercolor4.getBlue()) * (double) (tester_time - 11000) / 3000));
                 tester16 = (uint16_t) std::round(20000 - 20000 * (double) (tester_time - 11000) / 3000);
             } else {
                 testercolor = dmxfish::dmx::pixel(210, 0.8, 0.3);
