@@ -135,7 +135,7 @@ namespace dmxfish::dmx {
         }
     }
     void pixel::convert_hsi_to_rgb_pre(){
-        if (this->red == 0 and this->green == 0 and this->blue == 0 and this->iluminance >= 0.){
+        if (this->red == 0 and this->green == 0 and this->blue == 0 and this->iluminance > 0.){
             convert_hsi_to_rgb();
         }
     }
@@ -144,12 +144,12 @@ namespace dmxfish::dmx {
             convert_rgb_to_hsi();
         }
     }
-    void pixel::make_rgb_invalid(){
+    void pixel::invalidate_rgb(){
         this->red = 0;
         this->green = 0;
         this->blue = 0;
     }
-    void pixel::make_hsi_invalid(){
+    void pixel::invalidate_hsi(){
         this->iluminance = -1.;
     }
 
@@ -180,37 +180,37 @@ namespace dmxfish::dmx {
 
     void pixel::setHue(double h){
         convert_rgb_to_hsi_pre();
-        make_rgb_invalid();
+        invalidate_rgb();
         this->hue = h;
     }
 
     void pixel::setSaturation(double s){
         convert_rgb_to_hsi_pre();
-        make_rgb_invalid();
+        invalidate_rgb();
         this->saturation = s;
     }
 
     void pixel::setIluminance(double i){
         convert_rgb_to_hsi_pre();
-        make_rgb_invalid();
+        invalidate_rgb();
         this->iluminance = i;
     }
 
     void pixel::setRed(uint16_t r){
         convert_hsi_to_rgb_pre();
-        make_hsi_invalid();
+        invalidate_hsi();
         this->red = r;
     }
 
     void pixel::setGreen(uint16_t g){
         convert_hsi_to_rgb_pre();
-        make_hsi_invalid();
+        invalidate_hsi();
         this->green = g;
     }
 
     void pixel::setBlue(uint16_t b){
         convert_hsi_to_rgb_pre();
-        make_hsi_invalid();
+        invalidate_hsi();
         this->blue = b;
     }
 }

@@ -35,8 +35,8 @@ class pixel {
     void convert_rgb_to_hsi();
     inline void convert_hsi_to_rgb_pre();
     inline void convert_rgb_to_hsi_pre();
-    inline void make_rgb_invalid();
-    inline void make_hsi_invalid();
+    inline void invalidate_rgb();
+    inline void invalidate_hsi();
     void pixel_to_rgb16(uint16_t& r, uint16_t& g, uint16_t& b);
 
     public:
@@ -47,12 +47,12 @@ class pixel {
     void pixel_to_rgb(uint8_t& r, uint8_t& g, uint8_t& b);
     void pixel_to_rgbw(uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& w);
 
-    double getHue();
-    double getSaturation();
-    double getIluminance();
-    uint16_t getRed();
-    uint16_t getGreen();
-    uint16_t getBlue();
+    [[nodiscard]] double getHue();
+    [[nodiscard]] double getSaturation();
+    [[nodiscard]] double getIluminance();
+    [[nodiscard]] uint16_t getRed();
+    [[nodiscard]] uint16_t getGreen();
+    [[nodiscard]] uint16_t getBlue();
 
     void setHue(double h);
     void setSaturation(double s);
