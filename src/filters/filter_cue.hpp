@@ -68,20 +68,37 @@ namespace dmxfish::filters {
         };
 
         struct channel_str{
-//            std::string name;
             channel_t channel_type;
             size_t index;
             channel_str(channel_t ch_t,  size_t i) : channel_type(ch_t), index(i) {}
         };
 
-        std::string _own_id;
+        struct frame_actual{
+            bool updated;
+            double time_stamp;
+            size_t cue{};
+            size_t frame{};
+            std::vector<uint8_t> eight_bit_channels{};
+            std::vector<uint16_t> sixteen_bit_channels{};
+            std::vector<double> float_channels{};
+            std::vector<dmxfish::dmx::pixel> color_channels{};
+            frame_actual() :
+                    updated(false),
+                    time_stamp(0),
+                    cue(65535),
+                    frame(65535) {}
+        };
+
+        std::string own_filter_id;
         double* time = nullptr;
+        double* time_scale_input = nullptr;
+        double time_scale = 1;
+        double current_time = 0;
+        bool scale_valid = true;
         double start_time = 0;
         double pause_time = 0;
-        uint16_t frame = 0;
-        bool already_updated_last = false;
-        bool already_updated_act = false;
-        uint16_t active_cue = 0;
+        frame_actual last_values = frame_actual();
+        frame_actual actual_values = frame_actual();
 
         uint16_t next_cue = 0xffff;
 	    long default_cue = -1;
@@ -95,51 +112,110 @@ namespace dmxfish::filters {
         // containing the cues, incl, frames and transition types
         std::vector<cue_st> cues;
 
-        // values for the output
-        std::vector<uint8_t> eight_bit_channels;
-        std::vector<uint16_t> sixteen_bit_channels;
-        std::vector<double> float_channels;
-        std::vector<dmxfish::dmx::pixel> color_channels;
-
-        // last values, for calculating the transition
-        double last_timestamp = 0;
-        std::vector<uint8_t> last_eight_bit_channels;
-        std::vector<uint16_t> last_sixteen_bit_channels;
-        std::vector<double> last_float_channels;
-        std::vector<dmxfish::dmx::pixel> last_color_channels;
-
         // channel names for the output map
         std::vector<std::string> channel_names_eight;
         std::vector<std::string> channel_names_sixteen;
         std::vector<std::string> channel_names_float;
         std::vector<std::string> channel_names_color;
 
-
+        /**
+         * Sends current state to the ui
+         */
         void update_parameter_gui();
 
+        /**
+         * Handles each part separated by the sep of the string from start to end with the given function
+         * @param str the string to investigate
+         * @param start the start position where the investigation should start
+         * @param end the end position where the investigation should end
+         * @param sep the separator to separate parts of the string to be handled individually
+         * @param min_loops the number of parts at least to be found
+         * @param func the function to handle each part
+         * @return True when everything went fine, false otherwise or min_loops was not reached
+         */
         inline bool do_with_substr(const std::string& str, size_t start, const size_t end, const char sep, size_t min_loops, const std::function<bool(const std::string&, size_t, size_t, size_t)> func);
 
-        bool handle_frame(size_t cue, const std::string& str, size_t start, size_t end, size_t nr_channel);
+        /**
+         * Reads out the value and transition type of the one channel-frame
+         * @param cue the number of the cue to which the frame belongs
+         * @param str the string to investigate
+         * @param start the start position where the investigation should start
+         * @param end the end position where the investigation should end
+         * @param nr_channel the number which channel is investigated
+         * @return True when everything went fine
+         */
+        bool handle_channel_frame(size_t cue, const std::string& str, size_t start, size_t end, size_t nr_channel);
 
+        /**
+         * Reads out the timestamp and handles the channel-frames
+         * @param cue the number of the cue to which the timestamp belongs
+         * @param str the string to investigate
+         * @param start the start position where the investigation should start
+         * @param end the end position where the investigation should end
+         * @param nr_timestamp the number of the timestamp in this cue
+         * @return True when everything went fine
+         */
         bool handle_timestamps(size_t cue, const std::string& str, size_t start, size_t end, size_t nr_timestamp);
 
+        /**
+         * Handles the configuration (end_handling) of the cue
+         * @param cue the number of the cue
+         * @param str the string to investigate
+         * @param start the start position where the investigation should start
+         * @param end the end position where the investigation should end
+         * @param number (not used)
+         * @return True when everything went fine
+         */
         bool handle_cue_conf(size_t cue, const std::string& str, size_t start, size_t end, size_t number);
 
+        /**
+         * Handles the cue
+         * @param str the string to investigate
+         * @param start the start position where the investigation should start
+         * @param end the end position where the investigation should end
+         * @param number the number of the cue again
+         * @return True when everything went fine
+         */
         bool handle_cue(const std::string& str, size_t start, size_t end, size_t cue);
 
+        /**
+         * Calculation of the current output values
+         * @param rel_time the relative time already proceed to the next timestamp
+         * @param transition the transition type to the next timestamp
+         * @param start_value the value where this transition started
+         * @param end_value the value where this transition should end
+         * @param ind the index which channel-number (of the specific type) is considered
+         */
         template <typename T>
         void calc_transition(double rel_time, transition_t transition, T start_value, T end_value, size_t ind);
 
+        /**
+         * Puts the values of the last update to the output, for example if a cue ends with and hold
+         */
         void update_hold_values();
 
+        /**
+         * Puts the values of the of the last timestamp of the cue to the last values, so the next transition starts with the right ones
+         */
         void update_last_values();
 
-        void start_new_cue();
+        /**
+         * Resetting internal state for starting a new cue
+         */
+        void reset_for_starting_cue();
 
+        /**
+         * Updates all output values (and internal states for the current time
+         */
         void calc_values();
 
+        /**
+         * Handling when the end of a cue is reached
+         */
+        bool last_frame_handling();
+
     public:
-        filter_cue() : filter() {}
+        filter_cue() : filter() {this->scale_valid = true;}
         virtual ~filter_cue() {}
 
         virtual void pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& own_id) override;

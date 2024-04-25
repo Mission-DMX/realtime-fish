@@ -25,9 +25,12 @@ project_configuration::project_configuration(std::unique_ptr<MissionDMX::ShowFil
 	if(const auto as = show_file_dom->default_active_scene(); as.present()) {
 		this->default_active_scene = as.get();
 	}
+
 	logging_target << "Initializing default scene." << std::endl;
 	this->current_active_scene = this->default_active_scene;
-	this->scenes[this->get_active_scene()].on_start();
+	if(const auto scene_index = this->get_active_scene(); scene_index < this->scenes.size()) {
+		this->scenes[scene_index].on_start();
+	}
 	logging_target << "Show file '" << this->get_name() << "' successfully loaded." << std::endl;
 }
 
@@ -36,9 +39,16 @@ bool project_configuration::set_active_scene(unsigned int new_scene) {
 		return false;
 	}
 	const auto new_scene_index = this->scene_id_mapping.at(new_scene);
-	this->scenes[this->get_active_scene()].on_stop();
+	if (const auto current_scene = this->get_active_scene(); current_scene < this->scenes.size()) {
+		this->scenes[current_scene].on_stop();
+	}
 	this->current_active_scene = new_scene_index;
-	this->scenes[this->get_active_scene()].on_start();
+	if (new_scene_index >= this->scenes.size()) {
+		this->current_active_scene = this->scenes.size() - 1;
+	}
+	if (const auto scene_index = this->get_active_scene(); scene_index < this->scenes.size()) {
+		this->scenes[scene_index].on_start();
+	}
 	return true;
 }
 

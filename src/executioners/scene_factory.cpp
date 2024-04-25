@@ -492,8 +492,24 @@ COMPILER_RESTORE("-Weffc++")
 				}
 			}
 			if(!placed_filter) {
-				throw scheduling_exception(std::string(ERROR_CYCLIC_OR_BROKEN_DEPENDENCY_WHILE_SCHEDULING) + "There were no filters with resolved dependencies within this round (" + std::to_string(round) + "). Possible causes: broken or cyclic dependencies.\nAlready scheduled filters: "
-						+ iteratable_to_string(resolved_filters) + "\nStill missing filters: " + iteratable_to_string(missing_filter_stack));
+				std::stringstream exc_ss;
+				exc_ss << std::string(ERROR_CYCLIC_OR_BROKEN_DEPENDENCY_WHILE_SCHEDULING);
+				exc_ss << "There were no filters with resolved dependencies within this round (";
+				exc_ss << std::to_string(round);
+				exc_ss << "). Possible causes: broken or cyclic dependencies.\nAlready scheduled filters: ";
+				exc_ss << iteratable_to_string(resolved_filters);
+				exc_ss << "\nStill missing filters: ";
+				exc_ss << iteratable_to_string(missing_filter_stack);
+				for (const auto& f : missing_filter_stack) {
+					exc_ss << "\n" << f.id() << ":\n";
+					for(const auto& link : f.channellink()) {
+						const auto& dep_filter = link.output_channel_id();
+						if (!resolved_filters.contains(dep_filter.substr(0, dep_filter.find(":")))) {
+							exc_ss << '\t' << dep_filter << '\n';
+						}
+					}
+				}
+				throw scheduling_exception(exc_ss.str());
 			}
 			b.emplace_back(fv.size());
 			msg_stream << "Next round." << std::endl;
