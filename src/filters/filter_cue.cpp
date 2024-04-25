@@ -272,7 +272,7 @@ namespace dmxfish::filters {
     void filter_cue::calc_transition(double rel_time, transition_t transition, T start_value, T end_value, size_t ind) {
 
         // offset is the value of the sigmoidal at point zero, so the offset of the x-axis
-        constexpr double offset = 0.0024726231566347743340599073722557624510930726498587540880605924;
+        constexpr double sigmoidal_offset = 0.0024726231566347743340599073722557624510930726498587540880605924;
 
         switch (transition) {
             case EDGE:
@@ -296,7 +296,7 @@ namespace dmxfish::filters {
             case SIGMOIDAL:
                 // first the offset gets subtracted for starting at zero
                 // the distance at point one to one is now twice the offset, so divided by the height will scale to one
-                rel_time = (1.0 / (1 + std::exp(6 - rel_time * 12)) - offset) / (1 - 2 * offset);
+                rel_time = (1.0 / (1 + std::exp(6 - rel_time * 12)) - sigmoidal_offset) / (1 - 2 * sigmoidal_offset);
                 break;
             case EASE_IN:
                 rel_time = rel_time * rel_time;
