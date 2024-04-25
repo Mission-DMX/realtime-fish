@@ -58,7 +58,7 @@ namespace dmxfish::filters {
                 params <<
                        run_state_str << ";" <<
                        std::to_string(this->actual_values.cue) << ";" <<
-                       std::to_string((*this->time - this->start_time) / 1000) << ";";
+                       std::to_string((this->current_time - this->start_time) / 1000) << ";";
                 if (this->cues.at(this->actual_values.cue).timestamps.size() > 0) {
                     params << std::to_string(
                             (this->cues.at(this->actual_values.cue).timestamps.at(this->cues.at(this->actual_values.cue).timestamps.size() - 1)) /
@@ -143,7 +143,7 @@ namespace dmxfish::filters {
         return true;
     }
 
-    bool filter_cue::handle_frame(size_t cue, const std::string &str, size_t start, size_t end, size_t nr_channel) {
+    bool filter_cue::handle_channel_frame(size_t cue, const std::string &str, size_t start, size_t end, size_t nr_channel) {
         const size_t sep = str.find('@', start);
         if (nr_channel >= this->channel.size()) {
             return false;
@@ -214,7 +214,7 @@ namespace dmxfish::filters {
                 return false;
             }
             return do_with_substr(str, end_ts + 1, end, '&', this->channel.size(),
-                        std::bind(&dmxfish::filters::filter_cue::handle_frame, this, cue, std::placeholders::_1,
+                        std::bind(&dmxfish::filters::filter_cue::handle_channel_frame, this, cue, std::placeholders::_1,
                         std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
         }
         else {
@@ -270,6 +270,10 @@ namespace dmxfish::filters {
 
     template<typename T>
     void filter_cue::calc_transition(double rel_time, transition_t transition, T start_value, T end_value, size_t ind) {
+
+        // offset is the value of the sigmoidal at point zero, so the offset of the x-axis
+        constexpr double offset = 0.0024726231566347743340599073722557624510930726498587540880605924;
+
         switch (transition) {
             case EDGE:
                 if constexpr(std::is_same<T, uint8_t>::value)
@@ -277,7 +281,8 @@ namespace dmxfish::filters {
                     this->actual_values.eight_bit_channels.at(ind) = (rel_time < 1) ? start_value : end_value;
                 } else if constexpr(std::is_same<T, uint16_t>::value)
                 {
-                    this->actual_values.sixteen_bit_channels.at(ind) = (rel_time < 1) ? start_value : end_value;                } else if constexpr(std::is_same<T, double>::value)
+                    this->actual_values.sixteen_bit_channels.at(ind) = (rel_time < 1) ? start_value : end_value;
+                } else if constexpr(std::is_same<T, double>::value)
                 {
                     this->actual_values.float_channels.at(ind) = (rel_time < 1) ? start_value : end_value;
                 } else if constexpr(std::is_same<T, dmxfish::dmx::pixel>::value)
@@ -289,7 +294,9 @@ namespace dmxfish::filters {
             case LINEAR:
                 break;
             case SIGMOIDAL:
-                rel_time = (1.0 / (1 + std::exp(6 - rel_time * 12))) * 2 * 0.5024726231566347743340599073722557624510930726498587540880605924 - 0.0024726231566347743340599073722557624510930726498587540880605924;
+                // first the offset gets subtracted for starting at zero
+                // the distance at point one to one is now twice the offset, so divided by the height will scale to one
+                rel_time = (1.0 / (1 + std::exp(6 - rel_time * 12)) - offset) / (1 - 2 * offset);
                 break;
             case EASE_IN:
                 rel_time = rel_time * rel_time;
@@ -312,7 +319,8 @@ namespace dmxfish::filters {
             this->actual_values.float_channels.at(ind) = (end_value - start_value) * rel_time + start_value;
         } else if constexpr(std::is_same<T, dmxfish::dmx::pixel>::value)
         {
-            this->actual_values.color_channels.at(ind) = dmxfish::dmx::pixel((end_value.hue - start_value.hue) * rel_time + start_value.hue,
+            this->actual_values.color_channels.at(ind) = dmxfish::dmx::pixel(
+                                                         (end_value.hue - start_value.hue) * rel_time + start_value.hue,
                                                          (end_value.saturation - start_value.saturation) * rel_time +
                                                          start_value.saturation,
                                                          (end_value.iluminance - start_value.iluminance) * rel_time +
@@ -340,7 +348,7 @@ namespace dmxfish::filters {
     }
 
     inline void filter_cue::update_last_values() {
-        this->last_values.time_stamp = *this->time;
+        this->last_values.time_stamp = this->current_time;
         if (!this->last_values.updated) {
             for (size_t i = 0; i < this->actual_values.eight_bit_channels.size(); i++) {
                 this->last_values.eight_bit_channels.at(i) = this->actual_values.eight_bit_channels.at(i);
@@ -360,9 +368,9 @@ namespace dmxfish::filters {
         }
     }
 
-    void filter_cue::start_new_cue() {
+    void filter_cue::reset_for_starting_cue() {
         update_last_values();
-        this->start_time = *this->time;
+        this->start_time = this->current_time;
         this->actual_values.frame = 0;
         if (this->actual_values.cue >= this->cues.size()) {
             this->actual_values.cue = this->cues.size() - 1;
@@ -378,7 +386,7 @@ namespace dmxfish::filters {
                 break;
             case HOLD:
                 update_hold_values();
-                this->pause_time = *this->time;
+                this->pause_time = this->current_time;
                 this->running_state = PAUSE;
                 this->cue_end_handling_real = HOLDING;
                 update_parameter_gui();
@@ -418,7 +426,7 @@ namespace dmxfish::filters {
             this->actual_values.cue = this->next_cue;
             this->next_cue = 0xffff;
         }
-        start_new_cue();
+        reset_for_starting_cue();
         this->cue_end_handling_real = this->cues.at(this->actual_values.cue).end_handling;
         return true;
     }
@@ -431,7 +439,7 @@ namespace dmxfish::filters {
         if (this->last_values.frame != this->actual_values.frame - 1 || this->last_values.cue != this->actual_values.cue) {
             this->last_values.updated = false;
         }
-        if (*this->time >= this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) / this->time_scale + this->start_time) { // Next Frame?
+        if (this->current_time >= this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) / this->time_scale + this->start_time) { // Next Frame?
             if (!this->last_values.updated) {
                 for (size_t i = 0; i < this->actual_values.eight_bit_channels.size(); i++) {
                     this->last_values.eight_bit_channels.at(i) = this->cues.at(this->actual_values.cue).eight_bit_frames.at(
@@ -466,7 +474,7 @@ namespace dmxfish::filters {
         if (this->actual_values.frame < this->cues.at(this->actual_values.cue).timestamps.size()) {
             this->last_values.updated = false;
             double rel_time = (this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) / this->time_scale - this->last_values.time_stamp + this->start_time) <= 0 ? 1 :
-                    (*this->time - this->last_values.time_stamp) / (this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) / this->time_scale - this->last_values.time_stamp + this->start_time);
+                    (this->current_time - this->last_values.time_stamp) / (this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) / this->time_scale - this->last_values.time_stamp + this->start_time);
 
             for (size_t i = 0; i < this->actual_values.eight_bit_channels.size(); i++) {
                 size_t frame_index = this->actual_values.frame * this->actual_values.eight_bit_channels.size() + i;
@@ -597,23 +605,23 @@ namespace dmxfish::filters {
                             this->actual_values.cue = this->next_cue;
                             this->next_cue = 0xffff;
                         }
-                        start_new_cue();
+                        reset_for_starting_cue();
                         break;
                     case PLAY:
                         switch (this->cues.at(this->actual_values.cue).restart_handling) {
                             case DO_NOTHING:
                                 break;
                             case START_FROM_BEGIN:
-                                start_new_cue();
+                                reset_for_starting_cue();
                                 break;
                             default:
                                 return false;
                         }
                         break;
                     case PAUSE:
-                        this->start_time = this->start_time + (*this->time - this->pause_time);
-                        this->last_values.time_stamp = this->last_values.time_stamp + (*this->time - this->pause_time);
-                        if(*this->time >= this->cues.at(this->actual_values.cue).timestamps.at(this->cues.at(this->actual_values.cue).timestamps.size() - 1) + this->start_time){ // start new cue if cue was finished
+                        this->start_time = this->start_time + (this->current_time - this->pause_time);
+                        this->last_values.time_stamp = this->last_values.time_stamp + (this->current_time - this->pause_time);
+                        if(this->current_time >= this->cues.at(this->actual_values.cue).timestamps.at(this->cues.at(this->actual_values.cue).timestamps.size() - 1) + this->start_time){ // start new cue if cue was finished
                             if (this->cues.at(this->actual_values.cue).end_handling == NEXT_CUE || this->cues.at(this->actual_values.cue).end_handling == HOLD){
                                 if(this->actual_values.cue < this->cues.size()-1){
                                     this->actual_values.cue++;
@@ -625,7 +633,7 @@ namespace dmxfish::filters {
                                     this->next_cue = 0xffff;
                                 }
                             }
-                            start_new_cue();
+                            reset_for_starting_cue();
                         }
                         break;
                     default:
@@ -651,7 +659,7 @@ namespace dmxfish::filters {
                         return false;
                 }
                 this->running_state = PAUSE;
-                this->pause_time = *this->time;
+                this->pause_time = this->current_time;
                 update_parameter_gui();
                 return true;
             }
@@ -679,7 +687,7 @@ namespace dmxfish::filters {
             if (next > this->cues.size()) {
                 return false;
             }
-            start_new_cue();
+            reset_for_starting_cue();
             this->actual_values.cue = next;
             this->running_state = PLAY;
             this->cue_end_handling_real = this->cues.at(this->actual_values.cue).end_handling;
@@ -749,6 +757,7 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::update() {
+        this->current_time = *(this->time);
         switch (this->running_state) {
             case STOP: {
                 break;
@@ -777,9 +786,9 @@ namespace dmxfish::filters {
                     this->scale_valid = true;
                     receive_update_from_gui("run_mode", "play");
                 }
-                this->start_time = *this->time - (*this->time - this->start_time) * this->time_scale / *this->time_scale_input;
-                this->pause_time = *this->time - (*this->time - this->pause_time) * this->time_scale / *this->time_scale_input;
-                this->last_values.time_stamp = *this->time - (*this->time - this->last_values.time_stamp) * this->time_scale / *this->time_scale_input;
+                this->start_time = this->current_time - (this->current_time - this->start_time) * this->time_scale / *this->time_scale_input;
+                this->pause_time = this->current_time - (this->current_time - this->pause_time) * this->time_scale / *this->time_scale_input;
+                this->last_values.time_stamp = this->current_time - (this->current_time - this->last_values.time_stamp) * this->time_scale / *this->time_scale_input;
                 this->time_scale = *this->time_scale_input;
             }
         }
@@ -789,7 +798,7 @@ namespace dmxfish::filters {
         if (this->default_cue > -1) {
             this->running_state = PLAY;
             this->actual_values.cue = (uint16_t) this->default_cue;
-            start_new_cue();
+            reset_for_starting_cue();
             ::spdlog::info("Switched to Cue {}.", this->default_cue);
         }
     }

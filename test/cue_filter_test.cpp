@@ -326,7 +326,7 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
                 tester16 = 0;
                 testerfloat = 0;
             } else if (tester_time < 3000) {
-                tester8 = (uint8_t) std::round(100 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 2000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
+                tester8 = (uint8_t) std::round(100 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 2000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH));
                 tester16 = (uint16_t) std::round(16000 * (((double) tester_time - 1000) / 2000) * (((double) tester_time - 1000) / 2000));
                 testerfloat = 0.8 * ((double) tester_time - 1000)/2000;
             } else {
@@ -511,17 +511,17 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
                 tester16 = 0;
                 testerfloat = 0;
             } else if (tester_time < 11000) {
-                tester8 = (uint8_t) std::round(0 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 10000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
-                tester16 = (uint16_t) std::round((double) 1000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 10000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
-                testerfloat = (double) -50 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 10000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH);
+                tester8 = (uint8_t) std::round(0 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 10000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH));
+                tester16 = (uint16_t) std::round((double) 1000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 10000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH));
+                testerfloat = (double) -50 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 10000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH);
             } else if (tester_time < 21000) {
-                tester8 = (uint8_t) std::round(255 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 11000) / 10000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
-                tester16 = (uint16_t) std::round((double) 1000 + 60000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 11000) / 10000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
-                testerfloat = (double) -50 + 100 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 11000) / 10000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH);
+                tester8 = (uint8_t) std::round(255 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 11000) / 10000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH));
+                tester16 = (uint16_t) std::round((double) 1000 + 60000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 11000) / 10000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH));
+                testerfloat = (double) -50 + 100 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 11000) / 10000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH);
             } else if (tester_time < 41000){
-                tester8 = (uint8_t) std::round(255 - 200 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
-                tester16 = (uint16_t) std::round(61000 - 30000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
-                testerfloat = 50 + 1000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH);
+                tester8 = (uint8_t) std::round(255 - 200 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH));
+                tester16 = (uint16_t) std::round(61000 - 30000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH));
+                testerfloat = 50 + 1000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH);
             } else {
                 tester8 = 55;
                 tester16 = 31000;
@@ -564,13 +564,13 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
                 tester16 = 0;
                 testerfloat = 0;
             } else if (tester_time < 21000) {
-                tester8 = (uint8_t) std::round(255 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
-                tester16 = (uint16_t) std::round((double) 1000 + 60000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
-                testerfloat = (double) -50 + 100 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH);
+                tester8 = (uint8_t) std::round(255 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH));
+                tester16 = (uint16_t) std::round((double) 1000 + 60000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH));
+                testerfloat = (double) -50 + 100 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 1000) / 20000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH);
             } else if (tester_time < 41000){
-                tester8 = (uint8_t) std::round(255 - 200 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
-                tester16 = (uint16_t) std::round(61000 - 30000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH));
-                testerfloat = 50 + 1000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) * 2 * (0.5 + SIGSTRECH) - SIGSTRECH);
+                tester8 = (uint8_t) std::round(255 - 200 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH));
+                tester16 = (uint16_t) std::round(61000 - 30000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH));
+                testerfloat = 50 + 1000 * (1.0 / (1 + std::exp(6 - ((double) tester_time - 21000) / 20000 * 12)) - SIGSTRECH) / (1 - 2 * SIGSTRECH);
             } else {
                 tester8 = 55;
                 tester16 = 31000;
