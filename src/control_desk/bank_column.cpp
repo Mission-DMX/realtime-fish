@@ -111,7 +111,7 @@ namespace dmxfish::control_desk {
                 readymode_raw_configuration.secondary_position = (uint16_t) position_request;
             }
 		    if(current_bank_mode != bank_mode::DIRECT_INPUT_MODE) {
-		        this->readymode_color.iluminance = (uint16_t) position_request / 65535.0;
+		        this->readymode_color.setIluminance((uint16_t) position_request / 65535.0);
 		    }
 		} else {
             if (raw_working_on_primary) {
@@ -120,7 +120,7 @@ namespace dmxfish::control_desk {
                 raw_configuration.secondary_position = (uint16_t) position_request;
             }
 		    if(current_bank_mode != bank_mode::DIRECT_INPUT_MODE) {
-		        this->color.iluminance = ((uint16_t) position_request) / 65535.0;
+		        this->color.setIluminance(((uint16_t) position_request) / 65535.0);
 		    }
 		}
 		update_physical_fader_position();
@@ -155,19 +155,19 @@ namespace dmxfish::control_desk {
 		if(current_bank_mode != bank_mode::DIRECT_INPUT_MODE) {
 			switch(current_re_assignment) {
 				case rotary_encoder_assignment::HUE:
-					selected_color.hue += 15 * (double) change_request;
-					if(selected_color.hue > 360.0) {
-						selected_color.hue = 0.0 + (selected_color.hue - 1.0);
-					} else if(selected_color.hue < 0.0) {
-						selected_color.hue = 360.0 + selected_color.hue;
-					}
+					selected_color.setHue(selected_color.getHue() + 15 * (double) change_request);
+                    if(selected_color.getHue() > 360.0) {
+                        selected_color.setHue(0.0 + (selected_color.getHue() - 360.0));
+                    } else if(selected_color.getHue() < 0.0) {
+                        selected_color.setHue(360.0 + selected_color.getHue());
+                    }
 					break;
 				case rotary_encoder_assignment::SATURATION:
-					selected_color.saturation += (1.0/128.0) * (double) change_request;
-					if(selected_color.saturation > 1) {
-						selected_color.saturation = 1.0;
-					} else if(selected_color.saturation < 0) {
-						selected_color.saturation = 0.0;
+					selected_color.setSaturation(selected_color.getSaturation() + (1.0/128.0) * (double) change_request);
+					if(selected_color.getSaturation() > 1) {
+						selected_color.setSaturation(1.0);
+					} else if(selected_color.getSaturation() < 0) {
+						selected_color.setSaturation(0.0);
 					}
 					break;
 				case rotary_encoder_assignment::AMBER:
@@ -310,7 +310,7 @@ namespace dmxfish::control_desk {
 			} else {
 				switch(this->current_re_assignment) {
 				case rotary_encoder_assignment::HUE: {
-					const auto hue = readymode_active ? readymode_color.hue : color.hue;
+					const auto hue = readymode_active ? readymode_color.getHue() : color.getHue();
 					if(hue < 30.0) {
 						value = "red";
 					} else if (hue < 50.0) {
@@ -330,7 +330,7 @@ namespace dmxfish::control_desk {
 					}
 					} break;
 				case rotary_encoder_assignment::SATURATION:
-					value = std::to_string(readymode_active ? readymode_color.saturation : color.saturation);
+					value = std::to_string(readymode_active ? readymode_color.getSaturation() : color.getSaturation());
 					break;
 				case rotary_encoder_assignment::AMBER:
 					value = std::to_string(readymode_active ? readymode_amber : amber);
@@ -473,9 +473,9 @@ namespace dmxfish::control_desk {
             }
 		} else {
 			if(readymode_active)
-			    xtouch_set_ring_led(*connection.lock(), e, (uint8_t) ((this->readymode_color.hue / 360.0) * 128));
+			    xtouch_set_ring_led(*connection.lock(), e, (uint8_t) ((this->readymode_color.getHue() / 360.0) * 128));
 			else
-			    xtouch_set_ring_led(*connection.lock(), e, (uint8_t) ((this->color.hue / 360.0) * 128));
+			    xtouch_set_ring_led(*connection.lock(), e, (uint8_t) ((this->color.getHue() / 360.0) * 128));
 		}
 	}
 
@@ -504,7 +504,7 @@ namespace dmxfish::control_desk {
 		if(current_bank_mode == bank_mode::DIRECT_INPUT_MODE) {
 			return;
 		}
-		xtouch_set_meter_leds(*connection.lock(), led_bar{(uint8_t) led_bar::BAR_CH1 + fader_index}, (uint8_t) ((readymode_active ? readymode_color.saturation : color.saturation) * 126 + 1));
+		xtouch_set_meter_leds(*connection.lock(), led_bar{(uint8_t) led_bar::BAR_CH1 + fader_index}, (uint8_t) ((readymode_active ? readymode_color.getSaturation() : color.getSaturation()) * 126 + 1));
 	}
 
 	void bank_column::commit_from_readymode() {
@@ -564,10 +564,10 @@ namespace dmxfish::control_desk {
 		}
 	}
 
-	inline void color_to_message(const dmxfish::dmx::pixel& c, missiondmx::fish::ipcmessages::fader_column_hsi_color& cm) {
-		cm.set_hue(c.hue);
-		cm.set_saturation(c.saturation);
-		cm.set_intensity(c.iluminance);
+	inline void color_to_message(dmxfish::dmx::pixel& c, missiondmx::fish::ipcmessages::fader_column_hsi_color& cm) {
+		cm.set_hue(c.getHue());
+		cm.set_saturation(c.getSaturation());
+		cm.set_intensity(c.getIluminance());
 	}
 
 	void bank_column::send_col_update_to_fish() {

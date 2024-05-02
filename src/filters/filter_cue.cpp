@@ -319,12 +319,11 @@ namespace dmxfish::filters {
             this->actual_values.float_channels.at(ind) = (end_value - start_value) * rel_time + start_value;
         } else if constexpr(std::is_same<T, dmxfish::dmx::pixel>::value)
         {
-            this->actual_values.color_channels.at(ind) = dmxfish::dmx::pixel(
-                                                         (end_value.hue - start_value.hue) * rel_time + start_value.hue,
-                                                         (end_value.saturation - start_value.saturation) * rel_time +
-                                                         start_value.saturation,
-                                                         (end_value.iluminance - start_value.iluminance) * rel_time +
-                                                         start_value.iluminance);
+            this->actual_values.color_channels.at(ind) = dmxfish::dmx::pixel((uint16_t)((end_value.getRed() - start_value.getRed()) * rel_time + start_value.getRed()),
+                                                         (uint16_t)((end_value.getGreen() - start_value.getGreen()) * rel_time +
+                                                         start_value.getGreen()),
+                                                         (uint16_t)((end_value.getBlue() - start_value.getBlue()) * rel_time +
+                                                         start_value.getBlue()));
         }
         this->actual_values.updated = false;
     }
