@@ -138,6 +138,15 @@ BOOST_AUTO_TEST_CASE(test_color_to_rgb) {
     BOOST_TEST(*map.eight_bit_channels["test:r"] == testr, "value r in filter color_to_rgb should be " + std::to_string(testr) + " but is " + std::to_string(*map.eight_bit_channels["test:r"]));
     BOOST_TEST(*map.eight_bit_channels["test:g"] == testg, "value g in filter color_to_rgb should be " + std::to_string(testg) + " but is " + std::to_string(*map.eight_bit_channels["test:g"]));
     BOOST_TEST(*map.eight_bit_channels["test:b"] == testb, "value b in filter color_to_rgb should be " + std::to_string(testb) + " but is " + std::to_string(*map.eight_bit_channels["test:b"]));
+
+    in_channel = dmxfish::dmx::pixel(0.0, 0.0, 1.0);
+    fil.update();
+    testr = 255;
+    testg = 255;
+    testb = 255;
+    BOOST_TEST(*map.eight_bit_channels["test:r"] == testr, "value r in filter color_to_rgb should be " + std::to_string(testr) + " but is " + std::to_string(*map.eight_bit_channels["test:r"]));
+    BOOST_TEST(*map.eight_bit_channels["test:g"] == testg, "value g in filter color_to_rgb should be " + std::to_string(testg) + " but is " + std::to_string(*map.eight_bit_channels["test:g"]));
+    BOOST_TEST(*map.eight_bit_channels["test:b"] == testb, "value b in filter color_to_rgb should be " + std::to_string(testb) + " but is " + std::to_string(*map.eight_bit_channels["test:b"]));
 }
 
 BOOST_AUTO_TEST_CASE(test_color_to_rgbw) {

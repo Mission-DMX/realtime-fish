@@ -10,12 +10,12 @@ namespace dmxfish::dmx {
     [[nodiscard]] std::string pixel::str() {
 		std::stringstream ss;
         if (this->iluminance >= 0.) {
-            ss << "{\"hue\": " << this->hue << ", \"saturation\": " << this->saturation << ", \"iluminance\": "
-               << this->iluminance << " }";
-        } else {
-            ss << "{\"red\": " << this->red << ", \"green\": " << this->green << ", \"blue\": "
-               << this->blue << " }";
-        }
+		this->convert_rgb_to_hsi();
+	}
+            ss << "{\"hue\": " << this->getHue() << ", \"saturation\": " << this->getSaturation() << ", \"iluminance\": "
+               << this->getIluminance() << " } ";
+            ss << "{\"red\": " << this->getRed() << ", \"green\": " << this->getGreen() << ", \"blue\": "
+               << this->getBlue() << " }";
 		return ss.str();
 	}
 
