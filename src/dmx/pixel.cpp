@@ -8,14 +8,23 @@
 namespace dmxfish::dmx {
 
     [[nodiscard]] std::string pixel::str() {
-		std::stringstream ss;
-        if (this->iluminance >= 0.) {
-		this->convert_rgb_to_hsi();
-	}
-            ss << "{\"hue\": " << this->getHue() << ", \"saturation\": " << this->getSaturation() << ", \"iluminance\": "
-               << this->getIluminance() << " } ";
-            ss << "{\"red\": " << this->getRed() << ", \"green\": " << this->getGreen() << ", \"blue\": "
-               << this->getBlue() << " }";
+        std::stringstream sshsi;
+        std::stringstream ssrgb;
+        std::stringstream ss;
+        sshsi << "{\"hue\": " << this->hue << ", \"saturation\": " << this->saturation << ", \"iluminance\": "
+           << this->iluminance << " } ";
+        ssrgb << "{\"red\": " << this->red << ", \"green\": " << this->green << ", \"blue\": " << this->blue << " }";
+        if (this->iluminance < 0){
+            ss << ssrgb.str() << "; hsi not valid: ";
+        }
+        ss << sshsi.str();
+        if (this->red == 0 and this->green == 0 and this->blue == 0 and this->iluminance > 0.) {
+            ss << "; rgb not valid: ";
+        }
+        if (this->iluminance >= 0){
+            ss << ssrgb.str();
+        }
+
 		return ss.str();
 	}
 

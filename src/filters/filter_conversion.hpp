@@ -226,10 +226,9 @@ COMPILER_SUPRESS("-Weffc++")
         }
 
         virtual void update() override {
-            input->pixel_to_rgb(this->r, this->g, this->b);
-	    //this->r=(uint8_t) (this->input->getRed()*256)/65536;
-            //this->g=(uint8_t) (this->input->getGreen()*256)/65536;
-            //this->b=(uint8_t) (this->input->getBlue()*256)/65536;
+	        this->r = (uint8_t) std::round(((double) this->input->getRed()*255)/65535);
+            this->g = (uint8_t) std::round(((double) this->input->getGreen()*255)/65535);
+            this->b = (uint8_t) std::round(((double) this->input->getBlue()*255)/65535);
         }
 
         virtual void scene_activated() override {}
