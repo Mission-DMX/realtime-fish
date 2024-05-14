@@ -138,13 +138,22 @@ namespace dmxfish::filters {
         }
 
         virtual void update() override {
-            if (last_update + *switch_time <= *time){
-                for(size_t i = values.size() - 1; i > 0; i--){
-                    values.at(i) = values.at(i-1);
+            if (last_update + *switch_time <= *time) {
+                for (size_t i = values.size() - 1; i > 0; i--) {
+                    values.at(i) = values.at(i - 1);
                 }
                 values.at(0) = *input;
                 //last_update = last_update + *switch_time;
-		last_update = *time;
+                if (*switch_time > 0){
+                    last_update = last_update + std::floor((*time - last_update) / *switch_time) * *switch_time;
+                }
+                // alternative instead of the above
+//                if (*time < last_update + 2 * *switch_time){
+//                    last_update = last_update + *switch_time;
+//                }
+                else {
+                    last_update = *time;
+                }
             }
         }
 
