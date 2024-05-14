@@ -226,9 +226,9 @@ COMPILER_SUPRESS("-Weffc++")
         }
 
         virtual void update() override {
-            this->r = (uint8_t) std::round(((double) this->input->getRed()*255)/65535);
-            this->g = (uint8_t) std::round(((double) this->input->getGreen()*255)/65535);
-            this->b = (uint8_t) std::round(((double) this->input->getBlue()*255)/65535);
+            this->r = (uint8_t) ((this->input->getRed() & (0xFF00)) >> 8);
+            this->g = (uint8_t) ((this->input->getGreen() & (0xFF00)) >> 8);
+            this->b = (uint8_t) ((this->input->getBlue() & (0xFF00)) >> 8);
         }
 
         virtual void scene_activated() override {}
