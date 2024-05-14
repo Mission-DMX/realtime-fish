@@ -24,22 +24,8 @@ namespace dmxfish::filters {
         filter_shift() : filter() {}
         virtual ~filter_shift() {}
 
-        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
-            MARK_UNUSED(initial_parameters);
-            if(!input_channels.float_channels.contains("time")) {
-                throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain "
-                                              "channel 'time' of type 'double'. This input should come from the scenes "
-                                              "global time node.", own_type, own_id);
-            }
-            this->time = input_channels.float_channels.at("time");
-
-            if(!input_channels.float_channels.contains("switch_time")) {
-                throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain "
-                                              "channel 'switch_time' of type 'double'.", own_type, own_id);
-            }
-            this->switch_time = input_channels.float_channels.at("switch_time");
-            
-            if (!configuration.contains("nr_outputs")){
+	virtual void pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& own_id) {
+	    if (!configuration.contains("nr_outputs")){
                 throw filter_config_exception("Unable to setup shift filter: configuration does not contain a value "
                                               "for 'nr_outputs'", own_type, own_id);
             }
@@ -55,17 +41,49 @@ namespace dmxfish::filters {
                 throw filter_config_exception("Unable to setup shift filter: the number of outputs is less then 1",
                                               own_type, own_id);
             }
-            
+
+	    if constexpr (std::is_same<T, uint8_t>::value) {
+                values.reserve(nr_outputs);
+                for(int i = 0; i < nr_outputs; i++){
+                    values.push_back(0);
+                }
+            } else if constexpr (std::is_same<T, uint16_t>::value) {
+                values.reserve(nr_outputs);
+		for(int i = 0; i < nr_outputs; i++){
+                    values.push_back(0);
+                }
+            } else if constexpr (std::is_same<T, double>::value) {
+                values.reserve(nr_outputs);
+		for(int i = 0; i < nr_outputs; i++){
+                    values.push_back(0.0);
+                }
+            } else {
+                values.reserve(nr_outputs);
+		for(int i = 0; i < nr_outputs; i++){
+                    values.push_back(dmxfish::dmx::pixel());
+                }
+            }
+	}
+
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
+            MARK_UNUSED(initial_parameters);
+            if(!input_channels.float_channels.contains("time")) {
+                throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain "
+                                              "channel 'time' of type 'double'. This input should come from the scenes "
+                                              "global time node.", own_type, own_id);
+            }
+            this->time = input_channels.float_channels.at("time");
+
+            if(!input_channels.float_channels.contains("switch_time")) {
+                throw filter_config_exception("Unable to link input of shift filter: channel mapping does not contain "
+                                              "channel 'switch_time' of type 'double'.", own_type, own_id);
+            }
+            this->switch_time = input_channels.float_channels.at("switch_time"); 
             
             if constexpr (std::is_same<T, uint8_t>::value) {
                 if(!input_channels.eight_bit_channels.contains("input")) {
                     throw filter_config_exception("Unable to link input of shift filter: channel mapping does not "
                                                   "contain channel 'input' of type 'uint8_t'.", own_type, own_id);
-                }
-//                values = std::vector(nr_outputs, 0);
-                values.reserve(nr_outputs);
-                for(int i = 0; i < nr_outputs; i++){
-                    values.push_back(0);
                 }
                 this->input = input_channels.eight_bit_channels.at("input");
             } else if constexpr (std::is_same<T, uint16_t>::value) {
@@ -73,24 +91,18 @@ namespace dmxfish::filters {
                     throw filter_config_exception("Unable to link input of shift filter: channel mapping does not "
                                                   "contain channel 'input' of type 'uint16_t'.", own_type, own_id);
                 }
-//                values = std::vector(nr_outputs, 0);
                 this->input = input_channels.sixteen_bit_channels.at("input");
-                for(int i = 0; i < nr_outputs; i++){
-                    values.push_back(0);
-                }
             } else if constexpr (std::is_same<T, double>::value) {
                 if(!input_channels.float_channels.contains("input")) {
                     throw filter_config_exception("Unable to link input of shift filter: channel mapping does not "
                                                   "contain channel 'input' of type 'double'.", own_type, own_id);
                 }
-                values = std::vector(nr_outputs, 0.0);
                 this->input = input_channels.float_channels.at("input");
             } else {
                 if(!input_channels.color_channels.contains("input")) {
                     throw filter_config_exception("Unable to link input of shift filter: channel mapping does not "
                                                   "contain channel 'input' of type 'hsv_pixel'.", own_type, own_id);
                 }
-                values = std::vector(nr_outputs, dmxfish::dmx::pixel());
                 this->input = input_channels.color_channels.at("input");
             }
         }
@@ -104,30 +116,44 @@ namespace dmxfish::filters {
         virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
             if constexpr (std::is_same<T, uint8_t>::value) {
                 for(size_t i = 0; i < values.size(); i++) {
-                    map.eight_bit_channels[name + ":output_" + std::to_string(i+1)] = &values.at(i);
+		    const auto c_name = name + ":output_" + std::to_string(i+1);
+                    map.eight_bit_channels[c_name] = &values.at(i);
                 }
             } else if constexpr (std::is_same<T, uint16_t>::value) {
                 for(size_t i = 0; i < values.size(); i++) {
-                    map.sixteen_bit_channels[name + ":output_" + std::to_string(i+1)] = &values.at(i);
+		    const auto c_name = name + ":output_" + std::to_string(i+1);
+                    map.sixteen_bit_channels[c_name] = &values.at(i);
                 }
             } else if constexpr (std::is_same<T, double>::value) {
                 for(size_t i = 0; i < values.size(); i++) {
-                    map.float_channels[name + ":output_" + std::to_string(i+1)] = &values.at(i);
+                    const auto c_name = name + ":output_" + std::to_string(i+1);
+		    map.float_channels[c_name] = &values.at(i);
                 }
             } else {
                 for(size_t i = 0; i < values.size(); i++) {
-                    map.color_channels[name + ":output_" + std::to_string(i+1)] = &values.at(i);
+		    const auto c_name = name + ":output_" + std::to_string(i+1);
+                    map.color_channels[c_name] = &values.at(i);
                 }
             }
         }
 
         virtual void update() override {
-            if (last_update + *switch_time <= *time){
-                for(size_t i = values.size() - 1; i > 0; i--){
-                    values.at(i) = values.at(i-1);
+            if (last_update + *switch_time <= *time) {
+                for (size_t i = values.size() - 1; i > 0; i--) {
+                    values.at(i) = values.at(i - 1);
                 }
                 values.at(0) = *input;
-                last_update = last_update + *switch_time;
+                //last_update = last_update + *switch_time;
+                if (*switch_time > 0){
+                    last_update = last_update + std::floor((*time - last_update) / *switch_time) * *switch_time;
+                }
+                // alternative instead of the above
+//                if (*time < last_update + 2 * *switch_time){
+//                    last_update = last_update + *switch_time;
+//                }
+                else {
+                    last_update = *time;
+                }
             }
         }
 

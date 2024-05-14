@@ -226,7 +226,9 @@ COMPILER_SUPRESS("-Weffc++")
         }
 
         virtual void update() override {
-            input->pixel_to_rgb(r, g, b);
+            this->r = (uint8_t) ((this->input->getRed() & (0xFF00)) >> 8);
+            this->g = (uint8_t) ((this->input->getGreen() & (0xFF00)) >> 8);
+            this->b = (uint8_t) ((this->input->getBlue() & (0xFF00)) >> 8);
         }
 
         virtual void scene_activated() override {}

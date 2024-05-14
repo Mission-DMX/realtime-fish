@@ -8,14 +8,23 @@
 namespace dmxfish::dmx {
 
     [[nodiscard]] std::string pixel::str() {
-		std::stringstream ss;
-        if (this->iluminance >= 0.) {
-            ss << "{\"hue\": " << this->hue << ", \"saturation\": " << this->saturation << ", \"iluminance\": "
-               << this->iluminance << " }";
-        } else {
-            ss << "{\"red\": " << this->red << ", \"green\": " << this->green << ", \"blue\": "
-               << this->blue << " }";
+        std::stringstream sshsi;
+        std::stringstream ssrgb;
+        std::stringstream ss;
+        sshsi << "{\"hue\": " << this->hue << ", \"saturation\": " << this->saturation << ", \"iluminance\": "
+           << this->iluminance << " } ";
+        ssrgb << "{\"red\": " << this->red << ", \"green\": " << this->green << ", \"blue\": " << this->blue << " }";
+        if (this->iluminance < 0){
+            ss << ssrgb.str() << "; hsi not valid: ";
         }
+        ss << sshsi.str();
+        if (this->red == 0 and this->green == 0 and this->blue == 0 and this->iluminance > 0.) {
+            ss << "; rgb not valid: ";
+        }
+        if (this->iluminance >= 0){
+            ss << ssrgb.str();
+        }
+
 		return ss.str();
 	}
 
@@ -37,19 +46,19 @@ namespace dmxfish::dmx {
         I = I>0 ? (I<1 ? I : 1) : 0;
 
         if(H < 2.09439) {
-            r = (uint16_t) std::round(65535*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
-            g = (uint16_t) std::round(65535*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
-            b = (uint16_t) std::round(65535*I/3*(1-S));
+            r = (uint16_t) std::round(65535.0*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
+            g = (uint16_t) std::round(65535.0*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
+            b = (uint16_t) std::round(65535.0*I/3*(1-S));
         } else if(H < 4.188787) {
             H = H - 2.09439;
-            g = (uint16_t) std::round(65535*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
-            b = (uint16_t) std::round(65535*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
-            r = (uint16_t) std::round(65535*I/3*(1-S));
+            g = (uint16_t) std::round(65535.0*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
+            b = (uint16_t) std::round(65535.0*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
+            r = (uint16_t) std::round(65535.0*I/3*(1-S));
         } else {
             H = H - 4.188787;
-            b = (uint16_t) std::round(65535*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
-            r = (uint16_t) std::round(65535*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
-            g = (uint16_t) std::round(65535*I/3*(1-S));
+            b = (uint16_t) std::round(65535.0*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
+            r = (uint16_t) std::round(65535.0*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
+            g = (uint16_t) std::round(65535.0*I/3*(1-S));
         }
     }
 
