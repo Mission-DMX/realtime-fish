@@ -46,19 +46,19 @@ namespace dmxfish::dmx {
         I = I>0 ? (I<1 ? I : 1) : 0;
 
         if(H < 2.09439) {
-            r = (uint16_t) std::round(65535*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
-            g = (uint16_t) std::round(65535*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
-            b = (uint16_t) std::round(65535*I/3*(1-S));
+            r = (uint16_t) std::round(65535.0*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
+            g = (uint16_t) std::round(65535.0*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
+            b = (uint16_t) std::round(65535.0*I/3*(1-S));
         } else if(H < 4.188787) {
             H = H - 2.09439;
-            g = (uint16_t) std::round(65535*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
-            b = (uint16_t) std::round(65535*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
-            r = (uint16_t) std::round(65535*I/3*(1-S));
+            g = (uint16_t) std::round(65535.0*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
+            b = (uint16_t) std::round(65535.0*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
+            r = (uint16_t) std::round(65535.0*I/3*(1-S));
         } else {
             H = H - 4.188787;
-            b = (uint16_t) std::round(65535*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
-            r = (uint16_t) std::round(65535*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
-            g = (uint16_t) std::round(65535*I/3*(1-S));
+            b = (uint16_t) std::round(65535.0*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
+            r = (uint16_t) std::round(65535.0*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
+            g = (uint16_t) std::round(65535.0*I/3*(1-S));
         }
     }
 
