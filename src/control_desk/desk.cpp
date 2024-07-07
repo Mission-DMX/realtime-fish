@@ -571,6 +571,15 @@ namespace dmxfish::control_desk {
         }
         auto& bs = bank_sets[current_active_bank_set];
         const auto& cid = msg.column_id();
+	if(cid == "main") {
+		this->global_illumination = msg.position();
+		for (auto d : this->devices) {
+			if (d->get_device_id() == midi_device_id::X_TOUCH) {
+				xtouch_set_fader_position(*d, fader::FADER_MAIN, msg.position() * 128 / 65536);
+			}
+		}
+		return;
+	}
         if(!bs.columns_map.contains(cid)) {
             return;
         }

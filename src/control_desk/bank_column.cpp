@@ -17,9 +17,20 @@ COMPILER_RESTORE("-Wuseless-cast")
 
 namespace dmxfish::control_desk {
 
-	bank_column::bank_column(std::weak_ptr<device_handle> device_connection, std::function<void(std::string const&, bool)> _desk_ready_update, std::function<void(std::string const&, bool)> _select_state_handler, bank_mode mode, std::string _id, uint8_t column_index) :
-		connection(device_connection), desk_ready_update(_desk_ready_update), select_state_handler(_select_state_handler), id(_id), display_text_up{}, display_text_down{}, color{}, readymode_color{}, raw_configuration{},
-		readymode_raw_configuration{}, current_bank_mode(mode), fader_index(column_index) {
+	bank_column::bank_column(
+            std::weak_ptr<device_handle> device_connection,
+            std::function<void(std::string const&, bool)> _desk_ready_update,
+            std::function<void(std::string const&, bool)> _select_state_handler,
+            bank_mode mode, std::string _id, uint8_t column_index
+            ) :
+		connection(device_connection),
+        desk_ready_update(_desk_ready_update),
+        select_state_handler(_select_state_handler),
+        id(_id), display_text_up{}, display_text_down{},
+        color{}, readymode_color{}, raw_configuration{},
+		readymode_raw_configuration{},
+        current_bank_mode(mode),
+        fader_index(column_index) {
 			display_text_up.emplace_back("");
 			display_text_down.emplace_back("");
 		}
