@@ -75,7 +75,13 @@ COMPILER_RESTORE("-Weffc++")
 				ss << "\"" << k << "\": \"" << v << "\",";
 			}
 			ss << "} \"channel_mappings\": [";
+            bool first_map = true;
 			for(const auto& cp : this->channel_mapping) {
+                if(first_map) {
+                    first_map = false;
+                } else {
+                    ss << ", ";
+                }
 				ss << cp.first << " -> " << cp.second;
 			}
 			ss << "]}";
@@ -482,7 +488,7 @@ COMPILER_RESTORE("-Weffc++")
 					const auto initial_params = convert_configuration(f_template.initialParameters());
 					const auto mapping = convert_channel_mapping(f_template.channellink());
 					const filter_info fi(fid, conf, initial_params, mapping);
-					msg_stream << "Loading configuration of filter " << filter_index << " of type " << fid << " with config: " << fi.str() << ". Scheduled." << std::endl;
+					msg_stream << "Loading configuration of filter " << filter_index << " of type " << fid << " with config: " << fi.str() << ". Scheduled.\n" << std::endl;
 					filter_info_map[filter_index] = fi;
 					scene_filter_index[fid] = fv[filter_index];
 					resolved_filters.insert(fid);
@@ -493,10 +499,11 @@ COMPILER_RESTORE("-Weffc++")
 			}
 			if(!placed_filter) {
 				std::stringstream exc_ss;
+                exc_ss << "\n";
 				exc_ss << std::string(ERROR_CYCLIC_OR_BROKEN_DEPENDENCY_WHILE_SCHEDULING);
 				exc_ss << "There were no filters with resolved dependencies within this round (";
 				exc_ss << std::to_string(round);
-				exc_ss << "). Possible causes: broken or cyclic dependencies.\nAlready scheduled filters: ";
+				exc_ss << ").\nPossible causes: broken or cyclic dependencies.\nAlready scheduled filters: ";
 				exc_ss << iteratable_to_string(resolved_filters);
 				exc_ss << "\nStill missing filters: ";
 				exc_ss << iteratable_to_string(missing_filter_stack);
@@ -512,7 +519,7 @@ COMPILER_RESTORE("-Weffc++")
 				throw scheduling_exception(exc_ss.str());
 			}
 			b.emplace_back(fv.size());
-			msg_stream << "Next round." << std::endl;
+			msg_stream << "Next round.\n" << std::endl;
 			round++;
 		}
 		msg_stream << "Finished scheduling " << resolved_filters.size() << " filters in " << round << " rounds." << std::endl;
