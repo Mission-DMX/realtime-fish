@@ -224,7 +224,10 @@ namespace dmxfish::filters {
     }
 
     bool filter_cue::handle_cue_conf(size_t cue, const std::string &str, size_t start, size_t end, size_t number) {
-        MARK_UNUSED(number);
+        if (number > 0) {
+            // We are ignoring everything after the restart method (name etc.) but no error occurred.
+            return true;
+        }
         if (!str.substr(start, end - start).compare("hold")) {
             this->cues.at(cue).end_handling = HOLD;
         } else if (!str.substr(start, end - start).compare("start_again")) {
