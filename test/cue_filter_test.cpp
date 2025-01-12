@@ -267,28 +267,6 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
     }
 
-//    BOOST_AUTO_TEST_CASE(emptychannel) {
-//        std::map <std::string, std::string> configuration;
-//
-//        cue_st_names channel_names;
-//        channel_names.eight_bit_frames.push_back("");
-//
-//        configuration["mapping"] = "";
-//        configuration["end_handling"] = "hold";
-//        configuration["cuelist"] = "3:|7:#hold#do_nothing";
-//
-//        std::map<int, cue_st_test> test_values;
-//        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
-//
-//
-//        std::vector<int> time_s;
-//        for (int tester_time = 0; tester_time < 4000; tester_time = tester_time + 100) {
-//            time_s.push_back(tester_time);
-//        }
-//
-//        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
-//    }
-
 
     BOOST_AUTO_TEST_CASE(oneframeeachchanneltype) {
         std::map <std::string, std::string> configuration;
@@ -1495,6 +1473,58 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
         test_cue_function(time_s, test_values, channel_names, configuration, update_key_values, activations, time_scale);
     }
 
+BOOST_AUTO_TEST_CASE(test_parsing_metadata) {
+        std::map <std::string, std::string> configuration;
+        configuration["mapping"] = "dimmer:8bit";
+        configuration["end_handling"] = "start_again";
 
+        cue_st_names channel_names;
+        channel_names.eight_bit_frames.push_back("dimmer");
+
+        configuration["cuelist"] =
+        "2:200@lin|4:50@lin#next_cue#restart$3:100@lin|6:250@lin#next_cue#do_nothing#just a cue name";
+
+        std::map<int, cue_st_test> test_values;
+        std::map<int, std::vector<std::tuple<std::string, std::string>>> update_key_values;
+
+        std::vector<int> time_s;
+        for (int tester_time= 0; tester_time < 24000; tester_time= tester_time + 100) {
+            time_s.push_back(tester_time);
+            if (tester_time == 1000) {
+                update_key_values[tester_time].push_back(std::tuple("run_mode", "to_next_cue"));
+            }
+            if (tester_time == 6000) {
+                update_key_values[tester_time].push_back(std::tuple("run_mode", "play"));
+            }
+            uint8_t tester8;
+            if (tester_time < 1000){
+                tester8 = 0;
+            } else if (tester_time < 3000){
+                tester8 = (uint8_t) std::round((double) 200 * ((double) tester_time - 1000) / 2000);
+            } else if (tester_time < 5000){
+                tester8 = (uint8_t) std::round((double) 200 - 150 * ((double) tester_time - 3000) / 2000);
+            } else if (tester_time < 6000){
+                tester8 = (uint8_t) std::round((double) 50);
+            } else if (tester_time < 9000){
+                tester8 = (uint8_t) std::round((double) 50 + 50 * ((double) tester_time - 6000) / 3000);
+            } else if (tester_time < 12000){
+                tester8 = (uint8_t) std::round((double) 100 + 150 * ((double) tester_time - 9000) / 3000);
+            } else if (tester_time < 14000){
+                tester8 = (uint8_t) std::round((double) 250 - 50 * ((double) tester_time - 12000) / 2000);
+            } else if (tester_time < 16000){
+                tester8 = (uint8_t) std::round((double) 200 - 150 * ((double) tester_time - 14000) / 2000);
+            } else if (tester_time < 19000){
+                tester8 = (uint8_t) std::round((double) 50 + 50 * ((double) tester_time - 16000) / 3000);
+            } else if (tester_time < 22000){
+                tester8 = (uint8_t) std::round((double) 100 + 150 * ((double) tester_time - 19000) / 3000);
+            } else if (tester_time < 24000){
+                tester8 = (uint8_t) std::round((double) 250 - 50 * ((double) tester_time - 22000) / 2000);
+            } else if (tester_time < 26000){
+                tester8 = (uint8_t) std::round((double) 200 - 150 * ((double) tester_time - 24000) / 2000);
+            }
+            test_values[tester_time].eight_bit_frames.push_back(tester8);
+        }
+        test_cue_function(time_s, test_values, channel_names, configuration, update_key_values);
+    }
 
 BOOST_AUTO_TEST_SUITE_END()
