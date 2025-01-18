@@ -15,4 +15,19 @@ namespace dmxfish::execution::state_registry {
     void set(const std::string& key, const std::string& value) {
         unspecific_map[key] = value;
     }
+
+    [[nodiscard]] std::optional<std::string> get(const std::string& key) {
+        if (!unspecific_map.contains(key)) {
+            return std::nullopt;
+        }
+        return unspecific_map.at(key);
+    }
+
+    [[nodiscard]] std::optional<std::string> get(const size_t scene_id, const std::string& key) {
+        const auto akey = std::to_string(scene_id) + "::" + key;
+        if (!unspecific_map.contains(akey)) {
+            return std::nullopt;
+        }
+        return unspecific_map.at(akey);
+    }
 }
