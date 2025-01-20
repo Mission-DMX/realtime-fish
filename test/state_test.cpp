@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(return_states_on_empty_message) {
     set("MSG1TestKeyA", "abc1");
     set(1, "MSG1TestKey", "def1");
     state_list msg;
-    BOOST_CHECK_EQUAL(update_states_from_message(msg), false);
+    BOOST_CHECK_EQUAL(update_states_from_message(msg), true);
     auto item_count = 0;
     for(auto& [k,v] : msg.unspecific_states()) {
         BOOST_CHECK_EQUAL(k, "MSG1TestKeyA");
@@ -49,12 +49,43 @@ BOOST_AUTO_TEST_CASE(return_states_on_empty_message) {
         BOOST_CHECK_EQUAL(kvs.scene_id(), 1);
         BOOST_CHECK_EQUAL(kvs.v(), "def1");
     }
+    BOOST_CHECK_EQUAL(item_count, 1);
+}
 
+BOOST_AUTO_TEST_CASE(state_reset_method) {
+    using namespace dmxfish::execution::state_registry;
+    reset_state_registry();
+    set("resetkey1", "something");
+    set(2, "resetkey2", "something else");
+    dump_state_to_logging();
+    auto reply = get("resetkey1");
+    BOOST_CHECK_EQUAL(reply.has_value(), true);
+    reply = get(2, "resetkey2");
+    BOOST_CHECK_EQUAL(reply.has_value(), true);
+    reset_state_registry();
+    reply = get("resetkey1");
+    BOOST_CHECK_EQUAL(reply.has_value(), false);
+    reply = get(2, "resetkey2");
+    BOOST_CHECK_EQUAL(reply.has_value(), false);
 }
 
 BOOST_AUTO_TEST_CASE(fill_states_on_message) {
     using namespace dmxfish::execution::state_registry;
     using namespace missiondmx::fish::ipcmessages;
     reset_state_registry();
-    // TODO
+    auto reply = get("fillkey1");
+    BOOST_CHECK_EQUAL(reply.has_value(), false);
+    reply = get(2, "fillkey2");
+    BOOST_CHECK_EQUAL(reply.has_value(), false);
+    state_list msg;
+    (*msg.mutable_unspecific_states())["fillkey1"] = "ghi";
+    auto* specific_item = msg.add_specific_states();
+    specific_item->set_k("fillkey2");
+    specific_item->set_v("jkl");
+    specific_item->set_scene_id(2);
+    BOOST_CHECK_EQUAL(update_states_from_message(msg), false);
+    reply = get("fillkey1");
+    BOOST_CHECK_EQUAL(reply.value(), "ghi");
+    reply = get(2, "fillkey2");
+    BOOST_CHECK_EQUAL(reply.value(), "jkl");
 }

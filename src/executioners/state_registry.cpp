@@ -6,6 +6,8 @@
 #include <cstdlib>
 #include <unordered_map>
 
+#include "lib/logging.hpp"
+
 namespace dmxfish::execution::state_registry {
     std::unordered_map<std::string, std::string> scene_specific_map, unspecific_map;
 
@@ -26,10 +28,10 @@ namespace dmxfish::execution::state_registry {
 
     [[nodiscard]] std::optional<std::string> get(const size_t scene_id, const std::string& key) {
         const auto akey = std::to_string(scene_id) + "::" + key;
-        if (!unspecific_map.contains(akey)) {
+        if (!scene_specific_map.contains(akey)) {
             return std::nullopt;
         }
-        return unspecific_map.at(akey);
+        return scene_specific_map.at(akey);
     }
 
     [[nodiscard]] bool update_states_from_message(::missiondmx::fish::ipcmessages::state_list& msg) {
@@ -63,11 +65,22 @@ namespace dmxfish::execution::state_registry {
             kvs->set_v(v);
 	    }
 	}
-	return !was_empty;
+	return was_empty;
     }
 
     void reset_state_registry() {
         unspecific_map.clear();
         scene_specific_map.clear();
+    }
+
+    void dump_state_to_logging() {
+        ::spdlog::debug("Unspecific states:");
+        for (auto& [k, v]: unspecific_map) {
+            ::spdlog::debug("{} = {}", k, v);
+        }
+        ::spdlog::debug("Specific states:");
+        for (auto& [k, v]: scene_specific_map) {
+            ::spdlog::debug("{} = {}", k, v);
+        }
     }
 }

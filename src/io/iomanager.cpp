@@ -517,7 +517,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 	case ::missiondmx::fish::ipcmessages::MSGT_STATE_LIST: {
             auto msg = ::missiondmx::fish::ipcmessages::state_list();
 	    if (msg.ParseFromZeroCopyStream(buffer)) {
-		if (::dmxfish::executioners::state_registry::update_states_from_message(msg)) {
+		if (::dmxfish::execution::state_registry::update_states_from_message(msg)) {
 		    client.write_message(msg, ::missiondmx::fish::ipcmessages::MSGT_STATE_LIST);
 		}
 	    } else {

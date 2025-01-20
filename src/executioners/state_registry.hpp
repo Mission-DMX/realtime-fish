@@ -58,4 +58,9 @@ namespace dmxfish::execution::state_registry {
      * This method purges all states from existence.
      */
     void reset_state_registry();
+
+    /**
+     * This method may be called for debugging purposes to dump all states to stdout.
+     */
+    void dump_state_to_logging();
 }
