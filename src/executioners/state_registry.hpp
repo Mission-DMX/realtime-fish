@@ -53,4 +53,9 @@ namespace dmxfish::execution::state_registry {
      * @return True if the message was filled and needs to be transmitted.
      */
     [[nodiscard]] bool update_states_from_message(::missiondmx::fish::ipcmessages::state_list& msg);
+
+    /**
+     * This method purges all states from existence.
+     */
+    void reset_state_registry();
 }

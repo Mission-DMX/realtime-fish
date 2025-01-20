@@ -65,4 +65,9 @@ namespace dmxfish::execution::state_registry {
 	}
 	return !was_empty;
     }
+
+    void reset_state_registry() {
+        unspecific_map.clear();
+        scene_specific_map.clear();
+    }
 }
