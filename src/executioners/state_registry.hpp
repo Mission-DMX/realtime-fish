@@ -6,6 +6,7 @@
 
 #include <string>
 #include <optional>
+#include "proto_src/RealTimeControl.pb.h"
 
 namespace dmxfish::execution::state_registry {
 
@@ -44,5 +45,12 @@ namespace dmxfish::execution::state_registry {
      */
     void set(const size_t scene_id, const std::string& key, const std::string& value);
 
-    // TODO write serialization method to protobuf
+    /**
+     * This method updates the state registry if the provided message is not empty.
+     * Otherwise it will fill it with the current state.
+     *
+     * @param msg The message to handle or fill
+     * @return True if the message was filled and needs to be transmitted.
+     */
+    [[nodiscard]] bool update_states_from_message(::missiondmx::fish::ipcmessages::state_list& msg);
 }

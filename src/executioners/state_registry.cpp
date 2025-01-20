@@ -30,4 +30,27 @@ namespace dmxfish::execution::state_registry {
         }
         return unspecific_map.at(akey);
     }
+
+    [[nodiscard]] bool update_states_from_message(::missiondmx::fish::ipcmessages::state_list& msg) {
+	bool was_empty = true;
+	for (const auto& [k, v] : msg.unspecific_states()) {
+	    was_empty = false;
+	    unspecific_map[k] = v;
+	}
+	for (const auto& kvs : msg.specific_states()) {
+	    was_empty = false;
+	    set(kvs.scene_id(), kvs.k(), kvs.v());
+	}
+	if(was_empty) {
+	    for(const auto& [k, v] : unspecific_map) {
+		msg.unspecific_states().Add(k, v);
+	    }
+	    for(const auto& [sk, v]: scene_specific_map) {
+		// TODO split
+		// TODO store in message
+		// TODO insert message
+	    }
+	}
+	return !was_empty;
+    }
 }
