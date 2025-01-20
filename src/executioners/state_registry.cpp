@@ -3,6 +3,7 @@
 //
 #include "state_registry.hpp"
 
+#include <cstdlib>
 #include <unordered_map>
 
 namespace dmxfish::execution::state_registry {
@@ -43,12 +44,23 @@ namespace dmxfish::execution::state_registry {
 	}
 	if(was_empty) {
 	    for(const auto& [k, v] : unspecific_map) {
-		msg.unspecific_states().Add(k, v);
+            (*msg.mutable_unspecific_states())[k] = v;
 	    }
 	    for(const auto& [sk, v]: scene_specific_map) {
-		// TODO split
-		// TODO store in message
-		// TODO insert message
+            auto split_pos = sk.find("::");
+            size_t scene_id = 0;
+            if (split_pos == std::string::npos) {
+                split_pos = 0;
+                scene_id = 0;
+            } else {
+                // std::atol will return 0 if it fails which is exactly what we want
+                scene_id = std::atol(sk.substr(0, split_pos).c_str());
+                split_pos += 2;
+            }
+            auto* kvs = msg.add_specific_states();
+            kvs->set_scene_id(scene_id);
+            kvs->set_k(sk.substr(split_pos));
+            kvs->set_v(v);
 	    }
 	}
 	return !was_empty;
