@@ -6,7 +6,9 @@
 
 #include "dmx/universe.hpp"
 
-class dmxfish::io::ioboard;
+namespace dmxfish::io {
+    class ioboard;
+}
 
 namespace dmxfish::dmx {
 
