@@ -7,7 +7,7 @@
 #include "dmx/ftdi_universe.hpp"
 #include "dmx/ioboard_universe.hpp"
 #include "io/artnet_handler.hpp"
-#include "io/ioboard.hpp"
+#include "io/ioboard/ioboard.hpp"
 #include "lib/logging.hpp"
 #include "net/sock_address_factory.hpp"
 
@@ -139,7 +139,9 @@ void unregister_universe(const int id) {
 	if(!_artnet_handler.unlink_universe(id)) {
 		if(dongle_map.contains(id)) {
 			dongle_map.erase(id);
-		}
+		} else if(ioboard_handler_opt.has_value() && ioboard_handler_opt->unregister_universe_by_id(id)) {
+            // we erased it and do not need to look any further
+        }
 	}
 	std::erase_if(active_universes, [id](std::weak_ptr<dmxfish::dmx::universe>& u_ptr) {
 				return u_ptr.use_count() == 0 || u_ptr.lock()->getID() == id;

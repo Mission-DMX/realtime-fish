@@ -4,21 +4,23 @@
 //
 #pragma once
 
-#include "dmx/universe.hpp"
+#include <array>
+#include <cstdint>
 
-namespace dmxfish::io {
-    class ioboard;
-}
+#include "dmx/universe.hpp"
+#include "io/ioboard/types.h"
 
 namespace dmxfish::dmx {
 
     class ioboard_universe : public universe {
     private:
         size_t port;
+        std::array<uint8_t, DMX_UNIVERSE_SIZE> raw_data;
     private:
         friend class dmxfish::io::ioboard;
-        ioboard_universe(size_t port);
     public:
+        ioboard_universe(dmxfish::io::ioboard_port_id_t port, int id);
+
         virtual channel_8bit_t& operator[](size_t p);
 
         virtual universe_iterator begin();
