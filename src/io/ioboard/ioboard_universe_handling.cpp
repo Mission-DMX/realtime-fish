@@ -57,14 +57,15 @@ namespace dmxfish::io {
         if (const auto univ_opt = this->linked_universes[port]; univ_opt.has_value()) [[likely]] {
             const auto univ = *(univ_opt->get());
             rmrf::net::iorecord r;
-            r.reserve_space(4+576); // 576 = 512/8*9
+            r.reserve_space(4+586); // 586 = 512*8/7
             auto arr = r.ptr();
             arr[0] = MSG_TYPE_SEND_DMX;
             arr[1] = port & 0b01111111;
-            arr[2] = 0b10; // size, bits 7 and 8 of 512
-            arr[3] = 0; // size, bits 6:0 of 512
+            arr[2] = 0b100; // size, bits 9:7 of 586
+            arr[3] = 0b01001010; // size, bits 6:0 of 586
 
-            for (int i = 4, bit_offset = 0, last_data = 0; const auto channel : univ) {
+            int i = 4, bit_offset = 0, last_data = 0;
+            for (const auto channel : univ) {
                 last_data = (last_data << 8) | channel;
                 bit_offset += 8;
                 while(bit_offset > 7) {
@@ -72,7 +73,9 @@ namespace dmxfish::io {
                     bit_offset -= 7;
                 }
             }
-            // FIXME we may need one last write
+            if (bit_offset > 0) {
+                arr[i++] = last_data >> (7 - bit_offset) & 0b01111111;
+            }
 
             priority_queue.push_back(r);
             this->set_io_flags();
