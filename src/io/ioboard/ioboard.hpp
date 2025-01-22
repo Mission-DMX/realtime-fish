@@ -28,6 +28,7 @@ namespace dmxfish::io {
         ::ev::io io_sync;
         rmrf::net::auto_fd usb_device_fd;
         rmrf::net::ioqueue<rmrf::net::iorecord> priority_queue, background_queue;
+        bool transmitting_background_msg;
 
         friend class dmxfish::dmx::ioboard_universe; // Required to notify this about insertion of new data
         std::vector<std::optional<std::shared_ptr<dmxfish::dmx::ioboard_universe>>> linked_universes;
@@ -45,6 +46,12 @@ namespace dmxfish::io {
         // TODO implement RS232 event output
         // TODO implement methods for configuration of displays
         // TODO implement keypad event output
+
+        /**
+         * This method is should be called by the universe_sender. It will push all registered universes content to the
+         * io board.
+         */
+        void transmit_universe(ioboard_port_id_t port);
     private:
         void unregister_universe(ioboard_port_id_t port);
 
