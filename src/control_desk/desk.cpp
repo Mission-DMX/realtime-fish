@@ -62,7 +62,7 @@ namespace dmxfish::control_desk {
             if(d->get_device_id() == midi_device_id::X_TOUCH) {
                 std::array<char, 14> initial_lcd_text = {'M', 'i', 's', 's', 'i', 'o', 'n', 'V', 'e', 'r', 's', 'i', 'o', 'n'};
                 xtouch_set_lcd_display(*d, 0, lcd_color::white_up_inverted, initial_lcd_text);
-                initial_lcd_text = {' ', 'D', 'M', 'X', ' ', ' ', ' ', ' ', '1', '.', '0', '.', '0', ' '};
+                initial_lcd_text = {' ', 'D', 'M', 'X', ' ', ' ', ' ', ' ', '1', '.', '0', '.', '1', ' '};
                 xtouch_set_lcd_display(*d, 1, lcd_color::white_up_inverted, initial_lcd_text);
 	        d->schedule_transmission();
 	    }
@@ -566,11 +566,20 @@ namespace dmxfish::control_desk {
     }
 
     void desk::update_fader_position_from_protobuf(const ::missiondmx::fish::ipcmessages::fader_position& msg) {
+        const auto& cid = msg.column_id();
+        if(cid == "main") {
+            this->global_illumination = msg.position();
+            for (auto d : this->devices) {
+                if (d->get_device_id() == midi_device_id::X_TOUCH) {
+                    xtouch_set_fader_position(*d, fader::FADER_MAIN, msg.position() * 127 / 65536);
+                }
+            }
+            return;
+        }
         if(!(current_active_bank_set < bank_sets.size())) {
             return;
         }
         auto& bs = bank_sets[current_active_bank_set];
-        const auto& cid = msg.column_id();
         if(!bs.columns_map.contains(cid)) {
             return;
         }
