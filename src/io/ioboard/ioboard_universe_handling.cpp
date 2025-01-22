@@ -64,17 +64,15 @@ namespace dmxfish::io {
             arr[2] = 0b10; // size, bits 7 and 8 of 512
             arr[3] = 0; // size, bits 6:0 of 512
 
-            // FIXME this is still broken
             for (int i = 4, bit_offset = 0, last_data = 0; const auto channel : univ) {
                 last_data = (last_data << 8) | channel;
                 bit_offset += 8;
                 while(bit_offset > 7) {
                     arr[i++] = (last_data >> (bit_offset - 7)) & 0b01111111;
-                    last_data = last_data >> 7;
                     bit_offset -= 7;
                 }
             }
-            // FIXME until here
+            // FIXME we may need one last write
 
             priority_queue.push_back(r);
             this->set_io_flags();
