@@ -30,6 +30,9 @@ namespace dmxfish::io {
         rmrf::net::ioqueue<rmrf::net::iorecord> priority_queue, background_queue;
         bool transmitting_background_msg;
         bool uses_file_driver;
+        ioboard_message_state_t incoming_message_state = ioboard_message_state_t::IDLE;
+        uint16_t in_message_length = 0;
+        uint16_t current_message_length = 0;
 
         friend class dmxfish::dmx::ioboard_universe; // Required to notify this about insertion of new data
         std::vector<std::optional<std::shared_ptr<dmxfish::dmx::ioboard_universe>>> linked_universes;

@@ -9,8 +9,6 @@
 
 #include "io/ioboard/types.h"
 
-#define MSG_TYPE_SEND_DMX 0b10000001
-
 namespace dmxfish::io {
 
     [[nodiscard]] std::weak_ptr<dmxfish::dmx::ioboard_universe> ioboard::get_or_create_universe(ioboard_port_id_t port, int id) {
@@ -61,7 +59,7 @@ namespace dmxfish::io {
             rmrf::net::iorecord r;
             r.reserve_space(4+586); // 586 = 512*8/7
             auto arr = r.ptr();
-            arr[0] = MSG_TYPE_SEND_DMX;
+            arr[0] = (uint8_t) ioboard_message_type_t::SEND_DMX_DATA;
             arr[1] = port & 0b01111111;
             arr[2] = 0b100; // size, bits 9:7 of 586
             arr[3] = 0b01001010; // size, bits 6:0 of 586
