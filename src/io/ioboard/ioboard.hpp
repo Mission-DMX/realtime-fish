@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <memory>
@@ -32,6 +33,7 @@ namespace dmxfish::io {
 
         friend class dmxfish::dmx::ioboard_universe; // Required to notify this about insertion of new data
         std::vector<std::optional<std::shared_ptr<dmxfish::dmx::ioboard_universe>>> linked_universes;
+        std::vector<uint8_t> in_message_construction;
     public:
         ioboard(const int usb_device_id, const int usb_vendor_id, const int usb_product_id, const std::string& usb_name, const std::string& usb_serial_channel);
         ioboard(const std::string driver_file_path);
@@ -89,6 +91,20 @@ namespace dmxfish::io {
         void set_io_flags();
         void cb_async_schedule(::ev::async& w, int events);
         void cb_io_handler(::ev::io& w, int events);
+
+        /**
+         * This message fetches the data from the construction vector and processes it.
+         * The vector needs to be cleared after calling it. Leading bytes not belonging
+         * to the message are ignored.
+         */
+        void process_complete_message();
+
+        /**
+         * This method keeps track if the current message is complete yet.
+         * @param latest_byte The latest byte that has been added to the vector
+         * @return True if the message is complete.
+         */
+        bool check_if_message_is_complete(uint8_t latest_byte);
     };
 
 }
