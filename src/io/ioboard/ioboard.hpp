@@ -77,6 +77,13 @@ namespace dmxfish::io {
          * @param port The port to unregister the universe from
          */
         void unregister_universe(ioboard_port_id_t port);
+
+        /**
+         * This method searches for the universe with the given id.
+         * @param id The id of the universe to search for
+         * @return -1 if the universe isn't part of this or the port id otherwise.
+         */
+        [[nodiscard]] ioboard_port_id_t find_universe(int id) const;
     private:
         // io management
         void set_io_flags();

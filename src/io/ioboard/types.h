@@ -7,6 +7,6 @@
 namespace dmxfish::io {
 
     class ioboard;
-    using ioboard_port_id_t = size_t;
+    using ioboard_port_id_t = long;
 
 }

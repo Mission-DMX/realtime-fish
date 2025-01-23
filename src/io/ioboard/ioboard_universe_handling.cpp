@@ -7,6 +7,8 @@
 
 #include <stdexcept>
 
+#include "io/ioboard/types.h"
+
 #define MSG_TYPE_SEND_DMX 0b10000001
 
 namespace dmxfish::io {
@@ -27,7 +29,7 @@ namespace dmxfish::io {
         }
     }
 
-    void ioboard::unregister_universe(dmxfish::io::ioboard_port_id_t port) {
+    void ioboard::unregister_universe(ioboard_port_id_t port) {
         if (const auto universe_vector_size = this->linked_universes.size(); port >= universe_vector_size) [[unlikely]] {
             throw std::out_of_range("Requested to invalidate port #" + std::to_string(port) +
                                     " (0-indexed) but there are only " + std::to_string(universe_vector_size) +
@@ -84,5 +86,16 @@ namespace dmxfish::io {
             throw std::out_of_range("Requested push universe data at port #" + std::to_string(port) +
                                     " (0-indexed), which is not active.");
         }
+    }
+
+    [[nodiscard]] ioboard_port_id_t ioboard::find_universe(int id) const {
+        for (size_t i = 0; i < this->linked_universes.size(); i++) {
+            if (auto univ = this->linked_universes[i]; univ.has_value()) {
+                if (univ->get()->getID() == id) {
+                    return i;
+                }
+            }
+        }
+        return -1;
     }
 }
