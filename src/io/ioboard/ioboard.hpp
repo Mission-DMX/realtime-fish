@@ -38,8 +38,8 @@ namespace dmxfish::io {
         std::vector<std::optional<std::shared_ptr<dmxfish::dmx::ioboard_universe>>> linked_universes;
         std::vector<uint8_t> in_message_construction;
     public:
-        ioboard(const int usb_device_id, const int usb_vendor_id, const int usb_product_id, const std::string& usb_name, const std::string& usb_serial_channel);
-        ioboard(const std::string driver_file_path);
+        //ioboard(const int usb_device_id, const int usb_vendor_id, const int usb_product_id, const std::string& usb_name, const std::string& usb_serial_channel);
+        ioboard(const std::string& driver_file_path);
         ioboard(const ioboard&) = delete;
         ioboard(ioboard&&) = delete;
         ~ioboard();
