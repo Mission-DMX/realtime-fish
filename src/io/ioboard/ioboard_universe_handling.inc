@@ -55,10 +55,10 @@ namespace dmxfish::io {
                                     " (0-indexed), which does not exist.");
         }
         if (const auto univ_opt = this->linked_universes[port]; univ_opt.has_value()) [[likely]] {
-            const auto univ = *(univ_opt->get());
+            auto& univ = *(univ_opt->get());
             rmrf::net::iorecord r;
             r.reserve_space(4+586); // 586 = 512*8/7
-            auto arr = r.ptr();
+            auto arr = ((uint8_t*) r.ptr());
             arr[0] = (uint8_t) ioboard_message_type_t::SEND_DMX_DATA;
             arr[1] = port & 0b01111111;
             arr[2] = 0b100; // size, bits 9:7 of 586

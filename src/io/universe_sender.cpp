@@ -162,7 +162,7 @@ std::shared_ptr<dmxfish::dmx::universe> get_universe(const int id) {
 	}
     if (ioboard_handler_opt.has_value()) {
         if (const auto port = ioboard_handler_opt->find_universe(id); port != -1) {
-            return ioboard_handler_opt->get_or_create_universe(port, id);
+            return ioboard_handler_opt->get_or_create_universe(port, id).lock();
         }
     }
 	return _artnet_handler.get_universe(id);

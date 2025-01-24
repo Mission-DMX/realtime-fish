@@ -16,12 +16,12 @@
 
 namespace dmxfish::io {
     void ioboard::set_io_flags() {
-        auto flags = ::ev::READ;
+        int flags = (int) ::ev::READ;
         if (!this->priority_queue.empty() || !this->background_queue.empty()) {
-            flags |= ::ev::WRITE;
+            flags |= (int) ::ev::WRITE;
         }
         this->io_sync.set(flags);
-        if (flags & ::ev::WRITE) {
+        if (flags & (int) ::ev::WRITE) {
             this->async.send();
         }
     }
@@ -80,9 +80,8 @@ namespace dmxfish::io {
     void ioboard::process_complete_message() {
         ioboard_message_state_t current_state = ioboard_message_state_t::IDLE;
         ioboard_message_type_t msg_type = ioboard_message_type_t::INVALID;
-        int target;
-        int length;
-        int state_memory;
+        unsigned int target;
+        unsigned int length;
 
         for(const auto b : this->in_message_construction) {
             if ((b & 0b10000000) > 0) {
@@ -95,7 +94,6 @@ namespace dmxfish::io {
                 case ioboard_message_state_t::TYPE_SEEN:
                     target = b;
                     current_state = ioboard_message_state_t::TARGET_SEEN;
-                    state_memory = 0;
                     break;
                 case ioboard_message_state_t::TARGET_SEEN:
                     length = b << 7;
@@ -108,7 +106,7 @@ namespace dmxfish::io {
                     //  As of now, this includes the handshake.
                 case ioboard_message_state_t::LENGTH_COMPLETE:
                     switch(msg_type) {
-                        case ioboard_message_type_t:SEND_DMX_DATA:
+			case ioboard_message_type_t::SEND_DMX_DATA:
                         case ioboard_message_type_t::DMX_EVENT_DATA:
                             if (target >= this->linked_universes.size()) [[unlikely]] {
                                 ::spdlog::error("IO Board responded with DMX data for a port ({}) it reported to be non-existant.", target);
@@ -122,7 +120,7 @@ namespace dmxfish::io {
                             break;
                             // TODO implement remaining message types
                         default:
-                            ::spdlog::error("Handling data of message type {} is not yet implemented.", msg_type);
+                            ::spdlog::error("Handling data of message type {} is not yet implemented.", (unsigned int) msg_type);
                             return;
                     }
                     length--;
@@ -133,7 +131,7 @@ namespace dmxfish::io {
                     ::spdlog::error("Received further message bytes although message is already finished.");
                     return;
                 default:
-                    throw rmrf::net::netio_exception("Unknown message decoding state: " + std::to_string((uint8_t) current_state));
+                    throw rmrf::net::netio_exception("Unknown message decoding state: " + std::to_string((unsigned int) current_state));
             }
         }
     }
@@ -154,7 +152,7 @@ namespace dmxfish::io {
                 this->incoming_message_state = ioboard_message_state_t::CONTINUING_LENGTH;
                 return false;
             case ioboard_message_state_t::CONTINUING_LENGTH:
-                this->in_message_length |= b;
+                this->in_message_length |= latest_byte;
                 this->incoming_message_state = ioboard_message_state_t::LENGTH_COMPLETE;
                 return this->in_message_length == 0;
             case ioboard_message_state_t::LENGTH_COMPLETE:

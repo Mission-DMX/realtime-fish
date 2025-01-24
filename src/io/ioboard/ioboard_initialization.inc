@@ -20,7 +20,7 @@ namespace dmxfish::io {
         // TODO ensure that ft60x.ko (from https://github.com/lambdaconcept/ft60x_driver/tree/master) is loaded
 
         // open usb device
-        this->usb_device_fd = rmrf::net::autofd{open(driver_file_path.c_str(), O_RDWR)};
+        this->usb_device_fd = rmrf::net::auto_fd{open(driver_file_path.c_str(), O_RDWR)};
         if (!this->usb_device_fd) {
             throw rmrf::net::netio_exception("Failed to connect fo ft60x kernel driver. Errno: " + std::to_string(errno));
         }
@@ -67,7 +67,7 @@ namespace dmxfish::io {
         // make fd nonblocking, register it with libev
         written = fcntl(this->usb_device_fd.get(), F_GETFL, 0);
         if (fcntl(this->usb_device_fd.get(), F_SETFL, written | O_NONBLOCK) < 0) {
-            throw rmrf::net::netio_exception("Failed to enable non blocking option with ft60x driver. errno: {}", errno);
+            throw rmrf::net::netio_exception("Failed to enable non blocking option with ft60x driver. errno: " + std::to_string(errno));
         }
         this->async.set<ioboard, &ioboard::cb_async_schedule>(this);
         this->async.start();
