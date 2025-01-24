@@ -143,7 +143,7 @@ test: ${TEST_TARGETS} all
 		$$a || exit 1; \
 	done
 
-tools: ${BINDIR}/tools/sample_xml_generator ${BINDIR}/tools/ftdi_test
+tools: ${BINDIR}/tools/sample_xml_generator ${BINDIR}/tools/ftdi_test ${BINDIR}/tools/ioboardctrl
 	echo Created tools.
 
 ${PROTO_SRCDIR}/%.pb.cc: ${PROTO_DEFDIR}/%.proto Makefile
