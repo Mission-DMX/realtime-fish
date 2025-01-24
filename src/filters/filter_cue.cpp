@@ -1,5 +1,7 @@
 #include "filters/filter_cue.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <string>
 #include <sstream>
@@ -8,6 +10,7 @@
 #include "lib/macros.hpp"
 #include "lib/logging.hpp"
 #include "dmx/pixel.hpp"
+#include "executioners/state_registry.hpp"
 #include "filters/util.hpp"
 
 #include "proto_src/MessageTypes.pb.h"
@@ -595,6 +598,14 @@ namespace dmxfish::filters {
                 this->default_cue = new_default_cue;
             }
         }
+
+        if(configuration.contains("persistence")) {
+            auto s = configuration.at("persistence");
+            // This does not work for multi-byte characters from UTF-8. As we only need to check for true, this will
+            // still work though.
+            std::transform(s.begin(), s.end(), s.begin(), [](const unsigned char c) {std::tolower(c);});
+            this->state_persistent = (s == "true");
+        }
     }
 
     bool filter_cue::receive_update_from_gui(const std::string &key, const std::string &_value) {
@@ -797,12 +808,61 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::scene_activated() {
+        if (this->state_persistent) {
+            using namespace dmxfish::execution;
+            const auto scene_id = get_iomanager_instance()->get_active_show()->get_active_scene();
+            bool loaded_values = false;
+            if(auto rs_opt = state_registry::get(scene_id, this->own_filter_id + "::running_state"); rs_opt.has_value()) {
+                this->running_state = (run_state) std::stoi(rs_opt.value());
+                loaded_values = true;
+            }
+            if(auto c_opt = state_registry::get(scene_id, this->own_filter_id + "::cue"); c_opt.has_value()) {
+                this->actual_values.cue = (size_t) std::stol(c_opt.value());
+                loaded_values &= true;
+            }
+            if(auto f_opt = state_registry::get(scene_id, this->own_filter_id + "::frame"); f_opt.has_value()) {
+                this->actual_values.frame = (size_t) std::stol(f_opt.value());
+                loaded_values &= true;
+            }
+            if(auto t_opt = state_registry::get(scene_id, this->own_filter_id + "::time"); t_opt.has_value()) {
+                this->current_time = *(this->time);
+                this->start_time = std::stod(t_opt.value()) + this->current_time;
+                loaded_values &= true;
+            }
+            if (loaded_values) {
+                // TODO is update_last_values() required here?
+                if (this->actual_values.cue >= this->cues.size()) {
+                    this->actual_values.cue = this->cues.size() - 1;
+                }
+                if(this->actual_values.cue < this->cues.size()) {
+                    this->cue_end_handling_real = this->cues.at(this->actual_values.cue).end_handling;
+                }
+                ::spdlog::info("Resumed cue from stored state.");
+                return;
+            }
+        }
         if (this->default_cue > -1) {
             this->running_state = PLAY;
             this->actual_values.cue = (uint16_t) this->default_cue;
             reset_for_starting_cue();
             ::spdlog::info("Switched to Cue {}.", this->default_cue);
         }
+    }
+
+    void filter_cue::scene_deactivated() {
+        if (!this->state_persistent) {
+            return;
+        }
+        using namespace dmxfish::execution;
+        const auto scene_id = get_iomanager_instance()->get_active_show()->get_active_scene();
+        state_registry::set(scene_id, this->own_filter_id + "::running_state",
+                            std::to_string((unsigned int) this->running_state));
+        state_registry::set(scene_id, this->own_filter_id + "::cue",
+                            std::to_string(this->actual_values.cue));
+        state_registry::set(scene_id, this->own_filter_id + "::frame",
+                            std::to_string(this->actual_values.frame));
+        state_registry::set(scene_id, this->own_filter_id + "::time",
+                            std::to_string(this->current_time - this->start_time));
     }
 
 }

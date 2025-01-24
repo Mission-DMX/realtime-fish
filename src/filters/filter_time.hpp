@@ -45,7 +45,11 @@ namespace dmxfish::filters {
             this->now = (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()-get_start_time())).count();
         }
 
-        virtual void scene_activated() override {}
+        virtual void scene_activated() override {
+            // As there are filters requiring the the current time as soon as the scene gets activated,
+            // we need to perform the update here.
+            this->update();
+        }
 
     };
 
