@@ -50,3 +50,4 @@ cmake-build-debug/*
 *CMakeLists.txt
 lib/
 tools/generator-tmp
+.ccls-cache/
