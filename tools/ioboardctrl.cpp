@@ -13,11 +13,12 @@
 
 enum class action : uint8_t {
     HELP,
-    WRITE_UNIVERSE
+    WRITE_UNIVERSE,
+    PRINT_CHIP_INFO
 };
 
 action selected_action = action::HELP;
-unsigned int port = 0;
+dmxfish::io::ioboard_port_id_t port = 0;
 std::shared_ptr<dmxfish::dmx::ioboard_universe> data;
 dmxfish::io::ioboard board("/dev/ft60x0");
 
@@ -26,6 +27,8 @@ bool parse_cmd_args(int argc, char* argv[]) {
         if (std::string s(argv[i]); s == "--help") {
             selected_action = action::HELP;
             break;
+        } else if (s == "--info") {
+            selected_action = action::PRINT_CHIP_INFO;
         } else if(s == "--write-universe") {
             if (++i == argc) {
                 std::cerr << "Expected dmx port id." << std::endl;
@@ -39,7 +42,7 @@ bool parse_cmd_args(int argc, char* argv[]) {
             bool parsing_data = false;
 
             if(data == nullptr) {
-                data = board.get_or_create_universe((dmxfish::io::ioboard_port_id_t) port, port);
+                data = board.get_or_create_universe(port, (int) port);
             }
 
             for (size_t spos = 6; spos < s.length(); spos++) {
@@ -67,6 +70,7 @@ bool parse_cmd_args(int argc, char* argv[]) {
 
 void print_help() {
     std::cout << "--help\tprint this help" << std::endl;
+    std::cout << "--info\tprint chip info and exit" << std::endl;
     std::cout << "--write-universe <port on device>\tselect the dmx port" << std::endl;
     std::cout << "--data=<channel1>:<data1>,<channel2>:<data2>,...\tWrite data to selected port" << std::endl;
 }
@@ -80,6 +84,8 @@ int main(int argc, char* argv[]) {
         print_help();
         return 0;
     } else if (selected_action == action::WRITE_UNIVERSE) {
+        board.transmit_universe(port);
+    } else if (selected_action == action::PRINT_CHIP_INFO) {
         // TODO
     }
 }
