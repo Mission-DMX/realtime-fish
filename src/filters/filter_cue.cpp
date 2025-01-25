@@ -373,6 +373,28 @@ namespace dmxfish::filters {
         }
     }
 
+    void filter_cue::update_last_values_from_cuelist(){
+        for (size_t i = 0; i < this->actual_values.eight_bit_channels.size(); i++) {
+            this->last_values.eight_bit_channels.at(i) = this->cues.at(this->actual_values.cue).eight_bit_frames.at(
+                    this->actual_values.eight_bit_channels.size() * this->actual_values.frame + i).value;
+        }
+        for (size_t i = 0; i < this->actual_values.sixteen_bit_channels.size(); i++) {
+            this->last_values.sixteen_bit_channels.at(i) = this->cues.at(this->actual_values.cue).sixteen_bit_frames.at(
+                    this->actual_values.sixteen_bit_channels.size() * this->actual_values.frame + i).value;
+        }
+        for (size_t i = 0; i < this->actual_values.float_channels.size(); i++) {
+            this->last_values.float_channels.at(i) = this->cues.at(this->actual_values.cue).float_frames.at(
+                    this->actual_values.float_channels.size() * this->actual_values.frame + i).value;
+        }
+        for (size_t i = 0; i < this->actual_values.color_channels.size(); i++) {
+            this->last_values.color_channels.at(i) = this->cues.at(this->actual_values.cue).color_frames.at(
+                    this->actual_values.color_channels.size() * this->actual_values.frame + i).value;
+        }
+        this->last_values.frame = this->actual_values.frame;
+        this->last_values.cue = this->actual_values.cue;
+        this->last_values.updated = true;
+    }
+
     void filter_cue::reset_for_starting_cue() {
         update_last_values();
         this->start_time = this->current_time;
@@ -446,25 +468,7 @@ namespace dmxfish::filters {
         }
         if (this->current_time >= this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) / this->time_scale + this->start_time) { // Next Frame?
             if (!this->last_values.updated) {
-                for (size_t i = 0; i < this->actual_values.eight_bit_channels.size(); i++) {
-                    this->last_values.eight_bit_channels.at(i) = this->cues.at(this->actual_values.cue).eight_bit_frames.at(
-                            this->actual_values.eight_bit_channels.size() * this->actual_values.frame + i).value;
-                }
-                for (size_t i = 0; i < this->actual_values.sixteen_bit_channels.size(); i++) {
-                    this->last_values.sixteen_bit_channels.at(i) = this->cues.at(this->actual_values.cue).sixteen_bit_frames.at(
-                            this->actual_values.sixteen_bit_channels.size() * this->actual_values.frame + i).value;
-                }
-                for (size_t i = 0; i < this->actual_values.float_channels.size(); i++) {
-                    this->last_values.float_channels.at(i) = this->cues.at(this->actual_values.cue).float_frames.at(
-                            this->actual_values.float_channels.size() * this->actual_values.frame + i).value;
-                }
-                for (size_t i = 0; i < this->actual_values.color_channels.size(); i++) {
-                    this->last_values.color_channels.at(i) = this->cues.at(this->actual_values.cue).color_frames.at(
-                            this->actual_values.color_channels.size() * this->actual_values.frame + i).value;
-                }
-                this->last_values.frame = this->actual_values.frame;
-                this->last_values.cue = this->actual_values.cue;
-                this->last_values.updated = true;
+                update_last_values_from_cuelist()
             }
             this->last_values.time_stamp = this->start_time + this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) / this->time_scale;
             if (this->actual_values.frame < this->cues.at(this->actual_values.cue).timestamps.size() - 1) { // Not the last Frame of the cue?
@@ -837,6 +841,12 @@ namespace dmxfish::filters {
                 if(this->actual_values.cue < this->cues.size()) {
                     this->cue_end_handling_real = this->cues.at(this->actual_values.cue).end_handling;
                 }
+                if (this->actual_values.frame > 0){
+                    this->actual_values.frame--;
+                    update_last_values_from_cuelist();
+                    this->actual_values.frame++;
+                }
+                update_last_values_from_cuelist()
                 ::spdlog::info("Resumed cue from stored state.");
                 return;
             }

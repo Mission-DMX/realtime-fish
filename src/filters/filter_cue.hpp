@@ -203,6 +203,11 @@ namespace dmxfish::filters {
         void update_last_values();
 
         /**
+         * Puts the values of the last frame from the cuelist to the last_values
+         */
+        void update_last_values_from_cuelist();
+
+        /**
          * Resetting internal state for starting a new cue
          */
         void reset_for_starting_cue();
