@@ -201,6 +201,9 @@ ${BINDIR}/tools/sample_xml_generator: Makefile ${XMLTREE_DEFDIR}/ShowFile_v0.xsd
 ${BINDIR}/tools/ftdi_test: ${OBJDIR}/dmx/ftdi_universe.o
 	${MKDIR} ${@D} && ${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/ftdi_test.cpp $^ ${LFLAGS} -o $@
 
+${BINDIR}/tools/ioboardctrl: ${OBJDIR}/dmx/ioboard_universe.o ${OBJDIR}/io/ioboard/ioboard.o ${OBJDIR}/librmrfnet.a
+	${MKDIR} ${@D} && ${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/ioboardctrl.cpp $^ ${LFLAGS} -o $@
+
 ${DEPDIR}/test:
 	${MKDIR} ${DEPDIR}/test
 

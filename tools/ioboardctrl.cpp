@@ -10,6 +10,7 @@
 #include <string>
 
 #include "dmx/ioboard_universe.hpp"
+#include "io/ioboard/ioboard.hpp"
 
 enum class action : uint8_t {
     HELP,
@@ -42,7 +43,7 @@ bool parse_cmd_args(int argc, char* argv[]) {
             bool parsing_data = false;
 
             if(data == nullptr) {
-                data = board.get_or_create_universe(port, (int) port);
+                data = board.get_or_create_universe(port, (int) port).lock();
             }
 
             for (size_t spos = 6; spos < s.length(); spos++) {
