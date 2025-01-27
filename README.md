@@ -28,6 +28,14 @@ interface protocol.
 Interfacing with Usb DMX dongles is implemented for FTDI based devices. The corresponding
 universe type is called `ftdi_universe`.
 
+A corresponding entry in the `udev` rules should be made, allowing the user associated with
+running fish to communicate with the dongle without superuser permissions.
+
+## IO Board support
+Communication with the io board is done using an FTDI600Q chip as regular USB2.0 speeds are
+nowhere near enough. In order for this to work, the [FT60X](https://github.com/lambdaconcept/ft60x_driver/tree/master)
+driver needs to be installed and loaded. A corresponding entry to `/etc/modules` should do the trick.
+
 ##### Warning
 USB dmx adapters are bad. The better ones out there (for example the entec ones) use FTDI chips.
 Even those have bad timing properties and only support a small sub set of the DMX512 specification
