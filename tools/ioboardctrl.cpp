@@ -21,7 +21,19 @@ enum class action : uint8_t {
 action selected_action = action::HELP;
 dmxfish::io::ioboard_port_id_t port = 0;
 std::shared_ptr<dmxfish::dmx::ioboard_universe> data;
-dmxfish::io::ioboard board("/dev/ft60x0");
+std::shared_ptr<dmxfish::io::ioboard> board;
+
+void ensure_board() {
+    if(board == nullptr) {
+        try {
+            board = std::make_shared<dmxfish::io::ioboard>("/dev/ft60x0");
+        } catch (const rmrf::net::netio_exception& e) {
+            std::cerr << "Failed to connect to io board: " << e.what() << std::endl;
+            std::cerr << "Is the kernel driver properly loaded?" << std::endl;
+            exit(1);
+        }
+    }
+}
 
 bool parse_cmd_args(int argc, char* argv[]) {
     for (int i = 0; i < argc; i++) {
@@ -43,7 +55,8 @@ bool parse_cmd_args(int argc, char* argv[]) {
             bool parsing_data = false;
 
             if(data == nullptr) {
-                data = board.get_or_create_universe(port, (int) port).lock();
+                ensure_board();
+                data = board->get_or_create_universe(port, (int) port).lock();
             }
 
             for (size_t spos = 6; spos < s.length(); spos++) {
@@ -85,7 +98,8 @@ int main(int argc, char* argv[]) {
         print_help();
         return 0;
     } else if (selected_action == action::WRITE_UNIVERSE) {
-        board.transmit_universe(port);
+        ensure_board();
+        board->transmit_universe(port);
     } else if (selected_action == action::PRINT_CHIP_INFO) {
         // TODO
     }

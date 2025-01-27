@@ -6,6 +6,7 @@
 #include "ioboard.hpp"
 
 #include <array>
+#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -22,7 +23,19 @@ namespace dmxfish::io {
         // open usb device
         this->usb_device_fd = rmrf::net::auto_fd{open(driver_file_path.c_str(), O_RDWR)};
         if (!this->usb_device_fd) {
-            throw rmrf::net::netio_exception("Failed to connect fo ft60x kernel driver. Errno: " + std::to_string(errno));
+            std::array<char, 64> buffer;
+#if defined(__linux__) && defined(_GNU_SOURCE)
+            auto ret_str = strerror_r(errno, buffer.data(), buffer.size());
+            throw rmrf::net::netio_exception(
+                    "Failed to connect fo ft60x kernel driver. Errno: " + std::to_string(errno)
+                    + " (" + std::string(ret_str) + ") Driver path: " + driver_file_path);
+#else
+            int ret = strerror_r(errno, buffer.data(), buffer.size());
+            throw rmrf::net::netio_exception(
+                    "Failed to connect fo ft60x kernel driver. Errno: " + std::to_string(errno)
+                    + " (" + ((RET == 0) ? std::string(buffer.data()) : "UNKNOWN") + ") Driver path: "
+                    + driver_file_path);
+#endif
         }
 
         // issue hello message, thus resetting the io board
