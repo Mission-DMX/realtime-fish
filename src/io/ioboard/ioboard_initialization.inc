@@ -11,11 +11,13 @@
 #include <unistd.h>
 
 #include "lib/logging.hpp"
+#include "io/ioboard/ioboard_midi_event_source.hpp"
+#include "main.hpp"
 
 namespace dmxfish::io {
     ioboard::ioboard(const std::string& driver_file_path) :
             async(), io_sync(), usb_device_fd(rmrf::net::nullfd), priority_queue(), background_queue(), transmitting_background_msg(false),
-            uses_file_driver(true), linked_universes(), in_message_construction() {
+            uses_file_driver(true), linked_universes(), in_message_construction(), evs(nullptr) {
         this->in_message_construction.reserve(1024);
 
         // TODO ensure that ft60x.ko (from https://github.com/lambdaconcept/ft60x_driver/tree/master) is loaded
@@ -86,6 +88,8 @@ namespace dmxfish::io {
         this->async.start();
         this->io_sync.set<ioboard, &ioboard::cb_io_handler>(this);
         this->io_sync.start(this->usb_device_fd.get(), 0);
+
+        this->evs = dmxfish::events::event_source::create<ioboard_midi_event_source>(get_event_storage_instance());
     }
 
     ioboard::~ioboard() {

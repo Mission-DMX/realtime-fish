@@ -70,6 +70,10 @@ namespace dmxfish::events {
         [[nodiscard]] inline const std::array<uint8_t, 7> get_args() const {
             return this->event_arguments;
         }
+
+        inline void set_arg_data(size_t pos, uint8_t d) {
+            this->event_arguments[pos] = d;
+        }
     };
 
     std::ostream& operator<<(std::ostream& os, const event& ev);

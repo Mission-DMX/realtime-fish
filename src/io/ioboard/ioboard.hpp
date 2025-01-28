@@ -20,6 +20,10 @@
 #include "dmx/ioboard_universe.hpp"
 #include "io/ioboard/types.h"
 
+namespace dmxfish::events {
+    class event_source;
+}
+
 namespace dmxfish::io {
 
     class ioboard {
@@ -37,6 +41,7 @@ namespace dmxfish::io {
         friend class dmxfish::dmx::ioboard_universe; // Required to notify this about insertion of new data
         std::vector<std::optional<std::shared_ptr<dmxfish::dmx::ioboard_universe>>> linked_universes;
         std::vector<uint8_t> in_message_construction;
+        std::shared_ptr<dmxfish::events::event_source> evs;
     public:
         //ioboard(const int usb_device_id, const int usb_vendor_id, const int usb_product_id, const std::string& usb_name, const std::string& usb_serial_channel);
         ioboard(const std::string& driver_file_path);
@@ -108,6 +113,14 @@ namespace dmxfish::io {
          * @return True if the message is complete.
          */
         bool check_if_message_is_complete(uint8_t latest_byte);
+
+        /**
+         * This method decodes incomming data fields.
+         * @param start_in_buffer The position where to start the read process inside the construction buffer
+         * @param length How many message bytes should be read
+         * @return A vector with the decoded data
+         */
+        std::vector<uint8_t> decode_shift_encoded_data(size_t start_in_buffer, size_t length);
     };
 
 }

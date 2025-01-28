@@ -8,11 +8,16 @@
 #include <array>
 #include <fcntl.h>
 #include <unistd.h>
+#include <vector>
 
 #include <ev++.h>
 
 #include "lib/logging.hpp"
+#include "control_desk/command.hpp"
+#include "events/event.hpp"
+#include "events/event_type.hpp"
 #include "net/netio_exception.hpp"
+#include "main.hpp"
 
 namespace dmxfish::io {
     void ioboard::set_io_flags() {
@@ -77,13 +82,45 @@ namespace dmxfish::io {
         this->set_io_flags();
     }
 
+    inline dmxfish::events::event_type get_event_type_from_midi_message(uint8_t midi_action_byte) {
+        using namespace dmxfish::events;
+        if (midi_action_byte == ((uint8_t) dmxfish::control_desk::midi_status::NOTE_ON)) {
+            return event_type::START;
+        } else if (midi_action_byte == ((uint8_t) dmxfish::control_desk::midi_status::NOTE_OFF)) {
+            return event_type::RELEASE;
+        }
+        return event_type::SINGLE_TRIGGER;
+    }
+
+    std::vector<uint8_t> ioboard::decode_shift_encoded_data(size_t start_in_buffer, size_t length) {
+        // TODO we should write a unit test for this
+        std::vector<uint8_t> d;
+        d.reserve(length);
+        unsigned int current_word = 0;
+        unsigned int shift = 0;
+        for(size_t i = start_in_buffer; i < this->in_message_construction.size() && i < start_in_buffer + length; i++) {
+            current_word = (current_word << 7) | this->in_message_construction[i];
+            shift += 7;
+            if (shift >= 8) {
+                d.push_back((uint8_t) ((current_word >> (shift - 8)) & 0xFF));
+                shift -= 8;
+            }
+        }
+        if (shift > 0) [[likely]] {
+            const uint8_t mask = (uint8_t) ~(0xFF << shift);
+            d.push_back(current_word & ((unsigned int) mask));
+        }
+        return d;
+    }
+
     void ioboard::process_complete_message() {
         ioboard_message_state_t current_state = ioboard_message_state_t::IDLE;
         ioboard_message_type_t msg_type = ioboard_message_type_t::INVALID;
         unsigned int target;
         unsigned int length;
 
-        for(const auto b : this->in_message_construction) {
+        for(size_t i = 0; i < this->in_message_construction.size(); i++) {
+            const auto b = this->in_message_construction[i];
             if ((b & 0b10000000) > 0) {
                 current_state = ioboard_message_state_t::TYPE_SEEN;
                 msg_type = (ioboard_message_type_t) b;
@@ -102,7 +139,7 @@ namespace dmxfish::io {
                 case ioboard_message_state_t::CONTINUING_LENGTH:
                     length |= b;
                     current_state = ioboard_message_state_t::LENGTH_COMPLETE;
-                    // TODO message types with length = 0 need to be handled here already
+                    // message types with length = 0 need to be handled here already
                     //  As of now, this includes the handshake.
                 case ioboard_message_state_t::LENGTH_COMPLETE:
                     switch(msg_type) {
@@ -118,6 +155,24 @@ namespace dmxfish::io {
                             }
                             this->linked_universes[target]->get()->operator[](DMX_UNIVERSE_SIZE - length) = b;
                             break;
+                        case ioboard_message_type_t::MIDI_EVENT_DATA:
+                        case ioboard_message_type_t::SEND_MIDI_DATA: {
+                            if(length != 4) {
+                                ::spdlog::error("Expected MIDI message length of 4");
+                                break;
+                            }
+                            auto decoded_data = this->decode_shift_encoded_data(i, 4);
+                            i += 3;
+                            dmxfish::events::event e(
+                                    get_event_type_from_midi_message(decoded_data[0]),
+                                    dmxfish::events::event_sender_t{this->evs->get_sender_id(), 0} // MIDI Port 0 as there is no other as of now
+                                    );
+                            e.set_arg_data(0, decoded_data[0]);
+                            e.set_arg_data(0, decoded_data[1]);
+                            e.set_arg_data(0, decoded_data[2]);
+                            get_event_storage_instance()->insert_event(e);
+                            break;
+                        }
                             // TODO implement remaining message types
                         default:
                             ::spdlog::error("Handling data of message type {} is not yet implemented.", (unsigned int) msg_type);

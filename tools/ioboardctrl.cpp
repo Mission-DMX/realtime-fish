@@ -94,7 +94,7 @@ void print_help() {
     std::cout << "--info\tprint chip info and exit" << std::endl;
     std::cout << "--write-universe <port on device>\tselect the dmx port" << std::endl;
     std::cout << "--interface <path to interface>\tSet the driver interface to use. Defaults to " << driver_path <<
-        "This needs to be set as the first argument." << std::endl;
+        " This needs to be set as the first argument." << std::endl;
     std::cout << "--data=<channel1>:<data1>,<channel2>:<data2>,...\tWrite data to selected port" << std::endl;
 }
 

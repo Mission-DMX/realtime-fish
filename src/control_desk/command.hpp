@@ -6,6 +6,7 @@
 
 namespace dmxfish::control_desk {
 
+    // TODO we should move this enum to a separate file
     enum class midi_status : uint8_t {
         INVALID = 0x00,
         NOTE_OFF = 0x80,
