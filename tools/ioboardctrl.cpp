@@ -20,13 +20,14 @@ enum class action : uint8_t {
 
 action selected_action = action::HELP;
 dmxfish::io::ioboard_port_id_t port = 0;
+std::string driver_path = "/dev/ft60x0";
 std::shared_ptr<dmxfish::dmx::ioboard_universe> data;
 std::shared_ptr<dmxfish::io::ioboard> board;
 
 void ensure_board() {
     if(board == nullptr) {
         try {
-            board = std::make_shared<dmxfish::io::ioboard>("/dev/ft60x0");
+            board = std::make_shared<dmxfish::io::ioboard>(driver_path);
         } catch (const rmrf::net::netio_exception& e) {
             std::cerr << "Failed to connect to io board: " << e.what() << std::endl;
             std::cerr << "Is the kernel driver properly loaded?" << std::endl;
@@ -40,6 +41,12 @@ bool parse_cmd_args(int argc, char* argv[]) {
         if (std::string s(argv[i]); s == "--help") {
             selected_action = action::HELP;
             break;
+        } else if (s == "--interface") {
+            if (i == argc) {
+                std::cerr << "Expected driver path." << std::endl;
+                return false;
+            }
+            driver_path = std::string(argv[++i]);
         } else if (s == "--info") {
             selected_action = action::PRINT_CHIP_INFO;
         } else if(s == "--write-universe") {
@@ -86,6 +93,8 @@ void print_help() {
     std::cout << "--help\tprint this help" << std::endl;
     std::cout << "--info\tprint chip info and exit" << std::endl;
     std::cout << "--write-universe <port on device>\tselect the dmx port" << std::endl;
+    std::cout << "--interface <path to interface>\tSet the driver interface to use. Defaults to " << driver_path <<
+        "This needs to be set as the first argument." << std::endl;
     std::cout << "--data=<channel1>:<data1>,<channel2>:<data2>,...\tWrite data to selected port" << std::endl;
 }
 
