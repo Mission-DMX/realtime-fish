@@ -42,12 +42,13 @@ namespace dmxfish {
                 return;
             }
             this->output = *(this->inputs[0]);
-            for(const auto input_ptr : this->inputs) {
+            for(auto i = 1; i < this->inputs.size(); i++) {
+                const auto input_ptr = this->inputs[i];
                 const auto h1 = this->output.getHue();
                 const auto h2 = input_ptr->getHue();
-                this->output.setHue(std::fmod(h1 + h2, 360.0) / 2);
-                this->output.setSaturation(this->output.getSaturation() + input_ptr->getSaturation() / 2);
-                this->output.setIluminance(this->output.getIluminance() + input_ptr->getIluminance() / 2);
+                this->output.setHue(std::fmod(h1 + h2, 360.0) / 2.0);
+                this->output.setSaturation((this->output.getSaturation() + input_ptr->getSaturation()) / 2.0);
+                this->output.setIluminance((this->output.getIluminance() + input_ptr->getIluminance()) / 2.0);
             }
         }
 
