@@ -267,6 +267,9 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_color_mixer_hsv:
                     sum += sizeof(filter_color_mixer_hsv);
                     break;
+                case filter_type::filter_color_mixer_rgb_additive:
+                    sum += sizeof(filter_color_mixer_add_rgb);
+                    break;
 				default: {
 						 std::stringstream ss;
 						 ss << ERROR_FILTER_NOT_IMPLEMENTED_IN_ALLOCATION;
@@ -413,8 +416,10 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_combine_bytes_to_16bit>(pac);
             case filter_type::filter_map_8bit_to_16bit:
                 return calloc<filter_map_8bit_to_16bit>(pac);
-            case filter_type::filter_color_mixer:
-                return calloc<filter_color_mixer>(pac);
+            case filter_type::filter_color_mixer_hsv:
+                return calloc<filter_color_mixer_hsv>(pac);
+            case filter_type::filter_color_mixer_rgb_additive:
+                return calloc<filter_color_mixer_add_rgb>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}

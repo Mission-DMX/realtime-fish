@@ -112,6 +112,9 @@ BOOST_AUTO_TEST_CASE(test_color_mix_filter_two_inputs) {
 
     filter_color_mixer_hsv cmf_hsv;
     test_two_input_filter(cmf_hsv);
+
+    filter_color_mixer_add_rgb cmf_argb;
+    test_two_input_filter(cmf_argb);
 }
 
 // TODO also write test cases for 0, 1 and 3
