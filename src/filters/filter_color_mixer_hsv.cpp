@@ -46,7 +46,9 @@ namespace dmxfish {
                 const auto input_ptr = this->inputs[i];
                 const auto h1 = this->output.getHue();
                 const auto h2 = input_ptr->getHue();
-                this->output.setHue(std::fmod(h1 + h2, 360.0) / 2.0);
+                // Performance improvements could be made using the binary angle measurement system
+                const auto hue_diff = std::fmod(h1-h2 + 180.0 + 360.0, (double) 360.0) - ((double) 180.0);
+                this->output.setHue(std::fmod(360.0 + h2 + (hue_diff/2.0), (double) 360.0));
                 this->output.setSaturation((this->output.getSaturation() + input_ptr->getSaturation()) / 2.0);
                 this->output.setIluminance((this->output.getIluminance() + input_ptr->getIluminance()) / 2.0);
             }
