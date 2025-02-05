@@ -11,15 +11,15 @@
 
 namespace dmxfish {
     namespace filters {
-        filter_color_mixer::filter_color_mixer() : filter(), inputs(), output() {}
+        filter_color_mixer_hsv::filter_color_mixer_hsv() : filter(), inputs(), output() {}
 
-        void filter_color_mixer::get_output_channels(channel_mapping& map, const std::string& name) {
+        void filter_color_mixer_hsv::get_output_channels(channel_mapping& map, const std::string& name) {
             COMPILER_SUPRESS("-Weffc++")
             map.color_channels[name + ":value"] = &this->output;
             COMPILER_RESTORE("-Weffc++")
         }
 
-        void filter_color_mixer::setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) {
+        void filter_color_mixer_hsv::setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) {
             MARK_UNUSED(initial_parameters);
             if(!configuration.contains("input_count")) {
                 return;
@@ -37,7 +37,7 @@ namespace dmxfish {
             }
         }
 
-        void filter_color_mixer::update() {
+        void filter_color_mixer_hsv::update() {
             if (this->inputs.size() == 0) {
                 return;
             }
@@ -52,7 +52,7 @@ namespace dmxfish {
             }
         }
 
-        void filter_color_mixer::scene_activated() {
+        void filter_color_mixer_hsv::scene_activated() {
             // Do nothing
         }
     } // dmxfish

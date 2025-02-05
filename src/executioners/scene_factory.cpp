@@ -264,8 +264,8 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_map_8bit_to_16bit:
                     sum += sizeof(filter_map_8bit_to_16bit);
                     break;
-                case filter_type::filter_color_mixer:
-                    sum += sizeof(filter_color_mixer);
+                case filter_type::filter_color_mixer_hsv:
+                    sum += sizeof(filter_color_mixer_hsv);
                     break;
 				default: {
 						 std::stringstream ss;

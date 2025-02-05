@@ -14,14 +14,14 @@
 namespace dmxfish {
     namespace filters {
 
-        class filter_color_mixer : public filter {
+        class filter_color_mixer_hsv : public filter {
         private:
             COMPILER_SUPRESS("-Weffc++")
             std::vector<dmxfish::dmx::pixel*> inputs;
             COMPILER_RESTORE("-Weffc++")
             dmxfish::dmx::pixel output;
         public:
-            filter_color_mixer();
+            filter_color_mixer_hsv();
             virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override;
             virtual void get_output_channels(channel_mapping& map, const std::string& name) override;
             virtual void update() override;
