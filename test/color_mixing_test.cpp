@@ -110,11 +110,17 @@ BOOST_AUTO_TEST_CASE(test_color_mix_filter_two_inputs) {
     spdlog::set_level(spdlog::level::info);
     //spdlog::set_level(spdlog::level::debug);
 
+    spdlog::info("Testing CSV mixing with 2 inputs");
     filter_color_mixer_hsv cmf_hsv;
     test_two_input_filter(cmf_hsv);
 
+    spdlog::info("Testing RGB adding with 2 inputs");
     filter_color_mixer_add_rgb cmf_argb;
     test_two_input_filter(cmf_argb);
+
+    spdlog::info("Testing RGB normative mixing with 2 inputs");
+    filter_color_mixer_norm_rgb cmf_nrgb;
+    test_two_input_filter(cmf_nrgb);
 }
 
 // TODO also write test cases for 0, 1 and 3
