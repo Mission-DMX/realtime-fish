@@ -123,4 +123,35 @@ BOOST_AUTO_TEST_CASE(test_color_mix_filter_two_inputs) {
     test_two_input_filter(cmf_nrgb);
 }
 
-// TODO also write test cases for 0, 1 and 3
+void test_zero_input_filter(filter& cmf) {
+    channel_mapping input_channels, output_channels;
+    std::map<std::string, std::string> configuration, initial_parameters;
+
+    cmf.setup_filter(configuration, initial_parameters, input_channels, "test_filter");
+    cmf.get_output_channels(output_channels, "test_filter");
+    cmf.scene_activated();
+
+    cmf.update();
+    BOOST_TEST(output_channels.color_channels["test_filter:value"]->getRed() < 0.001, "Expected Red to be 0.");
+    BOOST_TEST(output_channels.color_channels["test_filter:value"]->getGreen() < 0.001, "Expected Green to be 0.");
+    BOOST_TEST(output_channels.color_channels["test_filter:value"]->getBlue() < 0.001, "Expected Blue to be 0.");
+}
+
+BOOST_AUTO_TEST_CASE(test_color_mix_filter_two_inputs) {
+        spdlog::set_level(spdlog::level::info);
+        //spdlog::set_level(spdlog::level::debug);
+
+        spdlog::info("Testing CSV mixing with 0 inputs");
+        filter_color_mixer_hsv cmf_hsv;
+        test_zero_input_filter(cmf_hsv);
+
+        spdlog::info("Testing RGB adding with 0 inputs");
+        filter_color_mixer_add_rgb cmf_argb;
+        test_zero_input_filter(cmf_argb);
+
+        spdlog::info("Testing RGB normative mixing with 0 inputs");
+        filter_color_mixer_norm_rgb cmf_nrgb;
+        test_zero_input_filter(cmf_nrgb);
+}
+
+// TODO also write test cases for 1 and 3
