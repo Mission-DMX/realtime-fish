@@ -819,15 +819,21 @@ namespace dmxfish::filters {
             if(auto c_opt = state_registry::get(scene_id, this->own_filter_id + "::cue"); c_opt.has_value()) {
                 this->actual_values.cue = (size_t) std::stol(c_opt.value());
                 loaded_values &= true;
+            } else {
+                loaded_values = false;
             }
             if(auto f_opt = state_registry::get(scene_id, this->own_filter_id + "::frame"); f_opt.has_value()) {
                 this->actual_values.frame = (size_t) std::stol(f_opt.value());
                 loaded_values &= true;
+            } else {
+                loaded_values = false;
             }
             if(auto t_opt = state_registry::get(scene_id, this->own_filter_id + "::time"); t_opt.has_value()) {
                 this->current_time = *(this->time);
-                this->start_time = std::stod(t_opt.value()) + this->current_time;
+                this->start_time = this->current_time - std::stod(t_opt.value());
                 loaded_values &= true;
+            } else {
+                loaded_values = false;
             }
             if (loaded_values) {
                 // TODO is update_last_values() required here?
