@@ -79,7 +79,8 @@ void test_two_input_filter(filter& cmf) {
     cmf.update();
     ::spdlog::debug("8");
     h = output_channels.color_channels["test_filter:value"]->getHue();
-    BOOST_TEST((h > 354.5) && (h < 355.5), "Expected hue to be approximately 355 deg. Actual: " + std::to_string(h));
+    const bool hue_about_355 = (h > 354.5) && (h < 355.5);
+    BOOST_TEST(hue_about_355, "Expected hue to be approximately 355 deg. Actual: " + std::to_string(h));
     s = output_channels.color_channels["test_filter:value"]->getSaturation();
     BOOST_TEST(s > 0.45, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
     BOOST_TEST(s < 0.55, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
@@ -97,7 +98,8 @@ void test_two_input_filter(filter& cmf) {
     cmf.update();
     ::spdlog::debug("8");
     h = output_channels.color_channels["test_filter:value"]->getHue();
-    BOOST_TEST((h > 89.5) && (h < 90.5), "Mixing yellow and blue, Expected hue to be approximately 90 deg (green). Actual: " + std::to_string(h));
+    const bool hue_about_90 = (h > 89.5) && (h < 90.5);
+    BOOST_TEST(hue_about_90, "Mixing yellow and blue, Expected hue to be approximately 90 deg (green). Actual: " + std::to_string(h));
     s = output_channels.color_channels["test_filter:value"]->getSaturation();
     BOOST_TEST(s > 0.45, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
     BOOST_TEST(s < 0.55, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
@@ -137,7 +139,7 @@ void test_zero_input_filter(filter& cmf) {
     BOOST_TEST(output_channels.color_channels["test_filter:value"]->getBlue() < 0.001, "Expected Blue to be 0.");
 }
 
-BOOST_AUTO_TEST_CASE(test_color_mix_filter_two_inputs) {
+BOOST_AUTO_TEST_CASE(test_color_mix_filter_zero_inputs) {
         spdlog::set_level(spdlog::level::info);
         //spdlog::set_level(spdlog::level::debug);
 

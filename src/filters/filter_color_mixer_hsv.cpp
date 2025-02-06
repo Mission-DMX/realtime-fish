@@ -31,7 +31,7 @@ namespace dmxfish {
                 if(!input_channels.color_channels.contains(i_s)) {
                     throw filter_config_exception("Unable to link input channel number " + i_s +
                     ". Hint: input_count is configured to " + std::to_string(input_count),
-                    filter_type::filter_color_mixer, own_id);
+                    filter_type::filter_color_mixer_hsv, own_id);
                 }
                 this->inputs.push_back(input_channels.color_channels.at(i_s));
             }
