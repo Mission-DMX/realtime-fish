@@ -24,6 +24,9 @@ namespace dmxfish {
             if(!configuration.contains("input_count")) {
                 return;
             }
+	    if(initial_parameters.contains("reduce_saturation_on_far_angles") && initial_parameters.at("reduce_saturation_on_far_angles") != "false") {
+                this->reduce_saturation_on_far_angles = true;
+	    }
             const auto input_count = std::stoi(configuration.at("input_count"));
             this->inputs.reserve(input_count);
             for (auto i = 0; i < input_count; i++) {
@@ -49,8 +52,9 @@ namespace dmxfish {
                 // Performance improvements could be made using the binary angle measurement system
                 const auto hue_diff = std::fmod(h1-h2 + 180.0 + 360.0, (double) 360.0) - ((double) 180.0);
                 this->output.setHue(std::fmod(360.0 + h2 + (hue_diff/2.0), (double) 360.0));
-                this->output.setSaturation((this->output.getSaturation() + input_ptr->getSaturation()) / 2.0);
-                this->output.setIluminance((this->output.getIluminance() + input_ptr->getIluminance()) / 2.0);
+		const double saturation_reduction = (this->reduce_saturation_on_far_angles && hue_diff > 45.0) ? hue_diff / 360.0 : 0.0;
+                this->output.setSaturation((this->output.getSaturation() + input_ptr->getSaturation() - saturation_reduction) / 2.0);
+                this->output.setIluminance((this->output.getIluminance() + input_ptr->getIluminance() + (saturation_reduction / 2.0)) / 2.0);
             }
         }
 

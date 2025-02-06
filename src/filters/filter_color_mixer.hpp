@@ -19,6 +19,7 @@ namespace dmxfish {
             COMPILER_SUPRESS("-Weffc++")
             std::vector<dmxfish::dmx::pixel*> inputs;
             COMPILER_RESTORE("-Weffc++")
+	    bool reduce_saturation_on_far_angles = false;
             dmxfish::dmx::pixel output;
         public:
             filter_color_mixer_hsv();

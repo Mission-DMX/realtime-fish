@@ -196,13 +196,23 @@ namespace dmxfish::dmx {
     void pixel::setSaturation(double s){
         convert_rgb_to_hsi_pre();
         invalidate_rgb();
+	if (s > 1.0) {
+		s = 1.0;
+	} else if (s < 0.0) {
+		s = 0.0;
+	}
         this->saturation = s;
     }
 
     void pixel::setIluminance(double i){
         convert_rgb_to_hsi_pre();
         invalidate_rgb();
-        this->iluminance = i;
+        if (i > 1.0) {
+		i = 1.0;
+	} else if (i < 0.0) {
+		i = 0.0;
+	}
+	this->iluminance = i;
     }
 
     void pixel::setRed(uint16_t r){
