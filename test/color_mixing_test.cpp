@@ -42,7 +42,7 @@ void test_two_input_filter(filter& cmf, double accuracy, int method) {
     ::spdlog::debug("4");
     auto h = output_channels.color_channels["test_filter:value"]->getHue();
     ::spdlog::debug("4.1");
-    double target = (method == 1) ? 60.0 : 45.0;
+    double target = 45.0;
     BOOST_TEST(h > (target - accuracy), "Expected hue to be approximately " + std::to_string(target) + " deg. Actual: " + std::to_string(h));
     BOOST_TEST(h < (target + accuracy), "Expected hue to be approximately " + std::to_string(target) + " deg. Actual: " + std::to_string(h));
     auto s = output_channels.color_channels["test_filter:value"]->getSaturation();
@@ -63,7 +63,7 @@ void test_two_input_filter(filter& cmf, double accuracy, int method) {
     cmf.update();
     ::spdlog::debug("6");
     h = output_channels.color_channels["test_filter:value"]->getHue();
-    if (method != 2) {
+    if (method == 0) {
         const bool hue_close_to_mod_zero = (h > 360-accuracy && h < 360+accuracy) || (h >= 0 && h < 0+accuracy);
         BOOST_TEST(hue_close_to_mod_zero, "Expected hue to be approximately 0 deg. Actual: " + std::to_string(h));
     } else {
@@ -87,7 +87,7 @@ void test_two_input_filter(filter& cmf, double accuracy, int method) {
     cmf.update();
     ::spdlog::debug("8");
     h = output_channels.color_channels["test_filter:value"]->getHue();
-    target = (method == 2) ? 45 : 355;
+    target = (method != 0) ? 45 : 355;
     const bool hue_about_355 = ((h > target - accuracy) && (h < target + accuracy)) || (h >= 0 && h < std::fmod(target + accuracy, 360.0));
     BOOST_TEST(hue_about_355, "Expected hue to be approximately " + std::to_string(target) + " deg. Actual: " + std::to_string(h));
     s = output_channels.color_channels["test_filter:value"]->getSaturation();
@@ -107,7 +107,7 @@ void test_two_input_filter(filter& cmf, double accuracy, int method) {
     cmf.update();
     ::spdlog::debug("8");
     h = output_channels.color_channels["test_filter:value"]->getHue();
-    target = (method == 0) ? 90 : 0;
+    target = (method == 0) ? 90 : 45;
     const bool hue_about_90 = (h > target - accuracy) && (h < target + accuracy);
     BOOST_TEST(hue_about_90, "Mixing yellow and blue, Expected hue to be approximately 90 deg (green). Actual: " + std::to_string(h));
     s = output_channels.color_channels["test_filter:value"]->getSaturation();

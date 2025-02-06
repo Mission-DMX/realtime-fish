@@ -16,9 +16,9 @@ using namespace dmxfish::filters;
 using namespace dmxfish::dmx;
 
 void print_color(pixel& p) {
-    std::cout << "{\"r\":" << p.getRed();
-    std::cout << ", \"g\":" << p.getGreen();
-    std::cout << ", \"b\":" << p.getBlue();
+    std::cout << "{\"r\":" << (int) ((uint8_t) (p.getRed() * 255 / 65535));
+    std::cout << ", \"g\":" << (int) ((uint8_t) (p.getGreen() * 255 / 65535));
+    std::cout << ", \"b\":" << (int) ((uint8_t) (p.getBlue() * 255 / 65535));
     std::cout << "}";
 }
 
@@ -36,7 +36,7 @@ void print_filter_results(const std::string& filter_name, int method) {
         std::cout << "\t\t{\"inputs\":[";
         for (j = 0; j < test_cases[i].size(); j++) {
             if (!test_cases[i][j].has_value()) {
-                continue;
+                break;
             }
             if (j > 0) {
                 std::cout << ", ";
@@ -47,6 +47,7 @@ void print_filter_results(const std::string& filter_name, int method) {
         std::shared_ptr<filter> cmf;
         switch(method) {
             case 0:
+	    case 3:
                 cmf = std::make_shared<filter_color_mixer_hsv>();
                 break;
             case 1:
@@ -64,8 +65,14 @@ void print_filter_results(const std::string& filter_name, int method) {
         std::map<std::string, std::string> configuration, initial_parameters;
         configuration["input_count"] = std::to_string(j);
         for (size_t k = 0; k <= j; k++) {
+		if(!test_cases[i][k].has_value()) {
+			break;
+		}
             input_channels.color_channels[std::to_string(k)] = &(test_cases[i][k].value());
         }
+	if (method == 3) {
+	    initial_parameters["reduce_saturation_on_far_angles"] = "true";
+	}
         cmf->setup_filter(configuration, initial_parameters, input_channels, "test_filter");
         cmf->get_output_channels(output_channels, "test_filter");
         cmf->scene_activated();
@@ -90,6 +97,8 @@ int main(int argc, char* argv[]) {
     std::cout << "{";
 
     print_filter_results("hsv", 0);
+    std::cout << ",";
+    print_filter_results("hsv_red_sat", 3);
     std::cout << ",";
     print_filter_results("additive_rgb", 1);
     std::cout << ",";

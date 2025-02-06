@@ -46,9 +46,9 @@ namespace dmxfish {
                 g += in_ptr->getGreen();
                 b += in_ptr->getBlue();
             }
-            this->output.setRed(r > 255 ? 255 : r);
-            this->output.setGreen(g > 255 ? 255 : g);
-            this->output.setBlue(b > 255 ? 255 : b);
+            this->output.setRed(r > 65535 ? 65535 : r);
+            this->output.setGreen(g > 65535 ? 65535 : g);
+            this->output.setBlue(b > 65535 ? 65535 : b);
         }
 
         void filter_color_mixer_add_rgb::scene_activated() {

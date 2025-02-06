@@ -53,9 +53,9 @@ namespace dmxfish {
             g = std::sqrt(g);
             b = std::sqrt(b);
             const auto vlen = std::sqrt(r*r+g*g+b*b);
-            this->output.setRed((r/vlen)*255);
-            this->output.setGreen((g/vlen)*255);
-            this->output.setBlue((b/vlen)*255);
+            this->output.setRed((r/vlen)*65535);
+            this->output.setGreen((g/vlen)*65535);
+            this->output.setBlue((b/vlen)*65535);
         }
 
         void filter_color_mixer_norm_rgb::scene_activated() {
