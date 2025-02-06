@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
+#include <cmath>
+
 #define BOOST_AUTO_TEST_MAIN
 #define BOOST_TEST_MODULE FISH_TESTS
 
@@ -13,7 +15,7 @@
 
 using namespace dmxfish::filters;
 
-void test_two_input_filter(filter& cmf) {
+void test_two_input_filter(filter& cmf, double accuracy, int method) {
     dmxfish::dmx::pixel p1, p2;
 
     channel_mapping input_channels, output_channels;
@@ -40,14 +42,15 @@ void test_two_input_filter(filter& cmf) {
     ::spdlog::debug("4");
     auto h = output_channels.color_channels["test_filter:value"]->getHue();
     ::spdlog::debug("4.1");
-    BOOST_TEST(h > 44.5, "Expected hue to be approximately 45 deg. Actual: " + std::to_string(h));
-    BOOST_TEST(h < 45.5, "Expected hue to be approximately 45 deg. Actual: " + std::to_string(h));
+    double target = (method == 1) ? 60.0 : 45.0;
+    BOOST_TEST(h > (target - accuracy), "Expected hue to be approximately " + std::to_string(target) + " deg. Actual: " + std::to_string(h));
+    BOOST_TEST(h < (target + accuracy), "Expected hue to be approximately " + std::to_string(target) + " deg. Actual: " + std::to_string(h));
     auto s = output_channels.color_channels["test_filter:value"]->getSaturation();
-    BOOST_TEST(s > 0.95, "Expected saturation to be approximately 1. Actual: " + std::to_string(s));
-    BOOST_TEST(s < 1.05, "Expected saturation to be approximately 1. Actual: " + std::to_string(s));
+    BOOST_TEST(s > 1 - accuracy, "Expected saturation to be approximately 1. Actual: " + std::to_string(s));
+    BOOST_TEST(s < 1 + accuracy, "Expected saturation to be approximately 1. Actual: " + std::to_string(s));
     auto i = output_channels.color_channels["test_filter:value"]->getIluminance();
-    BOOST_TEST(i > 0.95, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
-    BOOST_TEST(i < 1.05, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
+    BOOST_TEST(i > 1 - accuracy, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
+    BOOST_TEST(i < 1 + accuracy, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
     ::spdlog::debug("4.2");
 
     p1.setHue(330.0);
@@ -60,14 +63,19 @@ void test_two_input_filter(filter& cmf) {
     cmf.update();
     ::spdlog::debug("6");
     h = output_channels.color_channels["test_filter:value"]->getHue();
-    const bool hue_close_to_mod_zero = (h > 359.5 && h < 360.5) || (h >= 0 && h < 0.5);
-    BOOST_TEST(hue_close_to_mod_zero, "Expected hue to be approximately 0 deg. Actual: " + std::to_string(h));
+    if (method != 2) {
+        const bool hue_close_to_mod_zero = (h > 360-accuracy && h < 360+accuracy) || (h >= 0 && h < 0+accuracy);
+        BOOST_TEST(hue_close_to_mod_zero, "Expected hue to be approximately 0 deg. Actual: " + std::to_string(h));
+    } else {
+	const bool hue_close_to_45 = (h > 45 - accuracy) && (h < 45 + accuracy);
+        BOOST_TEST(hue_close_to_45, "Expecting normative rgb adding to yield 45. Got: " + std::to_string(h));
+    }
     s = output_channels.color_channels["test_filter:value"]->getSaturation();
-    BOOST_TEST(s > 0.45, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
-    BOOST_TEST(s < 0.55, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
+    BOOST_TEST(s > 0.5 - accuracy, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
+    BOOST_TEST(s < 0.5 + accuracy, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
     i = output_channels.color_channels["test_filter:value"]->getIluminance();
-    BOOST_TEST(i > 0.95, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
-    BOOST_TEST(i < 1.05, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
+    BOOST_TEST(i > 1 - accuracy, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
+    BOOST_TEST(i < 1 + accuracy, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
 
     p1.setHue(320.0);
     p2.setHue(30.0);
@@ -79,14 +87,15 @@ void test_two_input_filter(filter& cmf) {
     cmf.update();
     ::spdlog::debug("8");
     h = output_channels.color_channels["test_filter:value"]->getHue();
-    const bool hue_about_355 = (h > 354.5) && (h < 355.5);
-    BOOST_TEST(hue_about_355, "Expected hue to be approximately 355 deg. Actual: " + std::to_string(h));
+    target = (method == 2) ? 45 : 355;
+    const bool hue_about_355 = ((h > target - accuracy) && (h < target + accuracy)) || (h >= 0 && h < std::fmod(target + accuracy, 360.0));
+    BOOST_TEST(hue_about_355, "Expected hue to be approximately " + std::to_string(target) + " deg. Actual: " + std::to_string(h));
     s = output_channels.color_channels["test_filter:value"]->getSaturation();
-    BOOST_TEST(s > 0.45, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
-    BOOST_TEST(s < 0.55, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
+    BOOST_TEST(s > 0.5 - accuracy, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
+    BOOST_TEST(s < 0.5 + accuracy, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
     i = output_channels.color_channels["test_filter:value"]->getIluminance();
-    BOOST_TEST(i > 0.95, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
-    BOOST_TEST(i < 1.05, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
+    BOOST_TEST(i > 1 - accuracy, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
+    BOOST_TEST(i < 1 + accuracy, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
 
     p1.setHue(0.0);
     p2.setHue(180.0);
@@ -98,14 +107,15 @@ void test_two_input_filter(filter& cmf) {
     cmf.update();
     ::spdlog::debug("8");
     h = output_channels.color_channels["test_filter:value"]->getHue();
-    const bool hue_about_90 = (h > 89.5) && (h < 90.5);
+    target = (method == 0) ? 90 : 0;
+    const bool hue_about_90 = (h > target - accuracy) && (h < target + accuracy);
     BOOST_TEST(hue_about_90, "Mixing yellow and blue, Expected hue to be approximately 90 deg (green). Actual: " + std::to_string(h));
     s = output_channels.color_channels["test_filter:value"]->getSaturation();
-    BOOST_TEST(s > 0.45, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
-    BOOST_TEST(s < 0.55, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
+    BOOST_TEST(s > 0.5 - accuracy, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
+    BOOST_TEST(s < 0.5 + accuracy, "Expected saturation to be approximately 0.5. Actual: " + std::to_string(s));
     i = output_channels.color_channels["test_filter:value"]->getIluminance();
-    BOOST_TEST(i > 0.95, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
-    BOOST_TEST(i < 1.05, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
+    BOOST_TEST(i > 1 - accuracy, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
+    BOOST_TEST(i < 1 + accuracy, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
 }
 
 BOOST_AUTO_TEST_CASE(test_color_mix_filter_two_inputs) {
@@ -114,15 +124,15 @@ BOOST_AUTO_TEST_CASE(test_color_mix_filter_two_inputs) {
 
     spdlog::info("Testing CSV mixing with 2 inputs");
     filter_color_mixer_hsv cmf_hsv;
-    test_two_input_filter(cmf_hsv);
+    test_two_input_filter(cmf_hsv, 0.5, 0);
 
     spdlog::info("Testing RGB adding with 2 inputs");
     filter_color_mixer_add_rgb cmf_argb;
-    test_two_input_filter(cmf_argb);
+    test_two_input_filter(cmf_argb, 7.5, 1);
 
     spdlog::info("Testing RGB normative mixing with 2 inputs");
     filter_color_mixer_norm_rgb cmf_nrgb;
-    test_two_input_filter(cmf_nrgb);
+    test_two_input_filter(cmf_nrgb, 2.5, 2);
 }
 
 void test_zero_input_filter(filter& cmf) {
@@ -156,7 +166,7 @@ BOOST_AUTO_TEST_CASE(test_color_mix_filter_zero_inputs) {
         test_zero_input_filter(cmf_nrgb);
 }
 
-void test_single_input_filter(filter& cmf) {
+void test_single_input_filter(filter& cmf, double accuracy) {
     channel_mapping input_channels, output_channels;
     std::map<std::string, std::string> configuration, initial_parameters;
     dmxfish::dmx::pixel p;
@@ -175,31 +185,31 @@ void test_single_input_filter(filter& cmf) {
     cmf.update();
 
     const auto h = output_channels.color_channels["test_filter:value"]->getHue();
-    BOOST_TEST(h > 319.5, "Expected hue to be approximately 45 deg. Actual: " + std::to_string(h));
-    BOOST_TEST(h < 320.5, "Expected hue to be approximately 45 deg. Actual: " + std::to_string(h));
+    BOOST_TEST(h > 320 - accuracy, "Expected hue to be approximately 320 deg. Actual: " + std::to_string(h));
+    BOOST_TEST(h < 320 + accuracy, "Expected hue to be approximately 320 deg. Actual: " + std::to_string(h));
     const auto s = output_channels.color_channels["test_filter:value"]->getSaturation();
-    BOOST_TEST(s > 0.95, "Expected saturation to be approximately 1. Actual: " + std::to_string(s));
-    BOOST_TEST(s < 1.05, "Expected saturation to be approximately 1. Actual: " + std::to_string(s));
+    BOOST_TEST(s > 1.0 - accuracy, "Expected saturation to be approximately 1. Actual: " + std::to_string(s));
+    BOOST_TEST(s < 1.0 + accuracy, "Expected saturation to be approximately 1. Actual: " + std::to_string(s));
     const auto i = output_channels.color_channels["test_filter:value"]->getIluminance();
-    BOOST_TEST(i > 0.45, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
-    BOOST_TEST(i < 0.55, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
+    BOOST_TEST(i > 0.5 - accuracy, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
+    BOOST_TEST(i < 0.5 + accuracy, "Expected intensity to be approximately 1. Actual: " + std::to_string(i));
 }
 
 BOOST_AUTO_TEST_CASE(test_color_mix_filter_single_input) {
         spdlog::set_level(spdlog::level::info);
         //spdlog::set_level(spdlog::level::debug);
 
-        spdlog::info("Testing CSV mixing with 0 inputs");
+        spdlog::info("Testing CSV mixing with 1 inputs");
         filter_color_mixer_hsv cmf_hsv;
-        test_single_input_filter(cmf_hsv);
+        test_single_input_filter(cmf_hsv, 0.5);
 
-        spdlog::info("Testing RGB adding with 0 inputs");
+        spdlog::info("Testing RGB adding with 1 inputs");
         filter_color_mixer_add_rgb cmf_argb;
-        test_single_input_filter(cmf_argb);
+        test_single_input_filter(cmf_argb, 25.0);
 
-        spdlog::info("Testing RGB normative mixing with 0 inputs");
+        spdlog::info("Testing RGB normative mixing with 1 inputs");
         filter_color_mixer_norm_rgb cmf_nrgb;
-        test_single_input_filter(cmf_nrgb);
+        test_single_input_filter(cmf_nrgb, 2.5);
 }
 
 // TODO also write test case for 3
