@@ -61,6 +61,9 @@ namespace dmxfish::filters {
         filter_float_map_range_float = 56,
         filter_combine_bytes_to_16bit = 57,
         filter_map_8bit_to_16bit = 58,
+        filter_color_mixer_hsv = 59,
+        filter_color_mixer_rgb_additive = 60,
+        filter_color_mixer_rgb_normative = 61,
         filter_sum_8bit = 62,
         filter_sum_16bit = 63,
         filter_sum_float = 64

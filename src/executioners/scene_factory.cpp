@@ -23,6 +23,7 @@
 #include "filters/filter_cue.hpp"
 #include "filters/filter_shift.hpp"
 #include "filters/filter_lua_script.hpp"
+#include "filters/filter_color_mixer.hpp"
 
 #include <iostream>
 
@@ -271,6 +272,14 @@ COMPILER_RESTORE("-Weffc++")
                     break;
                 case filter_type::filter_sum_float:
                     sum += sizeof(filter_sum_float);
+                case filter_type::filter_color_mixer_hsv:
+                    sum += sizeof(filter_color_mixer_hsv);
+                    break;
+                case filter_type::filter_color_mixer_rgb_additive:
+                    sum += sizeof(filter_color_mixer_add_rgb);
+                    break;
+                case filter_type::filter_color_mixer_rgb_normative:
+                    sum += sizeof(filter_color_mixer_norm_rgb);
                     break;
 				default: {
 						 std::stringstream ss;
@@ -418,6 +427,12 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_combine_bytes_to_16bit>(pac);
             case filter_type::filter_map_8bit_to_16bit:
                 return calloc<filter_map_8bit_to_16bit>(pac);
+            case filter_type::filter_color_mixer_hsv:
+                return calloc<filter_color_mixer_hsv>(pac);
+            case filter_type::filter_color_mixer_rgb_additive:
+                return calloc<filter_color_mixer_add_rgb>(pac);
+            case filter_type::filter_color_mixer_rgb_normative:
+                return calloc<filter_color_mixer_norm_rgb>(pac);
             case filter_type::filter_sum_8bit:
                 return calloc<filter_sum_8bit>(pac);
             case filter_type::filter_sum_16bit:
