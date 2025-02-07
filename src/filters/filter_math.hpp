@@ -146,7 +146,7 @@ namespace dmxfish::filters {
         }
 
         virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
-            map.float_channels[name + ":value"] = &output;
+            get_channel_map(map)[name + ":value"] = &output;
         }
 
         virtual void update() override {
