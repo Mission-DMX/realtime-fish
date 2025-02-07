@@ -263,6 +263,15 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_map_8bit_to_16bit:
                     sum += sizeof(filter_map_8bit_to_16bit);
                     break;
+                case filter_type::filter_sum_8bit:
+                    sum += sizeof(filter_sum_8bit);
+                    break;
+                case filter_type::filter_sum_16bit:
+                    sum += sizeof(filter_sum_16bit);
+                    break;
+                case filter_type::filter_sum_float:
+                    sum += sizeof(filter_sum_float);
+                    break;
 				default: {
 						 std::stringstream ss;
 						 ss << ERROR_FILTER_NOT_IMPLEMENTED_IN_ALLOCATION;
@@ -409,6 +418,12 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_combine_bytes_to_16bit>(pac);
             case filter_type::filter_map_8bit_to_16bit:
                 return calloc<filter_map_8bit_to_16bit>(pac);
+            case filter_type::filter_sum_8bit:
+                return calloc<filter_sum_8bit>(pac);
+            case filter_type::filter_sum_16bit:
+                return calloc<filter_sum_16bit>(pac);
+            case filter_type::filter_sum_float:
+                return calloc<filter_sum_float>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
