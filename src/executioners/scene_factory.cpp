@@ -280,6 +280,17 @@ COMPILER_RESTORE("-Weffc++")
                     break;
                 case filter_type::filter_color_mixer_rgb_normative:
                     sum += sizeof(filter_color_mixer_norm_rgb);
+                case filter_type::filter_debug_remote_8bit:
+                    sum += sizeof(debug_remote_8bit);
+                    break;
+                case filter_type::filter_debug_remote_16bit:
+                    sum += sizeof(debug_remote_8bit);
+                    break;
+                case filter_type::filter_debug_remote_float:
+                    sum += sizeof(debug_remote_float);
+                    break;
+                case filter_type::filter_debug_remote_pixel:
+                    sum += sizeof(debug_remote_pixel);
                     break;
 				default: {
 						 std::stringstream ss;
@@ -439,6 +450,14 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_sum_16bit>(pac);
             case filter_type::filter_sum_float:
                 return calloc<filter_sum_float>(pac);
+            case filter_type::filter_debug_remote_8bit:
+                return calloc<debug_remote_8bit>(pac);
+            case filter_type::filter_debug_remote_16bit:
+                return calloc<debug_remote_16bit>(pac);
+            case filter_type::filter_debug_remote_float:
+                return calloc<debug_remote_float>(pac);
+            case filter_type::filter_debug_remote_pixel:
+                return calloc<debug_remote_pixel>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
