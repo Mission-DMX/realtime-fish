@@ -154,7 +154,12 @@ namespace dmxfish::filters {
         virtual void update() override {
             this->output = 0;
             for (const auto& v_ptr : this->params) {
-                this->output = std::min(*v_ptr + this->output, std::numeric_limits<T>::max());
+                if constexpr (std::is_same<T, double>::value) {
+                    this->output += *v_ptr;
+                } else {
+                    this->output = (T) std::min((long) *v_ptr + (long) this->output,
+                                                (long) std::numeric_limits<T>::max());
+                }
             }
         }
 
