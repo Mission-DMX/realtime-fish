@@ -263,6 +263,18 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_map_8bit_to_16bit:
                     sum += sizeof(filter_map_8bit_to_16bit);
                     break;
+                case filter_type::filter_debug_remote_8bit:
+                    sum += sizeof(debug_remote_8bit);
+                    break;
+                case filter_type::filter_debug_remote_16bit:
+                    sum += sizeof(debug_remote_8bit);
+                    break;
+                case filter_type::filter_debug_remote_float:
+                    sum += sizeof(debug_remote_float);
+                    break;
+                case filter_type::filter_debug_remote_pixel:
+                    sum += sizeof(debug_remote_pixel);
+                    break;
 				default: {
 						 std::stringstream ss;
 						 ss << ERROR_FILTER_NOT_IMPLEMENTED_IN_ALLOCATION;
@@ -409,6 +421,14 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_combine_bytes_to_16bit>(pac);
             case filter_type::filter_map_8bit_to_16bit:
                 return calloc<filter_map_8bit_to_16bit>(pac);
+            case filter_type::filter_debug_remote_8bit:
+                return calloc<debug_remote_8bit>(pac);
+            case filter_type::filter_debug_remote_16bit:
+                return calloc<debug_remote_16bit>(pac);
+            case filter_type::filter_debug_remote_float:
+                return calloc<debug_remote_float>(pac);
+            case filter_type::filter_debug_remote_pixel:
+                return calloc<debug_remote_pixel>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}

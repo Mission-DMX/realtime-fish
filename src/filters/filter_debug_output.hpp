@@ -12,10 +12,15 @@
 #include "lib/logging.hpp"
 #include "lib/macros.hpp"
 
+#include "proto_src/MessageTypes.pb.h"
+#include "proto_src/FilterMode.pb.h"
+
+#include "main.hpp"
+
 
 namespace dmxfish::filters {
 COMPILER_SUPRESS("-Weffc++")
-    template <typename T, filter_type own_type>
+    template <typename T, filter_type own_type, bool target_remote>
     class filter_debug_output_template : public filter {
     private:
         T* input = nullptr;
@@ -71,10 +76,22 @@ COMPILER_SUPRESS("-Weffc++")
 
         virtual void update() override {
             if(this->input != nullptr) {
+                std::string value;
                 if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
-                    ::spdlog::debug("Output from {} = {}.", this->filter_name, input->str());
+                    value = input->str();
                 } else {
-                    ::spdlog::debug("Output from {} = {}.", this->filter_name, *input);
+                    value = std::to_string(*input);
+                }
+                if constexpr (target_remote) {
+                    missiondmx::fish::ipcmessages::update_parameter msg;
+                    auto iom = get_iomanager_instance();
+                    msg.set_scene_id((int32_t) iom->get_active_show()->get_active_scene());
+                    msg.set_filter_id(this->filter_name);
+                    msg.set_parameter_key("value");
+                    msg.set_parameter_value(value);
+                    iom->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
+                } else {
+                    ::spdlog::debug("Output from {} = {}.", this->filter_name, value);
                 }
             } else {
                 ::spdlog::error("Input channel of filter {} is null.", this->filter_name);
@@ -85,9 +102,14 @@ COMPILER_SUPRESS("-Weffc++")
 
     };
 
-    using debug_8bit = filter_debug_output_template<uint8_t, filter_type::debug_8bit>;
-    using debug_16bit = filter_debug_output_template<uint16_t, filter_type::debug_16bit>;
-    using debug_float = filter_debug_output_template<double, filter_type::debug_float>;
-    using debug_pixel = filter_debug_output_template<dmxfish::dmx::pixel, filter_type::debug_pixel>;
+    using debug_8bit = filter_debug_output_template<uint8_t, filter_type::debug_8bit, false>;
+    using debug_16bit = filter_debug_output_template<uint16_t, filter_type::debug_16bit, false>;
+    using debug_float = filter_debug_output_template<double, filter_type::debug_float, false>;
+    using debug_pixel = filter_debug_output_template<dmxfish::dmx::pixel, filter_type::debug_pixel, false>;
+
+    using debug_remote_8bit = filter_debug_output_template<uint8_t, filter_type::filter_debug_remote_8bit, true>;
+    using debug_remote_16bit = filter_debug_output_template<uint16_t, filter_type::filter_debug_remote_16bit, true>;
+    using debug_remote_float = filter_debug_output_template<double, filter_type::filter_debug_remote_float, true>;
+    using debug_remote_pixel = filter_debug_output_template<dmxfish::dmx::pixel, filter_type::filter_debug_remote_pixel, true>;
 COMPILER_RESTORE("-Weffc++")
 }

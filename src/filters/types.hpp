@@ -60,6 +60,10 @@ namespace dmxfish::filters {
         filter_float_map_range_16bit = 55,
         filter_float_map_range_float = 56,
         filter_combine_bytes_to_16bit = 57,
-        filter_map_8bit_to_16bit = 58
+        filter_map_8bit_to_16bit = 58,
+        filter_debug_remote_8bit = 65,
+        filter_debug_remote_16bit = 66,
+        filter_debug_remote_float = 67,
+        filter_debug_remote_pixel = 68
     };
 }
