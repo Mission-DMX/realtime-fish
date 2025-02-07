@@ -5,6 +5,7 @@
 
 #include "filter_color_mixer.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 #include "filters/types.hpp"
@@ -41,6 +42,7 @@ namespace dmxfish {
             double r = 0.0;
             double g = 0.0;
             double b = 0.0;
+            double i = 0.0;
             for (const auto in_ptr : this->inputs) {
                 const auto r2 = in_ptr->getRed();
                 const auto g2 = in_ptr->getGreen();
@@ -48,14 +50,16 @@ namespace dmxfish {
                 r += r2*r2;
                 g += g2*g2;
                 b += b2*b2;
+                i = std::max(i, in_ptr->getIluminance());
             }
             r = std::sqrt(r);
             g = std::sqrt(g);
             b = std::sqrt(b);
+            i = std::min(i, 1.0);
             const auto vlen = std::sqrt(r*r+g*g+b*b);
-            this->output.setRed((r/vlen)*65535);
-            this->output.setGreen((g/vlen)*65535);
-            this->output.setBlue((b/vlen)*65535);
+            this->output.setRed((r/vlen)*65535*i);
+            this->output.setGreen((g/vlen)*65535*i);
+            this->output.setBlue((b/vlen)*65535*i);
         }
 
         void filter_color_mixer_norm_rgb::scene_activated() {
