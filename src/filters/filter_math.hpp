@@ -4,7 +4,12 @@
  * The filters calculate basic math functions
  */
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
+#include <vector>
+#include <string>
+#include <type_traits>
 
 #include "filters/filter.hpp"
 #include "lib/macros.hpp"
@@ -98,4 +103,82 @@ namespace dmxfish::filters {
 
     COMPILER_RESTORE("-Weffc++")
 
+    template <typename T, filter_type own_type>
+    class filter_multi_t_sum: public filter {
+    private:
+        COMPILER_SUPRESS("-Weffc++")
+        std::vector<T*> params;
+        COMPILER_RESTORE("-Weffc++")
+        T output = 0;
+    public:
+        filter_multi_t_sum() : filter() {}
+        virtual ~filter_multi_t_sum() {}
+
+        virtual void setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) override {
+            MARK_UNUSED(initial_parameters);
+            long input_count;
+            if(!configuration.contains("input_count")) [[unlikely]] {
+                throw filter_config_exception("Paramter `item_count` missing.", own_type, own_id);
+            } else {
+                try {
+                    input_count = std::stol(configuration.at("input_count"));
+                    if (input_count < 0) [[unlikely]] {
+                        throw filter_config_exception("`item_count` must not be negative.", own_type, own_id);
+                    }
+                } catch (const std::invalid_argument& e) {
+                    throw filter_config_exception(std::string("Unable to decode `item_count` parameter: ") + e.what(),
+                                                  own_type, own_id);
+                }
+                this->params.reserve();
+            }
+            for (auto i = 0; i < input_count; i++) {
+                const auto key = std::to_string(i);
+                auto& selected_map = get_channel_map(input_channels);
+                if (!selected_map.contains(key)) [[unlikely]] {
+                    throw filter_config_exception("Expected channel input map to contain key: " + key, own_type, own_id);
+                }
+                this->params.push_back(selected_map.at(key));
+            }
+        }
+
+        virtual bool receive_update_from_gui(const std::string& key, const std::string& _value) override {
+            MARK_UNUSED(key);
+            MARK_UNUSED(_value);
+            return false;
+        }
+
+        virtual void get_output_channels(channel_mapping& map, const std::string& name) override {
+            get_channel_map(map)[name + ":value"] = &output;
+        }
+
+        virtual void update() override {
+            this->output = 0;
+            for (const auto& v_ptr : this->params) {
+                if constexpr (std::is_same<T, double>::value) {
+                    this->output += *v_ptr;
+                } else {
+                    this->output = (T) std::min((long) *v_ptr + (long) this->output,
+                                                (long) std::numeric_limits<T>::max());
+                }
+            }
+        }
+
+        virtual void scene_activated() override {}
+    private:
+        constexpr const std::unordered_map<std::string, T>& get_channel_map(const channel_mapping& input_channels) const {
+            if constexpr (std::is_same<T, uint8_t>::value) {
+                return input_channels.eight_bit_channels;
+            } else if constexpr (std::is_same<T, uint16_t>::value) {
+                return input_channels.sixteen_bit_channels;
+            } else if constexpr (std::is_same<T, double>::value) {
+                return input_channels.float_channels;
+            } else {
+                static_assert(false);
+            }
+        }
+    };
+
+    using filter_sum_8bit = filter_multi_t_sum<uint8_t, filter_type::filter_sum_8bit>;
+    using filter_sum_16bit = filter_multi_t_sum<uint16_t, filter_type::filter_sum_16bit>;
+    using filter_sum_float = filter_multi_t_sum<double, filter_type::filter_sum_float>;
 }
