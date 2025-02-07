@@ -100,6 +100,11 @@ public:
 	 */
 	virtual void scene_activated() = 0;
 
+    /**
+     * This method may be used to store any state as it gets called prior to scene switches.
+     */
+    virtual void scene_deactivated() {}
+
 	/**
 	 * This method gets called if the GUI published a parameter update.
 	 * @param key the parameter to change

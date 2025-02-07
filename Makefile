@@ -143,7 +143,7 @@ test: ${TEST_TARGETS} all
 		$$a || exit 1; \
 	done
 
-tools: ${BINDIR}/tools/sample_xml_generator ${BINDIR}/tools/ftdi_test ${BINDIR}/tools/ioboardctrl
+tools: ${BINDIR}/tools/sample_xml_generator ${BINDIR}/tools/cmhelpdatagen ${BINDIR}/tools/ftdi_test ${BINDIR}/tools/ioboardctrl
 	echo Created tools.
 
 ${PROTO_SRCDIR}/%.pb.cc: ${PROTO_DEFDIR}/%.proto Makefile
@@ -197,6 +197,9 @@ ${BINDIR}/tools/sample_xml_generator: Makefile ${XMLTREE_DEFDIR}/ShowFile_v0.xsd
 	${MKDIR} ${@D} && ${MKDIR} tools/generator-tmp && cd tools/generator-tmp && \
 	${XSDTOOL} cxx-tree ${XSD_ARGS} --generate-serialization ../../${XMLTREE_DEFDIR}/ShowFile_v0.xsd && cd ../.. && \
 	${CXX} ${SUPPRESSWARN} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/sample_xml_generator.cpp tools/generator-tmp/ShowFile_v0.xml.cpp ${LFLAGS} -o $@
+
+${BINDIR}/tools/cmhelpdatagen: ${OBJDIR}/filters/filter_color_mixer_add_rgb.o ${OBJDIR}/filters/filter_color_mixer_norm_rgb.o ${OBJDIR}/filters/filter_color_mixer_hsv.o ${OBJDIR}/dmx/pixel.o ${OBJDIR}/filters/filter_config_exception.o
+	${MKDIR} ${@D} && ${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/color_mix_help_datagen.cpp $^ ${LFLAGS} -o $@
 
 ${BINDIR}/tools/ftdi_test: ${OBJDIR}/dmx/ftdi_universe.o
 	${MKDIR} ${@D} && ${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/ftdi_test.cpp $^ ${LFLAGS} -o $@

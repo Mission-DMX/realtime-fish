@@ -1,5 +1,7 @@
 #include "filters/filter_cue.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <string>
 #include <sstream>
@@ -8,6 +10,7 @@
 #include "lib/macros.hpp"
 #include "lib/logging.hpp"
 #include "dmx/pixel.hpp"
+#include "executioners/state_registry.hpp"
 #include "filters/util.hpp"
 
 #include "proto_src/MessageTypes.pb.h"
@@ -370,6 +373,28 @@ namespace dmxfish::filters {
         }
     }
 
+    void filter_cue::update_last_values_from_cuelist(){
+        for (size_t i = 0; i < this->actual_values.eight_bit_channels.size(); i++) {
+            this->last_values.eight_bit_channels.at(i) = this->cues.at(this->actual_values.cue).eight_bit_frames.at(
+                    this->actual_values.eight_bit_channels.size() * this->actual_values.frame + i).value;
+        }
+        for (size_t i = 0; i < this->actual_values.sixteen_bit_channels.size(); i++) {
+            this->last_values.sixteen_bit_channels.at(i) = this->cues.at(this->actual_values.cue).sixteen_bit_frames.at(
+                    this->actual_values.sixteen_bit_channels.size() * this->actual_values.frame + i).value;
+        }
+        for (size_t i = 0; i < this->actual_values.float_channels.size(); i++) {
+            this->last_values.float_channels.at(i) = this->cues.at(this->actual_values.cue).float_frames.at(
+                    this->actual_values.float_channels.size() * this->actual_values.frame + i).value;
+        }
+        for (size_t i = 0; i < this->actual_values.color_channels.size(); i++) {
+            this->last_values.color_channels.at(i) = this->cues.at(this->actual_values.cue).color_frames.at(
+                    this->actual_values.color_channels.size() * this->actual_values.frame + i).value;
+        }
+        this->last_values.frame = this->actual_values.frame;
+        this->last_values.cue = this->actual_values.cue;
+        this->last_values.updated = true;
+    }
+
     void filter_cue::reset_for_starting_cue() {
         update_last_values();
         this->start_time = this->current_time;
@@ -443,25 +468,7 @@ namespace dmxfish::filters {
         }
         if (this->current_time >= this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) / this->time_scale + this->start_time) { // Next Frame?
             if (!this->last_values.updated) {
-                for (size_t i = 0; i < this->actual_values.eight_bit_channels.size(); i++) {
-                    this->last_values.eight_bit_channels.at(i) = this->cues.at(this->actual_values.cue).eight_bit_frames.at(
-                            this->actual_values.eight_bit_channels.size() * this->actual_values.frame + i).value;
-                }
-                for (size_t i = 0; i < this->actual_values.sixteen_bit_channels.size(); i++) {
-                    this->last_values.sixteen_bit_channels.at(i) = this->cues.at(this->actual_values.cue).sixteen_bit_frames.at(
-                            this->actual_values.sixteen_bit_channels.size() * this->actual_values.frame + i).value;
-                }
-                for (size_t i = 0; i < this->actual_values.float_channels.size(); i++) {
-                    this->last_values.float_channels.at(i) = this->cues.at(this->actual_values.cue).float_frames.at(
-                            this->actual_values.float_channels.size() * this->actual_values.frame + i).value;
-                }
-                for (size_t i = 0; i < this->actual_values.color_channels.size(); i++) {
-                    this->last_values.color_channels.at(i) = this->cues.at(this->actual_values.cue).color_frames.at(
-                            this->actual_values.color_channels.size() * this->actual_values.frame + i).value;
-                }
-                this->last_values.frame = this->actual_values.frame;
-                this->last_values.cue = this->actual_values.cue;
-                this->last_values.updated = true;
+                update_last_values_from_cuelist()
             }
             this->last_values.time_stamp = this->start_time + this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) / this->time_scale;
             if (this->actual_values.frame < this->cues.at(this->actual_values.cue).timestamps.size() - 1) { // Not the last Frame of the cue?
@@ -594,6 +601,14 @@ namespace dmxfish::filters {
             } else {
                 this->default_cue = new_default_cue;
             }
+        }
+
+        if(configuration.contains("persistence")) {
+            auto s = configuration.at("persistence");
+            // This does not work for multi-byte characters from UTF-8. As we only need to check for true, this will
+            // still work though.
+            std::transform(s.begin(), s.end(), s.begin(), [](const unsigned char c) {std::tolower(c);});
+            this->state_persistent = (s == "true");
         }
     }
 
@@ -797,12 +812,73 @@ namespace dmxfish::filters {
     }
 
     void filter_cue::scene_activated() {
+        if (this->state_persistent) {
+            using namespace dmxfish::execution;
+            const auto scene_id = get_iomanager_instance()->get_active_show()->get_active_scene();
+            bool loaded_values = false;
+            if(auto rs_opt = state_registry::get(scene_id, this->own_filter_id + "::running_state"); rs_opt.has_value()) {
+                this->running_state = (run_state) std::stoi(rs_opt.value());
+                loaded_values = true;
+            }
+            if(auto c_opt = state_registry::get(scene_id, this->own_filter_id + "::cue"); c_opt.has_value()) {
+                this->actual_values.cue = (size_t) std::stol(c_opt.value());
+                loaded_values &= true;
+            } else {
+                loaded_values = false;
+            }
+            if(auto f_opt = state_registry::get(scene_id, this->own_filter_id + "::frame"); f_opt.has_value()) {
+                this->actual_values.frame = (size_t) std::stol(f_opt.value());
+                loaded_values &= true;
+            } else {
+                loaded_values = false;
+            }
+            if(auto t_opt = state_registry::get(scene_id, this->own_filter_id + "::time"); t_opt.has_value()) {
+                this->current_time = *(this->time);
+                this->start_time = this->current_time - std::stod(t_opt.value());
+                loaded_values &= true;
+            } else {
+                loaded_values = false;
+            }
+            if (loaded_values) {
+                // TODO is update_last_values() required here?
+                if (this->actual_values.cue >= this->cues.size()) {
+                    this->actual_values.cue = this->cues.size() - 1;
+                }
+                if(this->actual_values.cue < this->cues.size()) {
+                    this->cue_end_handling_real = this->cues.at(this->actual_values.cue).end_handling;
+                }
+                if (this->actual_values.frame > 0){
+                    this->actual_values.frame--;
+                    update_last_values_from_cuelist();
+                    this->actual_values.frame++;
+                }
+                //update_last_values_from_cuelist() // TODO this is left over from the experiment @LRalff conducted
+                ::spdlog::info("Resumed cue from stored state.");
+                return;
+            }
+        }
         if (this->default_cue > -1) {
             this->running_state = PLAY;
             this->actual_values.cue = (uint16_t) this->default_cue;
             reset_for_starting_cue();
             ::spdlog::info("Switched to Cue {}.", this->default_cue);
         }
+    }
+
+    void filter_cue::scene_deactivated() {
+        if (!this->state_persistent) {
+            return;
+        }
+        using namespace dmxfish::execution;
+        const auto scene_id = get_iomanager_instance()->get_active_show()->get_active_scene();
+        state_registry::set(scene_id, this->own_filter_id + "::running_state",
+                            std::to_string((unsigned int) this->running_state));
+        state_registry::set(scene_id, this->own_filter_id + "::cue",
+                            std::to_string(this->actual_values.cue));
+        state_registry::set(scene_id, this->own_filter_id + "::frame",
+                            std::to_string(this->actual_values.frame));
+        state_registry::set(scene_id, this->own_filter_id + "::time",
+                            std::to_string(this->current_time - this->start_time));
     }
 
 }

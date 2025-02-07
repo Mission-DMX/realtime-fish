@@ -68,7 +68,11 @@ public:
 	/**
 	 * This method gets called when the scene becomes invisible.
 	 */
-	inline void on_stop() {}
+	inline void on_stop() {
+        for (auto f_ptr : this->filters) {
+            f_ptr->scene_deactivated();
+        }
+    }
 
 	[[nodiscard]] inline size_t get_filter_count() {
 		return this->filters.size();

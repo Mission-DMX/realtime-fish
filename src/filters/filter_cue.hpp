@@ -32,11 +32,13 @@ namespace dmxfish::filters {
             DO_NOTHING,
             START_FROM_BEGIN
         };
-        enum run_state{
+
+        enum run_state : uint8_t {
             STOP,
             PLAY,
             PAUSE
         };
+
         enum channel_t{
             EIGHT_BIT,
             SIXTEEN_BIT,
@@ -95,6 +97,7 @@ namespace dmxfish::filters {
         double time_scale = 1;
         double current_time = 0;
         bool scale_valid = true;
+        bool state_persistent = false;
         double start_time = 0;
         double pause_time = 0;
         frame_actual last_values = frame_actual();
@@ -200,6 +203,11 @@ namespace dmxfish::filters {
         void update_last_values();
 
         /**
+         * Puts the values of the last frame from the cuelist to the last_values
+         */
+        void update_last_values_from_cuelist();
+
+        /**
          * Resetting internal state for starting a new cue
          */
         void reset_for_starting_cue();
@@ -229,6 +237,8 @@ namespace dmxfish::filters {
         virtual void update() override;
 
         virtual void scene_activated() override;
+
+        virtual void scene_deactivated() override;
 
     };
 
