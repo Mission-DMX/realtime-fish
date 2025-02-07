@@ -4,7 +4,9 @@
  * The filters calculate basic math functions
  */
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 #include <vector>
 #include <string>
 #include <type_traits>
@@ -152,7 +154,7 @@ namespace dmxfish::filters {
         virtual void update() override {
             this->output = 0;
             for (const auto& v_ptr : this->params) {
-                this->output += *v_ptr;
+                this->output = std::min(*v_ptr + this->output, std::numeric_limits<T>::max());
             }
         }
 
