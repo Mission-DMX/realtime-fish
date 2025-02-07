@@ -852,7 +852,7 @@ namespace dmxfish::filters {
                     update_last_values_from_cuelist();
                     this->actual_values.frame++;
                 }
-                update_last_values_from_cuelist()
+                //update_last_values_from_cuelist() // TODO this is left over from the experiment @LRalff conducted
                 ::spdlog::info("Resumed cue from stored state.");
                 return;
             }
