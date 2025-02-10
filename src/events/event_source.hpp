@@ -22,7 +22,8 @@ namespace dmxfish::events {
         event_source();
     public:
         event_source(const event_source& other) = default;
-        explicit event_source(event_source* other) : sender_id(other->sender_id) {}
+        explicit event_source(event_source* other);
+        virtual ~event_source();
 
         /**
          * Obtain the sender id.

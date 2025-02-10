@@ -468,7 +468,7 @@ namespace dmxfish::filters {
         }
         if (this->current_time >= this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) / this->time_scale + this->start_time) { // Next Frame?
             if (!this->last_values.updated) {
-                update_last_values_from_cuelist()
+                update_last_values_from_cuelist();
             }
             this->last_values.time_stamp = this->start_time + this->cues.at(this->actual_values.cue).timestamps.at(this->actual_values.frame) / this->time_scale;
             if (this->actual_values.frame < this->cues.at(this->actual_values.cue).timestamps.size() - 1) { // Not the last Frame of the cue?
@@ -607,7 +607,7 @@ namespace dmxfish::filters {
             auto s = configuration.at("persistence");
             // This does not work for multi-byte characters from UTF-8. As we only need to check for true, this will
             // still work though.
-            std::transform(s.begin(), s.end(), s.begin(), [](const unsigned char c) {std::tolower(c);});
+            std::transform(s.begin(), s.end(), s.begin(), [](const unsigned char c) {return std::tolower(c);});
             this->state_persistent = (s == "true");
         }
     }

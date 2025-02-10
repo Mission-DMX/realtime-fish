@@ -9,4 +9,10 @@ namespace dmxfish::io {
     ioboard_midi_event_source::ioboard_midi_event_source() : dmxfish::events::event_source(this) {
 
     }
+
+    ioboard_midi_event_source::~ioboard_midi_event_source() {}
+
+    void ioboard_midi_event_source::deregister() {
+
+    }
 }
