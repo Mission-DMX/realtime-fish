@@ -22,7 +22,7 @@
 #include "filters/filter_time.hpp"
 #include "filters/filter_cue.hpp"
 #include "filters/filter_shift.hpp"
-#include "filters/filter_lua_script.hpp"
+#include "filters/lua/filter_lua_script.hpp"
 #include "filters/filter_color_mixer.hpp"
 
 #include <iostream>

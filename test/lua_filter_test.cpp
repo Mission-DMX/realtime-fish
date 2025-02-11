@@ -1,7 +1,7 @@
 #define BOOST_AUTO_TEST_MAIN
 #define BOOST_TEST_MODULE FISH_TESTS
 #include <boost/test/included/unit_test.hpp>
-#include "filters/filter_lua_script.hpp"
+#include "filters/lua/filter_lua_script.hpp"
 #include "lib/logging.hpp"
 #include "io/iomanager.hpp"
 
