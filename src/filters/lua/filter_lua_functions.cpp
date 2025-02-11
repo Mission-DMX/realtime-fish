@@ -36,6 +36,9 @@ namespace dmxfish::filters::lua {
         init_lua_color_api(lua);
 
         // TODO make events available here
+        // TODO add a unit test that sends an event on one lua filter and listens to that event on another lua filter.
+        //  check the output of the second to confirm the handling of the event
+
         // TODO make function to send updates to GUI available here
         // TODO allow sending of filter parameter updates to own scene here
         
