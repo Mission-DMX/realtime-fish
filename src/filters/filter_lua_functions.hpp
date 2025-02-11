@@ -60,6 +60,13 @@ namespace dmxfish::filters::lua {
                 dmxfish::filters::lua::hsi_to_rgbw_color,
                 dmxfish::filters::lua::hsi_to_rgbw_table
         ) );
+
+        // TODO make color mixing methods available here
+        // TODO make events available here
+        // TODO make function to send updates to GUI vailable here
+        // TODO allow sending of filter parameter updates to own scene here
+        
+        // TODO send exceptions, thrown in scene_actived, update, etc. to gui as log entries
     }
 
 }
