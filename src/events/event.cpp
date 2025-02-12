@@ -3,6 +3,8 @@
 //
 
 #include <ostream>
+#include <string>
+
 #include "event.hpp"
 
 namespace dmxfish::events {
@@ -39,5 +41,18 @@ namespace dmxfish::events {
         }
         os << std::dec;
         return os;
+    }
+
+    [[nodiscard]] std::string event::get_args_as_str() const {
+        return std::string(this->event_arguments.data(), this->event_arguments.size());
+    }
+
+    void event::set_args_as_string(const std::string& s) {
+        for (auto i = 0; i < s.length() && i < this->event_arguments.size(); i++) {
+            this->event_arguments[i] = s.at(i);
+        }
+        for (auto i = s.length(); i < this->event_arguments.size(); i++) {
+            this->event_arguments[i] = 0;
+        }
     }
 }

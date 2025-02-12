@@ -74,6 +74,9 @@ namespace dmxfish::events {
         inline void set_arg_data(size_t pos, uint8_t d) {
             this->event_arguments[pos] = d;
         }
+
+        [[nodiscard]] std::string get_args_as_str() const;
+        void set_args_as_string(const std::string& s);
     };
 
     std::ostream& operator<<(std::ostream& os, const event& ev);
