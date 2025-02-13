@@ -22,7 +22,7 @@ namespace dmxfish::filters::lua {
         return evs_ptr->get_storage();
     }
 
-    bool has_event(dmxfish::events::event_sender_t source) {
+    bool has_event_t(dmxfish::events::event_sender_t source) {
         using namespace dmxfish::events;
         for(const auto& ev : get_event_storage_instance()->get_storage()) {
             if (ev.get_event_sender() == source && (ev.get_type() == event_type::START || ev.get_type() == event_type::ONGOING_EVENT || ev.get_type() == event_type::SINGLE_TRIGGER)) {
@@ -32,7 +32,7 @@ namespace dmxfish::filters::lua {
         return false;
     }
 
-    void insert_event(dmxfish::events::event_sender_t sender_id, dmxfish::events::event_type t, std::string args) {
+    void insert_event_sta(dmxfish::events::event_sender_t sender_id, dmxfish::events::event_type t, std::string args) {
         using namespace dmxfish::events;
         event e(t, sender_id);
         e.set_args_as_string(args);
@@ -40,11 +40,11 @@ namespace dmxfish::filters::lua {
     }
 
     void insert_event_sa(dmxfish::events::event_sender_t sender_id, std::string args) {
-        insert_event(sender_id, dmxfish::events::event_type::SINGLE_TRIGGER, args);
+        insert_event_sta(sender_id, dmxfish::events::event_type::SINGLE_TRIGGER, args);
     }
 
     void insert_event_s(dmxfish::events::event_sender_t sender_id) {
-        insert_event(sender_id, dmxfish::events::event_type::SINGLE_TRIGGER, "");
+        insert_event_sta(sender_id, dmxfish::events::event_type::SINGLE_TRIGGER, "");
     }
 
     uint64_t get_event_sender_id(uint32_t function) {
@@ -64,9 +64,9 @@ namespace dmxfish::filters::lua {
 
     std::vector<uint64_t> get_all_event_senders() {
         std::vector<uint64_t> v;
-        auto& sv = get_event_storage_instance()->get_registered_senders();
+        const auto& sv = get_event_storage_instance()->get_registered_senders();
         v.reserve(sv.size());
-        for (auto& es_ptr : sv) {
+        for (const auto& es_ptr : sv) {
             dmxfish::events::event_sender_t es;
             es.decoded_representation.sender = es_ptr->get_sender_id();
             es.decoded_representation.sender_function = 0;
@@ -75,8 +75,30 @@ namespace dmxfish::filters::lua {
         return v;
     }
 
-    void insert_event_n() {
-        insert_event(get_event_sender_id_auto(), dmxfish::events::event_type::SINGLE_TRIGGER, "");
+    inline dmxfish::events::event_sender_t int2event_sender_t(uint64_t enc) {
+	dmxfish::events::event_sender_t est;
+	est.encoded_sender_id = enc;
+	return est;
+    }
+
+    void insert_event() {
+        insert_event_sta(int2event_sender_t(get_event_sender_id_auto()), dmxfish::events::event_type::SINGLE_TRIGGER, "");
+    }
+
+    void insert_event_ita(uint64_t sender_id, dmxfish::events::event_type t, std::string args) {
+	insert_event_sta(int2event_sender_t(sender_id), t, args);
+    }
+
+    void insert_event_ia(uint64_t sender_id, std::string args) {
+	insert_event_sa(int2event_sender_t(sender_id), args);
+    }
+
+    void insert_event_i(uint64_t sender_id) {
+	insert_event_s(int2event_sender_t(sender_id));
+    }
+
+    bool has_event_i(uint64_t enc) {
+	return has_event_t(int2event_sender_t(enc));
     }
 
     void init_lua_event_api(sol::state& lua) {
@@ -107,14 +129,20 @@ namespace dmxfish::filters::lua {
                 );
 
         lua.set_function("get_events", dmxfish::filters::lua::get_events);
-        lua.set_function("has_event", dmxfish::filters::lua::has_event);
+        lua.set_function("has_event", sol::overload(
+		dmxfish::filters::lua::has_event_t,
+		dmxfish::filters::lua::has_event_i
+		));
         lua.set_function("get_all_event_senders", dmxfish::filters::lua::get_all_event_senders);
 
         lua.set_function("insert_event", sol::overload(
-                dmxfish::filters::lua::insert_event,
+                dmxfish::filters::lua::insert_event_sta,
                 dmxfish::filters::lua::insert_event_sa,
                 dmxfish::filters::lua::insert_event_s,
-                dmxfish::filters::lua::insert_event_n
+                dmxfish::filters::lua::insert_event_ita,
+                dmxfish::filters::lua::insert_event_ia,
+                dmxfish::filters::lua::insert_event_i,
+		dmxfish::filters::lua::insert_event
                 ));
         lua.set_function("get_event_sender", sol::overload(
                 dmxfish::filters::lua::get_event_sender_id,

@@ -590,7 +590,11 @@ BOOST_AUTO_TEST_CASE(event_api_test) {
     initial_parameters["script"] = R"(
 
         function update()
-            insert_event(get_event_sender(), 0, "")
+	    print("Update from 1")
+	    sender = get_event_sender()
+	    insert_event(sender)
+            insert_event(sender, event_type.SINGLE_TRIGGER, "")
+	    print(event_type.ONGOING_EVENT)
         end
 
         function scene_activated()
@@ -604,6 +608,7 @@ BOOST_AUTO_TEST_CASE(event_api_test) {
     initial_parameters2["script"] = R"(
 
         function update()
+	    print("Update from 2")
             if has_event(get_event_sender()) then
                 out = 1
             end
