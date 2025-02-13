@@ -5,13 +5,22 @@
 
 #pragma once
 
+#include <vector>
+
+#include "dmx/pixel.hpp"
 #include "filters/filter.hpp"
+#include "filters/sequencer/channel.h"
 #include "filters/sequencer/keyframe.hpp"
 
 namespace dmxfish {
     namespace filters {
 
         class filter_sequencer : public filter {
+        private:
+            std::vector<sequencer_channel<uint8_t>> channels_8bit;
+            std::vector<sequencer_channel<uint16_t>> channels_16bit;
+            std::vector<sequencer_channel<double>> channels_float;
+            std::vector<sequencer_channel<dmxfish::dmx::pixel>> channels_color;
         public:
             filter_sequencer();
             virtual ~filter_sequencer();
