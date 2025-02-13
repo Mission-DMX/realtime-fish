@@ -42,7 +42,7 @@ namespace dmxfish::events {
     class event {
     private:
         event_type type;
-        std::array<uint8_t, 7> event_arguments;
+        std::array<uint8_t, 8> event_arguments;
         event_id_t event_id;
         event_sender_t sender_id;
     public:
@@ -67,7 +67,7 @@ namespace dmxfish::events {
             return !(this->type == event_type::INVALID || this->event_id == 0);
         }
 
-        [[nodiscard]] inline const std::array<uint8_t, 7> get_args() const {
+        [[nodiscard]] inline const std::array<uint8_t, 8> get_args() const {
             return this->event_arguments;
         }
 

@@ -15,6 +15,5 @@ namespace dmxfish::events {
     }
 
     event_source::~event_source() {
-        this->deregister();
     }
 } // dmxfish

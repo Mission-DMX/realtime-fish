@@ -11,7 +11,8 @@
 #include <memory>
 #include <sstream>
 
-
+#include "main.hpp"
+#include "lib/logging.hpp"
 
 #include "rmrf-net/client_factory.hpp"
 #include "rmrf-net/ioqueue.hpp"
@@ -24,6 +25,29 @@
 #include <google/protobuf/text_format.h>
 
 using namespace dmxfish::filters;
+
+struct gf {
+    bool constructed = true;
+    gf() {
+        if (std::filesystem::exists("/tmp/fish.sock")) {
+            ::spdlog::warn("Found existing socket. Maybe from a rouge test? Attempting to remove it.");
+            std::filesystem::remove("/tmp/fish.sock");
+        }
+        if(std::filesystem::exists("/tmp/fish.sock")) {
+            constructed = false;
+            ::spdlog::warn("Skipped manager init");
+        } else {
+            construct_managers();
+        }
+    }
+    ~gf() {
+        if(constructed) {
+            destruct_managers();
+        }
+    }
+};
+
+BOOST_TEST_GLOBAL_FIXTURE(gf);
 
 BOOST_AUTO_TEST_CASE(test_error_init) {
     spdlog::set_level(spdlog::level::debug);
@@ -101,13 +125,7 @@ BOOST_AUTO_TEST_CASE(test_error_code) {
 BOOST_AUTO_TEST_CASE(testluadirectout) {
     spdlog::set_level(spdlog::level::debug);
 
-    std::shared_ptr<runtime_state_t> run_time_state = nullptr;
-    static std::shared_ptr<dmxfish::io::IOManager> manager = nullptr;
-
-    run_time_state = std::make_shared<runtime_state_t>();
-    manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
-    manager->start();
-
+    std::shared_ptr<dmxfish::io::IOManager> manager = get_iomanager_instance();
 
     auto msg_universe_init = std::make_shared<missiondmx::fish::ipcmessages::Universe>();
     msg_universe_init->set_id(1);
@@ -154,7 +172,6 @@ BOOST_AUTO_TEST_CASE(testluadirectout) {
     } else {
         BOOST_TEST(false, "universe for lua filter test does not exist");
     }
-    run_time_state->running = false;
     manager = nullptr;
 
 }
@@ -445,12 +462,7 @@ BOOST_AUTO_TEST_CASE(test_update_gui) {
 BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
     spdlog::set_level(spdlog::level::debug);
 
-    std::shared_ptr<runtime_state_t> run_time_state = nullptr;
-    static std::shared_ptr<dmxfish::io::IOManager> manager = nullptr;
-
-    run_time_state = std::make_shared<runtime_state_t>();
-    manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
-    manager->start();
+    static std::shared_ptr<dmxfish::io::IOManager> manager = get_iomanager_instance();
 
 
     auto msg_universe_init = std::make_shared<missiondmx::fish::ipcmessages::Universe>();
@@ -561,7 +573,70 @@ BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
     }
     std::cout << std::endl;
 
-
-    run_time_state->running = false;
     manager = nullptr;
+}
+
+#include <iostream>
+
+BOOST_AUTO_TEST_CASE(event_api_test) {
+    dmxfish::filters::filter_lua_script fil1, fil2;
+
+    channel_mapping input_channels = channel_mapping();
+    std::map<std::string, std::string> configuration, configuration2;
+    configuration["in_mapping"] = "";
+    configuration["out_mapping"] = "";
+    std::map<std::string, std::string> initial_parameters, initial_parameters2;
+
+    initial_parameters["script"] = R"(
+
+        function update()
+            insert_event(get_event_sender(), 0, "")
+        end
+
+        function scene_activated()
+        end
+	)";
+    std::cout << "a" << std::endl;
+    fil1.pre_setup(configuration, initial_parameters, "fil1");
+
+    configuration2["in_mapping"] = "";
+    configuration2["out_mapping"] = "out:8bit";
+    initial_parameters2["script"] = R"(
+
+        function update()
+            if has_event(get_event_sender()) then
+                out = 1
+            end
+        end
+
+        function scene_activated()
+            out = 0
+        end
+	)";
+    std::cout << "b.1" << std::endl;
+    fil2.pre_setup(configuration2, initial_parameters2, "fil2");
+
+    channel_mapping map = channel_mapping();
+    std::cout << "b.2" << std::endl;
+    fil1.get_output_channels(map, "fil1");
+    std::cout << "b.3" << std::endl;
+    fil1.setup_filter(configuration, initial_parameters, input_channels, "fil1");
+    std::cout << "b.4" << std::endl;
+    fil2.get_output_channels(map, "fil2");
+    std::cout << "b.5" << std::endl;
+    fil2.setup_filter(configuration2, initial_parameters2, input_channels, "fil2");
+
+
+    std::cout << "c" << std::endl;
+    fil1.scene_activated();
+    fil2.scene_activated();
+    std::cout << "d" << std::endl;
+    fil1.update();
+    fil2.update();
+    BOOST_CHECK_EQUAL(*(map.eight_bit_channels["fil2:out"]), 0);
+    get_event_storage_instance()->swap_buffers();
+    std::cout << "e" << std::endl;
+    fil1.update();
+    fil2.update();
+    BOOST_CHECK_EQUAL(*(map.eight_bit_channels["fil2:out"]), 1);
 }

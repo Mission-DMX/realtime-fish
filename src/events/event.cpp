@@ -44,7 +44,7 @@ namespace dmxfish::events {
     }
 
     [[nodiscard]] std::string event::get_args_as_str() const {
-        return std::string(this->event_arguments.data(), this->event_arguments.size());
+        return {this->event_arguments.begin(), this->event_arguments.end()};
     }
 
     void event::set_args_as_string(const std::string& s) {

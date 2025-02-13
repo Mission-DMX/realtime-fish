@@ -5,6 +5,7 @@
 #pragma once
 
 #include <memory>
+#include <stdexcept>
 
 #include "event_storage.hpp"
 
@@ -43,6 +44,9 @@ namespace dmxfish::events {
         template<class T>
         static typename std::enable_if<std::is_base_of<event_source, T>::value, std::shared_ptr<T>>::type
         create(std::shared_ptr<event_storage> storage_to_register_with) {
+            if(storage_to_register_with == nullptr) {
+                throw std::invalid_argument("The provided storage must not be null.");
+            }
             auto ptr = std::shared_ptr<T>(new T());
             ptr->sender_id = storage_to_register_with->register_event_source(ptr->shared_from_this());
             return ptr;
