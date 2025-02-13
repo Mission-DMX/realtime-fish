@@ -1,5 +1,6 @@
 //
 // Created by doralitze on 11/14/23.
+// SPDX-License-Identifier: GPL-3.0-or-later
 //
 
 #pragma once

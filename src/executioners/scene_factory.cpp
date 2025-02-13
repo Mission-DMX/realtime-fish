@@ -23,6 +23,7 @@
 #include "filters/filter_cue.hpp"
 #include "filters/filter_shift.hpp"
 #include "filters/lua/filter_lua_script.hpp"
+#include "filters/sequencer/filter_sequencer.hpp"
 #include "filters/filter_color_mixer.hpp"
 
 #include <iostream>
@@ -298,6 +299,9 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_debug_remote_pixel:
                     sum += sizeof(debug_remote_pixel);
                     break;
+                case filter_type::filter_sequencer:
+                    sum += sizeof(filter_sequencer);
+                    break;
 				default: {
 						 std::stringstream ss;
 						 ss << ERROR_FILTER_NOT_IMPLEMENTED_IN_ALLOCATION;
@@ -464,6 +468,8 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<debug_remote_float>(pac);
             case filter_type::filter_debug_remote_pixel:
                 return calloc<debug_remote_pixel>(pac);
+            case filter_type::filter_sequencer:
+                return calloc<filter_sequencer>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
