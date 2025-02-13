@@ -54,6 +54,10 @@ namespace dmxfish::events {
             return this->current_read_storage_is_a ? this->storage_a : this->storage_b;
             // TODO change this to return a view on the active event storage
         }
+
+        inline std::vector<std::shared_ptr<event_source>> get_registered_senders() {
+            return this->senders;
+        }
     private:
         event_sender_t  register_event_source(const std::shared_ptr<event_source>& self);
     };
