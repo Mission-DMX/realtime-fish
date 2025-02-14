@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-namespace dmxfish::filters {
+namespace dmxfish::filters::sequencer {
     enum class transition_t : uint8_t {
         EDGE,
         LINEAR,

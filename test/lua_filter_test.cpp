@@ -576,8 +576,6 @@ BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
     manager = nullptr;
 }
 
-#include <iostream>
-
 BOOST_AUTO_TEST_CASE(event_api_test) {
     dmxfish::filters::filter_lua_script fil1, fil2;
 
@@ -600,7 +598,6 @@ BOOST_AUTO_TEST_CASE(event_api_test) {
         function scene_activated()
         end
 	)";
-    std::cout << "a" << std::endl;
     fil1.pre_setup(configuration, initial_parameters, "fil1");
 
     configuration2["in_mapping"] = "";
@@ -618,29 +615,20 @@ BOOST_AUTO_TEST_CASE(event_api_test) {
             out = 0
         end
 	)";
-    std::cout << "b.1" << std::endl;
     fil2.pre_setup(configuration2, initial_parameters2, "fil2");
 
     channel_mapping map = channel_mapping();
-    std::cout << "b.2" << std::endl;
     fil1.get_output_channels(map, "fil1");
-    std::cout << "b.3" << std::endl;
     fil1.setup_filter(configuration, initial_parameters, input_channels, "fil1");
-    std::cout << "b.4" << std::endl;
     fil2.get_output_channels(map, "fil2");
-    std::cout << "b.5" << std::endl;
     fil2.setup_filter(configuration2, initial_parameters2, input_channels, "fil2");
 
-
-    std::cout << "c" << std::endl;
     fil1.scene_activated();
     fil2.scene_activated();
-    std::cout << "d" << std::endl;
     fil1.update();
     fil2.update();
     BOOST_CHECK_EQUAL(*(map.eight_bit_channels["fil2:out"]), 0);
     get_event_storage_instance()->swap_buffers();
-    std::cout << "e" << std::endl;
     fil1.update();
     fil2.update();
     BOOST_CHECK_EQUAL(*(map.eight_bit_channels["fil2:out"]), 1);

@@ -101,11 +101,27 @@ namespace dmxfish::filters::lua {
 	return has_event_t(int2event_sender_t(enc));
     }
 
+    uint64_t find_event_sender(std::string name, uint32_t function) {
+        auto ptr = get_event_storage_instance()->find_source_by_name(name);
+        if (ptr == nullptr) {
+            throw std::invalid_argument("The requested event source does not exist.");
+        }
+        const auto id = ptr->get_sender_id();
+        dmxfish::events::event_sender_t es;
+        es.decoded_representation.sender = id;
+        es.decoded_representation.sender_function = function;
+        return es.encoded_sender_id;
+    }
+
+    uint64_t find_event_sender_default(std::string name) {
+        return find_event_sender(name, 0);
+    }
+
     void init_lua_event_api(sol::state& lua) {
         if(lua_event_sender == nullptr) {
             try {
                 lua_event_sender = dmxfish::events::event_source::create<dmxfish::events::event_source>(
-                        get_event_storage_instance());
+                        get_event_storage_instance(), "lua");
             } catch (const std::invalid_argument& e) {
                 throw std::runtime_error(std::string("Global Event Storage not yet initialized. Base exception: ") + e.what());
             }
@@ -147,5 +163,6 @@ namespace dmxfish::filters::lua {
         lua.set_function("get_event_sender", sol::overload(
                 dmxfish::filters::lua::get_event_sender_id,
                 dmxfish::filters::lua::get_event_sender_id_auto));
+        lua.set_function("find_event_sender", sol::overload(find_event_sender,find_event_sender_default));
     }
 }
