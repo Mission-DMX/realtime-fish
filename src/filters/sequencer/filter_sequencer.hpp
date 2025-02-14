@@ -14,12 +14,19 @@
 #include "filters/sequencer/channel.h"
 #include "filters/sequencer/keyframe.hpp"
 #include "filters/sequencer/transition.hpp"
+#include "filters/sequencer/time.hpp"
+
+#include "lib/macros.hpp"
 
 namespace dmxfish {
     namespace filters {
 
         class filter_sequencer : public filter {
         private:
+            COMPILER_SUPRESS("-Weffc++")
+            double* input_time;
+	    double* time_scale;
+            COMPILER_RESTORE("-Weffc++")
             std::vector<sequencer::channel<uint8_t>> channels_8bit;
             std::vector<sequencer::channel<uint16_t>> channels_16bit;
             std::vector<sequencer::channel<double>> channels_float;

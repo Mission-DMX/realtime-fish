@@ -29,7 +29,21 @@ namespace dmxfish {
 
         void filter_sequencer::update() {
             // TODO queue transitions based on current events
+
             // TODO update all channels, using time input and time scale
+	    auto current_time = *(this->input_time);
+	    for (auto& c : this->channels_8bit) {
+                c.apply_update(current_time, *time_scale);
+	    }
+	    for (auto& c : this->channels_16bit) {
+                c.apply_update(current_time, *time_scale);
+	    }
+	    for (auto& c : this->channels_float) {
+                c.apply_update(current_time, *time_scale);
+	    }
+	    for (auto& c : this->channels_color) {
+                c.apply_update(current_time, *time_scale);
+	    }
         }
 
         void filter_sequencer::scene_activated() {

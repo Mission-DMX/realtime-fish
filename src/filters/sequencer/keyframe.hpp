@@ -25,7 +25,7 @@ namespace dmxfish::filters::sequencer {
         sequencer_time_t duration;
         keyframe(T val, transition_t tr): value(val), transition(tr) {}
 
-        T calculate_update(sequencer_time_t time_since_start, T start_value) {
+        T calculate_update(sequencer_time_t time_since_start, T start_value, double time_scale) {
             // TODO implement transition
         }
     };

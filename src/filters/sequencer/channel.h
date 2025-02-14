@@ -5,10 +5,14 @@
 
 #pragma once
 
+#include <algorithm>
 #include <deque>
+#include <numeric>
 #include <unordered_map>
 #include <tuple>
+#include <type_traits>
 
+#include "dmx/pixel.hpp"
 #include "filters/sequencer/keyframe.hpp"
 #include "filters/sequencer/time.hpp"
 #include "filters/sequencer/transition.hpp"
@@ -44,7 +48,7 @@ namespace dmxfish::filters::sequencer {
     public:
         channel() = default;
 
-        void apply_update(sequencer_time_t current_time) {
+        void apply_update(sequencer_time_t current_time, double time_scale) {
             if(this->upcomming_keyframes.empty()) {
                 if (this->apply_default_value_on_empty_transition_queue) {
                     current_value = default_value;
@@ -64,13 +68,13 @@ namespace dmxfish::filters::sequencer {
                         break;
                     }
                     auto &current_frame = keyframe_queue.front();
-                    if (current_time >= keyframe_start_time + current_frame.duration) {
+                    if (current_time * time_scale >= keyframe_start_time + current_frame.duration) {
                         keyframe_start_time = current_time;
                         keyframe_start_value = current_frame.value;
                         keyframe_queue.pop_front();
                         continue;
                     }
-                    requested_values.push_back(current_frame.calculate_update(current_time - keyframe_start_time, keyframe_start_value));
+                    requested_values.push_back(current_frame.calculate_update(current_time - keyframe_start_time, keyframe_start_value, time_scale));
                     break;
                 } while (true);
             }
@@ -82,19 +86,43 @@ namespace dmxfish::filters::sequencer {
         }
     private:
         void perform_update_arbiting(const std::vector<T>& values) {
+            if (values.empty()) [[unlikely]] {
+                return;
+            }
             switch(this->i_method) {
                 default:
                 case interleaving_method::AVERAGE:
-                    // TODO implement and update current_value
+		    {
+                        if constexpr (std::is_same<T, uint8_t>::value || std::is_same<T, uint16_t>::value) {
+			    this->current_value = std::accumulate(values.begin(), values.end(), 0) / values.size();
+		        } else if constexpr (std::is_same<T, double>::value) {
+			    double acc = 0.0;
+			    double size = (double) values.size();
+			    for (const auto& v : values) {
+				acc += v / size;
+			    }
+			    this->current_value = acc;
+			} else {
+                            // TODO implement color avarage and set current_value
+			}
+		    }
                     break;
                 case interleaving_method::MAX:
                 {
-                    // TODO implement and update current_value
+                    if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
+			// TODO implement color max and set current_value
+		    } else {
+			this->current_value = *std::max_element(values.begin(), values.end());
+		    }
                 }
                     break;
                 case interleaving_method::MIN:
-                    // TODO implement min and update current_value
-                    break;
+                    if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
+			// TODO implement color max and set current_value
+		    } else {
+			this->current_value = *std::min_element(values.begin(), values.end());
+		    }
+		    break;
             }
         }
     };
