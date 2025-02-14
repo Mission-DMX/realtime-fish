@@ -16,6 +16,10 @@
 namespace dmxfish::filters::sequencer {
     class transition {
     private:
+        /**
+         * If this is set to false, the transition will not be applied to the channels, if it is already running
+         */
+        bool reset_allowed = true;
         std::vector<std::pair<size_t, keyframe<uint8_t>>> frames_8bit;
         std::vector<std::pair<size_t, keyframe<uint16_t>>> frames_16bit;
         std::vector<std::pair<size_t, keyframe<double>>> frames_float;

@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "filters/sequencer/time.hpp"
+
 namespace dmxfish::filters::sequencer {
     enum class transition_t : uint8_t {
         EDGE,
@@ -20,6 +22,11 @@ namespace dmxfish::filters::sequencer {
     struct keyframe{
         T value;
         transition_t transition;
+        sequencer_time_t duration;
         keyframe(T val, transition_t tr): value(val), transition(tr) {}
+
+        T calculate_update(sequencer_time_t time_since_start, T start_value) {
+            // TODO implement transition
+        }
     };
 }
