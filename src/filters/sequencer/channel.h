@@ -110,7 +110,13 @@ namespace dmxfish::filters::sequencer {
                 case interleaving_method::MAX:
                     {
                         if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
-                            // TODO implement color max and set current_value
+                            unsigned int max_r = 0, max_g = 0, max_b = 0;
+                            for (auto& color : values) {
+                                max_r = std::max(max_r, color.getRed());
+                                max_g = std::max(max_g, color.getGreen());
+                                max_b = std::max(max_b, color.getBlue());
+                            }
+                            this->current_value = {max_r, max_g, max_b};
                         } else {
                             this->current_value = *std::max_element(values.begin(), values.end());
                         }
@@ -118,7 +124,17 @@ namespace dmxfish::filters::sequencer {
                     break;
                 case interleaving_method::MIN:
                     if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
-			            // TODO implement color min and set current_value
+                        if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
+                            unsigned int min_r = 65535, min_g = 65535, min_b = 65535;
+                            for (auto& color : values) {
+                                min_r = std::min(min_r, color.getRed());
+                                min_g = std::min(min_g, color.getGreen());
+                                min_b = std::min(min_b, color.getBlue());
+                            }
+                            this->current_value = {min_r, min_g, min_b};
+                        } else {
+                            this->current_value = *std::max_element(values.begin(), values.end());
+                        }
 		            } else {
 			            this->current_value = *std::min_element(values.begin(), values.end());
 		            }
