@@ -103,7 +103,31 @@ namespace dmxfish::filters::sequencer {
                             }
                             this->current_value = acc;
                         } else {
-                            // TODO implement color avarage and set current_value
+                            if (values.size() == 1) {
+                                this->current_value = values[0];
+                                return;
+                            }
+                            double r = 0.0;
+                            double g = 0.0;
+                            double b = 0.0;
+                            double i = 0.0;
+                            for (auto v : values) {
+                                const auto r2 = v.getRed();
+                                const auto g2 = v.getGreen();
+                                const auto b2 = v.getBlue();
+                                r += r2*r2;
+                                g += g2*g2;
+                                b += b2*b2;
+                                i = std::max(i, v.getIluminance());
+                            }
+                            r = std::sqrt(r);
+                            g = std::sqrt(g);
+                            b = std::sqrt(b);
+                            i = std::min(i, 1.0);
+                            const auto vlen = std::sqrt(r*r+g*g+b*b);
+                            this->current_value.setRed((r/vlen)*65535*i);
+                            this->current_value.setGreen((g/vlen)*65535*i);
+                            this->current_value.setBlue((b/vlen)*65535*i);
                         }
                     }
                     break;
