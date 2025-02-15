@@ -92,37 +92,37 @@ namespace dmxfish::filters::sequencer {
             switch(this->i_method) {
                 default:
                 case interleaving_method::AVERAGE:
-		    {
+                    {
                         if constexpr (std::is_same<T, uint8_t>::value || std::is_same<T, uint16_t>::value) {
-			    this->current_value = std::accumulate(values.begin(), values.end(), 0) / values.size();
-		        } else if constexpr (std::is_same<T, double>::value) {
-			    double acc = 0.0;
-			    double size = (double) values.size();
-			    for (const auto& v : values) {
-				acc += v / size;
-			    }
-			    this->current_value = acc;
-			} else {
+                            this->current_value = std::accumulate(values.begin(), values.end(), 0) / values.size();
+                        } else if constexpr (std::is_same<T, double>::value) {
+                            double acc = 0.0;
+                            double size = (double) values.size();
+                            for (const auto& v : values) {
+                                acc += v / size;
+                            }
+                            this->current_value = acc;
+                        } else {
                             // TODO implement color avarage and set current_value
-			}
-		    }
+                        }
+                    }
                     break;
                 case interleaving_method::MAX:
-                {
-                    if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
-			// TODO implement color max and set current_value
-		    } else {
-			this->current_value = *std::max_element(values.begin(), values.end());
-		    }
-                }
+                    {
+                        if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
+                            // TODO implement color max and set current_value
+                        } else {
+                            this->current_value = *std::max_element(values.begin(), values.end());
+                        }
+                    }
                     break;
                 case interleaving_method::MIN:
                     if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
-			// TODO implement color max and set current_value
-		    } else {
-			this->current_value = *std::min_element(values.begin(), values.end());
-		    }
-		    break;
+			            // TODO implement color min and set current_value
+		            } else {
+			            this->current_value = *std::min_element(values.begin(), values.end());
+		            }
+		            break;
             }
         }
     };
