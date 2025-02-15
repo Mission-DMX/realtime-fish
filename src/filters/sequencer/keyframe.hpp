@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstdint>
 
+#include "dmx/pixel.hpp"
 #include "filters/sequencer/time.hpp"
 
 namespace dmxfish::filters::sequencer {
@@ -28,10 +29,10 @@ namespace dmxfish::filters::sequencer {
         keyframe(T val, transition_t tr): value(val), transition(tr) {}
 
         T calculate_update(sequencer_time_t time_since_start, T start_value, double time_scale) {
+            const double interleave_point = this->compute_interleave_point(time_since_start, time_scale);
             if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
-                // TODO implement color interleaving
+                return dmxfish::dmx::mix_color_interleaving(start_value, value, interleave_point);
             } else {
-                double interleave_point = this->compute_interleave_point(time_since_start, time_scale);
                 return (T) (start_value * (1-interleave_point)) + (value * interleave_point);
             }
         }

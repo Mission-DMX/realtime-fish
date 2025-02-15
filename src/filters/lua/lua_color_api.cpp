@@ -185,37 +185,20 @@ namespace dmxfish::filters::lua {
         return mix_color_hsi_ttb(color1, color2, true);
     }
 
-    dmxfish::dmx::pixel mix_color_interleaving_cc(dmxfish::dmx::pixel c1, dmxfish::dmx::pixel c2, double range) {
-        if (range < 0.0 || range > 1.0) {
-            throw std::invalid_argument("The range interval needs to be within 0 and 1.");
-        }
-
-        dmxfish::dmx::pixel output;
-        const double h1 = c1.getHue();
-        const double h2 = c2.getHue();
-
-        const auto hue_diff = std::fmod(h1-h2 + 180.0 + 360.0, (double) 360.0) - ((double) 180.0);
-        output.setHue(std::fmod(360.0 + h2 + ((hue_diff*(range*2.0))/2.0), (double) 360.0));
-        output.setSaturation((c1.getSaturation() * (range)) + (c2.getSaturation() * (1.0-range)));
-        output.setIluminance((c1.getIluminance() * range) + (c2.getIluminance() * (1.0-range)));
-
-        return output;
-    }
-
     dmxfish::dmx::pixel mix_color_interleaving_ct(dmxfish::dmx::pixel c1, sol::table color2, double r) {
         dmxfish::dmx::pixel c2 = table2pixel(color2);
-        return mix_color_interleaving_cc(c1, c2, r);
+        return dmxfish::dmx::mix_color_interleaving(c1, c2, r);
     }
 
     dmxfish::dmx::pixel mix_color_interleaving_tc(sol::table color1, dmxfish::dmx::pixel c2, double r) {
         dmxfish::dmx::pixel c1 = table2pixel(color1);
-        return mix_color_interleaving_cc(c1, c2, r);
+        return dmxfish::dmx::mix_color_interleaving(c1, c2, r);
     }
 
     dmxfish::dmx::pixel mix_color_interleaving_tt(sol::table color1, sol::table color2, double r) {
         dmxfish::dmx::pixel c1 = table2pixel(color1);
         dmxfish::dmx::pixel c2 = table2pixel(color2);
-        return mix_color_interleaving_cc(c1, c2, r);
+        return dmxfish::dmx::mix_color_interleaving(c1, c2, r);
     }
 
     void init_lua_color_api(sol::state& lua) {

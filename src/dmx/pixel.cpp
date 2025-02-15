@@ -232,4 +232,21 @@ namespace dmxfish::dmx {
         invalidate_hsi();
         this->blue = b;
     }
+
+    dmxfish::dmx::pixel mix_color_interleaving(dmxfish::dmx::pixel c1, dmxfish::dmx::pixel c2, double range) {
+        if (range < 0.0 || range > 1.0) {
+            throw std::invalid_argument("The range interval needs to be within 0 and 1.");
+        }
+
+        dmxfish::dmx::pixel output;
+        const double h1 = c1.getHue();
+        const double h2 = c2.getHue();
+
+        const auto hue_diff = std::fmod(h1-h2 + 180.0 + 360.0, (double) 360.0) - ((double) 180.0);
+        output.setHue(std::fmod(360.0 + h2 + ((hue_diff*(range*2.0))/2.0), (double) 360.0));
+        output.setSaturation((c1.getSaturation() * (range)) + (c2.getSaturation() * (1.0-range)));
+        output.setIluminance((c1.getIluminance() * range) + (c2.getIluminance() * (1.0-range)));
+
+        return output;
+    }
 }
