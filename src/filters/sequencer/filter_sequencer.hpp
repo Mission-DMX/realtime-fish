@@ -41,6 +41,8 @@ namespace dmxfish {
             virtual void get_output_channels(channel_mapping& map, const std::string& name) override;
             virtual void update() override;
             virtual void scene_activated() override;
+        private:
+            void enqueue_transition(const transition& t);
         };
 
     } // filters

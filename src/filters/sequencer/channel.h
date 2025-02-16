@@ -62,6 +62,9 @@ namespace dmxfish::filters::sequencer {
                 auto& keyframe_start_time = std::get<0>(trans);
                 auto& keyframe_start_value = std::get<1>(trans);
                 auto& keyframe_queue = std::get<2>(trans);
+                if (keyframe_start_time == 0) {
+                    keyframe_start_time = current_time;
+                }
                 do {
                     if (keyframe_queue.empty()) {
                         transitions_to_remove.push_back(trans_id);
@@ -83,6 +86,14 @@ namespace dmxfish::filters::sequencer {
                 // TODO test if this is really removing the key and not the position
                 this->upcomming_keyframes.erase(i);
             }
+        }
+
+        bool transition_active(size_t transition_id) {
+            return this->upcomming_keyframes.contains(transition_id);
+        }
+
+        void insert_keyframes(std::deque<keyframe<T>> frames, size_t transition_id) {
+            this->upcomming_keyframes[transition_id] = std::make_tuple(0, this->current_value, frames);
         }
     private:
         void perform_update_arbiting(const std::vector<T>& values) {
