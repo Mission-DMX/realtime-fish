@@ -42,6 +42,9 @@ namespace dmxfish {
             virtual void update() override;
             virtual void scene_activated() override;
         private:
+            void ensure_uniqueness(std::map<std::string, size_t>& m, const std::string& new_name, const std::string& own_id, size_t channel_id);
+            void decode_input_channels(const channel_mapping& input_channels, const std::string& own_id);
+            void construct_channels(const std::map<std::string, std::string>& configuration, const std::string& own_id);
             void enqueue_transition(const sequencer::transition& t);
         };
 

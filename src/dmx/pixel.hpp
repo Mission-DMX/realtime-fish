@@ -64,6 +64,7 @@ class pixel {
 	[[nodiscard]] std::string str();
 };
 
-    dmxfish::dmx::pixel mix_color_interleaving(dmxfish::dmx::pixel c1, dmxfish::dmx::pixel c2, double range);
+    [[nodiscard]] dmxfish::dmx::pixel mix_color_interleaving(dmxfish::dmx::pixel c1, dmxfish::dmx::pixel c2, double range);
+    [[nodiscard]] dmxfish::dmx::pixel stopixel(const std::string& s);
 
 }

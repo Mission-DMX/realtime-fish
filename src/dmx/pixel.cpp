@@ -249,4 +249,13 @@ namespace dmxfish::dmx {
 
         return output;
     }
+
+    dmxfish::dmx::pixel stopixel(const std::string& str) {
+        const auto first_position = str.find(",");
+        const auto h = std::stod(str.substr(0, first_position));
+        const auto second_position = str.find(",", first_position + 1);
+        const auto s = std::stod(str.substr(first_position + 1, second_position - first_position - 1));
+        const auto i = std::stod(str.substr(second_position + 1));
+        return {h, s, i};
+    }
 }

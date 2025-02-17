@@ -20,7 +20,10 @@
 #include "filters/sequencer/time.hpp"
 #include "filters/sequencer/transition.hpp"
 
+#include "lib/logging.hpp"
 #include "lib/macros.hpp"
+
+#include "utils.hpp"
 
 namespace dmxfish::filters::sequencer {
 
@@ -29,6 +32,16 @@ namespace dmxfish::filters::sequencer {
         MIN,
         MAX
     };
+
+    interleaving_method interleaving_method_from_string(const std::string& s) {
+        if(auto upper_s = utils::toupper(s); s == "MAX") {
+            return interleaving_method::MAX;
+        } else if(upper_s == "MIN") {
+            return interleaving_method::MIN;
+        } else {
+            return interleaving_method::AVERAGE;
+        }
+    }
 
     template <typename T>
     class channel {
@@ -94,6 +107,7 @@ namespace dmxfish::filters::sequencer {
             for (auto i : transitions_to_remove) {
                 // TODO test if this is really removing the key and not the position
                 this->upcomming_keyframes.erase(i);
+                ::spdlog::debug("Finished transition for event {} in channel {}.", i, this->channel_name);
             }
         }
 
@@ -106,9 +120,11 @@ namespace dmxfish::filters::sequencer {
                 if(!reset_allowed) {
                     return false;
                 } else {
+                    ::spdlog::debug("Aborting execution of transition {} in channel {}.", transition_id, this->channel_name);
                     this->upcomming_keyframes.erase(transition_id);
                 }
             }
+            ::spdlog::debug("Starting execution of transition {} in channel {}.", transition_id, this->channel_name);
             return this->upcomming_keyframes.try_emplace(transition_id, frames, 0, this->current_value).second;
         }
 
@@ -210,6 +226,4 @@ namespace dmxfish::filters::sequencer {
             }
         }
     };
-
-    // TODO implement factory method for channel taking in description string
 }
