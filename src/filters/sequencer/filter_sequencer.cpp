@@ -28,7 +28,18 @@ namespace dmxfish {
         }
 
         void filter_sequencer::get_output_channels(channel_mapping& map, const std::string& name) {
-
+            for (auto& c : this->channels_8bit) {
+                map.eight_bit_channels[name + ":" + c.get_name()] = c.get_channel_pointer();
+            }
+            for (auto& c : this->channels_16bit) {
+                map.sixteen_bit_channels[name + ":" + c.get_name()] = c.get_channel_pointer();
+            }
+            for (auto& c : this->channels_float) {
+                map.float_channels[name + ":" + c.get_name()] = c.get_channel_pointer();
+            }
+            for (auto& c : this->channels_color) {
+                map.color_channels[name + ":" + c.get_name()] = c.get_channel_pointer();
+            }
         }
 
         void filter_sequencer::enqueue_transition(const sequencer::transition& t) {

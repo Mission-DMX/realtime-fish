@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <numeric>
 #include <unordered_map>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <vector>
@@ -32,7 +33,7 @@ namespace dmxfish::filters::sequencer {
     template <typename T>
     class channel {
         T current_value;
-        T default_value;
+        const T default_value;
 
         /**
          * The structure of this container is as follows:
@@ -47,11 +48,17 @@ namespace dmxfish::filters::sequencer {
          * keyframes.
          */
         std::unordered_map<size_t, frame_queue<T>> upcomming_keyframes;
-        bool apply_default_value_on_empty_transition_queue = false;
-        bool apply_default_value_on_clear_command = false;
-        interleaving_method i_method = interleaving_method::AVERAGE;
+        const bool apply_default_value_on_empty_transition_queue = false;
+        const bool apply_default_value_on_clear_command = false;
+        const interleaving_method i_method = interleaving_method::AVERAGE;
+        const std::string channel_name;
     public:
-        channel() = default;
+        channel(const std::string& name, T dv, bool default_on_empty, bool default_on_clear,
+                interleaving_method interleavingMethod) :
+        current_value(dv), default_value(dv), upcomming_keyframes(),
+        apply_default_value_on_empty_transition_queue(default_on_empty),
+        apply_default_value_on_clear_command(default_on_clear),
+        i_method(interleavingMethod), channel_name(name) {}
 
         void apply_update(sequencer_time_t current_time, double time_scale) {
             if(this->upcomming_keyframes.empty()) {
@@ -116,6 +123,10 @@ namespace dmxfish::filters::sequencer {
             if (this->apply_default_value_on_clear_command) {
                 this->current_value = this->default_value;
             }
+        }
+
+        [[nodiscard]] inline std::string get_name() const {
+            return this->channel_name;
         }
     private:
         void perform_update_arbiting(std::vector<T>& values) {
@@ -199,4 +210,6 @@ namespace dmxfish::filters::sequencer {
             }
         }
     };
+
+    // TODO implement factory method for channel taking in description string
 }
