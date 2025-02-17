@@ -82,8 +82,18 @@ namespace dmxfish {
         }
 
         void filter_sequencer::scene_activated() {
-            // TODO clear transition queues of channels
-            // TODO reset channels to their default value if required
+            for (auto& c : this->channels_8bit) {
+                c.clear();
+            }
+            for (auto& c : this->channels_16bit) {
+                c.clear();
+            }
+            for (auto& c : this->channels_float) {
+                c.clear();
+            }
+            for (auto& c : this->channels_color) {
+                c.clear();
+            }
         }
     } // filters
 } // dmxfish

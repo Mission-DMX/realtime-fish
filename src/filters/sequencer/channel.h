@@ -48,6 +48,7 @@ namespace dmxfish::filters::sequencer {
          */
         std::unordered_map<size_t, frame_queue<T>> upcomming_keyframes;
         bool apply_default_value_on_empty_transition_queue = false;
+        bool apply_default_value_on_clear_command = false;
         interleaving_method i_method = interleaving_method::AVERAGE;
     public:
         channel() = default;
@@ -109,6 +110,13 @@ namespace dmxfish::filters::sequencer {
             return &(this->current_value);
         }
         COMPILER_RESTORE("-Weffc++")
+
+        inline void clear() {
+            this->upcomming_keyframes.clear();
+            if (this->apply_default_value_on_clear_command) {
+                this->current_value = this->default_value;
+            }
+        }
     private:
         void perform_update_arbiting(std::vector<T>& values) {
             if (values.empty()) [[unlikely]] {

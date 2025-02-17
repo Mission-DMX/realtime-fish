@@ -59,7 +59,7 @@ namespace dmxfish::filters::sequencer {
 #if __cplusplus >= 202602L
                     constexpr double e = std::exp(1.0);
 #else
-                    const double e = std::exp(1.0);
+                    static const double e = std::exp(1.0);
 #endif
                     return (std::exp(elapsed_time * time_scale / this->duration) - 1.0) / (e - 1.0);
                 }
