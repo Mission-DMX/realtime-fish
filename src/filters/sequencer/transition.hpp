@@ -7,24 +7,38 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <utility>
+
+// Having ordered maps gives us a little bit more overhead at construction but yields better cache access during runtime.
+#if __cplusplus >= 202302
+#include <flat_map>
+#define selected_map_impl std::flat_map
+#else
+#include <map>
+#define selected_map_impl std::map
+#endif
+
 #include <vector>
 
 #include "dmx/pixel.hpp"
 #include "filters/sequencer/keyframe.hpp"
 
 namespace dmxfish::filters::sequencer {
-    class transition {
+    struct transition {
     private:
         /**
          * If this is set to false, the transition will not be applied to the channels, if it is already running
          */
         bool reset_allowed = true;
         size_t id;
-        std::vector<std::pair<size_t, keyframe<uint8_t>>> frames_8bit;
-        std::vector<std::pair<size_t, keyframe<uint16_t>>> frames_16bit;
-        std::vector<std::pair<size_t, keyframe<double>>> frames_float;
-        std::vector<std::pair<size_t, keyframe<dmxfish::dmx::pixel>>> frames_color;
+
+    public:
+        /**
+         * Set of channels and their transition content
+         */
+        selected_map_impl<size_t, std::vector<keyframe<uint8_t>>> frames_8bit;
+        selected_map_impl<size_t, std::vector<keyframe<uint16_t>>> frames_16bit;
+        selected_map_impl<size_t, std::vector<keyframe<double>>> frames_float;
+        selected_map_impl<size_t, std::vector<keyframe<dmxfish::dmx::pixel>>> frames_color;
 
         /**
          * This will be filled in by the constructor and is sorted. It is used to quickly check if the
@@ -35,5 +49,15 @@ namespace dmxfish::filters::sequencer {
     public:
         // TODO implement application methods and parsing using separate source file
         // TODO implement constructor with string as argument for parsing
+
+        [[nodiscard]] inline bool is_reset_allowed() const {
+            return this->reset_allowed;
+        }
+
+        [[nodiscard]] inline size_t get_transition_id() const {
+            return this->id;
+        }
     };
 }
+
+#undef selected_map_impl

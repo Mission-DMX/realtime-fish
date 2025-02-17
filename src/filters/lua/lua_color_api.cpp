@@ -238,7 +238,7 @@ namespace dmxfish::filters::lua {
         ));
 
         lua.set_function("mix_color_interleaving", sol::overload(
-                dmxfish::filters::lua::mix_color_interleaving_cc,
+                dmxfish::dmx::mix_color_interleaving,
                 dmxfish::filters::lua::mix_color_interleaving_ct,
                 dmxfish::filters::lua::mix_color_interleaving_tc,
                 dmxfish::filters::lua::mix_color_interleaving_tt

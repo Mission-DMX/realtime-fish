@@ -31,70 +31,38 @@ namespace dmxfish {
 
         }
 
-        void filter_sequencer::enqueue_transition(const transition& t, uint64_t event) {
-            if(!t.reset_allowed) {
+        void filter_sequencer::enqueue_transition(const sequencer::transition& t) {
+            // TODO This check is expensive. We need to see if it's too expensive and we need to live with partial resets
+            //  in case of transitions of uneven length.
+            if(!t.is_reset_allowed()) {
                 for (const auto cid : t.affected_channel_ids) {
-                    if (this->channels_8bit[cid].transition_active(t.id) || this->channels_16bit[cid].transition_active(t.id)
-                    || this->channels_float[cid].transition_active(t.id) || this->channels_color[cid].transition_active(t.id)) {
+                    if (this->channels_8bit[cid].transition_active(t.get_transition_id())
+                    || this->channels_16bit[cid].transition_active(t.get_transition_id())
+                    || this->channels_float[cid].transition_active(t.get_transition_id())
+                    || this->channels_color[cid].transition_active(t.get_transition_id())) {
                         return;
                     }
                 }
             }
-            {
-                std::unordered_map<size_t, std::deque<sequencer::keyframe<uint8_t>>> queues;
-                for (const auto& frame: t.frames_8bit) {
-                    if (!queues.contains(frame.first)) {
-                        queues[frame.first] = {};
-                    }
-                    queues[frame.first].push_back(frame.second);
-                }
-                for (auto& [channel_id, queue] : queues) {
-                    this->channels_8bit[channel_id].insert_keyframes(queue, t.id);
-                }
+            for (const auto& [channel_id, frames]: t.frames_8bit) {
+                this->channels_8bit[channel_id].insert_keyframes(frames, t.get_transition_id(), t.is_reset_allowed());
             }
-            {
-                std::unordered_map<size_t, std::deque<sequencer::keyframe<uint16_t>>> queues;
-                for (const auto& frame: t.frames_16bit) {
-                    if (!queues.contains(frame.first)) {
-                        queues[frame.first] = {};
-                    }
-                    queues[frame.first].push_back(frame.second);
-                }
-                for (auto& [channel_id, queue] : queues) {
-                    this->channels_16bit[channel_id].insert_keyframes(queue, t.id);
-                }
+            for (const auto& [channel_id, frames]: t.frames_16bit) {
+                this->channels_16bit[channel_id].insert_keyframes(frames, t.get_transition_id(), t.is_reset_allowed());
             }
-            {
-                std::unordered_map<size_t, std::deque<sequencer::keyframe<double>>> queues;
-                for (const auto& frame: t.frames_float) {
-                    if (!queues.contains(frame.first)) {
-                        queues[frame.first] = {};
-                    }
-                    queues[frame.first].push_back(frame.second);
-                }
-                for (auto& [channel_id, queue] : queues) {
-                    this->channels_float[channel_id].insert_keyframes(queue, t.id);
-                }
+            for (const auto& [channel_id, frames]: t.frames_float) {
+                this->channels_float[channel_id].insert_keyframes(frames, t.get_transition_id(), t.is_reset_allowed());
             }
-            {
-                std::unordered_map<size_t, std::deque<sequencer::keyframe<dmxfish::dmx::pixel>>> queues;
-                for (const auto& frame: t.frames_color) {
-                    if (!queues.contains(frame.first)) {
-                        queues[frame.first] = {};
-                    }
-                    queues[frame.first].push_back(frame.second);
-                }
-                for (auto& [channel_id, queue] : queues) {
-                    this->channels_color[channel_id].insert_keyframes(queue, t.id);
-                }
+            for (const auto& [channel_id, frames]: t.frames_color) {
+                this->channels_color[channel_id].insert_keyframes(frames, t.get_transition_id(), t.is_reset_allowed());
             }
         }
 
         void filter_sequencer::update() {
             for (const auto& event : get_event_storage_instance()->get_storage()) {
-                const auto found_transitions = this->transitions | std::views::filter([](auto& v) {return v.first == event;});
-                if(const auto trans : found_transitions) {
-                    this->enqueue_transition(trans, event);
+                for(auto [iter, range_end] = this->transitions.equal_range(event.get_event_sender().encoded_sender_id);
+                        iter != range_end; iter++) {
+                    this->enqueue_transition(iter->second);
                 }
             }
 

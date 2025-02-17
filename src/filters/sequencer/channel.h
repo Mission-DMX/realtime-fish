@@ -6,16 +6,20 @@
 #pragma once
 
 #include <algorithm>
-#include <deque>
+#include <cstdint>
 #include <numeric>
 #include <unordered_map>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 #include "dmx/pixel.hpp"
+#include "filters/sequencer/frame_queue.hpp"
 #include "filters/sequencer/keyframe.hpp"
 #include "filters/sequencer/time.hpp"
 #include "filters/sequencer/transition.hpp"
+
+#include "lib/macros.hpp"
 
 namespace dmxfish::filters::sequencer {
 
@@ -26,7 +30,7 @@ namespace dmxfish::filters::sequencer {
     };
 
     template <typename T>
-    struct channel {
+    class channel {
         T current_value;
         T default_value;
 
@@ -42,7 +46,7 @@ namespace dmxfish::filters::sequencer {
          * During the update process, the channel value will be updated by the average of the active transition
          * keyframes.
          */
-        std::unordered_map<size_t, std::tuple<sequencer_time_t, T, std::deque<keyframe<T>>>> upcomming_keyframes;
+        std::unordered_map<size_t, frame_queue<T>> upcomming_keyframes;
         bool apply_default_value_on_empty_transition_queue = false;
         interleaving_method i_method = interleaving_method::AVERAGE;
     public:
@@ -58,23 +62,20 @@ namespace dmxfish::filters::sequencer {
             std::vector<size_t> transitions_to_remove;
             std::vector<T> requested_values;
             requested_values.reserve(this->upcomming_keyframes.size());
-            for (auto& [trans_id, trans] : this->upcomming_keyframes) {
-                auto& keyframe_start_time = std::get<0>(trans);
-                auto& keyframe_start_value = std::get<1>(trans);
-                auto& keyframe_queue = std::get<2>(trans);
-                if (keyframe_start_time == 0) {
-                    keyframe_start_time = current_time;
+            for (auto& [trans_id, queue] : this->upcomming_keyframes) {
+                auto keyframe_start_time = queue.get_start_time();
+                auto keyframe_start_value = queue.get_start_value();
+                if (keyframe_start_time <= 0.1) { // It's unlikely that were in the year 1970
+                    queue.set_start_time(current_time);
                 }
                 do {
-                    if (keyframe_queue.empty()) {
+                    if (queue.empty()) {
                         transitions_to_remove.push_back(trans_id);
                         break;
                     }
-                    auto &current_frame = keyframe_queue.front();
-                    if (current_time * time_scale >= keyframe_start_time + current_frame.duration) {
-                        keyframe_start_time = current_time;
-                        keyframe_start_value = current_frame.value;
-                        keyframe_queue.pop_front();
+                    const auto& current_frame = queue.front();
+                    if (current_time * time_scale >= keyframe_start_time + current_frame.get_duration()) {
+                        queue.advance(current_time, this->current_value);
                         continue;
                     }
                     requested_values.push_back(current_frame.calculate_update(current_time - keyframe_start_time, keyframe_start_value, time_scale));
@@ -92,11 +93,24 @@ namespace dmxfish::filters::sequencer {
             return this->upcomming_keyframes.contains(transition_id);
         }
 
-        void insert_keyframes(std::deque<keyframe<T>> frames, size_t transition_id) {
-            this->upcomming_keyframes[transition_id] = std::make_tuple(0, this->current_value, frames);
+        bool insert_keyframes(const std::vector<keyframe<T>>& frames, const size_t transition_id, bool reset_allowed) {
+            if (this->transition_active(transition_id)) {
+                if(!reset_allowed) {
+                    return false;
+                } else {
+                    this->upcomming_keyframes.erase(transition_id);
+                }
+            }
+            return this->upcomming_keyframes.try_emplace(transition_id, frames, 0, this->current_value).second;
         }
+
+        COMPILER_SUPRESS("-Weffc++")
+        [[nodiscard]] inline T* get_channel_pointer() {
+            return &(this->current_value);
+        }
+        COMPILER_RESTORE("-Weffc++")
     private:
-        void perform_update_arbiting(const std::vector<T>& values) {
+        void perform_update_arbiting(std::vector<T>& values) {
             if (values.empty()) [[unlikely]] {
                 return;
             }
@@ -105,7 +119,7 @@ namespace dmxfish::filters::sequencer {
                 case interleaving_method::AVERAGE:
                     {
                         if constexpr (std::is_same<T, uint8_t>::value || std::is_same<T, uint16_t>::value) {
-                            this->current_value = std::accumulate(values.begin(), values.end(), 0) / values.size();
+                            this->current_value = (T) (std::accumulate(values.begin(), values.end(), 0) / values.size());
                         } else if constexpr (std::is_same<T, double>::value) {
                             double acc = 0.0;
                             double size = (double) values.size();
@@ -136,16 +150,16 @@ namespace dmxfish::filters::sequencer {
                             b = std::sqrt(b);
                             i = std::min(i, 1.0);
                             const auto vlen = std::sqrt(r*r+g*g+b*b);
-                            this->current_value.setRed((r/vlen)*65535*i);
-                            this->current_value.setGreen((g/vlen)*65535*i);
-                            this->current_value.setBlue((b/vlen)*65535*i);
+                            this->current_value.setRed((uint16_t) ((r/vlen)*65535.0*i));
+                            this->current_value.setGreen((uint16_t) ((g/vlen)*65535.0*i));
+                            this->current_value.setBlue((uint16_t) ((b/vlen)*65535.0*i));
                         }
                     }
                     break;
                 case interleaving_method::MAX:
                     {
                         if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
-                            unsigned int max_r = 0, max_g = 0, max_b = 0;
+                            uint16_t max_r = 0, max_g = 0, max_b = 0;
                             for (auto& color : values) {
                                 max_r = std::max(max_r, color.getRed());
                                 max_g = std::max(max_g, color.getGreen());
@@ -160,7 +174,7 @@ namespace dmxfish::filters::sequencer {
                 case interleaving_method::MIN:
                     if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
                         if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
-                            unsigned int min_r = 65535, min_g = 65535, min_b = 65535;
+                            uint16_t min_r = 65535, min_g = 65535, min_b = 65535;
                             for (auto& color : values) {
                                 min_r = std::min(min_r, color.getRed());
                                 min_g = std::min(min_g, color.getGreen());

@@ -24,8 +24,8 @@ namespace dmxfish {
         class filter_sequencer : public filter {
         private:
             COMPILER_SUPRESS("-Weffc++")
-            double* input_time;
-	    double* time_scale;
+            double* input_time = nullptr;
+            double* time_scale = nullptr;
             COMPILER_RESTORE("-Weffc++")
             std::vector<sequencer::channel<uint8_t>> channels_8bit;
             std::vector<sequencer::channel<uint16_t>> channels_16bit;
@@ -42,7 +42,7 @@ namespace dmxfish {
             virtual void update() override;
             virtual void scene_activated() override;
         private:
-            void enqueue_transition(const transition& t);
+            void enqueue_transition(const sequencer::transition& t);
         };
 
     } // filters

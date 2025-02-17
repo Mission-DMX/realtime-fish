@@ -22,22 +22,27 @@ namespace dmxfish::filters::sequencer {
     };
 
     template <typename T>
-    struct keyframe{
-        T value;
-        transition_t transition;
-        sequencer_time_t duration;
-        keyframe(T val, transition_t tr): value(val), transition(tr) {}
+    class keyframe{
+        const T value;
+        const transition_t transition;
+        const sequencer_time_t duration;
+    public:
+        keyframe(T& val, transition_t tr, sequencer_time_t fduration): value(val), transition(tr), duration(fduration) {}
 
-        T calculate_update(sequencer_time_t time_since_start, T start_value, double time_scale) {
+        T calculate_update(const sequencer_time_t time_since_start, const T& start_value, const double time_scale) const {
             const double interleave_point = this->compute_interleave_point(time_since_start, time_scale);
             if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
                 return dmxfish::dmx::mix_color_interleaving(start_value, value, interleave_point);
             } else {
-                return (T) (start_value * (1-interleave_point)) + (value * interleave_point);
+                return (T) ((((double) start_value) * (1-interleave_point)) + (((double) value) * interleave_point));
             }
         }
+
+        [[nodiscard]] inline sequencer_time_t get_duration() const {
+            return this->duration;
+        }
     private:
-        double compute_interleave_point(sequencer_time_t elapsed_time, double time_scale) {
+        double compute_interleave_point(sequencer_time_t elapsed_time, double time_scale) const {
             switch(this->transition) {
                 default:
                 case transition_t::LINEAR:
