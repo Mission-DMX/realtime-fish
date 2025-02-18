@@ -4,6 +4,9 @@
 //
 
 #pragma once
+
+#include <functional>
+
 #include "filters/sequencer/keyframe.hpp"
 #include "filters/sequencer/time.hpp"
 
@@ -13,22 +16,22 @@ namespace dmxfish {
 
             template <typename T>
             class frame_queue {
-                const std::vector<keyframe<T>>& storage;
+                const std::vector<keyframe<T>>* storage_wrapper;
                 size_t position = 0;
                 sequencer_time_t start_time;
                 T start_value;
             public:
-                frame_queue() = delete;
-                frame_queue(frame_queue& other) = default;
-                frame_queue(const std::vector<keyframe<T>>& ref_to_storage, sequencer_time_t current_time, T current_value) :
-                    storage(ref_to_storage), start_time(current_time), start_value(current_value) {}
+                //frame_queue() = delete;
+                //frame_queue(frame_queue& other) = default;
+                frame_queue(const std::vector<keyframe<T>>* ref_to_storage, sequencer_time_t current_time, T current_value) :
+                    storage_wrapper(ref_to_storage), start_time(current_time), start_value(current_value) {}
 
                 [[nodiscard]] inline bool empty() const {
-                    return position >= storage.size();
+                    return position >= storage_wrapper->size();
                 }
 
                 [[nodiscard]] inline const keyframe<T>& front() const {
-                    return this->storage[position];
+                    return (*this->storage_wrapper)[position];
                 }
 
                 inline void pop_front() {

@@ -11,7 +11,7 @@
 
 #include "dmx/pixel.hpp"
 #include "filters/filter.hpp"
-#include "filters/sequencer/channel.h"
+#include "filters/sequencer/channel.hpp"
 #include "filters/sequencer/keyframe.hpp"
 #include "filters/sequencer/name_maps.h"
 #include "filters/sequencer/transition.hpp"

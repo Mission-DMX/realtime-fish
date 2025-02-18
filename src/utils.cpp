@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#include "utils.h"
+#include "utils.hpp"
 
 #include <algorithm>
 #include <cctype>

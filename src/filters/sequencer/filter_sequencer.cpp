@@ -5,6 +5,7 @@
 
 #include "filters/sequencer/filter_sequencer.hpp"
 
+#include <functional>
 #include <ranges>
 
 #include "utils.hpp"
@@ -93,10 +94,10 @@ namespace dmxfish {
                 throw filter_config_exception("Configuration map does not contain 'transitions'.", filter_type::filter_sequencer, own_id);
             } else {
                 try {
-                    for (const auto transition_str: utils::split(trans_iter->second, ';')) {
+                    for (const auto& transition_str: utils::split(trans_iter->second, ';')) {
                         const auto glob_param = utils::split(transition_str, ',');
-                        const auto trigger_event_id = std::stol(utils::get_from_str_list(glob_param), 0);
-                        this->transitions.insert(trigger_event_id, {utils::get_from_str_list(glob_param, 1)});
+                        const auto trigger_event_id = std::stol(utils::get_from_str_list(glob_param, 0));
+                        this->transitions.insert({trigger_event_id, sequencer::transition(utils::get_from_str_list(glob_param, 1), nm)});
                     }
                 } catch (const std::invalid_argument& e) {
                     throw filter_config_exception(std::string("Unable to decode transitions: ") + e.what(), filter_type::filter_sequencer, own_id);
@@ -148,16 +149,16 @@ namespace dmxfish {
                 }
             }
             for (const auto& [channel_id, frames]: t.frames_8bit) {
-                this->channels_8bit[channel_id].insert_keyframes(frames, t.get_transition_id(), t.is_reset_allowed());
+                this->channels_8bit[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed());
             }
             for (const auto& [channel_id, frames]: t.frames_16bit) {
-                this->channels_16bit[channel_id].insert_keyframes(frames, t.get_transition_id(), t.is_reset_allowed());
+                this->channels_16bit[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed());
             }
             for (const auto& [channel_id, frames]: t.frames_float) {
-                this->channels_float[channel_id].insert_keyframes(frames, t.get_transition_id(), t.is_reset_allowed());
+                this->channels_float[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed());
             }
             for (const auto& [channel_id, frames]: t.frames_color) {
-                this->channels_color[channel_id].insert_keyframes(frames, t.get_transition_id(), t.is_reset_allowed());
+                this->channels_color[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed());
             }
         }
 

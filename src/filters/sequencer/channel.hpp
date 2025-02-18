@@ -33,15 +33,7 @@ namespace dmxfish::filters::sequencer {
         MAX
     };
 
-    interleaving_method interleaving_method_from_string(const std::string& s) {
-        if(auto upper_s = utils::toupper(s); s == "MAX") {
-            return interleaving_method::MAX;
-        } else if(upper_s == "MIN") {
-            return interleaving_method::MIN;
-        } else {
-            return interleaving_method::AVERAGE;
-        }
-    }
+    interleaving_method interleaving_method_from_string(const std::string& s);
 
     template <typename T>
     class channel {
@@ -115,7 +107,7 @@ namespace dmxfish::filters::sequencer {
             return this->upcomming_keyframes.contains(transition_id);
         }
 
-        bool insert_keyframes(const std::vector<keyframe<T>>& frames, const size_t transition_id, bool reset_allowed) {
+        bool insert_keyframes(const std::vector<keyframe<T>>* frames, const size_t transition_id, bool reset_allowed) {
             if (this->transition_active(transition_id)) {
                 if(!reset_allowed) {
                     return false;
