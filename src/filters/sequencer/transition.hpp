@@ -17,6 +17,8 @@
 #define selected_map_impl std::map
 #endif
 
+#include <list>
+#include <string>
 #include <vector>
 
 #include "dmx/pixel.hpp"
@@ -49,7 +51,7 @@ namespace dmxfish::filters::sequencer {
         std::vector<size_t> affected_channel_ids;
     public:
         transition();
-        transition(const std::string& s, const name_maps& nm);
+        transition(const std::list<std::string>& s, const name_maps& nm);
 
         [[nodiscard]] inline bool is_reset_allowed() const {
             return this->reset_allowed;

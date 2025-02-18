@@ -95,9 +95,10 @@ namespace dmxfish {
             } else {
                 try {
                     for (const auto& transition_str: utils::split(trans_iter->second, ';')) {
-                        const auto glob_param = utils::split(transition_str, ',');
-                        const auto trigger_event_id = std::stol(utils::get_from_str_list(glob_param, 0));
-                        this->transitions.insert({trigger_event_id, sequencer::transition(utils::get_from_str_list(glob_param, 1), nm)});
+                        auto glob_param = utils::split(transition_str, '#');
+                        const auto trigger_event_id = std::stol(glob_param.front());
+                        glob_param.pop_front();
+                        this->transitions.insert({trigger_event_id, sequencer::transition(glob_param, nm)});
                     }
                 } catch (const std::invalid_argument& e) {
                     throw filter_config_exception(std::string("Unable to decode transitions: ") + e.what(), filter_type::filter_sequencer, own_id);

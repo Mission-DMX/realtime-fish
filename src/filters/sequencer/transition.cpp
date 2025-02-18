@@ -10,7 +10,7 @@ namespace dmxfish::filters::sequencer {
         // Nothing to do here
     }
 
-    transition::transition(const std::string& s, const name_maps& nm) : transition() {
+    transition::transition(const std::list<std::string>& s, const name_maps& nm) : transition() {
         // TODO implement constructor with string as argument for parsing
     }
 }
