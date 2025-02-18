@@ -21,6 +21,7 @@
 
 #include "dmx/pixel.hpp"
 #include "filters/sequencer/keyframe.hpp"
+#include "filters/sequencer/name_maps.h"
 
 namespace dmxfish::filters::sequencer {
     struct transition {
@@ -47,8 +48,8 @@ namespace dmxfish::filters::sequencer {
          */
         std::vector<size_t> affected_channel_ids;
     public:
-        // TODO implement application methods and parsing using separate source file
-        // TODO implement constructor with string as argument for parsing
+        transition();
+        transition(const std::string& s, const name_maps& nm);
 
         [[nodiscard]] inline bool is_reset_allowed() const {
             return this->reset_allowed;

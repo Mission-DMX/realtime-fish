@@ -44,8 +44,7 @@ namespace dmxfish {
             m[new_name] = channel_id;
         }
 
-        void filter_sequencer::construct_channels(const std::map<std::string, std::string>& configuration, const std::string& own_id) {
-            std::map<std::string, size_t> name_to_id_8bit, name_to_id_16bit, name_to_id_float, name_to_id_color;
+        void filter_sequencer::construct_channels(const std::map<std::string, std::string>& configuration, const std::string& own_id, name_maps& nm) {
             if(!configuration.contains("channels")) {
                 throw filter_config_exception("Expected the configuration to contain a channel definition.", filter_type::filter_sequencer, own_id);
             }
@@ -69,16 +68,16 @@ namespace dmxfish {
                 param_list.pop_front();
 
                 if (data_type == "8BIT") {
-                    this->ensure_uniqueness(name_to_id_8bit, name, own_id, this->channels_8bit.size());
+                    this->ensure_uniqueness(nm.name_to_id_8bit, name, own_id, this->channels_8bit.size());
                     this->channels_8bit.emplace_back(name, std::stoi(default_value), default_on_empty, default_on_clear, interleaving_method);
                 } else if (data_type == "16BIT") {
-                    this->ensure_uniqueness(name_to_id_16bit, name, own_id, this->channels_16bit.size());
+                    this->ensure_uniqueness(nm.name_to_id_16bit, name, own_id, this->channels_16bit.size());
                     this->channels_16bit.emplace_back(name, std::stoi(default_value), default_on_empty, default_on_clear, interleaving_method);
                 } else if (data_type == "FLOAT") {
-                    this->ensure_uniqueness(name_to_id_float, name, own_id, this->channels_float.size());
+                    this->ensure_uniqueness(nm.name_to_id_float, name, own_id, this->channels_float.size());
                     this->channels_float.emplace_back(name, std::stod(default_value), default_on_empty, default_on_clear, interleaving_method);
                 } else if (data_type == "COLOR") {
-                    this->ensure_uniqueness(name_to_id_color, name, own_id, this->channels_color.size());
+                    this->ensure_uniqueness(nm.name_to_id_color, name, own_id, this->channels_color.size());
                     this->channels_color.emplace_back(name, dmxfish::dmx::stopixel(default_value), default_on_empty, default_on_clear, interleaving_method);
                 } else {
                     throw filter_config_exception(std::string("Unknown channel data type: '") + data_type
@@ -89,11 +88,28 @@ namespace dmxfish {
             }
         }
 
+        void filter_sequencer::construct_transitions(const std::map<std::string, std::string>& configuration, const std::string& own_id, name_maps& nm) {
+            if(const auto trans_iter = configuration.find("transitions"); trans_iter == configuration.end()) [[unlikely]] {
+                throw filter_config_exception("Configuration map does not contain 'transitions'.", filter_type::filter_sequencer, own_id);
+            } else {
+                try {
+                    for (const auto transition_str: utils::split(trans_iter->second, ';')) {
+                        const auto glob_param = utils::split(transition_str, ',');
+                        const auto trigger_event_id = std::stol(utils::get_from_str_list(glob_param), 0);
+                        this->transitions.insert(trigger_event_id, {utils::get_from_str_list(glob_param, 1)});
+                    }
+                } catch (const std::invalid_argument& e) {
+                    throw filter_config_exception(std::string("Unable to decode transitions: ") + e.what(), filter_type::filter_sequencer, own_id);
+                }
+            }
+        }
+
         void filter_sequencer::setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) {
             MARK_UNUSED(initial_parameters);
+            name_maps nm;
             this->decode_input_channels(input_channels, own_id);
-            this->construct_channels(configuration, own_id);
-            // TODO construct transitions (using name_to_id_* maps) and make sure that their ids are unique
+            this->construct_channels(configuration, own_id, nm);
+            this->construct_transitions(configuration, own_id, nm);
         }
 
         bool filter_sequencer::receive_update_from_gui(const std::string& key, const std::string& _value) {

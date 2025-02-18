@@ -13,6 +13,7 @@
 #include "filters/filter.hpp"
 #include "filters/sequencer/channel.h"
 #include "filters/sequencer/keyframe.hpp"
+#include "filters/sequencer/name_maps.h"
 #include "filters/sequencer/transition.hpp"
 #include "filters/sequencer/time.hpp"
 
@@ -44,7 +45,8 @@ namespace dmxfish {
         private:
             void ensure_uniqueness(std::map<std::string, size_t>& m, const std::string& new_name, const std::string& own_id, size_t channel_id);
             void decode_input_channels(const channel_mapping& input_channels, const std::string& own_id);
-            void construct_channels(const std::map<std::string, std::string>& configuration, const std::string& own_id);
+            void construct_channels(const std::map<std::string, std::string>& configuration, const std::string& own_id, name_maps& nm);
+            void construct_transitions(const std::map<std::string, std::string>& configuration, const std::string& own_id, name_maps& nm);
             void enqueue_transition(const sequencer::transition& t);
         };
 
