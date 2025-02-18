@@ -50,6 +50,7 @@ namespace dmxfish {
                 throw filter_config_exception("Expected the configuration to contain a channel definition.", filter_type::filter_sequencer, own_id);
             }
             const auto& channel_map_str = configuration.at("channels");
+            std::map<std::string, size_t> global_chan_map;
             for (size_t current_start = 0, next_end = channel_map_str.find(";", 0); next_end != std::string::npos; next_end = channel_map_str.find(";", next_end)) {
                 auto param_list = utils::split(channel_map_str.substr(current_start, next_end - current_start), ':');
                 if (param_list.size() < 4) {
@@ -69,16 +70,24 @@ namespace dmxfish {
                 param_list.pop_front();
 
                 if (data_type == "8BIT") {
-                    this->ensure_uniqueness(nm.name_to_id_8bit, name, own_id, this->channels_8bit.size());
+                    const auto channel_id = this->channels_8bit.size();
+                    this->ensure_uniqueness(global_chan_map, name, own_id, channel_id);
+                    nm.name_to_id_8bit[name] = channel_id;
                     this->channels_8bit.emplace_back(name, std::stoi(default_value), default_on_empty, default_on_clear, interleaving_method);
                 } else if (data_type == "16BIT") {
-                    this->ensure_uniqueness(nm.name_to_id_16bit, name, own_id, this->channels_16bit.size());
+                    const auto channel_id = this->channels_16bit.size();
+                    this->ensure_uniqueness(global_chan_map, name, own_id, channel_id);
+                    nm.name_to_id_16bit[name] = channel_id;
                     this->channels_16bit.emplace_back(name, std::stoi(default_value), default_on_empty, default_on_clear, interleaving_method);
                 } else if (data_type == "FLOAT") {
-                    this->ensure_uniqueness(nm.name_to_id_float, name, own_id, this->channels_float.size());
+                    const auto channel_id = this->channels_float.size();
+                    this->ensure_uniqueness(global_chan_map, name, own_id, channel_id);
+                    nm.name_to_id_float[name] = channel_id;
                     this->channels_float.emplace_back(name, std::stod(default_value), default_on_empty, default_on_clear, interleaving_method);
                 } else if (data_type == "COLOR") {
-                    this->ensure_uniqueness(nm.name_to_id_color, name, own_id, this->channels_color.size());
+                    const auto channel_id = this->channels_color.size();
+                    this->ensure_uniqueness(global_chan_map, name, own_id, channel_id);
+                    nm.name_to_id_color[name] = channel_id;
                     this->channels_color.emplace_back(name, dmxfish::dmx::stopixel(default_value), default_on_empty, default_on_clear, interleaving_method);
                 } else {
                     throw filter_config_exception(std::string("Unknown channel data type: '") + data_type

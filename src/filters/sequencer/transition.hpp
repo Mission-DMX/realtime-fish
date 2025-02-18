@@ -26,6 +26,7 @@
 #include "filters/sequencer/name_maps.h"
 
 namespace dmxfish::filters::sequencer {
+
     struct transition {
     private:
         /**

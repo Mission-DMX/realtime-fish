@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <string>
 
 #include "dmx/pixel.hpp"
 #include "filters/sequencer/time.hpp"
@@ -21,13 +22,15 @@ namespace dmxfish::filters::sequencer {
         EASE_OUT
     };
 
+    transition_t stotransition(const std::string& s);
+
     template <typename T>
     class keyframe{
         const T value;
         const transition_t transition;
         const sequencer_time_t duration;
     public:
-        keyframe(T& val, transition_t tr, sequencer_time_t fduration): value(val), transition(tr), duration(fduration) {}
+        keyframe(const T& val, const transition_t tr, const sequencer_time_t fduration): value(val), transition(tr), duration(fduration) {}
 
         T calculate_update(const sequencer_time_t time_since_start, const T& start_value, const double time_scale) const {
             const double interleave_point = this->compute_interleave_point(time_since_start, time_scale);
