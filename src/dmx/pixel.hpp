@@ -61,10 +61,14 @@ class pixel {
     void setGreen(uint16_t g);
     void setBlue(uint16_t b);
 
-	[[nodiscard]] std::string str();
+	[[nodiscard]] std::string str() const;
 };
 
     [[nodiscard]] dmxfish::dmx::pixel mix_color_interleaving(dmxfish::dmx::pixel c1, dmxfish::dmx::pixel c2, double range);
     [[nodiscard]] dmxfish::dmx::pixel stopixel(const std::string& s);
 
+}
+
+namespace std {
+    [[nodiscard]] std::string to_string(const dmxfish::dmx::pixel &p);
 }

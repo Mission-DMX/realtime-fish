@@ -7,7 +7,7 @@
 
 namespace dmxfish::dmx {
 
-    [[nodiscard]] std::string pixel::str() {
+    [[nodiscard]] std::string pixel::str() const {
         std::stringstream sshsi;
         std::stringstream ssrgb;
         std::stringstream ss;
@@ -257,5 +257,11 @@ namespace dmxfish::dmx {
         const auto s = std::stod(str.substr(first_position + 1, second_position - first_position - 1));
         const auto i = std::stod(str.substr(second_position + 1));
         return {h, s, i};
+    }
+}
+
+namespace std {
+    std::string to_string(const dmxfish::dmx::pixel &p) {
+        return p.str();
     }
 }

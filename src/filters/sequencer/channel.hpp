@@ -76,15 +76,16 @@ namespace dmxfish::filters::sequencer {
             std::vector<T> requested_values;
             requested_values.reserve(this->upcomming_keyframes.size());
             for (auto& [trans_id, queue] : this->upcomming_keyframes) {
-                auto keyframe_start_time = queue.get_start_time();
-                auto keyframe_start_value = queue.get_start_value();
-                if (keyframe_start_time <= 0.1) { // It's unlikely that were in the year 1970
-                    queue.set_start_time(current_time);
-                }
                 do {
                     if (queue.empty()) {
                         transitions_to_remove.push_back(trans_id);
                         break;
+                    }
+                    const auto keyframe_start_time = queue.get_start_time();
+                    const auto keyframe_start_value = queue.get_start_value();
+                    if (keyframe_start_time < 0) { // It's unlikely that were prior to the year 1970
+                        queue.set_start_time(current_time);
+                        continue;
                     }
                     const auto& current_frame = queue.front();
                     if (current_time * time_scale >= keyframe_start_time + current_frame.get_duration()) {
@@ -117,7 +118,7 @@ namespace dmxfish::filters::sequencer {
                 }
             }
             ::spdlog::debug("Starting execution of transition {} in channel {}.", transition_id, this->channel_name);
-            return this->upcomming_keyframes.try_emplace(transition_id, frames, 0, this->current_value).second;
+            return this->upcomming_keyframes.try_emplace(transition_id, frames, -1.0, this->current_value).second;
         }
 
         COMPILER_SUPRESS("-Weffc++")

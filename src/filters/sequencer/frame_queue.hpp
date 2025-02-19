@@ -6,6 +6,7 @@
 #pragma once
 
 #include <functional>
+#include <type_traits>
 
 #include "filters/sequencer/keyframe.hpp"
 #include "filters/sequencer/time.hpp"
@@ -20,6 +21,7 @@ namespace dmxfish {
                 size_t position = 0;
                 sequencer_time_t start_time;
                 T start_value;
+                static_assert(!std::is_reference<T>::value && !std::is_pointer<T>::value, "Enclosed type must not be reference or pointer");
             public:
                 //frame_queue() = delete;
                 //frame_queue(frame_queue& other) = default;

@@ -9,6 +9,7 @@
 #include <ranges>
 
 #include "utils.hpp"
+#include "lib/logging.hpp"
 #include "main.hpp"
 
 namespace dmxfish {
@@ -50,8 +51,15 @@ namespace dmxfish {
                 throw filter_config_exception("Expected the configuration to contain a channel definition.", filter_type::filter_sequencer, own_id);
             }
             const auto& channel_map_str = configuration.at("channels");
+            if(channel_map_str.empty()) [[unlikely]] {
+                ::spdlog::warn("Found empty channel definition while constructing filter '{}'.", own_id);
+            }
+
             std::map<std::string, size_t> global_chan_map;
-            for (size_t current_start = 0, next_end = channel_map_str.find(";", 0); next_end != std::string::npos; next_end = channel_map_str.find(";", next_end)) {
+            size_t current_start = 0, next_end = channel_map_str.find(";", 0);
+            bool final_round = false;
+            do {
+                final_round = (next_end == std::string::npos);
                 auto param_list = utils::split(channel_map_str.substr(current_start, next_end - current_start), ':');
                 if (param_list.size() < 4) {
                     throw filter_config_exception("Channel definition contains underspecified channels.", filter_type::filter_sequencer, own_id);
@@ -95,7 +103,8 @@ namespace dmxfish {
                 }
 
                 current_start = ++next_end;
-            }
+                next_end = channel_map_str.find(";", next_end);
+            } while (!final_round);
         }
 
         void filter_sequencer::construct_transitions(const std::map<std::string, std::string>& configuration, const std::string& own_id, name_maps& nm) {
