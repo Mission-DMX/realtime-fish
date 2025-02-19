@@ -1,6 +1,6 @@
-#include "filters/filter_lua_script.hpp"
+#include "filters/lua/filter_lua_script.hpp"
 
-#include "filters/filter_lua_functions.hpp"
+#include "filters/lua/filter_lua_functions.hpp"
 #include "lib/macros.hpp"
 #include "lib/logging.hpp"
 #include "dmx/pixel.hpp"

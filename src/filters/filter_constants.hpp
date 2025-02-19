@@ -44,11 +44,7 @@ namespace dmxfish::filters {
                 } else if constexpr (std::is_same<T, double>::value) {
                     this->value = std::stod(_value);
                 } else {
-                    const auto first_position = _value.find(",");
-                    this->value.setHue(std::stod(_value.substr(0, first_position)));
-                    const auto second_position = _value.find(",", first_position + 1);
-                    this->value.setSaturation(std::stod(_value.substr(first_position + 1, second_position - first_position - 1)));
-                    this->value.setIluminance(std::stod(_value.substr(second_position + 1)));
+                    this->value = dmxfish::dmx::stopixel(_value);
                 }
             } catch (const std::invalid_argument& ex) {
                 MARK_UNUSED(ex);

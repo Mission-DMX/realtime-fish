@@ -12,8 +12,8 @@
 using namespace dmxfish::filters;
 
 struct Iomanager_Init {
-    Iomanager_Init()  { construct_iomanager();}
-    ~Iomanager_Init() { destruct_iomanager(); }
+    Iomanager_Init()  { construct_managers();}
+    ~Iomanager_Init() { destruct_managers(); }
 };
 
 BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)

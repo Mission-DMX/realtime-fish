@@ -129,11 +129,11 @@ namespace dmxfish::filters {
                     throw filter_config_exception(std::string("Unable to decode `item_count` parameter: ") + e.what(),
                                                   own_type, own_id);
                 }
-                this->params.reserve();
+                this->params.reserve(input_count);
             }
             for (auto i = 0; i < input_count; i++) {
                 const auto key = std::to_string(i);
-                auto& selected_map = get_channel_map(input_channels);
+                auto& selected_map = get_const_channel_map(input_channels);
                 if (!selected_map.contains(key)) [[unlikely]] {
                     throw filter_config_exception("Expected channel input map to contain key: " + key, own_type, own_id);
                 }
@@ -165,7 +165,7 @@ namespace dmxfish::filters {
 
         virtual void scene_activated() override {}
     private:
-        constexpr const std::unordered_map<std::string, T>& get_channel_map(const channel_mapping& input_channels) const {
+        constexpr std::map<std::string, T*>& get_channel_map(channel_mapping& input_channels) const {
             if constexpr (std::is_same<T, uint8_t>::value) {
                 return input_channels.eight_bit_channels;
             } else if constexpr (std::is_same<T, uint16_t>::value) {
@@ -173,7 +173,19 @@ namespace dmxfish::filters {
             } else if constexpr (std::is_same<T, double>::value) {
                 return input_channels.float_channels;
             } else {
-                static_assert(false);
+                static_assert(std::is_same<T, uint8_t>::value || std::is_same<T, uint16_t>::value || std::is_same<T, double>::value, "This filter does not support colors.");
+            }
+        }
+
+        constexpr const std::map<std::string, T*>& get_const_channel_map(const channel_mapping& input_channels) const {
+            if constexpr (std::is_same<T, uint8_t>::value) {
+                return input_channels.eight_bit_channels;
+            } else if constexpr (std::is_same<T, uint16_t>::value) {
+                return input_channels.sixteen_bit_channels;
+            } else if constexpr (std::is_same<T, double>::value) {
+                return input_channels.float_channels;
+            } else {
+                static_assert(std::is_same<T, uint8_t>::value || std::is_same<T, uint16_t>::value || std::is_same<T, double>::value, "This filter does not support colors.");
             }
         }
     };

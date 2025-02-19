@@ -1,5 +1,6 @@
 //
 // Created by doralitze on 11/15/23.
+// SPDX-License-Identifier: GPL-3.0-or-later
 //
 
 #include "event_storage.hpp"
@@ -71,5 +72,21 @@ namespace dmxfish::events {
         next_id.decoded_representation.sender = next_slot;
         this->senders.emplace_back(self);
         return (event_sender_t) next_id;
+    }
+
+    std::shared_ptr<event_source> event_storage::find_source_by_name(const std::string& name) {
+        if (name.empty()) [[unlikely]] {
+            return nullptr;
+        }
+        auto& m = this->index_source_by_name;
+        if(m.count(name) == 0) {
+            return nullptr;
+        }
+        auto wptr = this->index_source_by_name.at(name);
+        if (wptr.expired()) [[unlikely]] {
+            m.erase(name);
+            return nullptr;
+        }
+        return wptr.lock();
     }
 }

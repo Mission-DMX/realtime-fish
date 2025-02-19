@@ -70,6 +70,7 @@ namespace dmxfish::filters {
         filter_debug_remote_8bit = 65,
         filter_debug_remote_16bit = 66,
         filter_debug_remote_float = 67,
-        filter_debug_remote_pixel = 68
+        filter_debug_remote_pixel = 68,
+        filter_sequencer = 69
     };
 }
