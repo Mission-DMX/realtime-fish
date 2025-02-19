@@ -6,13 +6,9 @@
 #include "io/iomanager.hpp"
 
 #include "io/universe_sender.hpp"
-#include <filesystem>
 #include <map>
 #include <memory>
 #include <sstream>
-
-#include "main.hpp"
-#include "lib/logging.hpp"
 
 #include "rmrf-net/client_factory.hpp"
 #include "rmrf-net/ioqueue.hpp"
@@ -24,30 +20,9 @@
 
 #include <google/protobuf/text_format.h>
 
+#include "../test/iomanager_test_fixture.hpp"
+
 using namespace dmxfish::filters;
-
-struct gf {
-    bool constructed = true;
-    gf() {
-        if (std::filesystem::exists("/tmp/fish.sock")) {
-            ::spdlog::warn("Found existing socket. Maybe from a rouge test? Attempting to remove it.");
-            std::filesystem::remove("/tmp/fish.sock");
-        }
-        if(std::filesystem::exists("/tmp/fish.sock")) {
-            constructed = false;
-            ::spdlog::warn("Skipped manager init");
-        } else {
-            construct_managers();
-        }
-    }
-    ~gf() {
-        if(constructed) {
-            destruct_managers();
-        }
-    }
-};
-
-BOOST_TEST_GLOBAL_FIXTURE(gf);
 
 BOOST_AUTO_TEST_CASE(test_error_init) {
     spdlog::set_level(spdlog::level::debug);

@@ -115,12 +115,19 @@ namespace dmxfish {
             }
         }
 
+        void filter_sequencer::pre_setup(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const std::string& own_id) {
+            MARK_UNUSED(initial_parameters);
+            this->tmp_name_maps = std::make_unique<name_maps>();
+            name_maps& nm = *(this->tmp_name_maps);
+            this->construct_channels(configuration, own_id, nm);
+        }
+
         void filter_sequencer::setup_filter(const std::map<std::string, std::string>& configuration, const std::map<std::string, std::string>& initial_parameters, const channel_mapping& input_channels, const std::string& own_id) {
             MARK_UNUSED(initial_parameters);
-            name_maps nm;
+            name_maps& nm = *(this->tmp_name_maps);
             this->decode_input_channels(input_channels, own_id);
-            this->construct_channels(configuration, own_id, nm);
             this->construct_transitions(configuration, own_id, nm);
+            this->tmp_name_maps = nullptr;
         }
 
         bool filter_sequencer::receive_update_from_gui(const std::string& key, const std::string& _value) {
@@ -180,18 +187,19 @@ namespace dmxfish {
                 }
             }
 
-            auto current_time = *(this->input_time);
+            const auto current_time = *(this->input_time);
+            const auto ts = *(this->time_scale);
             for (auto& c : this->channels_8bit) {
-                c.apply_update(current_time, *time_scale);
+                c.apply_update(current_time, ts);
             }
             for (auto& c : this->channels_16bit) {
-                c.apply_update(current_time, *time_scale);
+                c.apply_update(current_time, ts);
             }
             for (auto& c : this->channels_float) {
-                c.apply_update(current_time, *time_scale);
+                c.apply_update(current_time, ts);
             }
             for (auto& c : this->channels_color) {
-                c.apply_update(current_time, *time_scale);
+                c.apply_update(current_time, ts);
             }
         }
 
