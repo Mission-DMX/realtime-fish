@@ -1,11 +1,13 @@
 //
 // Created by doralitze on 11/15/23.
+// SPDX-License-Identifier: GPL-3.0-or-later
 //
 
 #pragma once
 
 #include <cstddef>
 #include <vector>
+#include <string>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -23,6 +25,7 @@ namespace dmxfish::events {
         bool current_read_storage_is_a = false;
         std::mutex storage_swap_mutex;
         std::map<event_sender_t, event> ongoing_events;
+        std::map<std::string, std::weak_ptr<event_source>> index_source_by_name;
     public:
         friend class event_source;
 
@@ -54,6 +57,17 @@ namespace dmxfish::events {
             return this->current_read_storage_is_a ? this->storage_a : this->storage_b;
             // TODO change this to return a view on the active event storage
         }
+
+        inline std::vector<std::shared_ptr<event_source>> get_registered_senders() {
+            return this->senders;
+        }
+
+        /**
+         * This method searches for the event sender specified by its name.
+         * @param name The name to look for
+         * @return A shared pointer to the event sender or nullptr if it could not be found.
+         */
+        std::shared_ptr<event_source> find_source_by_name(const std::string& name);
     private:
         event_sender_t  register_event_source(const std::shared_ptr<event_source>& self);
     };

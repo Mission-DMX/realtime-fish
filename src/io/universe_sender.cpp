@@ -1,16 +1,20 @@
 #include "universe_sender.hpp"
 
 #include <map>
+#include <optional>
 #include <vector>
 
 #include "dmx/ftdi_universe.hpp"
+#include "dmx/ioboard_universe.hpp"
 #include "io/artnet_handler.hpp"
+#include "io/ioboard/ioboard.hpp"
 #include "lib/logging.hpp"
 #include "net/sock_address_factory.hpp"
 
 namespace dmxfish::io {
 
 static artnet_handler _artnet_handler{"0.0.0.0"}; // TODO get external interface from configuration
+static std::optional<ioboard> ioboard_handler_opt;
 static std::map<int, std::shared_ptr<dmxfish::dmx::ftdi_universe>> dongle_map{};
 static std::vector<std::weak_ptr<dmxfish::dmx::universe>> active_universes;
 
@@ -20,7 +24,11 @@ bool publish_universe_update(std::shared_ptr<dmxfish::dmx::universe> universe) {
 			_artnet_handler.push_universe(*(static_cast<dmxfish::dmx::artnet_universe*>(universe.get())));
 			return true;
 		case dmxfish::dmx::universe_type::PHYSICAL:
-			return false;
+            if (!ioboard_handler_opt.has_value()) {
+                return false;
+            }
+            ioboard_handler_opt->transmit_universe(static_cast<dmxfish::dmx::ioboard_universe*>(universe.get())->get_port());
+            return true;
 		case dmxfish::dmx::universe_type::sACN:
 			return false;
 		case dmxfish::dmx::universe_type::FTDI:
@@ -131,7 +139,9 @@ void unregister_universe(const int id) {
 	if(!_artnet_handler.unlink_universe(id)) {
 		if(dongle_map.contains(id)) {
 			dongle_map.erase(id);
-		}
+		} else if(ioboard_handler_opt.has_value() && ioboard_handler_opt->unregister_universe_by_id(id)) {
+            // we erased it and do not need to look any further
+        }
 	}
 	std::erase_if(active_universes, [id](std::weak_ptr<dmxfish::dmx::universe>& u_ptr) {
 				return u_ptr.use_count() == 0 || u_ptr.lock()->getID() == id;
@@ -150,6 +160,11 @@ std::shared_ptr<dmxfish::dmx::universe> get_universe(const int id) {
 	if (dongle_map.contains(id)) {
 		return dongle_map.at(id);
 	}
+    if (ioboard_handler_opt.has_value()) {
+        if (const auto port = ioboard_handler_opt->find_universe(id); port != -1) {
+            return ioboard_handler_opt->get_or_create_universe(port, id).lock();
+        }
+    }
 	return _artnet_handler.get_universe(id);
 }
 

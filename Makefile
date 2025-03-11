@@ -3,7 +3,7 @@ OS = $(shell uname -s)
 # CFLAGS += -march=native -masm=intel -pipe -fsanitize=address,signed-integer-overflow,undefined -pedantic -Wall -Wextra -Werror -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src
 CFLAGS += -march=native -masm=intel -pipe -pedantic -Wall -Wextra -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src -Isrc/allocators
 
-CXXFLAGS += ${CFLAGS} -std=c++2a -Wuseless-cast -Weffc++ -I/usr/local/include -Wno-non-virtual-dtor
+CXXFLAGS += ${CFLAGS} -std=c++2b -Wuseless-cast -Weffc++ -I/usr/local/include -Wno-non-virtual-dtor
 DEPFLAGS = -MT $@ -MMD -MP -MF $(patsubst ${OBJDIR}/%.o,${DEPDIR}/%.d,$@) -pthread
 
 ifeq "${OS}" "Linux"
@@ -143,7 +143,7 @@ test: ${TEST_TARGETS} all
 		$$a || exit 1; \
 	done
 
-tools: ${BINDIR}/tools/sample_xml_generator ${BINDIR}/tools/cmhelpdatagen ${BINDIR}/tools/ftdi_test
+tools: ${BINDIR}/tools/sample_xml_generator ${BINDIR}/tools/cmhelpdatagen ${BINDIR}/tools/ftdi_test ${BINDIR}/tools/ioboardctrl
 	echo Created tools.
 
 ${PROTO_SRCDIR}/%.pb.cc: ${PROTO_DEFDIR}/%.proto Makefile
@@ -203,6 +203,10 @@ ${BINDIR}/tools/cmhelpdatagen: ${OBJDIR}/filters/filter_color_mixer_add_rgb.o ${
 
 ${BINDIR}/tools/ftdi_test: ${OBJDIR}/dmx/ftdi_universe.o
 	${MKDIR} ${@D} && ${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/ftdi_test.cpp $^ ${LFLAGS} -o $@
+
+${BINDIR}/tools/ioboardctrl: ${OBJDIR}/dmx/ioboard_universe.o ${OBJDIR}/io/ioboard/ioboard.o ${OBJDIR}/io/ioboard/ioboard_midi_event_source.o ${OBJDIR}/librmrfnet.a ${OBJDIR}/main_loop.o \
+${OBJDIR}/events/event.o ${OBJDIR}/events/event_source.o ${OBJDIR}/events/event_storage.o ${OBJDIR}/events/event_type.o
+	${MKDIR} ${@D} && ${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/ioboardctrl.cpp $^ ${LFLAGS} -o $@
 
 ${DEPDIR}/test:
 	${MKDIR} ${DEPDIR}/test

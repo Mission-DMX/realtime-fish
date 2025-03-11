@@ -45,7 +45,6 @@ namespace dmxfish::control_desk {
             packets_constructed = true;
         }
         if(!sysex_construction.empty()) {
-            // TODO erase first element from ioqueue if required
             this->sysex_queue.push_back(rmrf::net::iorecord{sysex_construction.data(), sysex_construction.size()});
             sysex_construction.clear();
             packets_constructed = true;

@@ -128,7 +128,7 @@ int main_loop() {
 
 	setup_sigint_handler();
 
-    construct_iomanager();
+    construct_managers();
 
 	auto control_desk = std::make_unique<dmxfish::control_desk::desk>(dmxfish::control_desk::enumerate_control_devices());
 
@@ -136,7 +136,7 @@ int main_loop() {
 
 	perform_main_update(run_time_state, std::move(control_desk));
 
-    destruct_iomanager();
+    destruct_managers();
 
 	run_time_state = nullptr;
 	return 0;
@@ -147,14 +147,18 @@ std::shared_ptr<dmxfish::io::IOManager> get_iomanager_instance() {
 }
 
 // only for testing purposes (and used in main_loop(), but only there!)
-void construct_iomanager() {
+void construct_managers() {
     manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
     manager->start();
     event_storage = std::make_shared<dmxfish::events::event_storage>();
 }
 
 // only for testing purposes (and used in main_loop(), but only there!)
-void destruct_iomanager() {
+void destruct_managers() {
     event_storage = nullptr;
     manager = nullptr;
+}
+
+std::shared_ptr<dmxfish::events::event_storage> get_event_storage_instance() {
+    return event_storage;
 }

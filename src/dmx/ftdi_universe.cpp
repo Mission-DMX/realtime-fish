@@ -38,6 +38,8 @@ unsigned int bcd_lulz(unsigned char const* nybbles, size_t length)
         data[4] = 0x00; // Start of DMX payload
         data[512+1+4] = END_MSG;
 
+        // TODO do manual libusb device fetch and setup with libev
+
         this->device_handle = device_ptr_t(ftdi_new());
         if(this->device_handle == nullptr) {
             throw std::invalid_argument("Memory allocation error while using ftdi_new.");

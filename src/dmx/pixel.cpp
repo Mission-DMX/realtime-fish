@@ -7,7 +7,7 @@
 
 namespace dmxfish::dmx {
 
-    [[nodiscard]] std::string pixel::str() {
+    [[nodiscard]] std::string pixel::str() const {
         std::stringstream sshsi;
         std::stringstream ssrgb;
         std::stringstream ss;
@@ -231,5 +231,37 @@ namespace dmxfish::dmx {
         convert_hsi_to_rgb_pre();
         invalidate_hsi();
         this->blue = b;
+    }
+
+    dmxfish::dmx::pixel mix_color_interleaving(dmxfish::dmx::pixel c1, dmxfish::dmx::pixel c2, double range) {
+        if (range < 0.0 || range > 1.0) {
+            throw std::invalid_argument("The range interval needs to be within 0 and 1.");
+        }
+
+        dmxfish::dmx::pixel output;
+        const double h1 = c1.getHue();
+        const double h2 = c2.getHue();
+
+        const auto hue_diff = std::fmod(h1-h2 + 180.0 + 360.0, (double) 360.0) - ((double) 180.0);
+        output.setHue(std::fmod(360.0 + h2 + ((hue_diff*(range*2.0))/2.0), (double) 360.0));
+        output.setSaturation((c1.getSaturation() * (range)) + (c2.getSaturation() * (1.0-range)));
+        output.setIluminance((c1.getIluminance() * range) + (c2.getIluminance() * (1.0-range)));
+
+        return output;
+    }
+
+    dmxfish::dmx::pixel stopixel(const std::string& str) {
+        const auto first_position = str.find(",");
+        const auto h = std::stod(str.substr(0, first_position));
+        const auto second_position = str.find(",", first_position + 1);
+        const auto s = std::stod(str.substr(first_position + 1, second_position - first_position - 1));
+        const auto i = std::stod(str.substr(second_position + 1));
+        return {h, s, i};
+    }
+}
+
+namespace std {
+    std::string to_string(const dmxfish::dmx::pixel &p) {
+        return p.str();
     }
 }

@@ -1,17 +1,14 @@
 #define BOOST_AUTO_TEST_MAIN
 #define BOOST_TEST_MODULE FISH_TESTS
 #include <boost/test/included/unit_test.hpp>
-#include "filters/filter_lua_script.hpp"
+#include "filters/lua/filter_lua_script.hpp"
 #include "lib/logging.hpp"
 #include "io/iomanager.hpp"
 
 #include "io/universe_sender.hpp"
-#include <filesystem>
 #include <map>
 #include <memory>
 #include <sstream>
-
-
 
 #include "rmrf-net/client_factory.hpp"
 #include "rmrf-net/ioqueue.hpp"
@@ -22,6 +19,8 @@
 #include "google/protobuf/util/delimited_message_util.h"
 
 #include <google/protobuf/text_format.h>
+
+#include "iomanager_test_fixture.hpp"
 
 using namespace dmxfish::filters;
 
@@ -101,13 +100,7 @@ BOOST_AUTO_TEST_CASE(test_error_code) {
 BOOST_AUTO_TEST_CASE(testluadirectout) {
     spdlog::set_level(spdlog::level::debug);
 
-    std::shared_ptr<runtime_state_t> run_time_state = nullptr;
-    static std::shared_ptr<dmxfish::io::IOManager> manager = nullptr;
-
-    run_time_state = std::make_shared<runtime_state_t>();
-    manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
-    manager->start();
-
+    std::shared_ptr<dmxfish::io::IOManager> manager = get_iomanager_instance();
 
     auto msg_universe_init = std::make_shared<missiondmx::fish::ipcmessages::Universe>();
     msg_universe_init->set_id(1);
@@ -154,7 +147,6 @@ BOOST_AUTO_TEST_CASE(testluadirectout) {
     } else {
         BOOST_TEST(false, "universe for lua filter test does not exist");
     }
-    run_time_state->running = false;
     manager = nullptr;
 
 }
@@ -445,12 +437,7 @@ BOOST_AUTO_TEST_CASE(test_update_gui) {
 BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
     spdlog::set_level(spdlog::level::debug);
 
-    std::shared_ptr<runtime_state_t> run_time_state = nullptr;
-    static std::shared_ptr<dmxfish::io::IOManager> manager = nullptr;
-
-    run_time_state = std::make_shared<runtime_state_t>();
-    manager = std::make_shared<dmxfish::io::IOManager>(run_time_state, true);
-    manager->start();
+    static std::shared_ptr<dmxfish::io::IOManager> manager = get_iomanager_instance();
 
 
     auto msg_universe_init = std::make_shared<missiondmx::fish::ipcmessages::Universe>();
@@ -561,7 +548,63 @@ BOOST_AUTO_TEST_CASE(lua_script_ersti_party) {
     }
     std::cout << std::endl;
 
-
-    run_time_state->running = false;
     manager = nullptr;
+}
+
+BOOST_AUTO_TEST_CASE(event_api_test) {
+    dmxfish::filters::filter_lua_script fil1, fil2;
+
+    channel_mapping input_channels = channel_mapping();
+    std::map<std::string, std::string> configuration, configuration2;
+    configuration["in_mapping"] = "";
+    configuration["out_mapping"] = "";
+    std::map<std::string, std::string> initial_parameters, initial_parameters2;
+
+    initial_parameters["script"] = R"(
+
+        function update()
+	    print("Update from 1")
+	    sender = get_event_sender()
+	    insert_event(sender)
+            insert_event(sender, event_type.SINGLE_TRIGGER, "")
+	    print(event_type.ONGOING_EVENT)
+        end
+
+        function scene_activated()
+        end
+	)";
+    fil1.pre_setup(configuration, initial_parameters, "fil1");
+
+    configuration2["in_mapping"] = "";
+    configuration2["out_mapping"] = "out:8bit";
+    initial_parameters2["script"] = R"(
+
+        function update()
+	    print("Update from 2")
+            if has_event(get_event_sender()) then
+                out = 1
+            end
+        end
+
+        function scene_activated()
+            out = 0
+        end
+	)";
+    fil2.pre_setup(configuration2, initial_parameters2, "fil2");
+
+    channel_mapping map = channel_mapping();
+    fil1.get_output_channels(map, "fil1");
+    fil1.setup_filter(configuration, initial_parameters, input_channels, "fil1");
+    fil2.get_output_channels(map, "fil2");
+    fil2.setup_filter(configuration2, initial_parameters2, input_channels, "fil2");
+
+    fil1.scene_activated();
+    fil2.scene_activated();
+    fil1.update();
+    fil2.update();
+    BOOST_CHECK_EQUAL(*(map.eight_bit_channels["fil2:out"]), 0);
+    get_event_storage_instance()->swap_buffers();
+    fil1.update();
+    fil2.update();
+    BOOST_CHECK_EQUAL(*(map.eight_bit_channels["fil2:out"]), 1);
 }
