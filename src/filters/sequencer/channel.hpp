@@ -201,17 +201,13 @@ namespace dmxfish::filters::sequencer {
                     break;
                 case interleaving_method::MIN:
                     if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
-                        if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
-                            uint16_t min_r = 65535, min_g = 65535, min_b = 65535;
-                            for (auto& color : values) {
-                                min_r = std::min(min_r, color.getRed());
-                                min_g = std::min(min_g, color.getGreen());
-                                min_b = std::min(min_b, color.getBlue());
-                            }
-                            this->current_value = {min_r, min_g, min_b};
-                        } else {
-                            this->current_value = *std::max_element(values.begin(), values.end());
+                        uint16_t min_r = 65535, min_g = 65535, min_b = 65535;
+                        for (auto& color : values) {
+                            min_r = std::min(min_r, color.getRed());
+                            min_g = std::min(min_g, color.getGreen());
+                            min_b = std::min(min_b, color.getBlue());
                         }
+                        this->current_value = {min_r, min_g, min_b};
 		            } else {
 			            this->current_value = *std::min_element(values.begin(), values.end());
 		            }

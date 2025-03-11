@@ -51,8 +51,8 @@ namespace dmxfish::filters::sequencer {
                 case transition_t::LINEAR:
                     return std::min(std::max((elapsed_time * time_scale) / duration, 0.0), 1.0);
                 case transition_t::EDGE: {
-                    constexpr double switch_point = 0.95;
-                    if (elapsed_time * time_scale >= this->duration * switch_point) {
+                    constexpr double min_cycle_time = 40.0;
+                    if ((elapsed_time * time_scale) + min_cycle_time >= this->duration) {
                         return 1.0;
                     } else {
                         return 0.0;

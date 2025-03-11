@@ -20,7 +20,7 @@
 
 #include <google/protobuf/text_format.h>
 
-#include "../test/iomanager_test_fixture.hpp"
+#include "iomanager_test_fixture.hpp"
 
 using namespace dmxfish::filters;
 

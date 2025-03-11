@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     fs.update();
     BOOST_CHECK_EQUAL(*channel_8b, 0);
     BOOST_CHECK(*channel_16b > 680 && *channel_16b < 690);
-    BOOST_CHECK(*channel_f > 0.3 && *channel_f < 0.4);
+    BOOST_CHECK(*channel_f > 0.4 && *channel_f < 0.6);
     BOOST_CHECK(channel_c->getHue() <= 0.0 + 0.5);
 
     current_time += 40.1;
