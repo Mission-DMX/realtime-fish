@@ -61,7 +61,7 @@ namespace dmxfish {
             do {
                 final_round = (next_end == std::string::npos);
                 auto param_list = utils::split(channel_map_str.substr(current_start, next_end - current_start), ':');
-                if (param_list.size() < 4) {
+                if (param_list.size() < 6) {
                     throw filter_config_exception("Channel definition contains underspecified channels.", filter_type::filter_sequencer, own_id);
                 }
                 const auto name = param_list.front();
