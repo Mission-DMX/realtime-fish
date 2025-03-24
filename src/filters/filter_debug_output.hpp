@@ -5,6 +5,7 @@
  * Use them with care as their execution is quite expensive.
  */
 
+#include <sstream>
 #include <type_traits>
 
 #include "dmx/pixel.hpp"
@@ -78,7 +79,13 @@ COMPILER_SUPRESS("-Weffc++")
             if(this->input != nullptr) {
                 std::string value;
                 if constexpr (std::is_same<T, dmxfish::dmx::pixel>::value) {
-                    value = input->str();
+                    if constexpr (target_remote) {
+                        std::stringstream ss;
+                        ss << input->getHue() << ',' << input->getSaturation() << ',' << input->getIluminance();
+                        value = ss.str();
+                    } else {
+                        value = input->str();
+                    }
                 } else {
                     value = std::to_string(*input);
                 }
