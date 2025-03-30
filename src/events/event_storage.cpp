@@ -8,6 +8,7 @@
 #include <limits>
 #include <stdexcept>
 #include "event_source.hpp"
+#include "main.hpp"
 
 namespace dmxfish::events {
 
@@ -30,6 +31,18 @@ namespace dmxfish::events {
         auto& storage = !this->current_read_storage_is_a ? this->storage_a : this->storage_b;
         storage.emplace_back(e);
         this->storage_swap_mutex.unlock();
+        const auto& sender = e.get_event_sender().decoded_representation.sender;
+        if(this->senders[sender]->remote_debug_enabled) {
+            missiondmx::fish::ipcmessages::event msg;
+            msg.set_type(e.get_type());
+            msg.set_sender_id(sender);
+            msg.set_sender_function(e.get_event_sender().decoded_representation.sender_function);
+            msg.set_event_id(e.get_event_id());
+            for (const auto& arg : e.get_args()) {
+                msg.arguments()->Add(arg);
+            }
+            get_iomanager_instance()->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_EVNT);
+        }
         return true;
     }
 

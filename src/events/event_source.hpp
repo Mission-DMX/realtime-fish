@@ -22,6 +22,7 @@ namespace dmxfish::events {
 
         event_sender_t sender_id;
         std::string name;
+        bool remote_debug_enabled = false;
     private:
         event_source();
     public:
