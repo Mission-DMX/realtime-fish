@@ -19,6 +19,7 @@ COMPILER_SUPRESS("-Wuseless-cast")
 #include "proto_src/MessageTypes.pb.h"
 #include "proto_src/Console.pb.h"
 #include "proto_src/DirectMode.pb.h"
+#include "proto_src/Events.pb.h"
 #include "proto_src/FilterMode.pb.h"
 #include "proto_src/RealTimeControl.pb.h"
 #include "proto_src/UniverseControl.pb.h"

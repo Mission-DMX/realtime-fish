@@ -1,7 +1,16 @@
 #include "io/client_handler.hpp"
 
+#include "main.hpp"
+
+#include "events/event_source.hpp"
 #include "lib/logging.hpp"
+#include "lib/macros.hpp"
 #include "google/protobuf/io/coded_stream.h"
+
+COMPILER_SUPRESS("-Wuseless-cast")
+#include "proto_src/MessageTypes.pb.h"
+#include "proto_src/Events.pb.h"
+COMPILER_RESTORE("-Wuseless-cast")
 
 namespace dmxfish::io {
 
@@ -14,6 +23,13 @@ namespace dmxfish::io {
         input_buffer(std::make_shared<client_input_buffer>())
 	{
 		this->connection_client->set_incomming_data_callback(std::bind(&dmxfish::io::client_handler::incomming_data_callback, this, std::placeholders::_1));
+        size_t transmitted_event_senders = 0;
+        for(const auto& sender : get_event_storage_instance()->get_registered_senders()) {
+            const auto msg = sender->encode_proto_message();
+            write_message(msg, ::missiondmx::fish::ipcmessages::MSGT_EVENT);
+            transmitted_event_senders++;
+        }
+        ::spdlog::info("Transmitted {} event sender descriptions to new client.", transmitted_event_senders);
 	}
 
 	void client_handler::handle_messages(){
@@ -64,7 +80,7 @@ namespace dmxfish::io {
         return this->connection_client->is_client_alive();
     }
 
-	void client_handler::write_message(google::protobuf::MessageLite& msg, uint32_t msgtype){
+	void client_handler::write_message(const google::protobuf::MessageLite& msg, uint32_t msgtype){
         auto buffer = std::vector<uint8_t>();
         size_t msgsize = msg.ByteSizeLong();
         buffer.resize(get_length_of_varint(msgtype) + get_length_of_varint(msgsize) + msgsize);

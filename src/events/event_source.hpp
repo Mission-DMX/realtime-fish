@@ -11,6 +11,11 @@
 
 #include "event_storage.hpp"
 
+#include "lib/macros.hpp"
+COMPILER_SUPRESS("-Wuseless-cast")
+#include "proto_src/Events.pb.h"
+COMPILER_RESTORE("-Wuseless-cast")
+
 namespace dmxfish::events {
 
     /**
@@ -63,6 +68,14 @@ namespace dmxfish::events {
             }
             return ptr;
         }
+
+        /**
+         * This method gets called in order to get the protobuf representation of the sender.
+         * Implementing classes need to override (and call the base of) this method in order to
+         * implement special configuration handling and setting an appropriate type.
+         * @return A protobuf message filled with the state of this sender.
+         */
+        virtual missiondmx::fish::ipcmessages::event_sender encode_proto_message() const;
     protected:
 
         /**

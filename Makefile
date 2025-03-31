@@ -205,7 +205,8 @@ ${BINDIR}/tools/ftdi_test: ${OBJDIR}/dmx/ftdi_universe.o
 	${MKDIR} ${@D} && ${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/ftdi_test.cpp $^ ${LFLAGS} -o $@
 
 ${BINDIR}/tools/ioboardctrl: ${OBJDIR}/dmx/ioboard_universe.o ${OBJDIR}/io/ioboard/ioboard.o ${OBJDIR}/io/ioboard/ioboard_midi_event_source.o ${OBJDIR}/librmrfnet.a ${OBJDIR}/main_loop.o \
-${OBJDIR}/events/event.o ${OBJDIR}/events/event_source.o ${OBJDIR}/events/event_storage.o ${OBJDIR}/events/event_type.o
+${OBJDIR}/events/event.o ${OBJDIR}/events/event_source.o ${OBJDIR}/events/event_storage.o ${OBJDIR}/events/event_type.o ${OBJDIR}/proto/Events.o ${OBJDIR}/io/iomanager.o ${OBJDIR}/io/gui_connection_handler.o \
+${OBJDIR}/io/client_handler.o ${OBJDIR}/io/client_output_buffer.o
 	${MKDIR} ${@D} && ${CXX} ${CFLAGS} ${CXXFLAGS} -Itools ${DEPFLAGS} tools/ioboardctrl.cpp $^ ${LFLAGS} -o $@
 
 ${DEPDIR}/test:
