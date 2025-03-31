@@ -5,8 +5,9 @@
 
 #include "event_source_factory.hpp"
 
-#include "event_source.hpp"
-#include "event_storage.hpp"
+#include "events/event.hpp"
+#include "events/event_source.hpp"
+#include "events/event_storage.hpp"
 
 #include "lib/logging.hpp"
 #include "main.hpp"
@@ -37,5 +38,22 @@ namespace dmxfish::events {
         const auto update_msg = s_ptr->encode_proto_message();
         get_iomanager_instance()->push_msg_to_all_gui(update_msg, ::missiondmx::fish::ipcmessages::MSGT_EVENT_SENDER_UPDATE);
         return success;
+    }
+
+    bool insert_event_from_message(const missiondmx::fish::ipcmessages::event& msg) {
+        auto storage_ptr = get_event_storage_instance();
+        event_sender_t es;
+        es.decoded_representation.sender = msg.sender_id();
+        es.decoded_representation.sender_function = msg.sender_function();
+        event e{(event_type) ((unsigned int) msg.type()), es};
+        size_t i = 0;
+        for (const auto c : msg.arguments()) {
+            if (i >= 8) {
+                break;
+            }
+            e.set_arg_data(i, (uint8_t) c);
+            i++;
+        }
+        return storage_ptr->insert_event(e);
     }
 }

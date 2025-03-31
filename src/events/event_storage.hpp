@@ -34,7 +34,7 @@ namespace dmxfish::events {
 
         /**
          * This method tries to stores an event inside the queue to be processed on the next cycle. The return value
-         * of this method needs to be honored in order to check if the operation was successful. THis method will not
+         * of this method needs to be honored in order to check if the operation was successful. This method will not
          * block.
          *
          * @param e The event to store

@@ -11,4 +11,5 @@ COMPILER_RESTORE("-Wuseless-cast")
 
 namespace dmxfish::events {
     [[nodiscard]] bool construct_or_update_event_source_from_message(const missiondmx::fish::ipcmessages::event_sender& msg);
+    bool insert_event_from_message(const missiondmx::fish::ipcmessages::event& msg);
 }
