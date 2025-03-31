@@ -32,7 +32,7 @@ void GUI_Connection_Handler::client_cb(rmrf::net::async_server_socket::self_ptr_
 	::spdlog::debug("Client found the server");
 }
 
-void GUI_Connection_Handler::push_msg_to_all_gui(google::protobuf::MessageLite& msg, uint32_t msg_type){
+void GUI_Connection_Handler::push_msg_to_all_gui(const google::protobuf::MessageLite& msg, uint32_t msg_type){
     std::shared_ptr<client_handler> to_delete = nullptr;
 	for (auto& c : this->clients){
         if(c->is_client_alive()) {

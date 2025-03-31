@@ -34,7 +34,7 @@ namespace dmxfish::io {
 			IOManager(std::shared_ptr<runtime_state_t> run_time_state_, bool is_default_manager = false);
 			~IOManager();
 			void start();
-			void push_msg_to_all_gui(google::protobuf::MessageLite& msg, uint32_t msg_type);
+			void push_msg_to_all_gui(const google::protobuf::MessageLite& msg, uint32_t msg_type);
 
 			[[nodiscard]] inline std::shared_ptr<dmxfish::execution::project_configuration> get_active_show() {
 				return this->active_show;
