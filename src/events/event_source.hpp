@@ -26,7 +26,7 @@ namespace dmxfish::events {
         friend class event_storage;
 
         event_sender_t sender_id;
-        std::string name;
+        const std::string name;
         bool remote_debug_enabled = false;
     private:
         event_source();
@@ -76,6 +76,13 @@ namespace dmxfish::events {
          * @return A protobuf message filled with the state of this sender.
          */
         virtual missiondmx::fish::ipcmessages::event_sender encode_proto_message() const;
+
+        /**
+         * Handle the update of settings. THis needs to be implemented by child classes as well.
+         * @param msg The message containing the updated paramters.
+         * @return True if the operation was successful. Otherwise false.
+         */
+        [[nodiscard]] virtual bool update_conf_from_message(const missiondmx::fish::ipcmessages::event_sender& msg);
     protected:
 
         /**

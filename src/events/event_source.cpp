@@ -25,4 +25,10 @@ namespace dmxfish::events {
         msg.set_gui_debug_enabled(this->remote_debug_enabled);
         return msg;
     }
+
+    bool event_source::update_conf_from_message(const missiondmx::fish::ipcmessages::event_sender& msg) {
+        this->remote_debug_enabled = msg.gui_debug_enabled();
+        // we cannot update the name, type or sender id.
+        return true;
+    }
 } // dmxfish

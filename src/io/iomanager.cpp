@@ -30,6 +30,7 @@ COMPILER_RESTORE("-Wuseless-cast")
 #include "dmx/ftdi_universe.hpp"
 #include "xml/show_files.hpp"
 #include "executioners/state_registry.hpp"
+#include "events/event_source_factory.hpp"
 
 namespace dmxfish::io {
 
@@ -600,6 +601,20 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                     control_desk_handle->update_column_from_message(msg);
                 } else {
                     error_message += "No control desk handle has been currently set.";
+                }
+                return;
+            } catch (const std::exception& e) {
+                this->latest_error = e.what();
+            }
+            break;
+        case ::missiondmx::fish::ipcmessages::MSGT_EVENT_SENDER_UPDATE:
+            try {
+                missiondmx::fish::ipcmessages::event_sender msg;
+                if(!msg.ParseFromZeroCopyStream(buffer)) {
+                    error_message += "Failed to decode MSGT_EVENT_SENDER_UPDATE message.";
+                }
+                if(!dmxfish::events::construct_or_update_event_source_from_message(msg)) {
+                    error_message += "Failed to update or create event sender.";
                 }
                 return;
             } catch (const std::exception& e) {
