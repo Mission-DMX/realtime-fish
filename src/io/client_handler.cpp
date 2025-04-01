@@ -26,7 +26,7 @@ namespace dmxfish::io {
         size_t transmitted_event_senders = 0;
         for(const auto& sender : get_event_storage_instance()->get_registered_senders()) {
             const auto msg = sender->encode_proto_message();
-            write_message(msg, ::missiondmx::fish::ipcmessages::MSGT_EVENT);
+            write_message(msg, ::missiondmx::fish::ipcmessages::MSGT_EVENT_SENDER_UPDATE);
             transmitted_event_senders++;
         }
         ::spdlog::info("Transmitted {} event sender descriptions to new client.", transmitted_event_senders);

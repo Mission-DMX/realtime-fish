@@ -28,7 +28,7 @@ namespace dmxfish::events {
         event_sender_t sender_id;
         const std::string name;
         bool remote_debug_enabled = false;
-    private:
+    protected:
         event_source();
     public:
         event_source(const event_source& other) = default;
@@ -75,7 +75,7 @@ namespace dmxfish::events {
          * implement special configuration handling and setting an appropriate type.
          * @return A protobuf message filled with the state of this sender.
          */
-        virtual missiondmx::fish::ipcmessages::event_sender encode_proto_message() const;
+        [[nodiscard]] virtual missiondmx::fish::ipcmessages::event_sender encode_proto_message() const;
 
         /**
          * Handle the update of settings. THis needs to be implemented by child classes as well.
@@ -89,6 +89,10 @@ namespace dmxfish::events {
          * This method needs to be called by the event storage if it is being taken down.
          */
         virtual void deregister();
+
+        [[nodiscard]] inline std::string get_name() {
+            return this->name;
+        }
     };
 
 } // dmxfish

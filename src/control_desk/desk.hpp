@@ -72,6 +72,8 @@ namespace dmxfish::control_desk {
         }
     };
 
+    class xtouch_gpio_event_sender;
+
     class desk {
     private:
         struct bank_set {
@@ -105,6 +107,7 @@ namespace dmxfish::control_desk {
         bool bank_set_modification_happened = false;
         bool global_dark = false;
         uint16_t global_illumination = 0;
+        std::shared_ptr<xtouch_gpio_event_sender> gpio_event_sender = nullptr;
     public:
         desk(std::list<std::pair<std::string, midi_device_id>> input_devices);
         ~desk();

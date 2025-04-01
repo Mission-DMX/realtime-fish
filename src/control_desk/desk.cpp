@@ -1,5 +1,6 @@
 #include "control_desk/desk.hpp"
 #include "control_desk/xtouch_driver.hpp"
+#include "control_desk/xtouch_gpio_event_sender.hpp"
 
 #include "proto_src/MessageTypes.pb.h"
 
@@ -58,20 +59,21 @@ namespace dmxfish::control_desk {
             }
         }
         this->reset_devices();
-	for(auto& d : devices) {
-            if(d->get_device_id() == midi_device_id::X_TOUCH) {
-                std::array<char, 14> initial_lcd_text = {'M', 'i', 's', 's', 'i', 'o', 'n', 'V', 'e', 'r', 's', 'i', 'o', 'n'};
-                xtouch_set_lcd_display(*d, 0, lcd_color::white_up_inverted, initial_lcd_text);
-                initial_lcd_text = {' ', 'D', 'M', 'X', ' ', ' ', ' ', ' ', '1', '.', '0', '.', '1', ' '};
-                xtouch_set_lcd_display(*d, 1, lcd_color::white_up_inverted, initial_lcd_text);
-	        d->schedule_transmission();
-	    }
-	}
+        for(auto& d : devices) {
+                if(d->get_device_id() == midi_device_id::X_TOUCH) {
+                    std::array<char, 14> initial_lcd_text = {'M', 'i', 's', 's', 'i', 'o', 'n', 'V', 'e', 'r', 's', 'i', 'o', 'n'};
+                    xtouch_set_lcd_display(*d, 0, lcd_color::white_up_inverted, initial_lcd_text);
+                    initial_lcd_text = {' ', 'D', 'M', 'X', ' ', ' ', ' ', ' ', '1', '.', '0', '.', '1', ' '};
+                    xtouch_set_lcd_display(*d, 1, lcd_color::white_up_inverted, initial_lcd_text);
+                d->schedule_transmission();
+            }
+        }
         if(devices.size() == 0) {
             ::spdlog::warn("No input devices where added to the control desk.");
         } else {
             ::spdlog::debug("Added {} devices to control desk.", devices.size());
         }
+        this->gpio_event_sender = dmxfish::events::event_source::create<xtouch_gpio_event_sender>(get_event_storage_instance(), "Xtouch GPIO");
     }
 
     desk::~desk() {
