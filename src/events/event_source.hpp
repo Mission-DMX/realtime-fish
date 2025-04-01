@@ -26,7 +26,7 @@ namespace dmxfish::events {
         friend class event_storage;
 
         event_sender_t sender_id;
-        const std::string name;
+        std::string name;
         bool remote_debug_enabled = false;
     protected:
         event_source();
@@ -63,6 +63,7 @@ namespace dmxfish::events {
             }
             auto ptr = std::shared_ptr<T>(new T());
             ptr->sender_id = storage_to_register_with->register_event_source(ptr->shared_from_this());
+            ptr->name = name;
             if(!name.empty()) {
                 storage_to_register_with->index_source_by_name[name] = ptr;
             }
