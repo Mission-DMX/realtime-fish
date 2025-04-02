@@ -19,7 +19,7 @@ namespace dmxfish {
         [[nodiscard]] missiondmx::fish::ipcmessages::event_sender encode_proto_message() const override;
         [[nodiscard]] bool update_conf_from_message(const missiondmx::fish::ipcmessages::event_sender& msg) override;
 
-        // TODO implement event insertion based on xtouch updates
+        bool send_message(unsigned int port, unsigned int new_state);
     };
 
     } // dmxfish

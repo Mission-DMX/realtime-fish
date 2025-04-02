@@ -8,7 +8,10 @@
 #include <stdexcept>
 #include <string>
 
+#include "events/event.hpp"
+
 #include "lib/logging.hpp"
+#include "main.hpp"
 
 namespace dmxfish {
     namespace control_desk {
@@ -20,7 +23,7 @@ namespace dmxfish {
             auto msg = event_source::encode_proto_message();
             auto conf = msg.configuration();
             conf["expression_pedal_threshold"] = std::to_string(this->expression_pedal_threshold);
-            msg.set_type("fish.builtin.gpio");
+            msg.set_type("fish.builtin.xtouchgpio");
             return msg;
         }
 
@@ -40,5 +43,14 @@ namespace dmxfish {
             }
             return res;
         }
+
+        bool xtouch_gpio_event_sender::send_message(unsigned int port, unsigned int new_state) {
+            using namespace dmxfish::events;
+            const event_sender_t evt{this->get_sender_id(), port};
+            event ev{port == 2 ? event_type::SINGLE_TRIGGER : (new_state == 0 ? event_type::RELEASE : event_type::START), evt};
+            ev.set_arg_data(0, new_state);
+            return get_event_storage_instance()->insert_event(ev);
+        }
+
     } // dmxfish
 } // control_desk
