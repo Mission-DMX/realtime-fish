@@ -11,6 +11,11 @@
 
 #include "event_storage.hpp"
 
+#include "lib/macros.hpp"
+COMPILER_SUPRESS("-Wuseless-cast")
+#include "proto_src/Events.pb.h"
+COMPILER_RESTORE("-Wuseless-cast")
+
 namespace dmxfish::events {
 
     /**
@@ -22,7 +27,8 @@ namespace dmxfish::events {
 
         event_sender_t sender_id;
         std::string name;
-    private:
+        bool remote_debug_enabled = false;
+    protected:
         event_source();
     public:
         event_source(const event_source& other) = default;
@@ -57,17 +63,37 @@ namespace dmxfish::events {
             }
             auto ptr = std::shared_ptr<T>(new T());
             ptr->sender_id = storage_to_register_with->register_event_source(ptr->shared_from_this());
+            ptr->name = name;
             if(!name.empty()) {
                 storage_to_register_with->index_source_by_name[name] = ptr;
             }
             return ptr;
         }
+
+        /**
+         * This method gets called in order to get the protobuf representation of the sender.
+         * Implementing classes need to override (and call the base of) this method in order to
+         * implement special configuration handling and setting an appropriate type.
+         * @return A protobuf message filled with the state of this sender.
+         */
+        [[nodiscard]] virtual missiondmx::fish::ipcmessages::event_sender encode_proto_message() const;
+
+        /**
+         * Handle the update of settings. THis needs to be implemented by child classes as well.
+         * @param msg The message containing the updated paramters.
+         * @return True if the operation was successful. Otherwise false.
+         */
+        [[nodiscard]] virtual bool update_conf_from_message(const missiondmx::fish::ipcmessages::event_sender& msg);
     protected:
 
         /**
          * This method needs to be called by the event storage if it is being taken down.
          */
         virtual void deregister();
+
+        [[nodiscard]] inline std::string get_name() {
+            return this->name;
+        }
     };
 
 } // dmxfish

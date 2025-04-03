@@ -8,10 +8,16 @@
 #include <limits>
 #include <stdexcept>
 #include "event_source.hpp"
+#include "main.hpp"
+
+COMPILER_SUPRESS("-Wuseless-cast")
+#include "proto_src/MessageTypes.pb.h"
+#include "proto_src/Events.pb.h"
+COMPILER_RESTORE("-Wuseless-cast")
 
 namespace dmxfish::events {
 
-    event_storage::event_storage() : storage_a(), storage_b(), storage_swap_mutex(), ongoing_events() {
+    event_storage::event_storage() : storage_a(), storage_b(), senders(), storage_swap_mutex(), ongoing_events() {
         // Experiments have shown that we grow to a size of approx. 50 very quick and usually stay there
         storage_a.reserve(50);
         storage_b.reserve(50);
@@ -30,6 +36,18 @@ namespace dmxfish::events {
         auto& storage = !this->current_read_storage_is_a ? this->storage_a : this->storage_b;
         storage.emplace_back(e);
         this->storage_swap_mutex.unlock();
+        const auto& sender = e.get_event_sender().decoded_representation.sender;
+        if(this->senders[sender]->remote_debug_enabled) {
+            missiondmx::fish::ipcmessages::event msg;
+            msg.set_type((::missiondmx::fish::ipcmessages::event_type) ((uint8_t) e.get_type()));
+            msg.set_sender_id(sender);
+            msg.set_sender_function(e.get_event_sender().decoded_representation.sender_function);
+            msg.set_event_id(e.get_event_id());
+            for (const auto& arg : e.get_args()) {
+                msg.add_arguments((unsigned int) arg);
+            }
+            get_iomanager_instance()->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_EVENT);
+        }
         return true;
     }
 

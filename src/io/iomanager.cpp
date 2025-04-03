@@ -19,6 +19,7 @@ COMPILER_SUPRESS("-Wuseless-cast")
 #include "proto_src/MessageTypes.pb.h"
 #include "proto_src/Console.pb.h"
 #include "proto_src/DirectMode.pb.h"
+#include "proto_src/Events.pb.h"
 #include "proto_src/FilterMode.pb.h"
 #include "proto_src/RealTimeControl.pb.h"
 #include "proto_src/UniverseControl.pb.h"
@@ -29,6 +30,7 @@ COMPILER_RESTORE("-Wuseless-cast")
 #include "dmx/ftdi_universe.hpp"
 #include "xml/show_files.hpp"
 #include "executioners/state_registry.hpp"
+#include "events/event_source_factory.hpp"
 
 namespace dmxfish::io {
 
@@ -605,6 +607,31 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 this->latest_error = e.what();
             }
             break;
+        case ::missiondmx::fish::ipcmessages::MSGT_EVENT:
+            try {
+                missiondmx::fish::ipcmessages::event msg;
+                if(!msg.ParseFromZeroCopyStream(buffer)) {
+                    error_message += "Failed to decode MSGT_EVENT message.";
+                }
+                dmxfish::events::insert_event_from_message(msg);
+            } catch (const std::exception& e) {
+                this->latest_error = e.what();
+            }
+            break;
+        case ::missiondmx::fish::ipcmessages::MSGT_EVENT_SENDER_UPDATE:
+            try {
+                missiondmx::fish::ipcmessages::event_sender msg;
+                if(!msg.ParseFromZeroCopyStream(buffer)) {
+                    error_message += "Failed to decode MSGT_EVENT_SENDER_UPDATE message.";
+                }
+                if(!dmxfish::events::construct_or_update_event_source_from_message(msg)) {
+                    error_message += "Failed to update or create event sender.";
+                }
+                return;
+            } catch (const std::exception& e) {
+                this->latest_error = e.what();
+            }
+            break;
 		default:
         {
             error_message += "IOManager Parse Message: Used a unknown Msg Type. ";
@@ -622,7 +649,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
 	}
 }
 
-void IOManager::push_msg_to_all_gui(google::protobuf::MessageLite& msg, uint32_t msg_type){
+void IOManager::push_msg_to_all_gui(const google::protobuf::MessageLite& msg, uint32_t msg_type){
 	this->gui_connections->push_msg_to_all_gui(msg, msg_type);
 }
 

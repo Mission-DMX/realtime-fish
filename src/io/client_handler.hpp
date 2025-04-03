@@ -29,7 +29,7 @@ class client_handler{
 		client_handler(parse_message_cb_t found_message_cb_, std::shared_ptr<rmrf::net::connection_client>);
 		void handle_messages();
         bool is_client_alive();
-        void write_message(google::protobuf::MessageLite&, uint32_t);
+        void write_message(const google::protobuf::MessageLite&, uint32_t);
         google::protobuf::io::ZeroCopyInputStream* get_zero_copy_input_stream();
     private:
         void incomming_data_callback(const rmrf::net::iorecord&);
