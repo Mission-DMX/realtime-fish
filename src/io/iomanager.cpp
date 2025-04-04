@@ -108,11 +108,19 @@ bool check_version_libev()
 void IOManager::run() {
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	::spdlog::debug("Entering ev defloop");
+    bool first_restart = true;
 	while(this->running) {
 		try {
 			this->loop->run(0);
+            first_restart = true;
 		} catch (const std::exception& e) {
-			::spdlog::error("Event loop crashed with exception: {}. Restarting event loop.", e.what());
+			if(first_restart) {
+                ::spdlog::error("Event loop crashed with exception: {}. Restarting event loop.", e.what());
+                first_restart = false;
+            } else {
+                ::spdlog::error("Event loop crashed a second time with exception: {}. This seams to be unrecoverable. Exiting.", e.what());
+                this->running = false;
+            }
 		}
 	}
 	::spdlog::debug("Leaving ev defloop");
@@ -615,6 +623,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 }
                 dmxfish::events::insert_event_from_message(msg);
             } catch (const std::exception& e) {
+                ::spdlog::error("Failed to insert event: {}", e.what());
                 this->latest_error = e.what();
             }
             break;

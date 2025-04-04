@@ -48,7 +48,7 @@ namespace dmxfish::events {
         event e{(event_type) ((unsigned int) msg.type()), es};
         size_t i = 0;
         for (const auto c : msg.arguments()) {
-            if (i >= 8) {
+            if (i > 7) {
                 break;
             }
             e.set_arg_data(i, (uint8_t) c);

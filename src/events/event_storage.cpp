@@ -15,6 +15,8 @@ COMPILER_SUPRESS("-Wuseless-cast")
 #include "proto_src/Events.pb.h"
 COMPILER_RESTORE("-Wuseless-cast")
 
+#include "lib/logging.hpp"
+
 namespace dmxfish::events {
 
     event_storage::event_storage() : storage_a(), storage_b(), senders(), storage_swap_mutex(), ongoing_events() {
@@ -30,13 +32,17 @@ namespace dmxfish::events {
     }
 
     [[nodiscard]] bool event_storage::insert_event(const event& e) {
+        const auto& sender = e.get_event_sender().decoded_representation.sender;
+        if(sender >= this->senders.size()) {
+            ::spdlog::error("Invalid server id while inserting event: {}", sender);
+            return false;
+        }
         if(!this->storage_swap_mutex.try_lock()) {
             return false;
         }
         auto& storage = !this->current_read_storage_is_a ? this->storage_a : this->storage_b;
         storage.emplace_back(e);
         this->storage_swap_mutex.unlock();
-        const auto& sender = e.get_event_sender().decoded_representation.sender;
         if(this->senders[sender]->remote_debug_enabled) {
             missiondmx::fish::ipcmessages::event msg;
             msg.set_type((::missiondmx::fish::ipcmessages::event_type) ((uint8_t) e.get_type()));
