@@ -80,13 +80,12 @@ void perform_main_update(std::shared_ptr<runtime_state_t> t, std::unique_ptr<dmx
 	while (t->running) {
 		const auto start_time = stdc::system_clock::now().time_since_epoch();
 		manager->update_control_desk();
+        event_storage->swap_buffers();
 		if (t->is_direct_mode) {
 			// TODO fetch and apply updates from FPGA, also send values to GUI
 		} else {
-			// TODO apply data from input structure on show.
 			if(auto sptr = manager->get_active_show(); sptr != nullptr) {
 				try {
-                    event_storage->swap_buffers();
 					sptr->run_cycle_update();
 				} catch (const std::exception& e) {
 					manager->set_latest_error(e.what());
