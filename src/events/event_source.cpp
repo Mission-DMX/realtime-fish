@@ -20,7 +20,7 @@ namespace dmxfish::events {
     missiondmx::fish::ipcmessages::event_sender event_source::encode_proto_message() const {
         missiondmx::fish::ipcmessages::event_sender msg;
         msg.set_sender_id(this->sender_id.decoded_representation.sender);
-        msg.set_type("undef");
+        msg.set_type("fish.builtin.plain");
         msg.set_name(this->name);
         msg.set_gui_debug_enabled(this->remote_debug_enabled);
         return msg;
