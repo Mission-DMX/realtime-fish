@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     // Construct one Transition using all channels
     constexpr auto event_id_tall = 0;
     std::stringstream transition_builder;
-    transition_builder << event_id_tall;
+    transition_builder << event_id_tall << ":0#T1";
     for(auto i = 0; i < 3; i++) {
         transition_builder << '#';
         transition_builder << "channel_8b:" << (60*i) << ":lin:120.0" << '#';
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
 
     // Construct one transition using only two channels
     constexpr auto event_id_tsingle = 1;
-    transition_builder << ';' << event_id_tsingle;
+    transition_builder << ';' << event_id_tsingle << ":0#T2";
     for(auto i = 0; i < 3; i++) {
         transition_builder << '#';
         transition_builder << "channel_8b:" << (60*i) << ":edg:100.0" << '#';
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(test_linear_update) {
 
     // Construct one out channel per data type
     configuration["channels"] = "channel_8b:8bit:0:true:true:max";
-    configuration["transitions"] = "0#channel_8b:255:lin:260";
+    configuration["transitions"] = "0:0:1:0##channel_8b:255:lin:260";
 
     filter_sequencer fs;
     fs.pre_setup(configuration, init_params, filter_id);

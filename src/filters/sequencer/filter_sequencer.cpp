@@ -7,7 +7,9 @@
 
 #include <functional>
 #include <ranges>
+#include <string>
 
+#include "events/event.hpp"
 #include "utils.hpp"
 #include "lib/logging.hpp"
 #include "main.hpp"
@@ -107,6 +109,15 @@ namespace dmxfish {
             } while (!final_round);
         }
 
+        dmxfish::events::event_sender_t parse_sender_representation(const std::string& s) {
+            auto parts = utils::split(s, ':');
+            dmxfish::events::event_sender_t es;
+            es.decoded_representation.sender = std::stoul(parts.front());
+            parts.pop_front();
+            es.decoded_representation.sender_function = std::stoul(parts.front());
+            return es;
+        }
+
         void filter_sequencer::construct_transitions(const std::map<std::string, std::string>& configuration, const std::string& own_id, name_maps& nm) {
             if(const auto trans_iter = configuration.find("transitions"); trans_iter == configuration.end()) [[unlikely]] {
                 throw filter_config_exception("Configuration map does not contain 'transitions'.", filter_type::filter_sequencer, own_id);
@@ -114,8 +125,9 @@ namespace dmxfish {
                 try {
                     for (const auto& transition_str: utils::split(trans_iter->second, ';')) {
                         auto glob_param = utils::split(transition_str, '#');
-                        const auto trigger_event_id = std::stol(glob_param.front());
+                        const auto trigger_event_id = parse_sender_representation(glob_param.front()).encoded_sender_id;
                         glob_param.pop_front();
+                        glob_param.pop_front(); // Discard name as we don't need it
                         this->transitions.insert({trigger_event_id, sequencer::transition(glob_param, nm)});
                     }
                 } catch (const std::invalid_argument& e) {
