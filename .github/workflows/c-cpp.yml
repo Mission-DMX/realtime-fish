@@ -21,4 +21,6 @@ jobs:
       uses: actions/upload-artifact@v4.6.2
       with:
         name: Fish
-        path: bin/fish
+        path: | 
+          bin/fish
+          bin/tools/ioboardctrl
