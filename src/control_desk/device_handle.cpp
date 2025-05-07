@@ -38,6 +38,11 @@ namespace dmxfish::control_desk {
     }
 
     void device_handle::schedule_transmission() {
+        if (this->in_error_state) [[unlikely]] {
+            event_construction.clear();
+            sysex_construction.clear();
+            return;
+        }
         bool packets_constructed = false;
         if(!event_construction.empty()) {
             this->event_queue.push_back(rmrf::net::iorecord{event_construction.data(), event_construction.size()});
