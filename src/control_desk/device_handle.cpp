@@ -85,7 +85,11 @@ namespace dmxfish::control_desk {
     }
 
     void device_handle::cb_io_handler(::ev::io& w, int events) {
+	if (this->in_error_state) [[unlikely]] {
+	    return;
+	}
         if(events & ::ev::ERROR) {
+	    this->in_error_state = true;
             throw rmrf::net::netio_exception("MIDI client error. libev: state=" + std::to_string(events));
         }
 
@@ -108,6 +112,7 @@ namespace dmxfish::control_desk {
                 } else if (errno == EAGAIN) {
                     driver_has_buffer_capacity = false;
                 } else {
+		    this->in_error_state = true;
                     throw rmrf::net::netio_exception("Could not write to MIDI driver. libev: state=" + std::to_string(events));
                 }
                 this->event_queue.push_front(buffer);
@@ -120,6 +125,7 @@ namespace dmxfish::control_desk {
                 } else if (errno == EAGAIN) {
                     driver_has_buffer_capacity = false;
                 } else {
+		    this->in_error_state = true;
                     throw rmrf::net::netio_exception("Could not write to MIDI driver. libev: state=" + std::to_string(events));
                 }
                 this->sysex_queue.push_front(buffer);
