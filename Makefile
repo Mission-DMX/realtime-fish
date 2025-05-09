@@ -140,6 +140,7 @@ all: ${BINDIR}/fish tools
 test: ${TEST_TARGETS} all
 	for a in ${TEST_TARGETS}; do \
 		echo $$a; \
+		rm -f "/tmp/fish.sock"; \
 		$$a || exit 1; \
 	done
 
