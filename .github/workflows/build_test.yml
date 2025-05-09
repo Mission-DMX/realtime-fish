@@ -1,0 +1,17 @@
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  build:
+
+    runs-on: [self-hosted]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    
+    - name: make
+      run: make test

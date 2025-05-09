@@ -8,6 +8,7 @@
 #include "events/event.hpp"
 #include "events/event_source.hpp"
 #include "events/event_storage.hpp"
+#include "midi/midirtp_event_source.hpp"
 
 #include "lib/logging.hpp"
 #include "main.hpp"
@@ -25,12 +26,13 @@ namespace dmxfish::events {
             const auto& type = msg.type();
             if (type == "fish.builtin.plain") {
                 s_ptr = event_source::create<event_source>(storage_ptr, msg.name());
+            } else if(type == "fish.builtin.midirtp") {
+                s_ptr = event_source::create<dmxfish::midi::midirtp_event_source>(storage_ptr, msg.name());
             } else {
                 ::spdlog::error("Event sender type '{}' not yet implemented or unknown.", type);
                 return false;
             }
             // TODO develop event_source fish.builtin.midi
-            // TODO develop event_source fish.builtin.midirtp
             // TODO develop event_source fish.builtin.gpio
             // TODO develop event_source fish.builtin.macrokeypad
         }
