@@ -19,6 +19,7 @@ namespace dmxfish::control_desk {
         std::deque<uint8_t> in_construction;
         int max_sysex_queue_length = 3;
         const midi_device_id device_id;
+	bool in_error_state = false;
     public:
         device_handle(const std::string& driver_file_path, const midi_device_id& mdi);
         device_handle(const device_handle&) = delete;
@@ -59,6 +60,10 @@ namespace dmxfish::control_desk {
         void cb_io_handler(::ev::io& w, int events);
 
         void set_io_flags() {
+	    if (this->in_error_state) [[unlikely]] {
+		this->file_sync.set(0);
+		return;
+	    }
             auto flags = 0;
             flags |= ::ev::READ;
             if(!event_queue.empty()) {

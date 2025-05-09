@@ -70,6 +70,7 @@ namespace dmxfish::events {
         std::shared_ptr<event_source> find_source_by_name(const std::string& name);
     private:
         event_sender_t  register_event_source(const std::shared_ptr<event_source>& self);
+        void notify_guis_about_event(const event& e);
     };
 
 
