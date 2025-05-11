@@ -43,14 +43,14 @@ namespace dmxfish::filters {
         map.sixteen_bit_channels[name + ":freq"] = &freq;
     }
 
-    void scene_activated() {
+    void filter_event_counter::scene_activated() {
         this->freq = 0;
         this->bpm = 0;
         this->counted_events = 0;
         this->time_til_next_update = 1000.0;
     }
 
-    void update() {
+    void filter_event_counter::update() {
         this->time_til_next_count -= *time;
         if (this->time_til_next_count <= 0.0) {
             this->freq = this->counted_events;
