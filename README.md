@@ -14,6 +14,7 @@ The part of the software that translates the users wishes to DMX in real time.
 	* libftdi-dev
 	* pkg-config
 	* liblua5.4-dev
+    * libasound2-dev
 
    If you would also like to run unit tests, you'll also need libboost-test-dev.
 2. Perform a recursive clone of this repository.
