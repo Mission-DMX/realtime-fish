@@ -28,6 +28,8 @@ namespace dmxfish::events {
                 s_ptr = event_source::create<event_source>(storage_ptr, msg.name());
             } else if(type == "fish.builtin.midirtp") {
                 s_ptr = event_source::create<dmxfish::midi::midirtp_event_source>(storage_ptr, msg.name());
+            } else if (type == "fish.builtin.audioextract") {
+                s_ptr = event_source::create<dmxfish::audio::audioinput_event_source>(storage_ptr, msg.name());
             } else {
                 ::spdlog::error("Event sender type '{}' not yet implemented or unknown.", type);
                 return false;
