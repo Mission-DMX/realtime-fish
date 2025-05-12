@@ -127,6 +127,7 @@ void IOManager::run() {
             } else {
                 ::spdlog::error("Event loop crashed a second time with exception: {}. This seams to be unrecoverable. Exiting.", e.what());
                 this->running = false;
+		this->run_time_state->running = false;
             }
 		}
 	}
