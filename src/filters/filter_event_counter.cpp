@@ -47,7 +47,7 @@ namespace dmxfish::filters {
         this->freq = 0;
         this->bpm = 0;
         this->counted_events = 0;
-        this->time_til_next_update = 1000.0;
+        this->time_til_next_count = 1000.0;
     }
 
     void filter_event_counter::update() {
@@ -59,7 +59,7 @@ namespace dmxfish::filters {
             this->counted_events = 0;
         }
         for(const auto& event : get_event_storage_instance()->get_storage()) {
-            if (event.is_same_sender(this->trigger_event_sender)) {
+            if (event.get_event_sender().is_same_sender(this->trigger_event_sender)) {
                 this->counted_events++;
             }
         }

@@ -6,6 +6,7 @@
 #include "audioinput_event_source.hpp"
 
 #include "ALSA/ALSA.H"
+#include "ALSA/Capture.H"
 
 #include "lib/logging.hpp"
 
@@ -18,7 +19,7 @@ namespace dmxfish::audio {
     missiondmx::fish::ipcmessages::event_sender audioinput_event_source::encode_proto_message() const {
         auto msg = event_source::encode_proto_message();
         msg.set_type("fish.builtin.audioextract");
-        auto conf = (*mutable_configuration) msg.configuration();
+        auto conf = msg.configuration();
         conf["dev"] = this->sound_dev_file;
         // TODO transmit cuttoff settings
         return msg;
@@ -26,7 +27,8 @@ namespace dmxfish::audio {
 
     bool audioinput_event_source::update_conf_from_message(const missiondmx::fish::ipcmessages::event_sender& msg) {
         // TODO update cutoff settings
-        if (msg.configuration()["dev"] == this->sound_dev_file) {
+        auto conf = msg.configuration();
+        if (conf["dev"] == this->sound_dev_file) {
             return true;
         }
         this->running = false;
@@ -39,8 +41,8 @@ namespace dmxfish::audio {
 
     void audioinput_event_source::update_task() {
         using namespace ALSA;
-        Capture capture_dev(this->sound_dev_file);
-        if (capute_dev.prepared()) {
+        Capture capture_dev(this->sound_dev_file.c_str());
+        if (capture_dev.prepared()) {
             ::spdlog::error("Failed to open sound input device {}", this->sound_dev_file);
             return;
         } else {
@@ -56,7 +58,7 @@ namespace dmxfish::audio {
             ::spdlog::error("Failed to set sound card access mode. Error: {}", ALSADebug().evaluateError(res));
             return;
         }
-        if (const auto res = capture.setChannels(this->channel_count); res < 0) {
+        if (const auto res = capture_dev.setChannels(this->channel_count); res < 0) {
             ::spdlog::error("Failed to set recording channel count to {}. Error: {}", this->channel_count, ALSADebug().evaluateError(res));
             return;
         }

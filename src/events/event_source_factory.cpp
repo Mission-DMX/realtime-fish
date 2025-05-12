@@ -9,6 +9,7 @@
 #include "events/event_source.hpp"
 #include "events/event_storage.hpp"
 #include "midi/midirtp_event_source.hpp"
+#include "sound/audioinput_event_source.hpp"
 
 #include "lib/logging.hpp"
 #include "main.hpp"

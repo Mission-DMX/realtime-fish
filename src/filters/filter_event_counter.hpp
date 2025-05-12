@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "events/event.hpp"
+#include "filters/filter.hpp"
 
 namespace dmxfish::filters {
 
