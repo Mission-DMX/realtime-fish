@@ -4,9 +4,12 @@
 
 #include <iomanip>
 #include <chrono>
+#include <stacktrace>
 #include <string>
 #include <sstream>
 #include <stdexcept>
+
+#include <cpptrace/from_current.hpp>
 
 #include "lib/logging.hpp"
 
@@ -110,12 +113,16 @@ void IOManager::run() {
 	::spdlog::debug("Entering ev defloop");
     bool first_restart = true;
 	while(this->running) {
-		try {
+		//try {
+		CPPTRACE_TRY {
 			this->loop->run(0);
             first_restart = true;
-		} catch (const std::exception& e) {
+		//} catch ([[with_stacktrace]] const std::exception& e) {
+		} CPPTRACE_CATCH (const std::exception& e) {
 			if(first_restart) {
                 ::spdlog::error("Event loop crashed with exception: {}. Restarting event loop.", e.what());
+		// TODO replace third party library with std::stacktrace::from_current_exception() once C++26 is here
+		cpptrace::from_current_exception().print();
                 first_restart = false;
             } else {
                 ::spdlog::error("Event loop crashed a second time with exception: {}. This seams to be unrecoverable. Exiting.", e.what());
