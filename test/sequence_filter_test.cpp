@@ -84,6 +84,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     current_time += 5.0;
     fs.update();
     BOOST_CHECK_EQUAL(*channel_8b, 0);
+    std::cout << "16b: " << ((int) *channel_16b) << std::endl;
     BOOST_CHECK(*channel_16b > 680 && *channel_16b < 690);
     BOOST_CHECK(*channel_f > 0.4 && *channel_f < 0.6);
     BOOST_CHECK(channel_c->getHue() <= 0.0 + 0.5);
@@ -92,6 +93,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     get_event_storage_instance()->swap_buffers();
     fs.update();
     BOOST_CHECK_EQUAL(*channel_8b, 0);
+    std::cout << "16b: " << ((int) *channel_16b) << std::endl;
     BOOST_CHECK(*channel_16b > 200 && *channel_16b < 350);
     BOOST_CHECK(*channel_f > 0.1 && *channel_f < 0.2);
     BOOST_CHECK(channel_c->getHue() >= 40.0 - 0.5 && channel_c->getHue() <= 40.0 + 0.5);
@@ -100,6 +102,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     get_event_storage_instance()->swap_buffers();
     fs.update();
     BOOST_CHECK_EQUAL(*channel_8b, 0);
+    std::cout << "16b: " << ((int) *channel_16b) << std::endl;
     BOOST_CHECK(*channel_16b < 10);
     BOOST_CHECK(*channel_f < 0.125);
     BOOST_CHECK(channel_c->getHue() <= 0.5);
@@ -109,6 +112,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     get_event_storage_instance()->swap_buffers();
     fs.update();
     BOOST_CHECK_EQUAL(*channel_8b, 20);
+    std::cout << "16b: " << ((int) *channel_16b) << std::endl;
     BOOST_CHECK(*channel_16b > 335 && *channel_16b < 350);
     BOOST_CHECK(*channel_f < 0.2);
     BOOST_CHECK(channel_c->getHue() >= 20.0 - 0.5 && channel_c->getHue() <= 20.0 + 0.5);
@@ -117,6 +121,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     get_event_storage_instance()->swap_buffers();
     fs.update();
     BOOST_CHECK_EQUAL(*channel_8b, 40);
+    std::cout << "16b: " << ((int) *channel_16b) << std::endl;
     BOOST_CHECK(*channel_16b > 680 && *channel_16b < 690);
     BOOST_CHECK(*channel_f > 0.1 && *channel_f < 0.2);
     BOOST_CHECK(channel_c->getHue() >= 40.0 - 0.5 && channel_c->getHue() <= 40.0 + 0.5);
@@ -125,6 +130,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     get_event_storage_instance()->swap_buffers();
     fs.update();
     BOOST_CHECK_EQUAL(*channel_8b, 60);
+    std::cout << "16b: " << ((int) *channel_16b) << std::endl;
     BOOST_CHECK(*channel_16b > 1022 && *channel_16b < 1026);
     BOOST_CHECK(*channel_f > 0.24 && *channel_f < 0.26);
     BOOST_CHECK(channel_c->getHue() >= 60.0 - 0.5 && channel_c->getHue() <= 60.0 + 0.5);
