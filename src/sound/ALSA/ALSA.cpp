@@ -16,12 +16,12 @@
 */
 #include "sound/ALSA/ALSA.H"
 
-ALSA::ALSA()
-{
-    //ctor
-}
+namespace ALSA {
+    /*ALSA::ALSA() {
+        //ctor
+    }
 
-ALSA::~ALSA()
-{
-    //dtor
+    ALSA::~ALSA() {
+        //dtor
+    }*/
 }

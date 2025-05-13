@@ -67,7 +67,7 @@ namespace dmxfish::audio {
         }
 
         const int latency = (this->sampler_rate / 1000) * this->record_block_duration_ms;
-        Eigen::Array<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> buffer(latency, this->channel_count);
+        Eigen::Array<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> buffer((int) latency, (int) this->channel_count);
 
         if (const auto res = capture_dev.start(); res < 0) {
             ::spdlog::error("Error while starting audio capture: {}.", ALSADebug().evaluateErrorS(res));
