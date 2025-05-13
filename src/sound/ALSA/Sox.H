@@ -142,12 +142,12 @@ public:
     The audioData is returned with each column as an audio channel.
     \param audioData The Matrix to place the read audio into. It is resized as required and will match the size of the number of samples read where each column is a channel.
     \param count the number of samples per channel to read, 0 for everything
-    \return NO_ERROR on success, or the error code otherwise. audioData holds the read data.
+    \return ALSA_NO_ERROR on success, or the error code otherwise. audioData holds the read data.
     */
     template <typename Derived>
     int read(Eigen::DenseBase<Derived> &audioData, int count=0){
         typedef typename Derived::Scalar Scalar;
-        int retVal=NO_ERROR; // start assuming no error
+        int retVal = ALSA_NO_ERROR; // start assuming no error
         if (in) { // if the input file has been opened...
             if (count==0) // if we want everything
 #ifndef HAVE_EMSCRIPTEN
@@ -275,7 +275,7 @@ public:
     */
     template <typename Derived>
     int write(const Eigen::DenseBase<Derived> &audioData) {
-        int retVal=NO_ERROR; // start assuming no error
+        int retVal = ALSA_NO_ERROR; // start assuming no error
         if (out) { // if the output file has been opened...
             if (out->signal.channels!=audioData.cols())
                 retVal=SOX_WRITE_OUT_CHANNEL_MISMATCH;
@@ -299,11 +299,11 @@ public:
     /** Write the audio data to an already open file.
     The audioData is written with each row as an audio channel.
     \param audioData The matrix to store to file.
-    \return NO_ERROR on success, or the number written otherwise.
+    \return ALSA_NO_ERROR on success, or the number written otherwise.
     */
     template <typename Derived>
     int writeTransposed(const Eigen::DenseBase<Derived> &audioData) {
-        int retVal=NO_ERROR; // start assuming no error
+        int retVal=ALSA_NO_ERROR; // start assuming no error
         if (out) { // if the output file has been opened...
             if (out->signal.channels!=audioData.rows())
                 retVal=SOX_WRITE_OUT_CHANNEL_MISMATCH;
@@ -449,7 +449,7 @@ public:
 
   /** Emscripten case : Read audio data into the audio member variable.
   \param count the number of samples per channel to read, 0 for everything
-  \return NO_ERROR on success, or the error code otherwise. audio holds the read data.
+  \return ALSA_NO_ERROR on success, or the error code otherwise. audio holds the read data.
   */
   int readJS(unsigned int count=0);
 

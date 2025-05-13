@@ -130,7 +130,7 @@ public:
     \param start_routine The function to run after the thread has been started
     \param data The argument to be pased to the thread
     \param priority The priority to schedule with if =0 then don't set the priority (pthreads only)
-    \return NO_ERROR on success or THREAD_CREATE_ERROR on failure
+    \return ALSA_NO_ERROR on success or THREAD_CREATE_ERROR on failure
     */
 #ifdef USE_GLIB_THREADS
     int run(void (*start_routine) (void *), void *data, int priority=0) {
@@ -299,7 +299,7 @@ public:
 
     /** Start the threadMain in a new thread.
     \param prioirity Set the priority for the thread e.g. sched_get_priority_max(SCHED_FIFO)
-    \return NO_ERROR on success, or a suitable error on failure : THREAD_CREATE_ERROR
+    \return ALSA_NO_ERROR on success, or a suitable error on failure : THREAD_CREATE_ERROR
     */
     virtual int run(int priority=0) {
         return Thread::run(threadMainStatic, static_cast<void*>(this), priority);
@@ -331,7 +331,7 @@ public:
     }
 
     /** Lock the mutual exclusion zone.
-    \return NO_ERROR on success, the suitable error code otherwise (EINVAL, EDEADLK).
+    \return ALSA_NO_ERROR on success, the suitable error code otherwise (EINVAL, EDEADLK).
     */
     int lock() {
         int retVal=pthread_mutex_lock(&mut);
@@ -342,11 +342,11 @@ public:
                 return ThreadDebug().evaluateError(THREAD_MUTEX_DEADLK_ERROR);
 
         }
-        return NO_ERROR;
+        return ALSA_NO_ERROR;
     }
 
     /** Try to lock the mutual exclusion zone.
-    \return NO_ERROR on success, the suitable error code otherwise (EINVAL, EBUSY).
+    \return ALSA_NO_ERROR on success, the suitable error code otherwise (EINVAL, EBUSY).
     */
     int tryLock() {
         int retVal=pthread_mutex_trylock(&mut);
@@ -357,11 +357,11 @@ public:
                 return ThreadDebug().evaluateError(THREAD_MUTEX_LOCKBUSY_WARNING);
 
         }
-        return NO_ERROR;
+        return ALSA_NO_ERROR;
     }
 
     /** Try to lock the mutual exclusion zone.
-    \return NO_ERROR on success, the suitable error code otherwise (EINVAL, EPERM when using a error checking mutex).
+    \return ALSA_NO_ERROR on success, the suitable error code otherwise (EINVAL, EPERM when using a error checking mutex).
     */
     int unLock() {
         int retVal=pthread_mutex_unlock(&mut);
@@ -372,7 +372,7 @@ public:
                 return ThreadDebug().evaluateError(THREAD_MUTEX_DONTOWN_ERROR);
 
         }
-        return NO_ERROR;
+        return ALSA_NO_ERROR;
     }
 };
 

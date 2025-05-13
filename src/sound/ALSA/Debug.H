@@ -25,12 +25,12 @@
 typedef unsigned int uint;
 #endif
 
-#ifdef NO_ERROR
-#if (NO_ERROR!=0)
-#error "NO_ERROR previously defined but not equal to zero"
+#ifdef ALSA_NO_ERROR
+#if (ALSA_NO_ERROR!=0)
+#error "ALSA_NO_ERROR previously defined but not equal to zero"
 #endif
 #else
-#define NO_ERROR 0 ///< There is no error.
+#define ALSA_NO_ERROR 0 ///< There is no error.
 #endif
 
 #ifndef DEBUG_ERROR_OFFSET
@@ -128,7 +128,7 @@ public:
 
     Debug() {
 #ifndef NDEBUG
-        errors[NO_ERROR]=std::string("No error. ");
+        errors[ALSA_NO_ERROR]=std::string("No error. ");
         errors[MALLOC_ERROR]=std::string("Couldn't allocate the memory error. ");
 #endif
     }
@@ -143,7 +143,7 @@ public:
     */
     virtual int evaluateError(int errorNum) {
 #ifndef NDEBUG
-      if (errorNum!=NO_ERROR){
+      if (errorNum != ALSA_NO_ERROR){
         if (errors.find(errorNum)==errors.end()) // if we don't have this error then perhaps it is a system error ?
           fprintf(stderr, "Error : %d strerror reports : %s ", errorNum, strerror(errno));
         else

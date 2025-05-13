@@ -8,16 +8,16 @@
 #include <array>
 #include <Eigen/Dense>
 
-#include "event/event_storage.hpp"
+#include "events/event.hpp"
+#include "events/event_storage.hpp"
 #include "sound/ALSA/ALSA.H"
 #include "sound/ALSA/Capture.H"
+#include "sound/fft.hpp"
 
 #include "lib/logging.hpp"
 #include "main.hpp"
 
 namespace dmxfish::audio {
-
-    constexpr auto fft_size = 1024;
 
     audioinput_event_source::audioinput_event_source() {
 
@@ -35,23 +35,37 @@ namespace dmxfish::audio {
         msg.set_type("fish.builtin.audioextract");
         auto conf = msg.configuration();
         conf["dev"] = this->sound_dev_file;
-        // TODO transmit cuttoff settings
+        conf["high_cut"] = std::to_string(this->high_cutoff_frequency);
+        conf["low_cut"] = std::to_string(this->low_cutoff_frequency);
+        conf["magnitude"] = std::to_string(this->trigger_magnitude);
+        conf["fft_window_size"] = "1024";
+        conf["channel_count"] = std::to_string(this->channel_count);
+        conf["sampler_rate"] = std::to_string(this->sampler_rate);
+        conf["sample_duration"] = std::to_string(this->record_block_duration_ms);
         return msg;
     }
 
     bool audioinput_event_source::update_conf_from_message(const missiondmx::fish::ipcmessages::event_sender& msg) {
-        // TODO update cutoff and magnitude settings
         auto conf = msg.configuration();
+        this->high_cutoff_frequency = std::stoi(conf["high_cut"]);
+        this->low_cutoff_frequency = std::stoi(conf["low_cut"]);
+        this->trigger_magnitude = std::stod(conf["magnitude"]);
+        const auto new_channel_count = std::stoi(conf["channel_count"]);
+        const auto new_sampler_rate = std::stoi(conf["sampler_rate"]);
+        const auto new_duration = std::stoi(conf["sample_duration"]);
         if (conf["dev"] == this->sound_dev_file
-                && channel_count == std::stoi(conf["channel_count"])
-                && sampler_rate == std::stoi(conf["sampler_rate"])
-                && record_block_duration_ms == std::stoi(conf["sample_duration"])) {
+                && this->channel_count == new_channel_count
+                && this->sampler_rate == new_sampler_rate
+                && this->record_block_duration_ms == new_duration) {
             return true;
         }
         this->running = false;
         if (this->thread.has_value()) {
             this->thread->join();
         }
+        this->channel_count = new_channel_count;
+        this->sampler_rate = new_sampler_rate;
+        this->record_block_duration_ms = new_duration;
         this->thread = std::thread(&audioinput_event_source::update_task, this);
         return true;
     }
@@ -117,13 +131,14 @@ namespace dmxfish::audio {
             // However implementing this on roalling data needs some math which I don't have
             // the time for at the moment. Therefore FFT it is.
 
-            remaining_elements_in_buffer = buffer.rows();
+            auto remaining_elements_in_buffer = buffer.rows();
+            // TODO use windows instead of blocks
             while (remaining_elements_in_buffer > fft_buffer.size()) {
                 // load buffer content
                 for (auto i = initial_fft_buffer_pos; i < fft_buffer.size(); i++) {
                     double avg = 0;
                     for (auto j = 0; j < buffer.cols(); j++) {
-                        avg += buffer[buffer.rows() - remaining_elements_in_buffer][j];
+                        avg += buffer(buffer.rows() - remaining_elements_in_buffer, j);
                     }
                     fft_buffer[i] = avg / buffer.cols();
                     remaining_elements_in_buffer--;
@@ -134,19 +149,20 @@ namespace dmxfish::audio {
                 std::array<double, fft_size> real, imag;
                 fft(fft_buffer, real, imag);
 
-                for (auto i=0; i < real.size(); i++) {
+                for (size_t i=0; i < real.size(); i++) {
                     real[i] = real[i] * real[i];
                 }
-                for (auto i=0; i < imag.size(); i++) {
+                for (size_t i=0; i < imag.size(); i++) {
                     imag[i] = imag[i] * imag[i];
                 }
 
                 double bassIntensity = 0;
-                for (i=this->low_cutoff_frequency; i < this->high_cutoff_frequency; i++){
+                for (auto i = this->low_cutoff_frequency; i < this->high_cutoff_frequency; i++){
                     bassIntensity += real[i] + imag[i];
                 }
                 if (bassIntensity > this->trigger_magnitude) {
-                    dmxfish::events::event e(this->get_sender_id(), 0);
+                    dmxfish::events::event e(dmxfish::events::event_type::SINGLE_TRIGGER,
+                                             dmxfish::events::event_sender_t{this->get_sender_id(), 0});
                     event_storage->insert_event(e);
                 }
             }
@@ -155,15 +171,11 @@ namespace dmxfish::audio {
             while(remaining_elements_in_buffer > 0) {
                 double avg = 0;
                 for (auto j = 0; j < buffer.cols(); j++) {
-                    avg += buffer[buffer.rows() - remaining_elements_in_buffer][j];
+                    avg += buffer(buffer.rows() - remaining_elements_in_buffer, j);
                     remaining_elements_in_buffer--;
                 }
                 fft_buffer[initial_fft_buffer_pos++] = avg / buffer.cols();
             }
         }
-    }
-
-    void fft(const std::array<double, fft_size>& in_buffer, std::array<double, fft_size>& real, std::array<double, fft_size>& imag) {
-        // TODO
     }
 }

@@ -17,16 +17,16 @@ namespace dmxfish::audio {
     class audioinput_event_source : public dmxfish::events::event_source {
     private:
         std::atomic_bool running = false;
-        std::atomic_int high_cutoff_frequency = 96;
-        std::atomic_int low_cutoff_frequency = 9;
-        std::atomic_double trigger_magnitude = 30.0;
+        int high_cutoff_frequency = 96;
+        int low_cutoff_frequency = 9;
+        double trigger_magnitude = 30.0;
 
         unsigned short channel_count = 1;
         unsigned short sampler_rate = 48000;
         unsigned short record_block_duration_ms = 40;
 
         std::string sound_dev_file = "";
-        std::optional<std::thread> thread;
+        std::optional<std::thread> thread = std::nullopt;
     public:
         audioinput_event_source();
         ~audioinput_event_source();

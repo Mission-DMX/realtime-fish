@@ -47,7 +47,7 @@ Sox<FP_TYPE_>::~Sox() {
 
 template<typename FP_TYPE_>
 int Sox<FP_TYPE_>::close(bool inputFile) {
-    int retVal=NO_ERROR;
+    int retVal = ALSA_NO_ERROR;
     if (inputFile) {
         if (in) {
             if (sox_close(in)!=SOX_SUCCESS)
@@ -133,7 +133,7 @@ void Sox<FP_TYPE_>::output_message(unsigned level, const char *filename, const c
 #ifndef HAVE_EMSCRIPTEN
 template<typename FP_TYPE_>
 int Sox<FP_TYPE_>::openWrite(const string &fileName, double fs, int channels, double maxVal, unsigned int wordSize, bool switchEndian, int revBytes, int revNibbles, int revBits){
-    int retVal=NO_ERROR; // start assuming no error
+    int retVal = ALSA_NO_ERROR; // start assuming no error
     bool inputFile=false;
     close(inputFile);
 
@@ -178,7 +178,7 @@ int Sox<FP_TYPE_>::openWrite(const string &fileName, double fs, int channels, do
 
 template<typename FP_TYPE_>
 int Sox<FP_TYPE_>::openMemWrite(void *buffer, size_t *len, double fs, int channels, double maxVal, const char* ext, unsigned int wordSize, bool switchEndian, int revBytes, int revNibbles, int revBits){
-    int retVal=NO_ERROR; // start assuming no error
+    int retVal = ALSA_NO_ERROR; // start assuming no error
     bool inputFile=false;
     close(inputFile);
 
@@ -201,7 +201,7 @@ int Sox<FP_TYPE_>::openMemWrite(void *buffer, size_t *len, double fs, int channe
 
 template<typename FP_TYPE_>
 int Sox<FP_TYPE_>::write(const vector<vector<FP_TYPE_> > &audioData) {
-    int retVal=NO_ERROR; // start assuming no error
+    int retVal = ALSA_NO_ERROR; // start assuming no error
     if (out) { // if the output file has been opened...
         if (out->signal.channels!=audioData.size())
             retVal=SOX_WRITE_OUT_CHANNEL_MISMATCH;
