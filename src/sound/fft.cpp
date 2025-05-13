@@ -31,6 +31,12 @@ namespace dmxfish::audio {
 
     fft_context::fft_context() : fft_buffer(), out_buffer() {
         this->p = fftw_plan_dft_1d(fft_size, (fftw_complex*) fft_buffer.data(), (fftw_complex*) out_buffer.data(), FFTW_FORWARD, FFTW_MEASURE);
+        for(auto& r : this->fft_buffer) {
+            r = 0;
+        }
+        for(auto& r : this->out_buffer) {
+            r = 0;
+        }
     }
 
     fft_context::~fft_context() {
