@@ -16,6 +16,7 @@ The part of the software that translates the users wishes to DMX in real time.
 	* liblua5.4-dev
     * libasound2-dev
     * libeigen3-dev
+    * libsox-dev
     * libcpptrace-dev (will be removed with C++26)
     * libdwarf-dev (required by cpptrace)
 

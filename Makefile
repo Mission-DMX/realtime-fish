@@ -1,7 +1,8 @@
 OS = $(shell uname -s)
+MARCH_ARGS ?= -march=native -masm=intel
 
-# CFLAGS += -march=native -masm=intel -pipe -fsanitize=address,signed-integer-overflow,undefined -pedantic -Wall -Wextra -Werror -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src
-CFLAGS += -march=native -masm=intel -pipe -pedantic -Wall -Wextra -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src -Isrc/allocators
+# CFLAGS += ${MARCH_ARGS} -pipe -fsanitize=address,signed-integer-overflow,undefined -pedantic -Wall -Wextra -Werror -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src
+CFLAGS += ${MARCH_ARGS} -pipe -pedantic -Wall -Wextra -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wdouble-promotion -Wshadow -Wformat=2 -Wfloat-equal -Wundef -Wpointer-arith -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Winit-self -fno-strict-aliasing -Wno-unknown-warning-option -Isrc -Ilib -Isubmodules/rmrf/src -Isrc/allocators
 
 CXXFLAGS += ${CFLAGS} -std=c++2b -Wuseless-cast -Weffc++ -I/usr/local/include -Wno-non-virtual-dtor
 DEPFLAGS = -MT $@ -MMD -MP -MF $(patsubst ${OBJDIR}/%.o,${DEPDIR}/%.d,$@) -pthread
@@ -46,12 +47,12 @@ LFLAGS += `${PKG_TOOL} --libs fmt`
 LFLAGS += `${PKG_TOOL} --libs libusb`
 LFLAGS += `${PKG_TOOL} --libs libftdi`
 LFLAGS += `${PKG_TOOL} --libs lua5.4`
-LFLAGS += `${PKG_TOOL} --libs alsa` `${PKG_TOOL} --libs eigen3`
+LFLAGS += `${PKG_TOOL} --libs alsa eigen3 sox`
 LFLAGS += -lcpptrace `${PKG_TOOL} --libs libdwarf` `${PKG_TOOL} --libs zlib libzstd`
 CFLAGS += `${PKG_TOOL} --cflags xerces-c`
 CFLAGS += `${PKG_TOOL} --cflags libusb`
 CFLAGS += `${PKG_TOOL} --cflags libftdi`
-CFLAGS += `${PKG_TOOL} --cflags alsa` `${PKG_TOOL} --cflags eigen3`
+CFLAGS += `${PKG_TOOL} --cflags alsa eigen3 sox`
 CFLAGS += `${PKG_TOOL} --cflags libdwarf libzstd`
 
 SUPPRESSWARN := -w
