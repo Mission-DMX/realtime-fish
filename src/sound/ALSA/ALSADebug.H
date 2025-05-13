@@ -18,6 +18,7 @@
 #define ALSADEBUG_H
 
 #include <iostream>
+#include <sstream>
 #include <sound/ALSA/Debug.H>
 #include <alsa/asoundlib.h>
 
@@ -83,6 +84,15 @@ namespace ALSA {
 			}
 			return Debug::evaluateError(errorNum);
 		}
+
+        virtual std::string evaluateErrorS(int errorNum) {
+            std::stringstream ss;
+            ss << "ALSA ERROR " << errorNum;
+            if (errorNum>MAX_ERROR_OFFSET || errorNum<MIN_ERROR_OFFSET){
+                ss << ", " << snd_strerror(errorNum);
+            }
+            return ss.str();
+        }
 
 		virtual int evaluateError(int errorNum, std::string append) {
 			return Debug::evaluateError(errorNum, append);
