@@ -47,12 +47,12 @@ LFLAGS += `${PKG_TOOL} --libs fmt`
 LFLAGS += `${PKG_TOOL} --libs libusb`
 LFLAGS += `${PKG_TOOL} --libs libftdi`
 LFLAGS += `${PKG_TOOL} --libs lua5.4`
-LFLAGS += `${PKG_TOOL} --libs alsa eigen3 sox`
+LFLAGS += `${PKG_TOOL} --libs alsa eigen3 sox fftw3`
 LFLAGS += -lcpptrace `${PKG_TOOL} --libs libdwarf` `${PKG_TOOL} --libs zlib libzstd`
 CFLAGS += `${PKG_TOOL} --cflags xerces-c`
 CFLAGS += `${PKG_TOOL} --cflags libusb`
 CFLAGS += `${PKG_TOOL} --cflags libftdi`
-CFLAGS += `${PKG_TOOL} --cflags alsa eigen3 sox`
+CFLAGS += `${PKG_TOOL} --cflags alsa eigen3 sox fftw3`
 CFLAGS += `${PKG_TOOL} --cflags libdwarf libzstd`
 
 SUPPRESSWARN := -w

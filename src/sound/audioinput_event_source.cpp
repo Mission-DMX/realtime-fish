@@ -117,10 +117,12 @@ namespace dmxfish::audio {
 
         ::spdlog::info("Successfully initialized device {} for capturing audio with format {}, {} channels, period size {} and a sampler rate of {}.",
                        this->sound_dev_file, capture_dev.getFormatName(format), capture_dev.getChannels(), pSize, this->sampler_rate);
-        std::array<double, fft_size> fft_buffer;
+
         size_t initial_fft_buffer_pos = 0;
 
         auto event_storage = get_event_storage_instance();
+        fft_context ctx;
+        std::array<double, fft_size> post_buffer;
 
         while(this->running) {
             capture_dev >> buffer;
@@ -132,33 +134,32 @@ namespace dmxfish::audio {
             // the time for at the moment. Therefore FFT it is.
 
             auto remaining_elements_in_buffer = buffer.rows();
+
             // TODO use windows instead of blocks
-            while (remaining_elements_in_buffer > fft_buffer.size()) {
+            while (remaining_elements_in_buffer > ctx.fft_buffer.size()) {
                 // load buffer content
-                for (auto i = initial_fft_buffer_pos; i < fft_buffer.size(); i++) {
+                for (auto i = initial_fft_buffer_pos; i < fft_size; i++) {
                     double avg = 0;
                     for (auto j = 0; j < buffer.cols(); j++) {
                         avg += buffer(buffer.rows() - remaining_elements_in_buffer, j);
                     }
-                    fft_buffer[i] = avg / buffer.cols();
+                    ctx.fft_buffer[i*2] = avg / buffer.cols();
                     remaining_elements_in_buffer--;
                 }
                 initial_fft_buffer_pos = 0;
 
                 // analyze buffer
-                std::array<double, fft_size> real, imag;
-                fft(fft_buffer, real, imag);
+                fft(ctx);
 
-                for (size_t i=0; i < real.size(); i++) {
-                    real[i] = real[i] * real[i];
-                }
-                for (size_t i=0; i < imag.size(); i++) {
-                    imag[i] = imag[i] * imag[i];
+                for (size_t i=0; i < fft_size; i++) {
+                    const auto pos_real = 2*i;
+                    const auto pos_imag = 2*i+1;
+                    post_buffer[i] = ctx.out_buffer[pos_real] * ctx.out_buffer[pos_real] + ctx.out_buffer[pos_imag] * ctx.out_buffer[pos_imag];
                 }
 
                 double bassIntensity = 0;
                 for (auto i = this->low_cutoff_frequency; i < this->high_cutoff_frequency; i++){
-                    bassIntensity += real[i] + imag[i];
+                    bassIntensity += post_buffer[i];
                 }
                 if (bassIntensity > this->trigger_magnitude) {
                     dmxfish::events::event e(dmxfish::events::event_type::SINGLE_TRIGGER,
@@ -174,7 +175,7 @@ namespace dmxfish::audio {
                     avg += buffer(buffer.rows() - remaining_elements_in_buffer, j);
                     remaining_elements_in_buffer--;
                 }
-                fft_buffer[initial_fft_buffer_pos++] = avg / buffer.cols();
+                ctx.fft_buffer[initial_fft_buffer_pos++] = avg / buffer.cols();
             }
         }
     }
