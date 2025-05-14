@@ -62,3 +62,7 @@ a low speed interface (1.0, 1.1, 2.0, 3.0) this will significantly slow down the
 Communication with the io board is done using an FTDI600Q chip as regular USB2.0 speeds are
 nowhere near enough. In order for this to work, the [FT60X](https://github.com/lambdaconcept/ft60x_driver/tree/master)
 driver needs to be installed and loaded. A corresponding entry to `/etc/modules` should do the trick.
+
+## Unit tests
+Running the unit tests requires Pulse Audio's `pactl` to be installed.
+It is usually supplied by a package called `pulseaudio-utils`

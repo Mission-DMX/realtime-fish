@@ -33,15 +33,15 @@ namespace dmxfish::audio {
     missiondmx::fish::ipcmessages::event_sender audioinput_event_source::encode_proto_message() const {
         auto msg = event_source::encode_proto_message();
         msg.set_type("fish.builtin.audioextract");
-        auto conf = msg.configuration();
-        conf["dev"] = this->sound_dev_file;
-        conf["high_cut"] = std::to_string(this->high_cutoff_frequency);
-        conf["low_cut"] = std::to_string(this->low_cutoff_frequency);
-        conf["magnitude"] = std::to_string(this->trigger_magnitude);
-        conf["fft_window_size"] = "1024";
-        conf["channel_count"] = std::to_string(this->channel_count);
-        conf["sampler_rate"] = std::to_string(this->sampler_rate);
-        conf["sample_duration"] = std::to_string(this->record_block_duration_ms);
+        auto conf = msg.mutable_configuration();
+        conf->operator[]("dev") = this->sound_dev_file;
+        conf->operator[]("high_cut") = std::to_string(this->high_cutoff_frequency);
+        conf->operator[]("low_cut") = std::to_string(this->low_cutoff_frequency);
+        conf->operator[]("magnitude") = std::to_string(this->trigger_magnitude);
+        conf->operator[]("fft_window_size") = "1024";
+        conf->operator[]("channel_count") = std::to_string(this->channel_count);
+        conf->operator[]("sampler_rate") = std::to_string(this->sampler_rate);
+        conf->operator[]("sample_duration") = std::to_string(this->record_block_duration_ms);
         return msg;
     }
 
@@ -63,6 +63,7 @@ namespace dmxfish::audio {
         if (this->thread.has_value()) {
             this->thread->join();
         }
+        this->running = true;
         this->channel_count = new_channel_count;
         this->sampler_rate = new_sampler_rate;
         this->record_block_duration_ms = new_duration;
@@ -74,7 +75,10 @@ namespace dmxfish::audio {
         using namespace ALSA;
 
         if(!this->running) {
+            ::spdlog::info("Leaving audio extraction thread early.");
             return;
+        } else {
+            ::spdlog::debug("Starting new audio extraction thread");
         }
 
         if(this->channel_count < 1) {
@@ -84,7 +88,7 @@ namespace dmxfish::audio {
 
         Capture capture_dev(this->sound_dev_file.c_str());
         if (capture_dev.prepared()) {
-            ::spdlog::error("Failed to open sound input device {}", this->sound_dev_file);
+            ::spdlog::error("Failed to open sound input device {}.", this->sound_dev_file);
             return;
         } else {
             ::spdlog::info("Opened sound device {}.", capture_dev.getDeviceName());
@@ -178,5 +182,6 @@ namespace dmxfish::audio {
                 ctx.fft_buffer[initial_fft_buffer_pos++] = avg / buffer.cols();
             }
         }
+        ::spdlog::debug("Leaving audio extraction thread");
     }
 }
