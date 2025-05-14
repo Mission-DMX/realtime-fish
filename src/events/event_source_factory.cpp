@@ -42,6 +42,9 @@ namespace dmxfish::events {
         success = s_ptr->update_conf_from_message(msg);
         const auto update_msg = s_ptr->encode_proto_message();
         get_iomanager_instance()->push_msg_to_all_gui(update_msg, ::missiondmx::fish::ipcmessages::MSGT_EVENT_SENDER_UPDATE);
+        if (success) {
+            ::spdlog::info("Successfully created / updated event source '{}' of type {}.", msg.name(), msg.type());
+        }
         return success;
     }
 

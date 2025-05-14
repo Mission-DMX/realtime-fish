@@ -47,12 +47,18 @@ namespace dmxfish::audio {
 
     bool audioinput_event_source::update_conf_from_message(const missiondmx::fish::ipcmessages::event_sender& msg) {
         auto conf = msg.configuration();
-        this->high_cutoff_frequency = std::stoi(conf["high_cut"]);
-        this->low_cutoff_frequency = std::stoi(conf["low_cut"]);
-        this->trigger_magnitude = std::stod(conf["magnitude"]);
-        const auto new_channel_count = std::stoi(conf["channel_count"]);
-        const auto new_sampler_rate = std::stoi(conf["sampler_rate"]);
-        const auto new_duration = std::stoi(conf["sample_duration"]);
+	if (conf.contains("high_cut")) {
+            this->high_cutoff_frequency = std::stoi(conf["high_cut"]);
+        }
+	if (conf.contains("low_cut")) {
+            this->low_cutoff_frequency = std::stoi(conf["low_cut"]);
+	}
+	if (conf.contains("magnitude")) {
+            this->trigger_magnitude = std::stod(conf["magnitude"]);
+	}
+        const auto new_channel_count = conf.contains("channel_count") ? std::stoi(conf["channel_count"]) : this->channel_count;
+        const auto new_sampler_rate = conf.contains("sampler_rate") ? std::stoi(conf["sampler_rate"]) : this->sampler_rate;
+        const auto new_duration = conf.contains("sample_duration") ? std::stoi(conf["sample_duration"]) : this->record_block_duration_ms;
         if (conf["dev"] == this->sound_dev_file
                 && this->channel_count == new_channel_count
                 && this->sampler_rate == new_sampler_rate
