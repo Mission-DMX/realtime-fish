@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 #include "events/event.hpp"
@@ -15,6 +16,7 @@ namespace dmxfish::filters {
     class filter_event_counter: public filter {
     private:
         double time_til_next_count = 1000.0;
+	double last_update = 0.0;
         COMPILER_SUPRESS("-Weffc++")
         double* time;
         COMPILER_RESTORE("-Weffc++")
@@ -22,6 +24,7 @@ namespace dmxfish::filters {
         unsigned long counted_events = 0;
         uint16_t freq = 0;
         uint16_t bpm = 0;
+	std::array<uint16_t, 4> bpm_window;
     public:
         filter_event_counter();
         virtual ~filter_event_counter();

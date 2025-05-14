@@ -12,7 +12,7 @@
 #include "main.hpp"
 
 namespace dmxfish::filters {
-    filter_event_counter::filter_event_counter() : filter() {
+    filter_event_counter::filter_event_counter() : filter(), bpm_window{} {
         this->trigger_event_sender.encoded_sender_id = 0;
     }
 
@@ -48,13 +48,23 @@ namespace dmxfish::filters {
         this->bpm = 0;
         this->counted_events = 0;
         this->time_til_next_count = 1000.0;
+	for (auto& t : this->bpm_window) {
+	    t = 0;
+	}
     }
 
     void filter_event_counter::update() {
-        this->time_til_next_count -= *time;
+        this->time_til_next_count -= (*time - this->last_update);
+	this->last_update = *time;
         if (this->time_til_next_count <= 0.0) {
             this->freq = this->counted_events;
-            this->bpm = this->counted_events / 60;
+	    uint16_t window_counter = 0;
+	    for (int i = 1; i < this->bpm_window.size(); i++) {
+		bpm_window[i - 1] = bpm_window[i];
+		window_counter += bpm_window[i];
+	    }
+	    bpm_window[bpm_window.size() - 1] = this->counted_events;
+            this->bpm = window_counter * 15;
             this->time_til_next_count = 1000.0;
             this->counted_events = 0;
         }
