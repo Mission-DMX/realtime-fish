@@ -13,6 +13,7 @@
 #include "sound/ALSA/ALSA.H"
 #include "sound/ALSA/Capture.H"
 #include "sound/fft.hpp"
+#include "sound/pulse.hpp"
 
 #include "lib/logging.hpp"
 #include "main.hpp"
@@ -42,6 +43,7 @@ namespace dmxfish::audio {
         conf->operator[]("channel_count") = std::to_string(this->channel_count);
         conf->operator[]("sampler_rate") = std::to_string(this->sampler_rate);
         conf->operator[]("sample_duration") = std::to_string(this->record_block_duration_ms);
+	conf->operator[]("use_alsa_directly") = this->use_alsa_directly ? "true" : "false";
         return msg;
     }
 
@@ -59,9 +61,11 @@ namespace dmxfish::audio {
         const auto new_channel_count = conf.contains("channel_count") ? std::stoi(conf["channel_count"]) : this->channel_count;
         const auto new_sampler_rate = conf.contains("sampler_rate") ? std::stoi(conf["sampler_rate"]) : this->sampler_rate;
         const auto new_duration = conf.contains("sample_duration") ? std::stoi(conf["sample_duration"]) : this->record_block_duration_ms;
+	const bool new_alsa_use = conf.contains("use_alsa_directly") ? (conf["use_alsa_directly"] == "true") : false;
         if (conf["dev"] == this->sound_dev_file
                 && this->channel_count == new_channel_count
                 && this->sampler_rate == new_sampler_rate
+		&& this->use_alsa_directly == new_alsa_use
                 && this->record_block_duration_ms == new_duration) {
             return true;
         }
@@ -70,28 +74,100 @@ namespace dmxfish::audio {
             this->thread->join();
         }
         this->running = true;
+	this->use_alsa_directly = new_alsa_use;
         this->sound_dev_file = conf.contains("dev") ? conf["dev"] : "default";
         this->channel_count = new_channel_count;
         this->sampler_rate = new_sampler_rate;
         this->record_block_duration_ms = new_duration;
-        this->thread = std::thread(&audioinput_event_source::update_task, this);
+	if (this->use_alsa_directly) {
+            this->thread = std::thread(&audioinput_event_source::update_task_alsa, this);
+	} else {
+	    this->thread = std::thread(&audioinput_event_source::update_task_pulse, this);
+	}
         return true;
     }
 
-    void audioinput_event_source::update_task() {
-        using namespace ALSA;
-
-        if(!this->running) {
+    bool audioinput_event_source::common_init() {
+	if(!this->running) {
             ::spdlog::info("Leaving audio extraction thread early.");
-            return;
+            return false;
         } else {
             ::spdlog::debug("Starting new audio extraction thread");
         }
 
         if(this->channel_count < 1) {
             ::spdlog::error("Beat analysis requires at least 1 input channel. {} were configured.", this->channel_count);
-            return;
+            return false;
         }
+	return true;
+    }
+
+    struct detection_parameters {
+	    double low_cutoff_frequency;
+	    double high_cutoff_frequency;
+	    double trigger_magnitude;
+	    uint32_t sender_id;
+    };
+
+    void process(Eigen::Array<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>& buffer, fft_context& ctx, size_t& initial_fft_buffer_pos, std::array<double, fft_size>& post_buffer, const detection_parameters& params) {
+	    auto event_storage = get_event_storage_instance();
+            if (buffer.rows() == 0) {
+                return;
+            }
+            // A better approach than this is http://werner.yellowcouch.org/Papers/bpm04/
+            // However implementing this on roalling data needs some math which I don't have
+            // the time for at the moment. Therefore FFT it is.
+
+            auto remaining_elements_in_buffer = buffer.rows();
+
+            // TODO use windows instead of blocks
+            while (remaining_elements_in_buffer > ctx.fft_buffer.size()) {
+                // load buffer content
+                for (auto i = initial_fft_buffer_pos; i < fft_size; i++) {
+                    double avg = 0;
+                    for (auto j = 0; j < buffer.cols(); j++) {
+                        avg += buffer(buffer.rows() - remaining_elements_in_buffer, j);
+                    }
+                    ctx.fft_buffer[i*2] = avg / buffer.cols();
+                    remaining_elements_in_buffer--;
+                }
+                initial_fft_buffer_pos = 0;
+
+                // analyze buffer
+                fft(ctx);
+
+                for (size_t i=0; i < fft_size; i++) {
+                    const auto pos_real = 2*i;
+                    const auto pos_imag = 2*i+1;
+                    post_buffer[i] = ctx.out_buffer[pos_real] * ctx.out_buffer[pos_real] + ctx.out_buffer[pos_imag] * ctx.out_buffer[pos_imag];
+                }
+
+                double bassIntensity = 0;
+                for (auto i = params.low_cutoff_frequency; i < params.high_cutoff_frequency; i++){
+                    bassIntensity += post_buffer[i];
+                }
+                if (bassIntensity > params.trigger_magnitude) {
+                    dmxfish::events::event e(dmxfish::events::event_type::SINGLE_TRIGGER,
+                                             dmxfish::events::event_sender_t{params.sender_id, 0});
+                    event_storage->insert_event(e);
+                }
+            }
+
+            // preload buffer for next iteration and update initial_fft_buffer_pos
+            while(remaining_elements_in_buffer > 0) {
+                double avg = 0;
+                for (auto j = 0; j < buffer.cols(); j++) {
+                    avg += buffer(buffer.rows() - remaining_elements_in_buffer, j);
+                    remaining_elements_in_buffer--;
+                }
+                ctx.fft_buffer[initial_fft_buffer_pos++] = avg / buffer.cols();
+            }
+    }
+
+    void audioinput_event_source::update_task_alsa() {
+        using namespace ALSA;
+
+        if(!this->common_init()) { return; }
 
         Capture capture_dev(this->sound_dev_file.c_str());
         if (capture_dev.prepared()) {
@@ -130,65 +206,57 @@ namespace dmxfish::audio {
                        this->sound_dev_file, capture_dev.getFormatName(format), capture_dev.getChannels(), pSize, this->sampler_rate);
 
         size_t initial_fft_buffer_pos = 0;
-
-        auto event_storage = get_event_storage_instance();
-        fft_context ctx;
-        std::array<double, fft_size> post_buffer;
+	std::array<double, fft_size> post_buffer;
+        fft_context ctx; 
 
         while(this->running) {
             capture_dev >> buffer;
-            if (buffer.rows() == 0) {
-                continue;
-            }
-            // A better approach than this is http://werner.yellowcouch.org/Papers/bpm04/
-            // However implementing this on roalling data needs some math which I don't have
-            // the time for at the moment. Therefore FFT it is.
-
-            auto remaining_elements_in_buffer = buffer.rows();
-
-            // TODO use windows instead of blocks
-            while (remaining_elements_in_buffer > ctx.fft_buffer.size()) {
-                // load buffer content
-                for (auto i = initial_fft_buffer_pos; i < fft_size; i++) {
-                    double avg = 0;
-                    for (auto j = 0; j < buffer.cols(); j++) {
-                        avg += buffer(buffer.rows() - remaining_elements_in_buffer, j);
-                    }
-                    ctx.fft_buffer[i*2] = avg / buffer.cols();
-                    remaining_elements_in_buffer--;
-                }
-                initial_fft_buffer_pos = 0;
-
-                // analyze buffer
-                fft(ctx);
-
-                for (size_t i=0; i < fft_size; i++) {
-                    const auto pos_real = 2*i;
-                    const auto pos_imag = 2*i+1;
-                    post_buffer[i] = ctx.out_buffer[pos_real] * ctx.out_buffer[pos_real] + ctx.out_buffer[pos_imag] * ctx.out_buffer[pos_imag];
-                }
-
-                double bassIntensity = 0;
-                for (auto i = this->low_cutoff_frequency; i < this->high_cutoff_frequency; i++){
-                    bassIntensity += post_buffer[i];
-                }
-                if (bassIntensity > this->trigger_magnitude) {
-                    dmxfish::events::event e(dmxfish::events::event_type::SINGLE_TRIGGER,
-                                             dmxfish::events::event_sender_t{this->get_sender_id(), 0});
-                    event_storage->insert_event(e);
-                }
-            }
-
-            // preload buffer for next iteration and update initial_fft_buffer_pos
-            while(remaining_elements_in_buffer > 0) {
-                double avg = 0;
-                for (auto j = 0; j < buffer.cols(); j++) {
-                    avg += buffer(buffer.rows() - remaining_elements_in_buffer, j);
-                    remaining_elements_in_buffer--;
-                }
-                ctx.fft_buffer[initial_fft_buffer_pos++] = avg / buffer.cols();
-            }
+	    detection_parameters params;
+	    params.high_cutoff_frequency = this->high_cutoff_frequency;
+	    params.low_cutoff_frequency = this->low_cutoff_frequency;
+	    params.trigger_magnitude = this->trigger_magnitude;
+	    params.sender_id = this->get_sender_id();
+            process(buffer, ctx, initial_fft_buffer_pos, post_buffer, params);
         }
-        ::spdlog::debug("Leaving audio extraction thread");
+        ::spdlog::debug("Leaving ALSA audio extraction thread.");
+    }
+
+    void audioinput_event_source::update_task_pulse() {
+	if(!this->common_init()) { return; }
+	using namespace YukiWorkshop;
+
+	SimplePA::Recorder r;
+	r.set_name("fish.builtin.audioextract");
+	r.set_device(this->sound_dev_file);
+	r.set_sample_spec({PA_SAMPLE_S32LE, this->sampler_rate, this->channel_count});
+	try {
+	    r.open();
+	    ::spdlog::info("Opened sound device for analysis.");
+	    fft_context ctx;
+	    
+	    const auto latency = (this->sampler_rate * this->record_block_duration_ms) / 1000;
+	    std::vector<int32_t> in_buf{this->channel_count * latency};
+	    Eigen::Array<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> buffer((int) latency, (int) this->channel_count);
+	    size_t initial_fft_buffer_pos = 0;
+	    std::array<double, fft_size> post_buffer;
+	    
+	    while(this->running) {
+		r.record(in_buf.data(), in_buf.size());
+
+		for(size_t i = 0; i < in_buf.size(); i++) {
+		    buffer(i / this->channel_count, i % this->channel_count) = in_buf[i];
+		}
+
+		detection_parameters params;
+	        params.high_cutoff_frequency = this->high_cutoff_frequency;
+	        params.low_cutoff_frequency = this->low_cutoff_frequency;
+	        params.trigger_magnitude = this->trigger_magnitude;
+	        params.sender_id = this->get_sender_id();
+		process(buffer, ctx, initial_fft_buffer_pos, post_buffer, params);
+	    }
+	} catch (std::runtime_error& e) {
+	    ::spdlog::error("Failed to use pulse stream: {}", e.what());
+	}
+	::spdlog::debug("Leaving Pulse audio extraction thread.");
     }
 }

@@ -17,6 +17,7 @@ namespace dmxfish::audio {
     class audioinput_event_source : public dmxfish::events::event_source {
     private:
         std::atomic_bool running = false;
+	std::atomic_bool use_alsa_directly = false;
         int high_cutoff_frequency = 96;
         int low_cutoff_frequency = 9;
         double trigger_magnitude = 30.0;
@@ -33,7 +34,9 @@ namespace dmxfish::audio {
         [[nodiscard]] missiondmx::fish::ipcmessages::event_sender encode_proto_message() const override;
         [[nodiscard]] bool update_conf_from_message(const missiondmx::fish::ipcmessages::event_sender& msg) override;
     private:
-        void update_task();
+	bool common_init();
+        void update_task_alsa();
+	void update_task_pulse();
     };
 
 }
