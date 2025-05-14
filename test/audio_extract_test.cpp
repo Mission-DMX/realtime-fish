@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(event_count_test) {
     auto msg = s_ptr->encode_proto_message();
     std::cout << "loading conf" << std::endl;
     auto conf = msg.mutable_configuration();
-    conf->operator[]("dev") = "default";
+    conf->operator[]("dev") = "virtmic";
     std::cout << "Received configuration:" << std::endl;
     for (auto& [k, v] : *conf) {
         std::cout << k << "=" << v << std::endl;
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(event_count_test) {
             count++;
         }
     }
-    std::cout << count << " beats." << std::endl;
+    std::cout << "\nCollected " << count << " beats." << std::endl;
 }
 
 // TODO write test case for event count filter

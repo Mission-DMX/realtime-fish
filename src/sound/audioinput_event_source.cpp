@@ -70,6 +70,7 @@ namespace dmxfish::audio {
             this->thread->join();
         }
         this->running = true;
+        this->sound_dev_file = conf.contains("dev") ? conf["dev"] : "default";
         this->channel_count = new_channel_count;
         this->sampler_rate = new_sampler_rate;
         this->record_block_duration_ms = new_duration;
@@ -97,7 +98,7 @@ namespace dmxfish::audio {
             ::spdlog::error("Failed to open sound input device {}.", this->sound_dev_file);
             return;
         } else {
-            ::spdlog::info("Opened sound device {}.", capture_dev.getDeviceName());
+            ::spdlog::info("Opened sound device '{}' from '{}'.", capture_dev.getDeviceName(), this->sound_dev_file);
         }
         capture_dev.resetParams();
         snd_pcm_format_t format=SND_PCM_FORMAT_S32_LE;
