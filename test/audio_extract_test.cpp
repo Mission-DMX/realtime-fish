@@ -7,7 +7,9 @@
 #define BOOST_TEST_MODULE FISH_TESTS
 #include <boost/test/included/unit_test.hpp>
 
+#include <chrono>
 #include <cstdlib>
+#include <thread>
 
 #include "events/event.hpp"
 #include "sound/audioinput_event_source.hpp"
@@ -22,7 +24,7 @@ struct audio_gf {
      * For debugging purposes: pactl load-module module-loopback routes micorphone input to the speakers
      */
     audio_gf() {
-        dmxfish::audio::train_fft();
+        dmxfish::audio::train_fft(true);
         ::spdlog::info("Creating virtual microphone");
         system("pactl load-module module-pipe-source source_name=virtmic file=/tmp/virtmic_test format=s16le rate=44100 channels=2");
     }
@@ -49,7 +51,11 @@ BOOST_AUTO_TEST_CASE(event_count_test) {
     std::cout << "Writing conf" << std::endl;
     s_ptr->update_conf_from_message(msg);
     std::cout << "Playing test file" << std::endl;
-    system("timeout 30 sh -c 'cat submodules/resources/testdata/test_extract_music_features.wav > /tmp/virtmic_test'");
+    std::thread t([]() {system("timeout 30 sh -c 'cat submodules/resources/testdata/test_extract_music_features.wav > /tmp/virtmic_test'");});
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(20000ms);
+    conf->operator[]("dev") = "";
+    s_ptr->update_conf_from_message(msg);
     size_t count = 0;
     for (const auto& e : storage_ptr->get_storage()) {
         if (e.get_event_sender().decoded_representation.sender == s_ptr->get_sender_id()) {
@@ -57,6 +63,8 @@ BOOST_AUTO_TEST_CASE(event_count_test) {
         }
     }
     std::cout << "\nCollected " << count << " beats." << std::endl;
+    s_ptr = nullptr;
+    t.join();
 }
 
 // TODO write test case for event count filter

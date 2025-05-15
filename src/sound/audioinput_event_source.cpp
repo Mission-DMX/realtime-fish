@@ -7,6 +7,7 @@
 
 #include <array>
 #include <Eigen/Dense>
+#include <limits>
 
 #include "events/event.hpp"
 #include "events/event_storage.hpp"
@@ -80,6 +81,7 @@ namespace dmxfish::audio {
         this->record_block_duration_ms = new_duration;
         if(this->sound_dev_file == "") {
             ::spdlog::info("Stopping audio analysis.");
+            this->thread = std::nullopt;
             return true;
         }
         this->running = true;
@@ -134,7 +136,7 @@ namespace dmxfish::audio {
                 for (auto i = initial_fft_buffer_pos; i < fft_size; i++) {
                     double avg = 0;
                     for (auto j = 0; j < buffer.cols(); j++) {
-                        avg += buffer(buffer.rows() - remaining_elements_in_buffer, j);
+                        avg += ((double) buffer(buffer.rows() - remaining_elements_in_buffer, j)) / ((double) std::numeric_limits<int>::max() / 10);
                     }
                     ctx.fft_buffer[i*2] = avg / buffer.cols();
                     remaining_elements_in_buffer--;
@@ -243,29 +245,33 @@ namespace dmxfish::audio {
 	    fft_context ctx;
 	    
 	    const auto latency = (this->sampler_rate * this->record_block_duration_ms) / 1000;
-	    std::vector<int32_t> in_buf{this->channel_count * latency};
+	    std::vector<int32_t> in_buf;
+        in_buf.reserve(this->channel_count * latency);
+        for (auto i = 0; i < this->channel_count * latency; i++) {
+            in_buf.push_back(0);
+        }
 	    Eigen::Array<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> buffer((int) latency, (int) this->channel_count);
 	    size_t initial_fft_buffer_pos = 0;
 	    std::array<double, fft_size> post_buffer;
 	    
 	    while(this->running) {
-		r.record(in_buf.data(), in_buf.size());
+            r.record(in_buf.data(), in_buf.size());
 
-		for(size_t i = 0; i < in_buf.size(); i++) {
-		    buffer(i / this->channel_count, i % this->channel_count) = in_buf[i];
-		}
+            for(size_t i = 0; i < in_buf.size(); i++) {
+                buffer(i / this->channel_count, i % this->channel_count) = in_buf[i];
+            }
 
-		detection_parameters params;
-        params.high_cutoff_frequency = this->high_cutoff_frequency;
-        params.low_cutoff_frequency = this->low_cutoff_frequency;
-        params.trigger_magnitude = this->trigger_magnitude;
-        params.sender_id = this->get_sender_id();
+            detection_parameters params;
+            params.high_cutoff_frequency = this->high_cutoff_frequency;
+            params.low_cutoff_frequency = this->low_cutoff_frequency;
+            params.trigger_magnitude = this->trigger_magnitude;
+            params.sender_id = this->get_sender_id();
 
-		process(buffer, ctx, initial_fft_buffer_pos, post_buffer, params);
+            process(buffer, ctx, initial_fft_buffer_pos, post_buffer, params);
 	    }
 	} catch (std::runtime_error& e) {
 	    ::spdlog::error("Failed to use pulse stream: {}", e.what());
 	}
-	::spdlog::debug("Leaving Pulse audio extraction thread.");
+	::spdlog::info("Leaving Pulse audio extraction thread.");
     }
 }

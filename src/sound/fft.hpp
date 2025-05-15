@@ -14,7 +14,7 @@ namespace dmxfish::audio {
     constexpr auto fft_size = 1024;
     constexpr auto complex_fft_size = fft_size * 2;
 
-    void train_fft();
+    void train_fft(bool online=false);
 
     struct fft_context {
         std::array<double, complex_fft_size> fft_buffer;

@@ -17,16 +17,25 @@ namespace dmxfish::audio {
     static bool fft_ready = false;
     static fftw_plan fft_plan_template;
 
-    void train_fft() {
+    void _train() {
+        std::array<double, complex_fft_size> in_arr;
+        std::array<double, complex_fft_size> out_arr;
+        fft_plan_template = fftw_plan_dft_1d(fft_size, (fftw_complex *) in_arr.data(),
+                                             (fftw_complex *) out_arr.data(), FFTW_FORWARD, FFTW_MEASURE);
+        fft_ready = true;
+        ::spdlog::info("FFT training successful.");
+    }
+
+    void train_fft(bool online) {
         ::spdlog::info("Starting FFT training.");
-        std::thread t([](){
-            std::array<double, complex_fft_size> in_arr;
-            std::array<double, complex_fft_size> out_arr;
-            fft_plan_template = fftw_plan_dft_1d(fft_size, (fftw_complex*) in_arr.data(), (fftw_complex*) out_arr.data(), FFTW_FORWARD, FFTW_MEASURE);
-            fft_ready = true;
-            ::spdlog::info("FFT training successful.");
-        });
-        t.detach();
+        if(!online) {
+            std::thread t([]() {
+                _train();
+            });
+            t.detach();
+        } else {
+            _train();
+        }
     }
 
     fft_context::fft_context() : fft_buffer(), out_buffer() {
