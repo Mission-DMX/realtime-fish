@@ -11,6 +11,7 @@
 
 #include "events/event.hpp"
 #include "sound/audioinput_event_source.hpp"
+#include "sound/fft.hpp"
 
 #include "main.hpp"
 
@@ -21,6 +22,7 @@ struct audio_gf {
      * For debugging purposes: pactl load-module module-loopback routes micorphone input to the speakers
      */
     audio_gf() {
+        dmxfish::audio::train_fft();
         ::spdlog::info("Creating virtual microphone");
         system("pactl load-module module-pipe-source source_name=virtmic file=/tmp/virtmic_test format=s16le rate=44100 channels=2");
     }
