@@ -19,6 +19,7 @@ The part of the software that translates the users wishes to DMX in real time.
     * libfftw3-dev
     * libsox-dev
     * libpulse-dev
+    * libsamplerate0-dev
     * libcpptrace-dev (will be removed with C++26)
     * libdwarf-dev (required by cpptrace)
 
