@@ -15,6 +15,7 @@
 #include "filters/filter_constants.hpp"
 #include "filters/filter_conversion.hpp"
 #include "filters/filter_debug_output.hpp"
+#include "filters/filter_event_counter.hpp"
 #include "filters/filter_fader.hpp"
 #include "filters/filter_universe_output.hpp"
 #include "filters/filter_trigonometric.hpp"
@@ -302,6 +303,9 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_sequencer:
                     sum += sizeof(filter_sequencer);
                     break;
+                case filter_type::filter_event_counter:
+                    sum += sizeof(filter_event_counter);
+                    break;
 				default: {
 						 std::stringstream ss;
 						 ss << ERROR_FILTER_NOT_IMPLEMENTED_IN_ALLOCATION;
@@ -470,6 +474,8 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<debug_remote_pixel>(pac);
             case filter_type::filter_sequencer:
                 return calloc<filter_sequencer>(pac);
+            case filter_type::filter_event_counter:
+                return calloc<filter_event_counter>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}

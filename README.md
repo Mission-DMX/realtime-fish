@@ -14,8 +14,27 @@ The part of the software that translates the users wishes to DMX in real time.
 	* libftdi-dev
 	* pkg-config
 	* liblua5.4-dev
+    * libasound2-dev
+    * libeigen3-dev
+    * libfftw3-dev
+    * libsox-dev
+    * libpulse-dev
+    * libsamplerate0-dev
+    * libcpptrace-dev (will be removed with C++26)
+    * libdwarf-dev (required by cpptrace)
 
    If you would also like to run unit tests, you'll also need libboost-test-dev.
+
+   If `libcpptrace-dev` is not available on your system, it can be installed as follows:
+   ```
+   git clone https://github.com/jeremy-rifkin/cpptrace.git
+   git checkout v0.8.3
+   mkdir cpptrace/build
+   cd cpptrace/build
+   cmake .. -DCMAKE_BUILD_TYPE=Release
+   make -j
+   sudo make install
+   ```
 2. Perform a recursive clone of this repository.
 3. Call `gmake` on the root directory of this repo. Tip: issue `make -j<ncores> BUILD_MODE=Release`
 if you're building a release.
@@ -45,3 +64,7 @@ a low speed interface (1.0, 1.1, 2.0, 3.0) this will significantly slow down the
 Communication with the io board is done using an FTDI600Q chip as regular USB2.0 speeds are
 nowhere near enough. In order for this to work, the [FT60X](https://github.com/lambdaconcept/ft60x_driver/tree/master)
 driver needs to be installed and loaded. A corresponding entry to `/etc/modules` should do the trick.
+
+## Unit tests
+Running the unit tests requires Pulse Audio's `pactl` to be installed.
+It is usually supplied by a package called `pulseaudio-utils`

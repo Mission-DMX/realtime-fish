@@ -1,6 +1,7 @@
 #include <execinfo.h>
 #include <signal.h>
 
+#include "sound/fft.hpp"
 #include "lib/logging.hpp"
 #include "lib/macros.hpp"
 
@@ -28,6 +29,8 @@ int main(int argc, char* argv[], char* env[]) {
     signal(SIGSEGV, segv_handler);
 
 	spdlog::set_level(spdlog::level::debug);
+
+    dmxfish::audio::train_fft();
 
 	auto ret_code = main_loop();
 	::spdlog::debug("Main End");
