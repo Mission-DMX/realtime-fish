@@ -56,6 +56,7 @@ BOOST_AUTO_TEST_CASE(event_count_test) {
     std::this_thread::sleep_for(20000ms);
     conf->operator[]("dev") = "";
     s_ptr->update_conf_from_message(msg);
+    storage_ptr->swap_buffers();
     size_t count = 0;
     for (const auto& e : storage_ptr->get_storage()) {
         if (e.get_event_sender().decoded_representation.sender == s_ptr->get_sender_id()) {
@@ -65,6 +66,8 @@ BOOST_AUTO_TEST_CASE(event_count_test) {
     std::cout << "\nCollected " << count << " beats." << std::endl;
     s_ptr = nullptr;
     t.join();
+    BOOST_CHECK(count > 10);
+    BOOST_CHECK(count < 50);
 }
 
 // TODO write test case for event count filter

@@ -13,6 +13,7 @@
 #include "events/event_storage.hpp"
 #include "sound/ALSA/ALSA.H"
 #include "sound/ALSA/Capture.H"
+#include "sound/BTrack.hpp"
 #include "sound/fft.hpp"
 #include "sound/pulse.hpp"
 
@@ -242,32 +243,37 @@ namespace dmxfish::audio {
 	try {
 	    r.open();
 	    ::spdlog::info("Opened sound device for analysis.");
-	    fft_context ctx;
 	    
 	    const auto latency = (this->sampler_rate * this->record_block_duration_ms) / 1000;
+        const auto channel_count = this->channel_count;
 	    std::vector<int32_t> in_buf;
-        in_buf.reserve(this->channel_count * latency);
-        for (auto i = 0; i < this->channel_count * latency; i++) {
+        std::vector<double> out_buf;
+        in_buf.reserve(channel_count * latency);
+        out_buf.reserve(latency);
+        for (auto i = 0; i < channel_count * latency; i++) {
             in_buf.push_back(0);
         }
-	    Eigen::Array<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> buffer((int) latency, (int) this->channel_count);
-	    size_t initial_fft_buffer_pos = 0;
-	    std::array<double, fft_size> post_buffer;
+        for(auto i = 0; i < latency; i++) {
+            out_buf.push_back(0.0);
+        }
+        BTrack b(512, out_buf.size());
+        auto event_storage = get_event_storage_instance();
 	    
 	    while(this->running) {
             r.record(in_buf.data(), in_buf.size());
-
-            for(size_t i = 0; i < in_buf.size(); i++) {
-                buffer(i / this->channel_count, i % this->channel_count) = in_buf[i];
+            for (int i = 0; i < latency; i++) {
+                double avg = 0.0;
+                for (int j = 0; j < channel_count; j++) {
+                    avg += (in_buf[(channel_count * i) + j] / (std::numeric_limits<int32_t>::max() / 1000));
+                }
+                out_buf[i] = avg / channel_count;
             }
-
-            detection_parameters params;
-            params.high_cutoff_frequency = this->high_cutoff_frequency;
-            params.low_cutoff_frequency = this->low_cutoff_frequency;
-            params.trigger_magnitude = this->trigger_magnitude;
-            params.sender_id = this->get_sender_id();
-
-            process(buffer, ctx, initial_fft_buffer_pos, post_buffer, params);
+            b.processAudioFrame(out_buf.data());
+            if (b.beatDueInCurrentFrame()) {
+                dmxfish::events::event e(dmxfish::events::event_type::SINGLE_TRIGGER,
+                                         dmxfish::events::event_sender_t{this->get_sender_id(), 0});
+                event_storage->insert_event(e);
+            }
 	    }
 	} catch (std::runtime_error& e) {
 	    ::spdlog::error("Failed to use pulse stream: {}", e.what());
