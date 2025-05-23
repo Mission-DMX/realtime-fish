@@ -24,10 +24,12 @@ namespace dmxfish::io {
 	{
 		this->connection_client->set_incomming_data_callback(std::bind(&dmxfish::io::client_handler::incomming_data_callback, this, std::placeholders::_1));
         size_t transmitted_event_senders = 0;
-        for(const auto& sender : get_event_storage_instance()->get_registered_senders()) {
-            const auto msg = sender->encode_proto_message();
-            write_message(msg, ::missiondmx::fish::ipcmessages::MSGT_EVENT_SENDER_UPDATE);
-            transmitted_event_senders++;
+        if(auto evs_ptr = get_event_storage_instance(); evs_ptr != nullptr) {
+            for (const auto &sender: evs_ptr->get_registered_senders()) {
+                const auto msg = sender->encode_proto_message();
+                write_message(msg, ::missiondmx::fish::ipcmessages::MSGT_EVENT_SENDER_UPDATE);
+                transmitted_event_senders++;
+            }
         }
         ::spdlog::info("Transmitted {} event sender descriptions to new client.", transmitted_event_senders);
 	}

@@ -8,6 +8,7 @@ namespace dmxfish::execution {
 
     threadpool::~threadpool() {
         this->join();
+	this->cleanup();
     }
 
     void threadpool::join() {
@@ -52,7 +53,13 @@ namespace dmxfish::execution {
                     s.insert(v.value());
                 }
             }
-            threads.remove_if([s](const std::thread& t){return s.contains(t.get_id());});
+            // Join all threads to be removed to prevent race conditions
+	    for (auto& t : threads) {
+		if (s.contains(t.get_id())) {
+		    t.join();
+		}
+	    }
+	    threads.remove_if([s](const std::thread& t){return s.contains(t.get_id());});
         }
     }
 

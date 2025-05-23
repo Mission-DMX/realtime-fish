@@ -7,7 +7,10 @@
 
 #include <functional>
 #include <ranges>
+#include <string>
 
+#include "events/event.hpp"
+#include "events/sender_parsing.hpp"
 #include "utils.hpp"
 #include "lib/logging.hpp"
 #include "main.hpp"
@@ -114,8 +117,9 @@ namespace dmxfish {
                 try {
                     for (const auto& transition_str: utils::split(trans_iter->second, ';')) {
                         auto glob_param = utils::split(transition_str, '#');
-                        const auto trigger_event_id = std::stol(glob_param.front());
+                        const auto trigger_event_id = dmxfish::events::parse_sender_representation(glob_param.front()).encoded_sender_id;
                         glob_param.pop_front();
+                        glob_param.pop_front(); // Discard name as we don't need it
                         this->transitions.insert({trigger_event_id, sequencer::transition(glob_param, nm)});
                     }
                 } catch (const std::invalid_argument& e) {

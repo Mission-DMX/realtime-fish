@@ -101,6 +101,11 @@ namespace dmxfish::filters::lua {
 	return has_event_t(int2event_sender_t(enc));
     }
 
+    bool has_event_i_i(uint64_t sender_id, uint64_t function) {
+	dmxfish::events::event_sender_t s{sender_id, function};
+	return has_event_t(s);
+    }
+
     uint64_t find_event_sender(std::string name, uint32_t function) {
         auto ptr = get_event_storage_instance()->find_source_by_name(name);
         if (ptr == nullptr) {
@@ -147,7 +152,8 @@ namespace dmxfish::filters::lua {
         lua.set_function("get_events", dmxfish::filters::lua::get_events);
         lua.set_function("has_event", sol::overload(
 		dmxfish::filters::lua::has_event_t,
-		dmxfish::filters::lua::has_event_i
+		dmxfish::filters::lua::has_event_i,
+		dmxfish::filters::lua::has_event_i_i
 		));
         lua.set_function("get_all_event_senders", dmxfish::filters::lua::get_all_event_senders);
 

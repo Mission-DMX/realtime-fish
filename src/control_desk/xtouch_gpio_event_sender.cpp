@@ -21,8 +21,8 @@ namespace dmxfish {
 
         missiondmx::fish::ipcmessages::event_sender xtouch_gpio_event_sender::encode_proto_message() const {
             auto msg = event_source::encode_proto_message();
-            auto conf = msg.configuration();
-            conf["expression_pedal_threshold"] = std::to_string(this->expression_pedal_threshold);
+            auto conf = msg.mutable_configuration();
+            conf->operator[]("expression_pedal_threshold") = std::to_string(this->expression_pedal_threshold);
             msg.set_type("fish.builtin.xtouchgpio");
             return msg;
         }
