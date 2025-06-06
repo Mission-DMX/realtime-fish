@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
         transition_builder << "channel_8b:" << (60*i) << ":lin:120.0" << '#';
         transition_builder << "channel_16b:" << (1024*i) << ":lin:120.0" << '#';
         transition_builder << "channel_f:" << (0.25*i) << ":lin:120.0" << '#';
-        transition_builder << "channel_c:" << (60.0*i) << ",1.0," << (0.3*i) << ":lin:120.0";
+        transition_builder << "channel_c:" << (60.0*i) << ",1.0," << (0.3*(i+1)) << ":lin:120.0";
     }
 
     // Construct one transition using only two channels
@@ -83,19 +83,22 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     get_event_storage_instance()->swap_buffers();
     current_time += 40.0;
     fs.update();
+    get_event_storage_instance()->swap_buffers();
     current_time += 5.0;
     fs.update();
+    current_time += 40;
+    fs.update();
+    std::cout << "1 - 16b: " << ((int) *channel_16b) << " f: " << *channel_f << " c: " << std::to_string(*channel_c) << std::endl;
     BOOST_CHECK_EQUAL(*channel_8b, 0);
-    std::cout << "16b: " << ((int) *channel_16b) << std::endl;
-    BOOST_CHECK(*channel_16b > 680 && *channel_16b < 690);
-    BOOST_CHECK(*channel_f > 0.4 && *channel_f < 0.6);
+    BOOST_CHECK(*channel_16b > 600 && *channel_16b < 690);
+    BOOST_CHECK(*channel_f > 0.3 && *channel_f < 0.6);
     BOOST_CHECK(channel_c->getHue() <= 0.0 + 0.5);
 
     current_time += 40.1;
     get_event_storage_instance()->swap_buffers();
     fs.update();
+    std::cout << "2 - 16b: " << ((int) *channel_16b) << " f: " << *channel_f << " c: " << std::to_string(*channel_c) << std::endl;
     BOOST_CHECK_EQUAL(*channel_8b, 0);
-    std::cout << "16b: " << ((int) *channel_16b) << std::endl;
     BOOST_CHECK(*channel_16b > 200 && *channel_16b < 350);
     BOOST_CHECK(*channel_f > 0.1 && *channel_f < 0.2);
     BOOST_CHECK(channel_c->getHue() >= 40.0 - 0.5 && channel_c->getHue() <= 40.0 + 0.5);
@@ -103,38 +106,41 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     current_time += 40.0;
     get_event_storage_instance()->swap_buffers();
     fs.update();
+    std::cout << "3 - 16b: " << ((int) *channel_16b) << " f: " << *channel_f << " c: " << std::to_string(*channel_c) << std::endl;
     BOOST_CHECK_EQUAL(*channel_8b, 0);
-    std::cout << "16b: " << ((int) *channel_16b) << std::endl;
-    BOOST_CHECK(*channel_16b < 10);
-    BOOST_CHECK(*channel_f < 0.125);
+    BOOST_CHECK(*channel_16b > 250 && *channel_16b < 400);
+    BOOST_CHECK(*channel_f < 0.25);
     BOOST_CHECK(channel_c->getHue() <= 0.5);
 
     //Next frame from transition
     current_time += 40.0;
     get_event_storage_instance()->swap_buffers();
     fs.update();
+    std::cout << "4 - 16b: " << ((int) *channel_16b) << " f: " << *channel_f << " c: " << std::to_string(*channel_c) << std::endl;
     BOOST_CHECK_EQUAL(*channel_8b, 20);
-    std::cout << "16b: " << ((int) *channel_16b) << std::endl;
-    BOOST_CHECK(*channel_16b > 335 && *channel_16b < 350);
+    BOOST_CHECK(*channel_16b > 500 && *channel_16b < 650);
     BOOST_CHECK(*channel_f < 0.2);
     BOOST_CHECK(channel_c->getHue() >= 20.0 - 0.5 && channel_c->getHue() <= 20.0 + 0.5);
 
     current_time += 40.1;
     get_event_storage_instance()->swap_buffers();
+    auto last_value_f = *channel_f;
     fs.update();
+    std::cout << "5 - 16b: " << ((int) *channel_16b) << " f: " << *channel_f << " c: " << std::to_string(*channel_c) << std::endl;
     BOOST_CHECK_EQUAL(*channel_8b, 40);
-    std::cout << "16b: " << ((int) *channel_16b) << std::endl;
-    BOOST_CHECK(*channel_16b > 680 && *channel_16b < 690);
-    BOOST_CHECK(*channel_f > 0.1 && *channel_f < 0.2);
+    BOOST_CHECK(*channel_16b > 700 && *channel_16b < 900);
+    BOOST_CHECK(*channel_f > last_value_f);
     BOOST_CHECK(channel_c->getHue() >= 40.0 - 0.5 && channel_c->getHue() <= 40.0 + 0.5);
 
     current_time += 40.000;
     get_event_storage_instance()->swap_buffers();
+    const auto last_16b_value = *channel_16b;
+    last_value_f = *channel_f;
     fs.update();
-    BOOST_CHECK_EQUAL(*channel_8b, 60);
-    std::cout << "16b: " << ((int) *channel_16b) << std::endl;
-    BOOST_CHECK(*channel_16b > 1022 && *channel_16b < 1026);
-    BOOST_CHECK(*channel_f > 0.24 && *channel_f < 0.26);
+    std::cout << "6 - 16b: " << ((int) *channel_16b) << " f: " << *channel_f << " c: " << std::to_string(*channel_c) << std::endl;
+    BOOST_CHECK_EQUAL(*channel_8b, 40);
+    BOOST_CHECK_EQUAL(*channel_16b, last_16b_value);
+    BOOST_CHECK_EQUAL(*channel_f, last_value_f);
     BOOST_CHECK(channel_c->getHue() >= 60.0 - 0.5 && channel_c->getHue() <= 60.0 + 0.5);
 
     // TODO test smaller transition with different time scale

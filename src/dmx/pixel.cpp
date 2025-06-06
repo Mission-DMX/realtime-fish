@@ -149,7 +149,7 @@ namespace dmxfish::dmx {
         }
     }
     void pixel::convert_rgb_to_hsi_pre(){
-        if (this->iluminance < 0.){
+        if (this->iluminance < -0.5){
             convert_rgb_to_hsi();
         }
     }

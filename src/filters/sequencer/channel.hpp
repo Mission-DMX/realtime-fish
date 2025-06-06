@@ -193,7 +193,9 @@ namespace dmxfish::filters::sequencer {
                                 max_g = std::max(max_g, color.getGreen());
                                 max_b = std::max(max_b, color.getBlue());
                             }
-                            this->current_value = {max_r, max_g, max_b};
+                            this->current_value.setRed(max_r);
+                            this->current_value.setGreen(max_g);
+                            this->current_value.setBlue(max_b);
                         } else {
                             this->current_value = *std::max_element(values.begin(), values.end());
                         }
@@ -207,7 +209,9 @@ namespace dmxfish::filters::sequencer {
                             min_g = std::min(min_g, color.getGreen());
                             min_b = std::min(min_b, color.getBlue());
                         }
-                        this->current_value = {min_r, min_g, min_b};
+                        this->current_value.setRed(min_r);
+                        this->current_value.setGreen(min_g);
+                        this->current_value.setBlue(min_b);
 		            } else {
 			            this->current_value = *std::min_element(values.begin(), values.end());
 		            }
