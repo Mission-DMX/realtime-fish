@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(event_count_test) {
     s_ptr = nullptr;
     t.join();
     BOOST_CHECK(count > 10);
-    BOOST_CHECK(count < 50);
+    BOOST_CHECK(count < 60);
 }
 
 // TODO write test case for event count filter

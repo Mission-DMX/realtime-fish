@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     BOOST_CHECK_EQUAL(*channel_8b, 0);
     BOOST_CHECK(*channel_16b > 600 && *channel_16b < 690);
     BOOST_CHECK(*channel_f > 0.3 && *channel_f < 0.6);
-    BOOST_CHECK(channel_c->getHue() <= 0.0 + 0.5);
+    BOOST_CHECK(channel_c->getHue() >= 45.0- 0.5 && channel_c->getHue() <= 45.0 + 0.5);
 
     current_time += 40.1;
     get_event_storage_instance()->swap_buffers();
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     BOOST_CHECK_EQUAL(*channel_8b, 0);
     BOOST_CHECK(*channel_16b > 200 && *channel_16b < 350);
     BOOST_CHECK(*channel_f > 0.1 && *channel_f < 0.2);
-    BOOST_CHECK(channel_c->getHue() >= 40.0 - 0.5 && channel_c->getHue() <= 40.0 + 0.5);
+    BOOST_CHECK(channel_c->getHue() >= 80.0 - 0.5 && channel_c->getHue() <= 90.0 + 0.5);
 
     current_time += 40.0;
     get_event_storage_instance()->swap_buffers();
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     BOOST_CHECK_EQUAL(*channel_8b, 0);
     BOOST_CHECK(*channel_16b > 250 && *channel_16b < 400);
     BOOST_CHECK(*channel_f < 0.25);
-    BOOST_CHECK(channel_c->getHue() <= 0.5);
+    BOOST_CHECK(channel_c->getHue() >= 55.0 && channel_c->getHue() <= 65.0);
 
     //Next frame from transition
     current_time += 40.0;
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     BOOST_CHECK_EQUAL(*channel_8b, 20);
     BOOST_CHECK(*channel_16b > 500 && *channel_16b < 650);
     BOOST_CHECK(*channel_f < 0.2);
-    BOOST_CHECK(channel_c->getHue() >= 20.0 - 0.5 && channel_c->getHue() <= 20.0 + 0.5);
+    BOOST_CHECK(channel_c->getHue() >= 70.0 - 5.0 && channel_c->getHue() <= 70.0 + 5.0);
 
     current_time += 40.1;
     get_event_storage_instance()->swap_buffers();
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     BOOST_CHECK_EQUAL(*channel_8b, 40);
     BOOST_CHECK(*channel_16b > 700 && *channel_16b < 900);
     BOOST_CHECK(*channel_f > last_value_f);
-    BOOST_CHECK(channel_c->getHue() >= 40.0 - 0.5 && channel_c->getHue() <= 40.0 + 0.5);
+    BOOST_CHECK(channel_c->getHue() >= 75.0 - 0.5 && channel_c->getHue() <= 80.0 + 0.5);
 
     current_time += 40.000;
     get_event_storage_instance()->swap_buffers();
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     BOOST_CHECK_EQUAL(*channel_8b, 40);
     BOOST_CHECK_EQUAL(*channel_16b, last_16b_value);
     BOOST_CHECK_EQUAL(*channel_f, last_value_f);
-    BOOST_CHECK(channel_c->getHue() >= 60.0 - 0.5 && channel_c->getHue() <= 60.0 + 0.5);
+    BOOST_CHECK(channel_c->getHue() >= 120.0 - 0.5 && channel_c->getHue() <= 120.0 + 0.5);
 
     // TODO test smaller transition with different time scale
 

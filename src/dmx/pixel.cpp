@@ -1,9 +1,10 @@
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
 #include "dmx/pixel.hpp"
 
+#include <cmath>
 #include <sstream>
-#include "cmath"
-#include "pixel.hpp"
-
 
 namespace dmxfish::dmx {
 
@@ -101,25 +102,28 @@ namespace dmxfish::dmx {
         pixel_to_rgb16(red, green, blue);
     }
     void pixel::convert_rgb_to_hsi(){
-        double r = this->red;
-        double g = this->green;
-        double b = this->blue;
+        double r = this->red / 65565.0;
+        double g = this->green / 65565.0;
+        double b = this->blue / 65565.0;
         double sum = r + g + b;
-        if (sum > 65535.0){
-            r = r * 65535.0 / sum;
-            g = g * 65535.0 / sum;
-            b = b * 65535.0 / sum;
-            sum = r + g + b;
-        }
+
         if (sum <= 0.0){
             this->hue = 0.0;
             this->saturation = 0.0;
             this->iluminance = 0.0;
             return;
         }
-        double min = std::min(std::min(r, g), b);
+
+	double min = std::min(std::min(r, g), b);
+	const double a = std::sqrt( (r*r) + (g*g) + (b*b) - (r*g) - (r*b) - (g*b) );
+	this->hue =  a > 0.0 ? std::acos(( (r - (g*0.5) - (b*0.5) ) )/(a)) : 0.0;
+	if (b > g) {
+	    this->hue = (2*M_PI) - this->hue;
+	}
+	this->hue *= (180.0/M_PI);
+
         this->saturation = 1.0 - (min * 3.0 / sum);
-        this->iluminance = sum / 65535.0;
+        this->iluminance = sum / 3.0;
 
         if (this->saturation <= 0.0){
             this->hue = 0.0;
@@ -127,7 +131,7 @@ namespace dmxfish::dmx {
         }
         // double hue_1 = -1.0;
         //https://www.wolframalpha.com/input?i=solve+%5B%2F%2Fmath%3Acos%28x%29%2F%28cos%28pi%2F3-x%29%29%3Da%2F%2F%5D+for+%5B%2F%2Fmath%3Ax%2F%2F%5D
-        if (b <= 0.0){
+        /*if (b <= 0.0){
             double a = (3 * r / (65535.0 * this->iluminance)- 1) * (1/this->saturation);
             // hue_1 = 2 * (std::atan((std::sqrt(3) * a - 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159;
             this->hue = std::fmod(2 * (std::atan((std::sqrt(3) * a + 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159 + 180.0, 360.0);
@@ -141,8 +145,9 @@ namespace dmxfish::dmx {
             double a = (3 * b / (65535.0 * this->iluminance)- 1) * (1/this->saturation);
             // hue_1 = 2 * (std::atan((std::sqrt(3) * a - 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159 + 240.0;
             this->hue = std::fmod(2 * (std::atan((std::sqrt(3) * a + 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159 + 420.0, 360.0);
-        }
+        }*/
     }
+
     void pixel::convert_hsi_to_rgb_pre(){
         if (this->red == 0 and this->green == 0 and this->blue == 0 and this->iluminance > 0.){
             convert_hsi_to_rgb();
