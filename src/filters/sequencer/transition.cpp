@@ -11,11 +11,11 @@
 #include "utils.hpp"
 
 namespace dmxfish::filters::sequencer {
-    transition::transition() : frames_8bit(), frames_16bit(), frames_float(), frames_color(), affected_channel_ids() {
+    transition::transition() : name(), frames_8bit(), frames_16bit(), frames_float(), frames_color(), affected_channel_ids() {
         // Nothing to do here
     }
 
-    transition::transition(const std::list<std::string>& s, const name_maps& nm) : transition() {
+    transition::transition(const std::string& name_, const std::list<std::string>& s, const name_maps& nm) : transition() {
         using namespace utils;
         for (const auto& frame_def : s) {
             const auto params = split(frame_def, ':');
@@ -54,5 +54,6 @@ namespace dmxfish::filters::sequencer {
                 throw std::invalid_argument("No channel with name '" + target_channel + "' exists.");
             }
         }
+        this->name = name_;
     }
 }

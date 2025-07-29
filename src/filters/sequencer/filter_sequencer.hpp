@@ -35,6 +35,7 @@ namespace dmxfish {
             std::vector<sequencer::channel<dmxfish::dmx::pixel>> channels_color;
             std::multimap<uint64_t, sequencer::transition> transitions;
             std::unique_ptr<name_maps> tmp_name_maps = nullptr;
+            std::string own_filter_id = "";
         public:
             filter_sequencer();
             virtual ~filter_sequencer();
@@ -51,6 +52,7 @@ namespace dmxfish {
             void construct_channels(const std::map<std::string, std::string>& configuration, const std::string& own_id, name_maps& nm);
             void construct_transitions(const std::map<std::string, std::string>& configuration, const std::string& own_id, name_maps& nm);
             void enqueue_transition(const sequencer::transition& t);
+            void send_transition_update_to_gui() const;
         };
 
     } // filters

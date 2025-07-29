@@ -65,12 +65,12 @@ namespace dmxfish::filters::sequencer {
         apply_default_value_on_clear_command(default_on_clear),
         i_method(interleavingMethod), channel_name(name) {}
 
-        void apply_update(sequencer_time_t current_time, double time_scale) {
+        bool apply_update(sequencer_time_t current_time, double time_scale) {
             if(this->upcomming_keyframes.empty()) {
                 if (this->apply_default_value_on_empty_transition_queue) {
                     current_value = default_value;
                 }
-                return;
+                return false;
             }
             std::vector<size_t> transitions_to_remove;
             std::vector<T> requested_values;
@@ -97,11 +97,14 @@ namespace dmxfish::filters::sequencer {
                 } while (true);
             }
             this->perform_update_arbiting(requested_values);
+            bool transitions_removed = false;
             for (auto i : transitions_to_remove) {
                 // TODO test if this is really removing the key and not the position
                 this->upcomming_keyframes.erase(i);
                 ::spdlog::debug("Finished transition for event {} in channel {}.", i, this->channel_name);
+                transitions_removed = true;
             }
+            return transitions_removed;
         }
 
         bool transition_active(size_t transition_id) {

@@ -33,7 +33,8 @@ namespace dmxfish::filters::sequencer {
          * If this is set to false, the transition will not be applied to the channels, if it is already running
          */
         bool reset_allowed = true;
-        size_t id;
+        size_t id = 0;
+        std::string name;
 
     public:
         /**
@@ -52,7 +53,7 @@ namespace dmxfish::filters::sequencer {
         std::vector<size_t> affected_channel_ids;
     public:
         transition();
-        transition(const std::list<std::string>& s, const name_maps& nm);
+        transition(const std::string& name_, const std::list<std::string>& s, const name_maps& nm);
 
         [[nodiscard]] inline bool is_reset_allowed() const {
             return this->reset_allowed;
@@ -60,6 +61,10 @@ namespace dmxfish::filters::sequencer {
 
         [[nodiscard]] inline size_t get_transition_id() const {
             return this->id;
+        }
+
+        [[nodiscard]] inline const std::string& get_name() const {
+            return this->name;
         }
     };
 }
