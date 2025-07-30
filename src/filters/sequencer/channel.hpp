@@ -107,7 +107,7 @@ namespace dmxfish::filters::sequencer {
             return transitions_removed;
         }
 
-        bool transition_active(size_t transition_id) {
+        bool transition_active(size_t transition_id) const {
             return this->upcomming_keyframes.contains(transition_id);
         }
 

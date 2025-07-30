@@ -8,6 +8,7 @@
 #include <map>
 #include <cstdint>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "dmx/pixel.hpp"
@@ -34,6 +35,7 @@ namespace dmxfish {
             std::vector<sequencer::channel<double>> channels_float;
             std::vector<sequencer::channel<dmxfish::dmx::pixel>> channels_color;
             std::multimap<uint64_t, sequencer::transition> transitions;
+	    std::unordered_map<size_t, std::string> active_transitions;
             std::unique_ptr<name_maps> tmp_name_maps = nullptr;
             std::string own_filter_id = "";
         public:
@@ -51,8 +53,10 @@ namespace dmxfish {
             void decode_input_channels(const channel_mapping& input_channels, const std::string& own_id);
             void construct_channels(const std::map<std::string, std::string>& configuration, const std::string& own_id, name_maps& nm);
             void construct_transitions(const std::map<std::string, std::string>& configuration, const std::string& own_id, name_maps& nm);
-            void enqueue_transition(const sequencer::transition& t);
+            [[nodiscard]] bool enqueue_transition(const sequencer::transition& t);
             void send_transition_update_to_gui() const;
+	    void perform_transition_gc();
+	    [[nodiscard]] bool compute_transition_active(size_t transition_id) const;
         };
 
     } // filters

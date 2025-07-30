@@ -21,7 +21,7 @@
 
 namespace dmxfish {
     namespace filters {
-        filter_sequencer::filter_sequencer() : channels_8bit(), channels_16bit(), channels_float(), channels_color(), transitions() {
+        filter_sequencer::filter_sequencer() : channels_8bit(), channels_16bit(), channels_float(), channels_color(), transitions(), active_transitions() {
 
         }
 
@@ -171,18 +171,9 @@ namespace dmxfish {
             }
         }
 
-        void filter_sequencer::enqueue_transition(const sequencer::transition& t) {
-            // TODO This check is expensive. We need to see if it's too expensive and we need to live with partial resets
-            //  in case of transitions of uneven length.
-            if(!t.is_reset_allowed()) {
-                for (const auto cid : t.affected_channel_ids) {
-                    if (this->channels_8bit[cid].transition_active(t.get_transition_id())
-                    || this->channels_16bit[cid].transition_active(t.get_transition_id())
-                    || this->channels_float[cid].transition_active(t.get_transition_id())
-                    || this->channels_color[cid].transition_active(t.get_transition_id())) {
-                        return;
-                    }
-                }
+        bool filter_sequencer::enqueue_transition(const sequencer::transition& t) {
+            if(!t.is_reset_allowed() && this->active_transitions.contains(t.get_transition_id())) {
+                return false;
             }
             for (const auto& [channel_id, frames]: t.frames_8bit) {
                 this->channels_8bit[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed());
@@ -196,33 +187,39 @@ namespace dmxfish {
             for (const auto& [channel_id, frames]: t.frames_color) {
                 this->channels_color[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed());
             }
+	    this->active_transitions[t.get_transition_id()] = t.get_name();
+	    return true;
         }
 
         void filter_sequencer::update() {
-            bool transitions_changed = false;
+            bool transitions_inserted = false;
+	    bool transitions_removed = false;
             for (const auto& event : get_event_storage_instance()->get_storage()) {
                 for(auto [iter, range_end] = this->transitions.equal_range(event.get_event_sender().encoded_sender_id);
                         iter != range_end; iter++) {
                     this->enqueue_transition(iter->second);
-                    transitions_changed = true;
+                    transitions_inserted = true;
                 }
             }
 
             const auto current_time = *(this->input_time);
             const auto ts = *(this->time_scale);
             for (auto& c : this->channels_8bit) {
-                transitions_changed |= c.apply_update(current_time, ts);
+                transitions_removed |= c.apply_update(current_time, ts);
             }
             for (auto& c : this->channels_16bit) {
-                transitions_changed |= c.apply_update(current_time, ts);
+                transitions_removed |= c.apply_update(current_time, ts);
             }
             for (auto& c : this->channels_float) {
-                transitions_changed |= c.apply_update(current_time, ts);
+                transitions_removed |= c.apply_update(current_time, ts);
             }
             for (auto& c : this->channels_color) {
-                transitions_changed |= c.apply_update(current_time, ts);
+                transitions_removed |= c.apply_update(current_time, ts);
             }
-            if (transitions_changed) {
+	    if (transitions_removed) {
+		this->perform_transition_gc();
+	    }
+            if (transitions_inserted || transitions_removed) {
                 this->send_transition_update_to_gui();
             }
         }
@@ -240,6 +237,7 @@ namespace dmxfish {
             for (auto& c : this->channels_color) {
                 c.clear();
             }
+	    this->active_transitions.clear();
             this->send_transition_update_to_gui();
         }
 
@@ -253,7 +251,14 @@ namespace dmxfish {
                 return;
             }
             std::stringstream ss;
-            // TODO get active transitions, insert them into ss, separated by ';'
+	    bool empty = true;
+	    for (const auto& [t_id, t_name] : this->active_transitions) {
+                if(!empty) {
+		    ss << ';';
+		}
+		empty = false;
+		ss << t_name;
+	    }
             auto update_message = missiondmx::fish::ipcmessages::update_parameter();
             update_message.set_filter_id(this->own_filter_id);
             update_message.set_parameter_key("active_transition_list");
@@ -261,5 +266,39 @@ namespace dmxfish {
             update_message.set_parameter_value(ss.str());
             iomanager->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
         }
+
+	void filter_sequencer::perform_transition_gc() {
+	    for (auto it = this->active_transitions.begin(); it != this->active_transitions.end();) {
+		if (!this->compute_transition_active(it->first)) {
+		    it = this->active_transitions.erase(it);
+		} else {
+		    it++;
+		}
+	    }
+	}
+
+	bool filter_sequencer::compute_transition_active(size_t transition_id) const {
+	    for (const auto& channel : this->channels_8bit) {
+                if (channel.transition_active(transition_id)) {
+		    return true;
+		}
+	    }
+	    for (const auto& channel : this->channels_16bit) {
+                if (channel.transition_active(transition_id)) {
+		    return true;
+		}
+	    }
+	    for (const auto& channel : this->channels_float) {
+                if (channel.transition_active(transition_id)) {
+		    return true;
+		}
+	    }
+	    for (const auto& channel : this->channels_color) {
+                if (channel.transition_active(transition_id)) {
+		    return true;
+		}
+	    }
+            return false;
+	}
     } // filters
 } // dmxfish
