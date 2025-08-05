@@ -84,11 +84,12 @@ namespace dmxfish::filters::sequencer {
                     const auto keyframe_start_time = queue.get_start_time();
                     const auto keyframe_start_value = queue.get_start_value();
                     if (keyframe_start_time < 0) { // It's unlikely that were prior to the year 1970
-                        queue.set_start_time(current_time);
+                        queue.set_start_time(current_time * time_scale);
                         continue;
                     }
                     const auto& current_frame = queue.front();
-                    if (current_time * time_scale >= keyframe_start_time + current_frame.get_duration()) {
+                    if (const auto duration = current_frame.get_duration() * 1000.0; current_time * time_scale >= keyframe_start_time + duration) {
+                        ::spdlog::debug("Advancing transition in channel {} to next keyframe. Elapsed duration: {}.", this->channel_name, duration);
                         queue.advance(current_time, this->current_value);
                         continue;
                     }
