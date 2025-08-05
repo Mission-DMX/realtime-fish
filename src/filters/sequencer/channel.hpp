@@ -88,7 +88,7 @@ namespace dmxfish::filters::sequencer {
                         continue;
                     }
                     const auto& current_frame = queue.front();
-                    if (const auto duration = current_frame.get_duration() * 1000.0; current_time * time_scale >= keyframe_start_time + duration) {
+                    if (const auto duration = current_frame.get_duration(); current_time * time_scale >= keyframe_start_time + duration) {
                         ::spdlog::debug("Advancing transition in channel {} to next keyframe. Elapsed duration: {}.", this->channel_name, duration);
                         queue.advance(current_time, this->current_value);
                         continue;
