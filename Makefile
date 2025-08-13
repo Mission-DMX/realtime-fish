@@ -44,14 +44,14 @@ LFLAGS += `${PKG_TOOL} --libs spdlog`
 LFLAGS += `${PKG_TOOL} --libs protobuf`
 LFLAGS += `${PKG_TOOL} --libs xerces-c`
 LFLAGS += `${PKG_TOOL} --libs fmt`
-LFLAGS += `${PKG_TOOL} --libs libusb`
-LFLAGS += `${PKG_TOOL} --libs libftdi`
-LFLAGS += `${PKG_TOOL} --libs lua5.4`
+LFLAGS += `${PKG_TOOL} --libs libusb-1.0`
+LFLAGS += `${PKG_TOOL} --libs libftdi1`
+LFLAGS += `${PKG_TOOL} --libs lua`
 LFLAGS += `${PKG_TOOL} --libs alsa eigen3 sox fftw3 libpulse libpulse-simple samplerate`
 LFLAGS += -lcpptrace `${PKG_TOOL} --libs libdwarf` `${PKG_TOOL} --libs zlib libzstd`
 CFLAGS += `${PKG_TOOL} --cflags xerces-c`
-CFLAGS += `${PKG_TOOL} --cflags libusb`
-CFLAGS += `${PKG_TOOL} --cflags libftdi`
+CFLAGS += `${PKG_TOOL} --cflags libusb-1.0`
+CFLAGS += `${PKG_TOOL} --cflags libftdi1`
 CFLAGS += `${PKG_TOOL} --cflags alsa eigen3 sox fftw3 libpulse libpulse-simple samplerate`
 CFLAGS += `${PKG_TOOL} --cflags libdwarf libzstd`
 
@@ -84,7 +84,7 @@ PODIR ?= po/lang
 MODIR ?= po/bin
 
 
-CXXFLAGS += `${PKG_TOOL} --cflags lua5.4`
+CXXFLAGS += `${PKG_TOOL} --cflags lua`
 LUA_SRCDIR := ${LIBSRCDIR}/lua
 CXXFLAGS += -I${LUA_SRCDIR} -Isubmodules/sol2/include
 

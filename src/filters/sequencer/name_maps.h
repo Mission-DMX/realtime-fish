@@ -5,6 +5,9 @@
 
 #pragma once
 
+#include <map>
+#include <string>
+
 namespace dmxfish::filters {
     struct name_maps {
         std::map<std::string, size_t> name_to_id_8bit, name_to_id_16bit, name_to_id_float, name_to_id_color;
