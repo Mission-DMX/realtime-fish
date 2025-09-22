@@ -127,7 +127,16 @@ namespace dmxfish::filters {
             if(auto col_ptr = input_col.lock()) {
                 using namespace dmxfish::control_desk;
                 if constexpr (MODE == bank_mode::DIRECT_INPUT_MODE) {
+                    const auto is_flash = col_ptr->is_flash_active();
+		    const auto is_dark  = col_ptr->is_column_blacked_out();
                     this->storage = col_ptr->get_raw_configuration();
+		    if (is_flash) {
+			this->storage.primary_position = 65535;
+			this->storage.secondary_position = 65535;
+		    } else if (is_dark) {
+			this->storage.primary_position = 0;
+			this->storage.secondary_position = 0;
+		    }
                 } else if constexpr (MODE == bank_mode::HSI_COLOR_MODE) {
                     this->storage.color = col_ptr->get_color();
                 } else if constexpr (MODE == bank_mode::HSI_WITH_AMBER_MODE) {

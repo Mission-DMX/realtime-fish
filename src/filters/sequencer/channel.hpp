@@ -65,12 +65,12 @@ namespace dmxfish::filters::sequencer {
         apply_default_value_on_clear_command(default_on_clear),
         i_method(interleavingMethod), channel_name(name) {}
 
-        void apply_update(sequencer_time_t current_time, double time_scale) {
+        bool apply_update(sequencer_time_t current_time, double time_scale) {
             if(this->upcomming_keyframes.empty()) {
                 if (this->apply_default_value_on_empty_transition_queue) {
                     current_value = default_value;
                 }
-                return;
+                return false;
             }
             std::vector<size_t> transitions_to_remove;
             std::vector<T> requested_values;
@@ -84,11 +84,12 @@ namespace dmxfish::filters::sequencer {
                     const auto keyframe_start_time = queue.get_start_time();
                     const auto keyframe_start_value = queue.get_start_value();
                     if (keyframe_start_time < 0) { // It's unlikely that were prior to the year 1970
-                        queue.set_start_time(current_time);
+                        queue.set_start_time(current_time * time_scale);
                         continue;
                     }
                     const auto& current_frame = queue.front();
-                    if (current_time * time_scale >= keyframe_start_time + current_frame.get_duration()) {
+                    if (const auto duration = current_frame.get_duration(); current_time * time_scale >= keyframe_start_time + duration) {
+                        ::spdlog::debug("Advancing transition in channel {} to next keyframe. Elapsed duration: {}.", this->channel_name, duration);
                         queue.advance(current_time, this->current_value);
                         continue;
                     }
@@ -97,14 +98,17 @@ namespace dmxfish::filters::sequencer {
                 } while (true);
             }
             this->perform_update_arbiting(requested_values);
+            bool transitions_removed = false;
             for (auto i : transitions_to_remove) {
                 // TODO test if this is really removing the key and not the position
                 this->upcomming_keyframes.erase(i);
                 ::spdlog::debug("Finished transition for event {} in channel {}.", i, this->channel_name);
+                transitions_removed = true;
             }
+            return transitions_removed;
         }
 
-        bool transition_active(size_t transition_id) {
+        bool transition_active(size_t transition_id) const {
             return this->upcomming_keyframes.contains(transition_id);
         }
 
@@ -193,7 +197,9 @@ namespace dmxfish::filters::sequencer {
                                 max_g = std::max(max_g, color.getGreen());
                                 max_b = std::max(max_b, color.getBlue());
                             }
-                            this->current_value = {max_r, max_g, max_b};
+                            this->current_value.setRed(max_r);
+                            this->current_value.setGreen(max_g);
+                            this->current_value.setBlue(max_b);
                         } else {
                             this->current_value = *std::max_element(values.begin(), values.end());
                         }
@@ -207,7 +213,9 @@ namespace dmxfish::filters::sequencer {
                             min_g = std::min(min_g, color.getGreen());
                             min_b = std::min(min_b, color.getBlue());
                         }
-                        this->current_value = {min_r, min_g, min_b};
+                        this->current_value.setRed(min_r);
+                        this->current_value.setGreen(min_g);
+                        this->current_value.setBlue(min_b);
 		            } else {
 			            this->current_value = *std::min_element(values.begin(), values.end());
 		            }

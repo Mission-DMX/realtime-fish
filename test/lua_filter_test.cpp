@@ -592,6 +592,8 @@ BOOST_AUTO_TEST_CASE(event_api_test) {
 	)";
     fil2.pre_setup(configuration2, initial_parameters2, "fil2");
 
+    // TODO test get_event_sender(int: id, int: function) and get_event_sender(str: name)
+
     channel_mapping map = channel_mapping();
     fil1.get_output_channels(map, "fil1");
     fil1.setup_filter(configuration, initial_parameters, input_channels, "fil1");

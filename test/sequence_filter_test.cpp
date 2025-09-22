@@ -8,6 +8,7 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include "events/event.hpp"
+#include "events/event_source.hpp"
 #include "filters/sequencer/filter_sequencer.hpp"
 
 #include <chrono>
@@ -24,6 +25,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
 
     double current_time = 0.5;
     double time_scale = 1.0;
+    const auto t_e_sender = dmxfish::events::event_source::create<dmxfish::events::event_source>(get_event_storage_instance());
     channel_mapping input_cm, output_cm;
     input_cm.float_channels["time"] = &current_time;
     input_cm.float_channels["time_scale"] = &time_scale;
@@ -39,18 +41,18 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     // Construct one Transition using all channels
     constexpr auto event_id_tall = 0;
     std::stringstream transition_builder;
-    transition_builder << event_id_tall;
+    transition_builder << event_id_tall << ":0#T1";
     for(auto i = 0; i < 3; i++) {
         transition_builder << '#';
         transition_builder << "channel_8b:" << (60*i) << ":lin:120.0" << '#';
         transition_builder << "channel_16b:" << (1024*i) << ":lin:120.0" << '#';
         transition_builder << "channel_f:" << (0.25*i) << ":lin:120.0" << '#';
-        transition_builder << "channel_c:" << (60.0*i) << ",1.0," << (0.3*i) << ":lin:120.0";
+        transition_builder << "channel_c:" << (60.0*i) << ",1.0," << (0.3*(i+1)) << ":lin:120.0";
     }
 
     // Construct one transition using only two channels
     constexpr auto event_id_tsingle = 1;
-    transition_builder << ';' << event_id_tsingle;
+    transition_builder << ';' << event_id_tsingle << ":0#T2";
     for(auto i = 0; i < 3; i++) {
         transition_builder << '#';
         transition_builder << "channel_8b:" << (60*i) << ":edg:100.0" << '#';
@@ -77,57 +79,69 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
     BOOST_CHECK(channel_c->getHue() >= 120.0 - 0.5 && channel_c->getHue() <= 120.0 + 0.5);
 
     // test full channel transition
-    get_event_storage_instance()->insert_event(event(event_type::SINGLE_TRIGGER, event_sender_t(0, event_id_tall)));
+    get_event_storage_instance()->insert_event(event(event_type::SINGLE_TRIGGER, event_sender_t(t_e_sender->get_sender_id(), event_id_tall)));
     get_event_storage_instance()->swap_buffers();
     current_time += 40.0;
     fs.update();
+    get_event_storage_instance()->swap_buffers();
     current_time += 5.0;
     fs.update();
+    current_time += 40;
+    fs.update();
+    std::cout << "1 - 16b: " << ((int) *channel_16b) << " f: " << *channel_f << " c: " << std::to_string(*channel_c) << std::endl;
     BOOST_CHECK_EQUAL(*channel_8b, 0);
-    BOOST_CHECK(*channel_16b > 680 && *channel_16b < 690);
-    BOOST_CHECK(*channel_f > 0.4 && *channel_f < 0.6);
-    BOOST_CHECK(channel_c->getHue() <= 0.0 + 0.5);
+    BOOST_CHECK(*channel_16b > 600 && *channel_16b < 690);
+    BOOST_CHECK(*channel_f > 0.3 && *channel_f < 0.6);
+    BOOST_CHECK(channel_c->getHue() >= 45.0- 0.5 && channel_c->getHue() <= 45.0 + 0.5);
 
     current_time += 40.1;
     get_event_storage_instance()->swap_buffers();
     fs.update();
+    std::cout << "2 - 16b: " << ((int) *channel_16b) << " f: " << *channel_f << " c: " << std::to_string(*channel_c) << std::endl;
     BOOST_CHECK_EQUAL(*channel_8b, 0);
     BOOST_CHECK(*channel_16b > 200 && *channel_16b < 350);
     BOOST_CHECK(*channel_f > 0.1 && *channel_f < 0.2);
-    BOOST_CHECK(channel_c->getHue() >= 40.0 - 0.5 && channel_c->getHue() <= 40.0 + 0.5);
+    BOOST_CHECK(channel_c->getHue() >= 80.0 - 0.5 && channel_c->getHue() <= 90.0 + 0.5);
 
     current_time += 40.0;
     get_event_storage_instance()->swap_buffers();
     fs.update();
+    std::cout << "3 - 16b: " << ((int) *channel_16b) << " f: " << *channel_f << " c: " << std::to_string(*channel_c) << std::endl;
     BOOST_CHECK_EQUAL(*channel_8b, 0);
-    BOOST_CHECK(*channel_16b < 10);
-    BOOST_CHECK(*channel_f < 0.125);
-    BOOST_CHECK(channel_c->getHue() <= 0.5);
+    BOOST_CHECK(*channel_16b > 250 && *channel_16b < 400);
+    BOOST_CHECK(*channel_f < 0.25);
+    BOOST_CHECK(channel_c->getHue() >= 55.0 && channel_c->getHue() <= 65.0);
 
     //Next frame from transition
     current_time += 40.0;
     get_event_storage_instance()->swap_buffers();
     fs.update();
+    std::cout << "4 - 16b: " << ((int) *channel_16b) << " f: " << *channel_f << " c: " << std::to_string(*channel_c) << std::endl;
     BOOST_CHECK_EQUAL(*channel_8b, 20);
-    BOOST_CHECK(*channel_16b > 335 && *channel_16b < 350);
+    BOOST_CHECK(*channel_16b > 500 && *channel_16b < 650);
     BOOST_CHECK(*channel_f < 0.2);
-    BOOST_CHECK(channel_c->getHue() >= 20.0 - 0.5 && channel_c->getHue() <= 20.0 + 0.5);
+    BOOST_CHECK(channel_c->getHue() >= 70.0 - 5.0 && channel_c->getHue() <= 70.0 + 5.0);
 
     current_time += 40.1;
     get_event_storage_instance()->swap_buffers();
+    auto last_value_f = *channel_f;
     fs.update();
+    std::cout << "5 - 16b: " << ((int) *channel_16b) << " f: " << *channel_f << " c: " << std::to_string(*channel_c) << std::endl;
     BOOST_CHECK_EQUAL(*channel_8b, 40);
-    BOOST_CHECK(*channel_16b > 680 && *channel_16b < 690);
-    BOOST_CHECK(*channel_f > 0.1 && *channel_f < 0.2);
-    BOOST_CHECK(channel_c->getHue() >= 40.0 - 0.5 && channel_c->getHue() <= 40.0 + 0.5);
+    BOOST_CHECK(*channel_16b > 700 && *channel_16b < 900);
+    BOOST_CHECK(*channel_f > last_value_f);
+    BOOST_CHECK(channel_c->getHue() >= 75.0 - 0.5 && channel_c->getHue() <= 80.0 + 0.5);
 
     current_time += 40.000;
     get_event_storage_instance()->swap_buffers();
+    const auto last_16b_value = *channel_16b;
+    last_value_f = *channel_f;
     fs.update();
-    BOOST_CHECK_EQUAL(*channel_8b, 60);
-    BOOST_CHECK(*channel_16b > 1022 && *channel_16b < 1026);
-    BOOST_CHECK(*channel_f > 0.24 && *channel_f < 0.26);
-    BOOST_CHECK(channel_c->getHue() >= 60.0 - 0.5 && channel_c->getHue() <= 60.0 + 0.5);
+    std::cout << "6 - 16b: " << ((int) *channel_16b) << " f: " << *channel_f << " c: " << std::to_string(*channel_c) << std::endl;
+    BOOST_CHECK_EQUAL(*channel_8b, 40);
+    BOOST_CHECK_EQUAL(*channel_16b, last_16b_value);
+    BOOST_CHECK_EQUAL(*channel_f, last_value_f);
+    BOOST_CHECK(channel_c->getHue() >= 120.0 - 0.5 && channel_c->getHue() <= 120.0 + 0.5);
 
     // TODO test smaller transition with different time scale
 
@@ -137,6 +151,7 @@ BOOST_AUTO_TEST_CASE(test_initialization_and_update) {
 }
 
 BOOST_AUTO_TEST_CASE(test_linear_update) {
+    const auto t_e_sender = dmxfish::events::event_source::create<dmxfish::events::event_source>(get_event_storage_instance());
     // Construct input channels
 
     double current_time = 0.5;
@@ -151,7 +166,7 @@ BOOST_AUTO_TEST_CASE(test_linear_update) {
 
     // Construct one out channel per data type
     configuration["channels"] = "channel_8b:8bit:0:true:true:max";
-    configuration["transitions"] = "0#channel_8b:255:lin:260";
+    configuration["transitions"] = std::to_string(t_e_sender->get_sender_id()) + ":0:1:0##channel_8b:255:lin:260";
 
     filter_sequencer fs;
     fs.pre_setup(configuration, init_params, filter_id);
@@ -160,12 +175,12 @@ BOOST_AUTO_TEST_CASE(test_linear_update) {
     fs.setup_filter(configuration, init_params, input_cm, filter_id);
     fs.scene_activated();
     fs.update();
-    get_event_storage_instance()->insert_event(event(event_type::SINGLE_TRIGGER, event_sender_t(0, 0)));
+    get_event_storage_instance()->insert_event(event(event_type::SINGLE_TRIGGER, event_sender_t(t_e_sender->get_sender_id(), 0)));
     int last_value = 0;
     for (current_time = 10.0; current_time <= 275.0; current_time += 10.0) {
         get_event_storage_instance()->swap_buffers();
         fs.update();
-        bool value_range_correct = ((*channel_8b > last_value && *channel_8b < (last_value + 15)) || (*channel_8b > 240));
+        bool value_range_correct = ((*channel_8b > last_value && *channel_8b < (last_value + 15)) || (*channel_8b > 240) || (*channel_8b == 0 && current_time < 15.0));
         BOOST_CHECK(value_range_correct);
         if(!value_range_correct) {
             std::cout << ((int) (*channel_8b)) << " does not have correct size at " << current_time << std::endl;

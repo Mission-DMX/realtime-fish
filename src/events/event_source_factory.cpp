@@ -9,6 +9,7 @@
 #include "events/event_source.hpp"
 #include "events/event_storage.hpp"
 #include "midi/midirtp_event_source.hpp"
+#include "sound/audioinput_event_source.hpp"
 
 #include "lib/logging.hpp"
 #include "main.hpp"
@@ -28,6 +29,8 @@ namespace dmxfish::events {
                 s_ptr = event_source::create<event_source>(storage_ptr, msg.name());
             } else if(type == "fish.builtin.midirtp") {
                 s_ptr = event_source::create<dmxfish::midi::midirtp_event_source>(storage_ptr, msg.name());
+            } else if (type == "fish.builtin.audioextract") {
+                s_ptr = event_source::create<dmxfish::audio::audioinput_event_source>(storage_ptr, msg.name());
             } else {
                 ::spdlog::error("Event sender type '{}' not yet implemented or unknown.", type);
                 return false;
@@ -39,6 +42,9 @@ namespace dmxfish::events {
         success = s_ptr->update_conf_from_message(msg);
         const auto update_msg = s_ptr->encode_proto_message();
         get_iomanager_instance()->push_msg_to_all_gui(update_msg, ::missiondmx::fish::ipcmessages::MSGT_EVENT_SENDER_UPDATE);
+        if (success) {
+            ::spdlog::info("Successfully created / updated event source '{}' of type {}.", msg.name(), msg.type());
+        }
         return success;
     }
 
@@ -50,7 +56,7 @@ namespace dmxfish::events {
         event e{(event_type) ((unsigned int) msg.type()), es};
         size_t i = 0;
         for (const auto c : msg.arguments()) {
-            if (i >= 8) {
+            if (i > 7) {
                 break;
             }
             e.set_arg_data(i, (uint8_t) c);

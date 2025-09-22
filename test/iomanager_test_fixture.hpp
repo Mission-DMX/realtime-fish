@@ -22,11 +22,13 @@ struct gf {
             ::spdlog::warn("Skipped manager init");
         } else {
             construct_managers();
+            ::spdlog::info("Created managers.");
         }
     }
     ~gf() {
         if(constructed) {
             destruct_managers();
+            ::spdlog::info("Stopped managers.");
         }
     }
 };

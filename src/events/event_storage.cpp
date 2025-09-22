@@ -15,6 +15,8 @@ COMPILER_SUPRESS("-Wuseless-cast")
 #include "proto_src/Events.pb.h"
 COMPILER_RESTORE("-Wuseless-cast")
 
+#include "lib/logging.hpp"
+
 namespace dmxfish::events {
 
     event_storage::event_storage() : storage_a(), storage_b(), senders(), storage_swap_mutex(), ongoing_events() {
@@ -30,25 +32,35 @@ namespace dmxfish::events {
     }
 
     [[nodiscard]] bool event_storage::insert_event(const event& e) {
+        const auto& sender = e.get_event_sender().decoded_representation.sender;
+        if(sender >= this->senders.size()) {
+            ::spdlog::error("Invalid server id while inserting event: {}", sender);
+            return false;
+        }
         if(!this->storage_swap_mutex.try_lock()) {
             return false;
         }
         auto& storage = !this->current_read_storage_is_a ? this->storage_a : this->storage_b;
         storage.emplace_back(e);
         this->storage_swap_mutex.unlock();
-        const auto& sender = e.get_event_sender().decoded_representation.sender;
-        if(this->senders[sender]->remote_debug_enabled) {
-            missiondmx::fish::ipcmessages::event msg;
-            msg.set_type((::missiondmx::fish::ipcmessages::event_type) ((uint8_t) e.get_type()));
-            msg.set_sender_id(sender);
-            msg.set_sender_function(e.get_event_sender().decoded_representation.sender_function);
-            msg.set_event_id(e.get_event_id());
-            for (const auto& arg : e.get_args()) {
-                msg.add_arguments((unsigned int) arg);
-            }
-            get_iomanager_instance()->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_EVENT);
-        }
+        this->notify_guis_about_event(e);
         return true;
+    }
+
+    void event_storage::notify_guis_about_event(const event& e) {
+        const auto& sender = e.get_event_sender().decoded_representation.sender;
+        if(!this->senders[sender]->remote_debug_enabled) {
+            return;
+        }
+        missiondmx::fish::ipcmessages::event msg;
+        msg.set_type((::missiondmx::fish::ipcmessages::event_type) ((uint8_t) e.get_type()));
+        msg.set_sender_id(sender);
+        msg.set_sender_function(e.get_event_sender().decoded_representation.sender_function);
+        msg.set_event_id(e.get_event_id());
+        for (const auto& arg : e.get_args()) {
+            msg.add_arguments((unsigned int) arg);
+        }
+        get_iomanager_instance()->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_EVENT);
     }
 
     void event_storage::swap_buffers() {
@@ -77,6 +89,7 @@ namespace dmxfish::events {
 
         for (auto& lasting_ev : this->ongoing_events) {
             new_read_storage.push_back(lasting_ev.second);
+            notify_guis_about_event(lasting_ev.second);
         }
     }
 

@@ -44,6 +44,10 @@ namespace dmxfish::filters::sequencer {
         [[nodiscard]] inline sequencer_time_t get_duration() const {
             return this->duration;
         }
+        
+        [[nodiscard]] inline transition_t get_transition_type() const {
+            return this->transition;
+        }
     private:
         double compute_interleave_point(sequencer_time_t elapsed_time, double time_scale) const {
             switch(this->transition) {
