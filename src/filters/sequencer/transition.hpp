@@ -9,7 +9,7 @@
 #include <cstdint>
 
 // Having ordered maps gives us a little bit more overhead at construction but yields better cache access during runtime.
-#if __cplusplus >= 202302
+#if __cplusplus >= 202502
 #include <flat_map>
 #define selected_map_impl std::flat_map
 #else
