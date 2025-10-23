@@ -40,7 +40,7 @@ bool project_configuration::set_active_scene(unsigned int new_scene) {
 	}
 	const auto new_scene_index = this->scene_id_mapping.at(new_scene);
     if (new_scene_index == this->current_active_scene) {
-        return false;
+        return true; // We're already in this scene so we'll do nothing.
     }
 	if (const auto current_scene = this->get_active_scene(); current_scene < this->scenes.size()) {
 		this->scenes[current_scene].on_stop();
