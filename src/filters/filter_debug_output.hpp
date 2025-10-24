@@ -92,7 +92,7 @@ COMPILER_SUPRESS("-Weffc++")
                 if constexpr (target_remote) {
                     missiondmx::fish::ipcmessages::update_parameter msg;
                     auto iom = get_iomanager_instance();
-                    msg.set_scene_id((int32_t) iom->get_active_show()->get_active_scene());
+                    msg.set_scene_id((int32_t) iom->get_active_show()->get_current_scene_id());
                     msg.set_filter_id(this->filter_name);
                     msg.set_parameter_key("value");
                     msg.set_parameter_value(value);

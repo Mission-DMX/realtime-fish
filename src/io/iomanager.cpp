@@ -459,6 +459,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
         {
             auto msg = missiondmx::fish::ipcmessages::enter_scene();
             if (msg.ParseFromZeroCopyStream(buffer)){
+		::spdlog::debug("Requested to switch to scene {}.", msg.scene_id());
                 if(this->active_show == nullptr) {
                     this->latest_error = "Request for scene switch couldn't be executed as there is currently no loaded scene.";
                     return;
@@ -468,6 +469,7 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                         this->latest_error = "The requested scene id (" + std::to_string(sid) + ") was not found.";
                     }
                 }
+		::spdlog::debug("Current scene: {} with index {}.", this->active_show->get_current_scene_id(), this->active_show->get_active_scene_index());
                 return;
             }
             error_message += "Could not parse the message of type: MSGT_ENTER_SCENE.";
@@ -681,7 +683,7 @@ void IOManager::load_show_file(std::shared_ptr<missiondmx::fish::ipcmessages::lo
 		auto show_candidate = std::make_shared<dmxfish::execution::project_configuration>(std::move(candidate), loading_result_stream);
 		if(!msg->goto_default_scene()) {
 			if(this->active_show) {
-				const auto current_scene = this->active_show->get_active_scene();
+				const auto current_scene = this->active_show->get_current_scene_id();
 				loading_result_stream << "Switching to last active scene " << current_scene << "." << std::endl;
 				show_candidate->set_active_scene(current_scene);
 			} else {
@@ -732,6 +734,9 @@ void IOManager::handle_queued_io() {
 
 void IOManager::rollback() {       
         if(this->is_rollback_available()) {
+		if (this->active_show != nullptr) {
+			this->last_active_show->set_active_scene(this->active_show->get_current_scene_id());
+		}
         	this->active_show = this->last_active_show;
                 this->last_active_show = nullptr;
                 if(this->control_desk_handle) {
