@@ -22,7 +22,7 @@ jobs:
       run: make docs
 
     - name: Push Nightly
-      run: /home/deploy/deploy.bash bin/fish downloads/fish/nightly/fish
+      run: sudo /home/deploy/deploy.bash bin/fish "downloads/fish/nightly/${GITHUB_REF##*/}"
 
     - name: Deploy Docs
-      run: /home/deploy/deploy.bash bin/docs docs/fish-dev
+      run: sudo /home/deploy/deploy.bash bin/docs docs/fish-dev
