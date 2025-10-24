@@ -137,7 +137,7 @@ XSD_ARGS := --generate-doxygen --generate-polymorphic --std c++11 --hxx-suffix .
 OBJECTS := $(filter-out %_test.o ,${TEST_SRCOBJS}) $(filter-out obj/main.o ,${SRCOBJS}) ${OBJDIR}/libproto.a ${OBJDIR}/librmrfnet.a ${OBJDIR}/showxml.a
 
 .PRECIOUS: ${DEPDIR}/%.d ${OBJDIR}/**/%.o ${POTOBJS} ${POOBJS}
-.PHONY: all tools test clean install lintian style translation
+.PHONY: all tools test clean install lintian style translation docs
 
 all: ${BINDIR}/fish tools
 	echo Done
@@ -226,3 +226,8 @@ clean:
 	rm -rf ${PROTO_SRCDIR}
 	rm -rf ${XMLTREE_SRCDIR}
 	rm -rf tools/generator-tmp
+
+docs:
+	mkdir -p bin/docs
+	doxygen ./doxygen.cnf
+
