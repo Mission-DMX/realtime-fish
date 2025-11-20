@@ -20,6 +20,9 @@
 #include "lib/logging.hpp"
 #include "main.hpp"
 
+#include "proto_src/MessageTypes.pb.h"
+#include "proto_src/FilterMode.pb.h"
+
 namespace dmxfish::audio {
 
     audioinput_event_source::audioinput_event_source() {
@@ -271,7 +274,7 @@ namespace dmxfish::audio {
     T avg(const std::vector<T> b) {
         T value = 0;
         for (auto& v : b) {
-            value += v;
+            value += v >= 0 ? v : v * (-1);
         }
         return value / b.size();
     }
@@ -322,16 +325,30 @@ namespace dmxfish::audio {
                     event_storage->insert_event(e);
                 }
 
-                if (has_beat && avg(out_buf) > this->trigger_magnitude) {
+                const auto out_buf_avg = avg(out_buf);
+                if (has_beat && out_buf_avg > this->trigger_magnitude) {
                     ::spdlog::debug("Sending Non-Silent Event: {}:0", this->get_sender_id());
                     dmxfish::events::event e(dmxfish::events::event_type::SINGLE_TRIGGER,
                                              dmxfish::events::event_sender_t { this->get_sender_id(), 1 });
                     event_storage->insert_event(e);
                 }
+                this->send_amplitude_update_to_gui(out_buf_avg);
             }
         } catch (std::runtime_error &e) {
             ::spdlog::error("Failed to use pulse stream: {}", e.what());
         }
         ::spdlog::info("Leaving Pulse audio extraction thread.");
+    }
+
+    void audioinput_event_source::send_amplitude_update_to_gui(long value) {
+        if (auto iomanager = get_iomanager_instance(); iomanager != nullptr) {
+            auto update_message = missiondmx::fish::ipcmessages::update_parameter();
+            update_message.set_filter_id("::fish.builtin.audioextract");
+            // There will never be a filter id containing :: therefore we can do this.
+            update_message.set_parameter_key("current_amplitude");
+            update_message.set_scene_id(-1);
+            update_message.set_parameter_value(std::to_string(value));
+            iomanager->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
+        }
     }
 }
