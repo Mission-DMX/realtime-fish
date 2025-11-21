@@ -100,7 +100,7 @@ namespace dmxfish::audio {
             ::spdlog::debug("Spawning audio extractor using Pulse API.");
             this->thread = std::thread(&audioinput_event_source::update_task_pulse, this);
         }
-        return true;
+        return dmxfish::events::event_source::update_conf_from_message(msg);
     }
 
     bool audioinput_event_source::common_init() {
@@ -327,7 +327,6 @@ namespace dmxfish::audio {
 
                 const auto out_buf_avg = avg(out_buf);
                 if (has_beat && out_buf_avg > this->trigger_magnitude) {
-                    ::spdlog::debug("Sending Non-Silent Event: {}:0", this->get_sender_id());
                     dmxfish::events::event e(dmxfish::events::event_type::SINGLE_TRIGGER,
                                              dmxfish::events::event_sender_t { this->get_sender_id(), 1 });
                     event_storage->insert_event(e);
