@@ -337,7 +337,7 @@ namespace dmxfish::filters {
             scene_activated_lua();
         } catch (const std::exception& e) {
             ::spdlog::warn("Scene activated of lua has failed: {}", e.what());
-            throw filter_runtime_exception(std::string("scene_sctivated script in lua had an error: ") + e.what(), filter_type::filter_lua_script);
+            throw filter_runtime_exception(std::string("scene_activated script in lua had an error: ") + e.what(), filter_type::filter_lua_script);
         }
     }
 
