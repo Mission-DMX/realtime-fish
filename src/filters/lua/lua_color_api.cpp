@@ -201,7 +201,12 @@ namespace dmxfish::filters::lua {
         return dmxfish::dmx::mix_color_interleaving(c1, c2, r);
     }
 
+    dmxfish::dmx::pixel create_color() {
+        return dmxfish::dmx::pixel();
+    }
+
     void init_lua_color_api(sol::state& lua) {
+	lua.set_function("Color", dmxfish::filters::lua::create_color);
         lua.set_function( "hsi_to_rgb", sol::overload(
                 dmxfish::filters::lua::hsi_to_rgb_color,
                 dmxfish::filters::lua::hsi_to_rgb_table

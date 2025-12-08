@@ -9,6 +9,37 @@
 #include <iostream>
 
 
+namespace std {
+    std::string to_string(sol::type t) {
+        switch (t) {
+            case ::sol::type::none:
+                return "LuaNone";
+            case sol::type::nil:
+                return "LuaNil";
+            case sol::type::string:
+                return "LuaString";
+            case sol::type::number:
+                return "LuaInteger";
+            case sol::type::thread:
+                return "LuaThread";
+            case sol::type::boolean:
+                return "LuaBoolean";
+            case sol::type::function:
+                return "LuaFunction";
+            case sol::type::userdata:
+                return "LuaUserdata";
+            case sol::type::lightuserdata:
+                return "LuaLightUserdata";
+            case sol::type::table:
+                return "LuaTable";
+            case sol::type::poly:
+                return "LuaOverloadedType";
+            default:
+                return "Unkown Lua Type";
+        }
+    }
+}
+
 namespace dmxfish::filters {
 
     inline void filter_lua_script::send_input_values_to_lua(){
@@ -59,14 +90,18 @@ namespace dmxfish::filters {
             for (size_t universe_id = 0; universe_id <= 2 * ((sol::table) outputs).size(); universe_id++) {
                 sol::object universe = ((sol::table) outputs)[universe_id];
                 if (auto uptr = dmxfish::io::get_universe((int) universe_id); uptr != nullptr) {
-                    if (universe.get_type() == sol::type::table) {
+                    if (const auto element_type = universe.get_type(); element_type == sol::type::table) {
                         for (uint16_t chan = 0; chan < 512; chan++) {
                             sol::object channel = ((sol::table) universe)[chan];
-                            if (channel.get_type() == sol::type::number) {
+                            if (const auto chan_type = channel.get_type(); chan_type == sol::type::number) {
                                 uint8_t value = ((sol::table) universe)[chan];
                                 (*uptr)[chan] = value;
+                            } else if (chan_type != sol::type::nil) {
+                                ::spdlog::error("Lua universe output: Expected output[{}][{}] to be a number. Got {} instead.", universe_id, chan, std::to_string(chan_type));
                             }
                         }
+                    } else if (element_type != sol::type::nil) {
+                       ::spdlog::error("Lua universe output: Expected output[{}] to be a table. Got {} instead.", universe_id, std::to_string(element_type));
                     }
                 }
             }
@@ -342,3 +377,4 @@ namespace dmxfish::filters {
     }
 
 }
+
