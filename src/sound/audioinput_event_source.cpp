@@ -9,6 +9,9 @@
 #include <Eigen/Dense>
 #include <limits>
 
+#include <sched.h>
+#include <unistd.h>
+
 #include "events/event.hpp"
 #include "events/event_storage.hpp"
 #include "sound/ALSA/ALSA.H"
@@ -117,6 +120,18 @@ namespace dmxfish::audio {
             return false;
         }
         return true;
+    }
+
+    void try_increase_thread_priority() {
+        struct sched_param param;
+	param.sched_priority = 75;
+	const auto thread_id = gettid();
+	if (thread_id == -1) {
+            return;
+	}
+        if (sched_setscheduler(thread_id, SCHED_RR, &param) != 0) {
+            ::spdlog::error("Failed to set BPM extract thread prio.");
+        }
     }
 
     struct detection_parameters {
@@ -235,6 +250,7 @@ namespace dmxfish::audio {
         size_t initial_fft_buffer_pos = 0;
         std::array<double, fft_size> post_buffer;
         fft_context ctx;
+        try_increase_thread_priority();
 
         while (this->running) {
             capture_dev >> buffer;
@@ -305,6 +321,7 @@ namespace dmxfish::audio {
             }
             BTrack b(512, out_buf.size());
             auto event_storage = get_event_storage_instance();
+            try_increase_thread_priority();
 
             while (this->running) {
                 r.record(in_buf.data(), in_buf.size());
