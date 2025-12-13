@@ -88,7 +88,7 @@ namespace dmxfish::filters {
         if (outputs.get_type() == sol::type::table) {
             // Todo: improve check all! existing universes and (only?) patched channels
             for (size_t universe_id = 0; universe_id <= 2 * ((sol::table) outputs).size(); universe_id++) {
-                sol::object universe = ((sol::table) outputs)[universe_id];
+                sol::object universe = ((sol::table) outputs)[universe_id + 1]; // in lua, everything is 1-indexed. Let's make this consistent.
                 if (auto uptr = dmxfish::io::get_universe((int) universe_id); uptr != nullptr) {
                     if (const auto element_type = universe.get_type(); element_type == sol::type::table) {
                         for (uint16_t chan = 0; chan < 512; chan++) {
