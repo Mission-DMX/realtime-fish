@@ -195,7 +195,8 @@ namespace dmxfish::filters {
                                                "i", sol::property(&dmxfish::dmx::pixel::getIluminance, &dmxfish::dmx::pixel::setIluminance),
                                                "r", sol::property(&dmxfish::dmx::pixel::getRed, &dmxfish::dmx::pixel::setRed),
                                                "g", sol::property(&dmxfish::dmx::pixel::getGreen, &dmxfish::dmx::pixel::setGreen),
-                                               "b", sol::property(&dmxfish::dmx::pixel::getBlue, &dmxfish::dmx::pixel::setBlue)
+                                               "b", sol::property(&dmxfish::dmx::pixel::getBlue, &dmxfish::dmx::pixel::setBlue),
+					       "str", sol::property(&dmxfish::dmx::pixel::str)
         );
 
         //::spdlog::debug("pre-setup: out_mapping: {}", out_mapping);
