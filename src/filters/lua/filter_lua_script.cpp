@@ -92,12 +92,12 @@ namespace dmxfish::filters {
                 if (auto uptr = dmxfish::io::get_universe((int) universe_id); uptr != nullptr) {
                     if (const auto element_type = universe.get_type(); element_type == sol::type::table) {
                         for (uint16_t chan = 0; chan < 512; chan++) {
-                            sol::object channel = ((sol::table) universe)[chan];
+                            sol::object channel = ((sol::table) universe)[chan + 1];
                             if (const auto chan_type = channel.get_type(); chan_type == sol::type::number) {
-                                uint8_t value = ((sol::table) universe)[chan];
+                                uint8_t value = ((sol::table) universe)[chan + 1];
                                 (*uptr)[chan] = value;
                             } else if (chan_type != sol::type::nil) {
-                                ::spdlog::error("Lua universe output: Expected output[{}][{}] to be a number. Got {} instead.", universe_id, chan, std::to_string(chan_type));
+                                ::spdlog::error("Lua universe output: Expected output[{}][{}] to be a number. Got {} instead.", universe_id, chan + 1, std::to_string(chan_type));
                             }
                         }
                     } else if (element_type != sol::type::nil) {
