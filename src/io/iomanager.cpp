@@ -386,6 +386,23 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
             ::spdlog::warn(error_message);
             return;
         }
+	case ::missiondmx::fish::ipcmessages::MSGT_READYMODE_UPDATE: {
+	    auto msg = missiondmx::fish::ipcmessages::readymode_update();
+	    if (msg.ParseFromZeroCopyStream(buffer)){
+                if(control_desk_handle) {
+                    try {
+                        control_desk_handle->process_readymode_update_from_gui(msg);
+                    } catch(const std::exception& e) {
+                        this->latest_error = e.what();
+                    }
+                }
+                return;
+            }
+            error_message += "Could not parse the message of type: MSGT_READYMODE_UPDATE.";
+            this->latest_error = error_message;
+            ::spdlog::warn(error_message);
+            return;
+	}
 		case ::missiondmx::fish::ipcmessages::MSGT_ROTARY_ENCODER_CHANGE:
         {
             auto msg = missiondmx::fish::ipcmessages::rotary_encoder_change();

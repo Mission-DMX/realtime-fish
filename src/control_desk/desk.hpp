@@ -17,6 +17,7 @@
 #include "lib/macros.hpp"
 COMPILER_SUPRESS("-Wuseless-cast")
 #include "proto_src/Console.pb.h"
+#include "proto_src/RealTimeControl.pb.h"
 COMPILER_RESTORE("-Wuseless-cast")
 
 namespace dmxfish::io {
@@ -106,6 +107,7 @@ namespace dmxfish::control_desk {
         bool update_message_required = false;
         bool bank_set_modification_happened = false;
         bool global_dark = false;
+        bool self_initialized_readymode = false;
         uint16_t global_illumination = 0;
         std::shared_ptr<xtouch_gpio_event_sender> gpio_event_sender = nullptr;
     public:
@@ -160,6 +162,7 @@ namespace dmxfish::control_desk {
         void set_seven_seg_display_data(const std::string& data);
         std::shared_ptr<bank_column> find_column(const std::string& set_id, const std::string& column_id);
 	void notify_showfile_changed();
+	void process_readymode_update_from_gui(const ::missiondmx::fish::ipcmessages::readymode_update& msg);
     private:
         void reset_devices();
         void remove_bank_set(size_t i);
@@ -169,6 +172,8 @@ namespace dmxfish::control_desk {
         void handle_select_state_update_from_bank(const std::string& column_id, bool new_state);
         void update_fader_bank_leds();
         void commit_readymode();
+	void abort_readymode();
+	void enter_readymode();
 	void print_bs_structure();
     };
 
