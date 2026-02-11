@@ -78,6 +78,15 @@ public:
 	bool set_active_scene(unsigned int new_scene_id);
 
 	void run_cycle_update();
+
+	/**
+	 * Get the amount of scenes.
+	 *
+	 * @return the scene count
+	 */
+	[[nodiscard]] inline auto get_scene_count() const {
+		return this->scenes.size();
+	}
 };
 
 }
