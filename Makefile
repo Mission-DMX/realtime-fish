@@ -44,14 +44,14 @@ LFLAGS += `${PKG_TOOL} --libs spdlog`
 LFLAGS += `${PKG_TOOL} --libs protobuf`
 LFLAGS += `${PKG_TOOL} --libs xerces-c`
 LFLAGS += `${PKG_TOOL} --libs fmt`
-LFLAGS += `${PKG_TOOL} --libs libusb-1.0`
-LFLAGS += `${PKG_TOOL} --libs libftdi1`
+LFLAGS += `${PKG_TOOL} --libs libusb`
+LFLAGS += `${PKG_TOOL} --libs libftdi`
 LFLAGS += `${PKG_TOOL} --libs lua`
 LFLAGS += `${PKG_TOOL} --libs alsa eigen3 sox fftw3 libpulse libpulse-simple samplerate`
 LFLAGS += -lcpptrace `${PKG_TOOL} --libs libdwarf` `${PKG_TOOL} --libs zlib libzstd`
 CFLAGS += `${PKG_TOOL} --cflags xerces-c`
-CFLAGS += `${PKG_TOOL} --cflags libusb-1.0`
-CFLAGS += `${PKG_TOOL} --cflags libftdi1`
+CFLAGS += `${PKG_TOOL} --cflags libusb`
+CFLAGS += `${PKG_TOOL} --cflags libftdi`
 CFLAGS += `${PKG_TOOL} --cflags alsa eigen3 sox fftw3 libpulse libpulse-simple samplerate`
 CFLAGS += `${PKG_TOOL} --cflags libdwarf libzstd`
 
@@ -137,7 +137,7 @@ XSD_ARGS := --generate-doxygen --generate-polymorphic --std c++11 --hxx-suffix .
 OBJECTS := $(filter-out %_test.o ,${TEST_SRCOBJS}) $(filter-out obj/main.o ,${SRCOBJS}) ${OBJDIR}/libproto.a ${OBJDIR}/librmrfnet.a ${OBJDIR}/showxml.a
 
 .PRECIOUS: ${DEPDIR}/%.d ${OBJDIR}/**/%.o ${POTOBJS} ${POOBJS}
-.PHONY: all tools test clean install lintian style translation
+.PHONY: all tools test clean install lintian style translation docs
 
 all: ${BINDIR}/fish tools
 	echo Done
@@ -226,3 +226,8 @@ clean:
 	rm -rf ${PROTO_SRCDIR}
 	rm -rf ${XMLTREE_SRCDIR}
 	rm -rf tools/generator-tmp
+
+docs:
+	mkdir -p bin/docs
+	doxygen ./doxygen.cnf
+

@@ -28,7 +28,7 @@ project_configuration::project_configuration(std::unique_ptr<MissionDMX::ShowFil
 
 	logging_target << "Initializing default scene." << std::endl;
 	this->current_active_scene = this->default_active_scene;
-	if(const auto scene_index = this->get_active_scene(); scene_index < this->scenes.size()) {
+	if(const auto scene_index = this->get_active_scene_index(); scene_index < this->scenes.size()) {
 		this->scenes[scene_index].on_start();
 	}
 	logging_target << "Show file '" << this->get_name() << "' successfully loaded." << std::endl;
@@ -40,23 +40,25 @@ bool project_configuration::set_active_scene(unsigned int new_scene) {
 	}
 	const auto new_scene_index = this->scene_id_mapping.at(new_scene);
     if (new_scene_index == this->current_active_scene) {
-        return false;
+        return true; // We're already in this scene so we'll do nothing.
     }
-	if (const auto current_scene = this->get_active_scene(); current_scene < this->scenes.size()) {
+	if (const auto current_scene = this->get_active_scene_index(); current_scene < this->scenes.size()) {
 		this->scenes[current_scene].on_stop();
 	}
 	this->current_active_scene = new_scene_index;
+	this->current_scene_id = new_scene;
 	if (new_scene_index >= this->scenes.size()) {
 		this->current_active_scene = this->scenes.size() - 1;
+		this->current_scene_id = this->current_active_scene;
 	}
-	if (const auto scene_index = this->get_active_scene(); scene_index < this->scenes.size()) {
+	if (const auto scene_index = this->get_active_scene_index(); scene_index < this->scenes.size()) {
 		this->scenes[scene_index].on_start();
 	}
 	return true;
 }
 
 void project_configuration::run_cycle_update() {
-	this->scenes[this->get_active_scene()].invoke_filters();
+	this->scenes[this->get_active_scene_index()].invoke_filters();
 }
 
 }

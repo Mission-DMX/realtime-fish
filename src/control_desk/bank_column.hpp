@@ -117,9 +117,9 @@ namespace dmxfish::control_desk {
             }
             this->color = p;
             if(this->readymode_active) {
-                readymode_raw_configuration.primary_position = (uint16_t) p.getIluminance() * 65535;
+                readymode_raw_configuration.primary_position = (uint16_t) (p.getIluminance() * 65535.0);
             } else {
-                raw_configuration.primary_position = (uint16_t) p.getIluminance() * 65535;
+                raw_configuration.primary_position = (uint16_t) (p.getIluminance() * 65535);
             }
             update_physical_fader_position();
             update_encoder_leds();
@@ -152,7 +152,11 @@ namespace dmxfish::control_desk {
 		}
 
 		inline void set_uv_value(uint8_t new_value) {
-			this->uv = new_value;
+			if (this->readymode_active) {
+			    this->readymode_uv = new_value;
+			} else {
+			    this->uv = new_value;
+			}
 			send_col_update_to_fish();
 		}
 
@@ -183,6 +187,10 @@ namespace dmxfish::control_desk {
         [[nodiscard]] inline bool is_select_active() const {
             return this->select_active;
         }
+
+	[[nodiscard]] inline bool in_readymode() const {
+            return this->readymode_active;
+	}
 
         inline void set_select_button_active(bool state) {
             this->select_active = state;

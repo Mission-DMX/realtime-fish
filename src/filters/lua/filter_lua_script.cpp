@@ -9,6 +9,37 @@
 #include <iostream>
 
 
+namespace std {
+    std::string to_string(sol::type t) {
+        switch (t) {
+            case ::sol::type::none:
+                return "LuaNone";
+            case sol::type::nil:
+                return "LuaNil";
+            case sol::type::string:
+                return "LuaString";
+            case sol::type::number:
+                return "LuaInteger";
+            case sol::type::thread:
+                return "LuaThread";
+            case sol::type::boolean:
+                return "LuaBoolean";
+            case sol::type::function:
+                return "LuaFunction";
+            case sol::type::userdata:
+                return "LuaUserdata";
+            case sol::type::lightuserdata:
+                return "LuaLightUserdata";
+            case sol::type::table:
+                return "LuaTable";
+            case sol::type::poly:
+                return "LuaOverloadedType";
+            default:
+                return "Unkown Lua Type";
+        }
+    }
+}
+
 namespace dmxfish::filters {
 
     inline void filter_lua_script::send_input_values_to_lua(){
@@ -57,16 +88,20 @@ namespace dmxfish::filters {
         if (outputs.get_type() == sol::type::table) {
             // Todo: improve check all! existing universes and (only?) patched channels
             for (size_t universe_id = 0; universe_id <= 2 * ((sol::table) outputs).size(); universe_id++) {
-                sol::object universe = ((sol::table) outputs)[universe_id];
+                sol::object universe = ((sol::table) outputs)[universe_id + 1]; // in lua, everything is 1-indexed. Let's make this consistent.
                 if (auto uptr = dmxfish::io::get_universe((int) universe_id); uptr != nullptr) {
-                    if (universe.get_type() == sol::type::table) {
+                    if (const auto element_type = universe.get_type(); element_type == sol::type::table) {
                         for (uint16_t chan = 0; chan < 512; chan++) {
-                            sol::object channel = ((sol::table) universe)[chan];
-                            if (channel.get_type() == sol::type::number) {
-                                uint8_t value = ((sol::table) universe)[chan];
+                            sol::object channel = ((sol::table) universe)[chan + 1];
+                            if (const auto chan_type = channel.get_type(); chan_type == sol::type::number) {
+                                uint8_t value = ((sol::table) universe)[chan + 1];
                                 (*uptr)[chan] = value;
+                            } else if (chan_type != sol::type::nil) {
+                                ::spdlog::error("Lua universe output: Expected output[{}][{}] to be a number. Got {} instead.", universe_id, chan + 1, std::to_string(chan_type));
                             }
                         }
+                    } else if (element_type != sol::type::nil) {
+                       ::spdlog::error("Lua universe output: Expected output[{}] to be a table. Got {} instead.", universe_id, std::to_string(element_type));
                     }
                 }
             }
@@ -160,7 +195,8 @@ namespace dmxfish::filters {
                                                "i", sol::property(&dmxfish::dmx::pixel::getIluminance, &dmxfish::dmx::pixel::setIluminance),
                                                "r", sol::property(&dmxfish::dmx::pixel::getRed, &dmxfish::dmx::pixel::setRed),
                                                "g", sol::property(&dmxfish::dmx::pixel::getGreen, &dmxfish::dmx::pixel::setGreen),
-                                               "b", sol::property(&dmxfish::dmx::pixel::getBlue, &dmxfish::dmx::pixel::setBlue)
+                                               "b", sol::property(&dmxfish::dmx::pixel::getBlue, &dmxfish::dmx::pixel::setBlue),
+					       "str", sol::property(&dmxfish::dmx::pixel::str)
         );
 
         //::spdlog::debug("pre-setup: out_mapping: {}", out_mapping);
@@ -337,8 +373,9 @@ namespace dmxfish::filters {
             scene_activated_lua();
         } catch (const std::exception& e) {
             ::spdlog::warn("Scene activated of lua has failed: {}", e.what());
-            throw filter_runtime_exception(std::string("scene_sctivated script in lua had an error: ") + e.what(), filter_type::filter_lua_script);
+            throw filter_runtime_exception(std::string("scene_activated script in lua had an error: ") + e.what(), filter_type::filter_lua_script);
         }
     }
 
 }
+

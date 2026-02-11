@@ -56,7 +56,7 @@ namespace dmxfish::filters {
                 auto update_message = missiondmx::fish::ipcmessages::update_parameter();
                 update_message.set_filter_id(this->own_filter_id);
                 update_message.set_parameter_key("actual_state");
-                update_message.set_scene_id(s->get_active_scene());
+                update_message.set_scene_id(s->get_current_scene_id());
                 std::stringstream params;
                 params <<
                        run_state_str << ";" <<
@@ -814,7 +814,7 @@ namespace dmxfish::filters {
     void filter_cue::scene_activated() {
         if (this->state_persistent) {
             using namespace dmxfish::execution;
-            const auto scene_id = get_iomanager_instance()->get_active_show()->get_active_scene();
+            const auto scene_id = get_iomanager_instance()->get_active_show()->get_current_scene_id();
             bool loaded_values = false;
             if(auto rs_opt = state_registry::get(scene_id, this->own_filter_id + "::running_state"); rs_opt.has_value()) {
                 this->running_state = (run_state) std::stoi(rs_opt.value());
@@ -870,7 +870,7 @@ namespace dmxfish::filters {
             return;
         }
         using namespace dmxfish::execution;
-        const auto scene_id = get_iomanager_instance()->get_active_show()->get_active_scene();
+        const auto scene_id = get_iomanager_instance()->get_active_show()->get_current_scene_id();
         state_registry::set(scene_id, this->own_filter_id + "::running_state",
                             std::to_string((unsigned int) this->running_state));
         state_registry::set(scene_id, this->own_filter_id + "::cue",

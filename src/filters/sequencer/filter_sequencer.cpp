@@ -262,7 +262,7 @@ namespace dmxfish {
             auto update_message = missiondmx::fish::ipcmessages::update_parameter();
             update_message.set_filter_id(this->own_filter_id);
             update_message.set_parameter_key("active_transition_list");
-            update_message.set_scene_id(active_show->get_active_scene());
+            update_message.set_scene_id(active_show->get_current_scene_id());
             update_message.set_parameter_value(ss.str());
             iomanager->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
         }

@@ -64,7 +64,7 @@ void push_updates_to_ui(std::shared_ptr<runtime_state_t> t, unsigned long c_time
 	if (t->is_direct_mode) {
 		msg->set_current_scene(-1);
 	} else if(auto s = manager->get_active_show(); s != nullptr) {
-		msg->set_current_scene(s->get_active_scene());
+		msg->set_current_scene(s->get_current_scene_id());
 	} else {
 		msg->set_current_scene(-2);
 	}

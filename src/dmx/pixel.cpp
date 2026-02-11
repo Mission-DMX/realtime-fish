@@ -29,6 +29,14 @@ namespace dmxfish::dmx {
 		return ss.str();
 	}
 
+    pixel::pixel (double h, double s, double i) : hue(h), saturation(s), iluminance(i), red(0), green(0), blue(0) {
+	    convert_hsi_to_rgb_pre();
+    }
+
+    pixel::pixel (uint16_t r, uint16_t g, uint16_t b) : hue(0.), saturation(0.), iluminance(-1.), red(r), green(g), blue(b) {
+	    convert_rgb_to_hsi_pre();
+    }
+
     void pixel::pixel_to_rgb(uint8_t& r, uint8_t& g, uint8_t& b){
         uint16_t r16;
         uint16_t g16;
@@ -196,6 +204,7 @@ namespace dmxfish::dmx {
         convert_rgb_to_hsi_pre();
         invalidate_rgb();
         this->hue = h;
+	convert_hsi_to_rgb_pre();
     }
 
     void pixel::setSaturation(double s){
@@ -207,6 +216,7 @@ namespace dmxfish::dmx {
 		s = 0.0;
 	}
         this->saturation = s;
+	convert_hsi_to_rgb_pre();
     }
 
     void pixel::setIluminance(double i){
@@ -218,24 +228,28 @@ namespace dmxfish::dmx {
 		i = 0.0;
 	}
 	this->iluminance = i;
+	convert_hsi_to_rgb_pre();
     }
 
     void pixel::setRed(uint16_t r){
         convert_hsi_to_rgb_pre();
         invalidate_hsi();
         this->red = r;
+	convert_rgb_to_hsi_pre();
     }
 
     void pixel::setGreen(uint16_t g){
         convert_hsi_to_rgb_pre();
         invalidate_hsi();
         this->green = g;
+	convert_rgb_to_hsi_pre();
     }
 
     void pixel::setBlue(uint16_t b){
         convert_hsi_to_rgb_pre();
         invalidate_hsi();
         this->blue = b;
+	convert_rgb_to_hsi_pre();
     }
 
     dmxfish::dmx::pixel mix_color_interleaving(dmxfish::dmx::pixel c1, dmxfish::dmx::pixel c2, double range) {

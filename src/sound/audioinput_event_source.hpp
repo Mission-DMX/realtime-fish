@@ -34,9 +34,10 @@ namespace dmxfish::audio {
         [[nodiscard]] missiondmx::fish::ipcmessages::event_sender encode_proto_message() const override;
         [[nodiscard]] bool update_conf_from_message(const missiondmx::fish::ipcmessages::event_sender& msg) override;
     private:
-	bool common_init();
+	    bool common_init();
         void update_task_alsa();
-	void update_task_pulse();
+	    void update_task_pulse();
+        void send_amplitude_update_to_gui(long value);
     };
 
 }

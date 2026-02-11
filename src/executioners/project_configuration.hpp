@@ -31,17 +31,31 @@ private:
 	std::vector<std::shared_ptr<dmxfish::dmx::universe>> universes;
 	std::map<int32_t, size_t> scene_id_mapping;
 	std::string name;
-	unsigned int default_active_scene = 0;
-	unsigned int current_active_scene = 0;
+	size_t default_active_scene = 0;
+	size_t current_active_scene = 0;
+	unsigned int current_scene_id = 0;
 public:
 	project_configuration(std::unique_ptr<MissionDMX::ShowFile::BordConfiguration> show_file_dom, std::stringstream& logging_target);
 
-	[[nodiscard]] inline unsigned int get_active_scene() const {
+	/**
+	 * Get the index of the current active scene.
+	 */
+	[[nodiscard]] inline size_t get_active_scene_index() const {
 		return this->current_active_scene;
 	}
 
-	[[nodiscard]] inline unsigned int get_default_scene() const {
+	/**
+	 * Get the index of the default active scene.
+	 */
+	[[nodiscard]] inline size_t get_default_scene() const {
 		return this->default_active_scene;
+	}
+
+	/**
+	 * Get the ID of the current active scene.
+	 */
+	[[nodiscard]] inline unsigned int get_current_scene_id() const {
+		return this->current_scene_id;
 	}
 
 	[[nodiscard]] inline std::string get_name() const {
@@ -55,7 +69,13 @@ public:
 		return this->scenes[this->scene_id_mapping.at(show_id)].update_filter_parameter(filter_id, key, value);
 	}
 
-	bool set_active_scene(unsigned int new_scene);
+	/**
+	 * Set the current active scene to a scene with the specified ID.
+	 *
+	 * The ID does not need to be the scene index.
+	 * @param new_scene_id The ID of the scene as specified in the show file.
+	 */
+	bool set_active_scene(unsigned int new_scene_id);
 
 	void run_cycle_update();
 };

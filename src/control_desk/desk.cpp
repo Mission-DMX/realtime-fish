@@ -312,6 +312,15 @@ namespace dmxfish::control_desk {
     }
 
     void desk::commit_readymode() {
+	for (auto d_ptr : devices) {
+	    if(d_ptr->get_device_id() == midi_device_id::X_TOUCH)
+                xtouch_set_button_led(*d_ptr, button::BTN_GLOBALVIEW_COMMITRDY, button_led_state::off);
+	}
+	if(auto iom = get_iomanager_instance(); iom != nullptr) {
+	    ::missiondmx::fish::ipcmessages::readymode_update msg;
+	    msg.set_cause(::missiondmx::fish::ipcmessages::RUC_COMMITED);
+	    iom->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_READYMODE_UPDATE);
+	}
         if(!(current_active_bank_set < bank_sets.size())) {
             return;
         }
@@ -324,9 +333,50 @@ namespace dmxfish::control_desk {
             }
         }
 	bs.columns_in_ready_state.clear();
-	for (auto d_ptr : devices) {
-	    if(d_ptr->get_device_id() == midi_device_id::X_TOUCH)
+        this->self_initialized_readymode = false;
+    }
+
+    void desk::enter_readymode() {
+        for (auto d_ptr : devices) {
+	    if(d_ptr->get_device_id() == midi_device_id::X_TOUCH) {
+                xtouch_set_button_led(*d_ptr, button::BTN_GLOBALVIEW_COMMITRDY, button_led_state::flash);
+		d_ptr->schedule_transmission();
+	    }
+	}
+	if(auto iom = get_iomanager_instance(); iom != nullptr) {
+	    ::missiondmx::fish::ipcmessages::readymode_update msg;
+	    msg.set_cause(::missiondmx::fish::ipcmessages::RUC_ENTERED);
+	    iom->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_READYMODE_UPDATE);
+	}
+    }
+
+    void desk::abort_readymode() {
+	for(auto& d_ptr : devices) {
+            if(d_ptr->get_device_id() == midi_device_id::X_TOUCH) {
                 xtouch_set_button_led(*d_ptr, button::BTN_GLOBALVIEW_COMMITRDY, button_led_state::off);
+                d_ptr->schedule_transmission();
+            }
+        }
+	if(auto iom = get_iomanager_instance(); iom != nullptr) {
+	    ::missiondmx::fish::ipcmessages::readymode_update msg;
+	    msg.set_cause(::missiondmx::fish::ipcmessages::RUC_ABORTED);
+	    iom->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_READYMODE_UPDATE);
+	}
+        this->self_initialized_readymode = false;
+    }
+
+    void desk::process_readymode_update_from_gui(const ::missiondmx::fish::ipcmessages::readymode_update& msg) {
+	this->self_initialized_readymode = false;
+	switch (msg.cause()) {
+            case ::missiondmx::fish::ipcmessages::RUC_ENTERED:
+		this->enter_readymode();
+		return;
+	    case ::missiondmx::fish::ipcmessages::RUC_ABORTED:
+		this->abort_readymode();
+		return;
+	    case ::missiondmx::fish::ipcmessages::RUC_COMMITED:
+		this->commit_readymode();
+		return;
 	}
     }
 
@@ -642,12 +692,14 @@ namespace dmxfish::control_desk {
         } else {
             rset.erase(column_id);
         }
-        for(auto btn_state = rset.empty() ? button_led_state::off : button_led_state::flash ; auto& d_ptr : devices) {
-            if(d_ptr->get_device_id() == midi_device_id::X_TOUCH) {
-                xtouch_set_button_led(*d_ptr, button::BTN_GLOBALVIEW_COMMITRDY, btn_state);
-                d_ptr->schedule_transmission();
-            }
-        }
+	if(rset.empty()) {
+	    if (this->self_initialized_readymode) {
+	        this->abort_readymode();
+	    }
+	} else {
+	    this->self_initialized_readymode = true;
+	    this->enter_readymode();
+	}
     }
 
     void desk::handle_select_state_update_from_bank(const std::string& column_id, bool new_state) {

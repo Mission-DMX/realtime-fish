@@ -306,6 +306,18 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_event_counter:
                     sum += sizeof(filter_event_counter);
                     break;
+                case filter_type::filter_responding_constant_8bit:
+                    sum += sizeof(responding_constant_8bit);
+                    break;
+                case filter_type::filter_responding_constant_16bit:
+                    sum += sizeof(responding_constant_16bit);
+                    break;
+                case filter_type::filter_responding_constant_float:
+                    sum += sizeof(responding_constant_float);
+                    break;
+                case filter_type::filter_responding_constant_color:
+                    sum += sizeof(responding_constant_color);
+                    break;
 				default: {
 						 std::stringstream ss;
 						 ss << ERROR_FILTER_NOT_IMPLEMENTED_IN_ALLOCATION;
@@ -476,6 +488,14 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_sequencer>(pac);
             case filter_type::filter_event_counter:
                 return calloc<filter_event_counter>(pac);
+            case filter_type::filter_responding_constant_8bit:
+                return calloc<responding_constant_8bit>(pac);
+            case filter_type::filter_responding_constant_16bit:
+                return calloc<responding_constant_16bit>(pac);
+            case filter_type::filter_responding_constant_float:
+                return calloc<responding_constant_float>(pac);
+            case filter_type::filter_responding_constant_color:
+                return calloc<responding_constant_color>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
