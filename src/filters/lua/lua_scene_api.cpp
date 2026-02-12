@@ -38,6 +38,18 @@ namespace dmxfish::filters::lua {
         }
     }
 
+    bool switch_to_scene(size_t new_scene_id) {
+        if (auto io_mgr_ptr = get_iomanager_instance(); io_mgr_ptr != nullptr) [[likely]] {
+            if (auto show_ptr = io_mgr_ptr->get_active_show(); show_ptr != nullptr) [[likely]] {
+                return show_ptr->set_active_scene(new_scene_id);
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+	}
+
     void init_lua_scene_api(sol::state& lua) {
         lua.set_function("get_scene_count",
 		    dmxfish::filters::lua::get_scene_count
@@ -45,7 +57,8 @@ namespace dmxfish::filters::lua {
         lua.set_function("get_own_scene_id",
             dmxfish::filters::lua::get_current_active_scene
         );
-
-	// switch_to_scene()
+        lua.set_function("switch_to_scene",
+            dmxfish::filters::lua::switch_to_scene
+        );
     }
 }
