@@ -77,6 +77,13 @@ public:
 	 */
 	bool set_active_scene(unsigned int new_scene_id);
 
+	/**
+	 * Get the scene ID of a given scene index.
+	 * @param scene_index The index of the scene.
+	 * @returns the ID, if the index is valid.
+	 */
+	[[nodiscard]] size_t find_scene_id_from_index(size_t scene_index) const;
+
 	void run_cycle_update();
 
 	/**

@@ -54,6 +54,10 @@ BOOST_AUTO_TEST_CASE(test_error_init) {
 
 }
 
+BOOST_AUTO_TEST_CASE(test_scene_management) {
+    // TODO
+}
+
 BOOST_AUTO_TEST_CASE(test_error_code) {
     spdlog::set_level(spdlog::level::debug);
     dmxfish::filters::filter_lua_script fil = filter_lua_script ();
