@@ -12,6 +12,7 @@
 #include <cpptrace/from_current.hpp>
 
 #include "lib/logging.hpp"
+#include "net/netio_exception.hpp"
 
 #include "lib/macros.hpp"
 #include "net/sock_address_factory.hpp"
@@ -114,22 +115,24 @@ void IOManager::run() {
     bool first_restart = true;
 	while(this->running) {
 		//try {
-		CPPTRACE_TRY {
+		cpptrace::try_catch( [&] {
 			this->loop->run(0);
             first_restart = true;
 		//} catch ([[with_stacktrace]] const std::exception& e) {
-		} CPPTRACE_CATCH (const std::exception& e) {
+	    }, [&] (const ::rmrf::net::netio_exception& e) {
+            ::spdlog::error("Network error: {}", e.what());
+		}, [&] (const std::exception& e) {
 			if(first_restart) {
                 ::spdlog::error("Event loop crashed with exception: {}. Restarting event loop.", e.what());
-		// TODO replace third party library with std::stacktrace::from_current_exception() once C++26 is here
-		cpptrace::from_current_exception().print();
+                // TODO replace third party library with std::stacktrace::from_current_exception() once C++26 is here
+                cpptrace::from_current_exception().print();
                 first_restart = false;
             } else {
                 ::spdlog::error("Event loop crashed a second time with exception: {}. This seams to be unrecoverable. Exiting.", e.what());
                 this->running = false;
-		this->run_time_state->running = false;
+                this->run_time_state->running = false;
             }
-		}
+		});
 	}
 	::spdlog::debug("Leaving ev defloop");
 }
