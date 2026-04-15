@@ -658,6 +658,13 @@ COMPILER_RESTORE("-Weffc++")
 	    return std::make_tuple(filters, boundries, pac, filter_index);
     }
 
+    inline void load_default_dmx_values(default_dmx_value_container& container, const ::MissionDMX::ShowFile::Scene& s) {
+        container.reserve(s.dmxdefaultvalue().size());
+        for (const auto& default_value_template : s.dmxdefaultvalue()) {
+            container.emplace_back(default_value_template.universe(), default_value_template.channel(), default_value_template.value());
+        }
+    }
+
     [[nodiscard]] std::pair<std::string, bool> populate_scene_vector(std::vector<scene>& v, const MissionDMX::ShowFile::BordConfiguration::scene_sequence& ss, std::map<int32_t, size_t>& scene_index_map) {
 		if(ss.size() == 0) {
 			return std::make_pair("There were no scenes defined. Skipping.", false);
@@ -674,10 +681,13 @@ COMPILER_RESTORE("-Weffc++")
 				std::stringstream msg_stream;
 				try {
 					auto filter_tuple = compute_filter(stemplate, msg_stream);
+                    default_dmx_value_container default_dmx_values;
+                    load_default_dmx_values(default_dmx_values, stemplate);
 					scene s{std::move(std::get<0>(filter_tuple)),
 							std::move(std::get<1>(filter_tuple)),
 							std::get<2>(filter_tuple),
-							std::get<3>(filter_tuple)
+							std::get<3>(filter_tuple),
+                            default_dmx_values
 						};
 					{
 						std::lock_guard lock(v_mutex);
