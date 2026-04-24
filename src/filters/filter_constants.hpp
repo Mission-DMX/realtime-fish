@@ -5,6 +5,7 @@
  * These filters should be able to be linked to the GUI as parameter inputs.
  */
 
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -46,7 +47,13 @@ namespace dmxfish::filters {
             }
             try {
                 if constexpr (std::is_same<T, uint8_t>::value || std::is_same<T, uint16_t>::value) {
-                    this->value = (T) std::stoi(_value);
+                    auto val = std::stol(_value);
+                    if (val < 0) {
+                        val = 0;
+                    } else if (val > std::numeric_limits<T>::max()) {
+                        val = std::numeric_limits<T>::max();
+                    }
+                    this->value = (T) val;
                 } else if constexpr (std::is_same<T, double>::value) {
                     this->value = std::stod(_value);
                 } else {
