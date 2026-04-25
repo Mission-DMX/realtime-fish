@@ -26,6 +26,7 @@
 #include "filters/lua/filter_lua_script.hpp"
 #include "filters/sequencer/filter_sequencer.hpp"
 #include "filters/filter_color_mixer.hpp"
+#include "filters/chaser/color_chaser.hpp"
 
 #include <iostream>
 
@@ -315,6 +316,9 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_responding_constant_float:
                     sum += sizeof(responding_constant_float);
                     break;
+		case filter_type::filter_color_chaser:
+		    sum += sizeof(filter_color_chaser);
+		    break;
                 case filter_type::filter_responding_constant_color:
                     sum += sizeof(responding_constant_color);
                     break;
@@ -496,6 +500,8 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<responding_constant_float>(pac);
             case filter_type::filter_responding_constant_color:
                 return calloc<responding_constant_color>(pac);
+            case filter_type::filter_color_chaser:
+                return calloc<filter_color_chaser>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
