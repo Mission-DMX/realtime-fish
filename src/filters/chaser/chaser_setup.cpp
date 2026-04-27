@@ -6,6 +6,7 @@
 
 #include "layer_plain_color.hpp"
 #include "layer_rainbow.hpp"
+#include "layer_sprinkles.hpp"
 
 namespace dmxfish::filters {
 
@@ -17,8 +18,10 @@ namespace dmxfish::filters {
             auto param_list = utils::split(entry, '|');
             if (param_list.front() == "plain_color") {
                 required_mem_size += sizeof(chaserlayers::plain_color);
-            } if (param_list.front() == "rainbow") {
+            } else if (param_list.front() == "rainbow") {
                 required_mem_size += sizeof(chaserlayers::rainbow);
+            } else if (param_list.front() == "sprinkles") {
+                required_mem_size += sizeof(chaserlayers::sprinkles);
             }
             // TODO continue
         }
@@ -29,10 +32,12 @@ namespace dmxfish::filters {
 #define make_inst(cls) new (this->alloc.Allocate(sizeof(cls))) cls
             if (param_list.front() == "plain_color") {
                 layers.push_back(make_inst(chaserlayers::plain_color)(param_list, target.color_parameter_inputs, target.number_parameter_inputs));
-            } if (param_list.front() == "rainbow") {
+            } else if (param_list.front() == "rainbow") {
                 layers.push_back(make_inst(chaserlayers::rainbow)(param_list, target.color_parameter_inputs, target.number_parameter_inputs));
+            } else if (param_list.front() == "sprinkles") {
+                layers.push_back(make_inst(chaserlayers::sprinkles)(param_list, target.number_parameter_inputs));
             }
-            // TODO
+            // TODO continue
 #undef make_inst
 		}
 	}

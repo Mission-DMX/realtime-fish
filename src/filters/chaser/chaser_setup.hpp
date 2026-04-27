@@ -25,8 +25,8 @@ namespace dmxfish::filters {
 
 	class chaser_setup {
 	private:
+        double last_update_time;
 		std::vector<chaser_layer_executor*> layers;
-		double last_update_time;
         LinearAllocator alloc;
 	public:
 		chaser_setup(const std::string& configuration, filter_color_chaser& target);
