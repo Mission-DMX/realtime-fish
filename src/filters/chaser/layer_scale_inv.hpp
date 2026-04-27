@@ -37,7 +37,7 @@ namespace dmxfish::filters::chaserlayers {
             for(auto i = 0; i < num_pixels; i++) {
                 if (i < scale_start) {
                     mask[i] = mask_off;
-                } else if (i < scale_start) {
+                } else if (i < scale_end) {
                     mask[i] = ((mask_on - mask_off) / (scale_start - scale_end)) * (i - scale_start) + mask_off;
                 } else {
                     mask[i] = mask_on;

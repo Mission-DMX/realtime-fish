@@ -10,6 +10,7 @@
 #include "layer_dots.hpp"
 #include "layer_scale.hpp"
 #include "layer_scale_inv.hpp"
+#include "layer_flat_mask.hpp"
 
 namespace dmxfish::filters {
 
@@ -31,6 +32,8 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::scale);
             } else if (param_list.front() == "scale_inv") {
                 required_mem_size += sizeof(chaserlayers::scale_inv);
+            } else if (param_list.front() == "flat_mask") {
+                required_mem_size += sizeof(chaserlayers::flat_mask);
             }
             // TODO continue
         }
@@ -51,6 +54,8 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chaserlayers::scale)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "scale_inv") {
                 layers.push_back(make_inst(chaserlayers::scale_inv)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "flat_mask") {
+                layers.push_back(make_inst(chaserlayers::flat_mask)(param_list, target.number_parameter_inputs));
             }
             // TODO continue
 #undef make_inst
