@@ -9,20 +9,38 @@
 
 namespace dmxfish::filters {
 
-	chaser_setup::chaser_setup(const std::string& configuration, filter_color_chaser& target) : layers(), last_update_time(-1) {
+	chaser_setup::chaser_setup(const std::string& configuration, filter_color_chaser& target) : layers(), last_update_time(-1), alloc(0) {
 		const auto layer_descriptions = utils::split(configuration, ';');
 		layers.reserve(layer_descriptions.size());
-        // TODO use a linear allocator and collect sizes beforehand
-		for (const auto& entry : layer_descriptions) {
+        size_t required_mem_size = 0;
+        for (const auto& entry : layer_descriptions) {
             auto param_list = utils::split(entry, '|');
             if (param_list.front() == "plain_color") {
-                layers.push_back(std::move(std::make_unique<chaserlayers::plain_color>(param_list, target.color_parameter_inputs, target.number_parameter_inputs)));
+                required_mem_size += sizeof(chaserlayers::plain_color);
             } if (param_list.front() == "rainbow") {
-                layers.push_back(std::move(std::make_unique<chaserlayers::rainbow>(param_list, target.color_parameter_inputs, target.number_parameter_inputs)));
+                required_mem_size += sizeof(chaserlayers::rainbow);
+            }
+            // TODO continue
+        }
+        this->alloc = LinearAllocator(required_mem_size);
+        this->alloc.Init();
+		for (const auto& entry : layer_descriptions) {
+            auto param_list = utils::split(entry, '|');
+#define make_inst(cls) new (this->alloc.Allocate(sizeof(cls))) cls
+            if (param_list.front() == "plain_color") {
+                layers.push_back(make_inst(chaserlayers::plain_color)(param_list, target.color_parameter_inputs, target.number_parameter_inputs));
+            } if (param_list.front() == "rainbow") {
+                layers.push_back(make_inst(chaserlayers::rainbow)(param_list, target.color_parameter_inputs, target.number_parameter_inputs));
             }
             // TODO
+#undef make_inst
 		}
 	}
+
+    chaser_setup::~chaser_setup() {
+        // We do not need to do things here as we delete both the vector as well as the allocator, thus freeing the
+        // memory
+    }
 
     void chaser_setup::execute(filter_color_chaser& target) {
         auto scaled_time = *(target.time_input) * *(target.timescale_input);

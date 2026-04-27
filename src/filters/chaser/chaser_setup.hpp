@@ -2,9 +2,10 @@
 
 #include <list>
 #include <map>
-#include <memory>
 #include <string>
 #include <vector>
+
+#include "allocators/LinearAllocator.h"
 
 #include "cle_parameters.hpp"
 
@@ -24,10 +25,12 @@ namespace dmxfish::filters {
 
 	class chaser_setup {
 	private:
-		std::vector<std::unique_ptr<chaser_layer_executor>> layers;
+		std::vector<chaser_layer_executor*> layers;
 		double last_update_time;
+        LinearAllocator alloc;
 	public:
 		chaser_setup(const std::string& configuration, filter_color_chaser& target);
+        ~chaser_setup();
 		void execute(filter_color_chaser& target);
 		void reset(filter_color_chaser& target);
 	};
