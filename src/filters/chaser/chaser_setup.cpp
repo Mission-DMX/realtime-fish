@@ -8,6 +8,7 @@
 #include "layer_rainbow.hpp"
 #include "layer_sprinkles.hpp"
 #include "layer_dots.hpp"
+#include "layer_scale.hpp"
 
 namespace dmxfish::filters {
 
@@ -25,6 +26,8 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::sprinkles);
             } else if (param_list.front() == "dots") {
                 required_mem_size += sizeof(chaserlayers::dots);
+            } else if (param_list.front() == "scale") {
+                required_mem_size += sizeof(chaserlayers::scale);
             }
             // TODO continue
         }
@@ -41,6 +44,8 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chaserlayers::sprinkles)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "dots") {
                 layers.push_back(make_inst(chaserlayers::dots)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "scale") {
+                layers.push_back(make_inst(chaserlayers::scale)(param_list, target.number_parameter_inputs));
             }
             // TODO continue
 #undef make_inst
