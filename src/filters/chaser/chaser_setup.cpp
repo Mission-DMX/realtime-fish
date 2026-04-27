@@ -5,6 +5,7 @@
 #include "color_chaser.hpp"
 
 #include "layer_plain_color.hpp"
+#include "layer_rainbow.hpp"
 
 namespace dmxfish::filters {
 
@@ -16,6 +17,8 @@ namespace dmxfish::filters {
             auto param_list = utils::split(entry, '|');
             if (param_list.front() == "plain_color") {
                 layers.push_back(std::move(std::make_unique<chaserlayers::plain_color>(param_list, target.color_parameter_inputs, target.number_parameter_inputs)));
+            } if (param_list.front() == "rainbow") {
+                layers.push_back(std::move(std::make_unique<chaserlayers::rainbow>(param_list, target.color_parameter_inputs, target.number_parameter_inputs)));
             }
             // TODO
 		}
