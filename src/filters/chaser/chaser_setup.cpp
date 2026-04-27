@@ -9,6 +9,7 @@
 #include "layer_sprinkles.hpp"
 #include "layer_dots.hpp"
 #include "layer_scale.hpp"
+#include "layer_scale_inv.hpp"
 
 namespace dmxfish::filters {
 
@@ -28,6 +29,8 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::dots);
             } else if (param_list.front() == "scale") {
                 required_mem_size += sizeof(chaserlayers::scale);
+            } else if (param_list.front() == "scale_inv") {
+                required_mem_size += sizeof(chaserlayers::scale_inv);
             }
             // TODO continue
         }
@@ -46,6 +49,8 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chaserlayers::dots)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "scale") {
                 layers.push_back(make_inst(chaserlayers::scale)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "scale_inv") {
+                layers.push_back(make_inst(chaserlayers::scale_inv)(param_list, target.number_parameter_inputs));
             }
             // TODO continue
 #undef make_inst
