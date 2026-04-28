@@ -11,6 +11,7 @@
 #include "layer_scale.hpp"
 #include "layer_scale_inv.hpp"
 #include "layer_flat_mask.hpp"
+#include "layer_mask_mod.hpp"
 
 namespace dmxfish::filters {
 
@@ -34,6 +35,14 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::scale_inv);
             } else if (param_list.front() == "flat_mask") {
                 required_mem_size += sizeof(chaserlayers::flat_mask);
+            } else if (param_list.front() == "maskmod__add") {
+                required_mem_size += sizeof(chaserlayers::mask_mod<chaserlayers::mod_operation_type::ADD>);
+            } else if (param_list.front() == "maskmod__sub") {
+                required_mem_size += sizeof(chaserlayers::mask_mod<chaserlayers::mod_operation_type::SUB>);
+            } else if (param_list.front() == "maskmod__mul") {
+                required_mem_size += sizeof(chaserlayers::mask_mod<chaserlayers::mod_operation_type::MUL>);
+            } else if (param_list.front() == "maskmod__div") {
+                required_mem_size += sizeof(chaserlayers::mask_mod<chaserlayers::mod_operation_type::DIV>);
             }
             // TODO continue
         }
@@ -56,6 +65,14 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chaserlayers::scale_inv)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "flat_mask") {
                 layers.push_back(make_inst(chaserlayers::flat_mask)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "maskmod__add") {
+                layers.push_back(make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::ADD>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "maskmod__sub") {
+                layers.push_back(make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::SUB>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "maskmod__mul") {
+                layers.push_back(make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::MUL>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "maskmod__div") {
+                layers.push_back(make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::DIV>)(param_list, target.number_parameter_inputs));
             }
             // TODO continue
 #undef make_inst
