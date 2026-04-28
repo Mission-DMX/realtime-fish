@@ -15,6 +15,7 @@
 #include "layer_mask_shift.hpp"
 #include "layer_color_shift.hpp"
 #include "layer_trig.hpp"
+#include "layer_strobe.hpp"
 
 namespace dmxfish::filters {
 
@@ -56,6 +57,8 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::trig<chaserlayers::trig_operations::COS>);
             } else if (param_list.front() == "trig__tan") {
                 required_mem_size += sizeof(chaserlayers::trig<chaserlayers::trig_operations::TAN>);
+            } else if (param_list.front() == "strobe") {
+                required_mem_size += sizeof(chaserlayers::mask_strobe);
             }
             // TODO continue
         }
@@ -96,6 +99,8 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chaserlayers::trig<chaserlayers::trig_operations::COS>)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "trig__tan") {
                 layers.push_back(make_inst(chaserlayers::trig<chaserlayers::trig_operations::TAN>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "strobe") {
+                layers.push_back(make_inst(chaserlayers::mask_strobe)(param_list, target.number_parameter_inputs));
             }
             // TODO continue
 #undef make_inst
