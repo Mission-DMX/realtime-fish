@@ -15,7 +15,7 @@ namespace dmxfish::filters::chaserlayers {
 
         virtual void apply(const double elapsed_time, std::vector<dmxfish::dmx::pixel>& pixels, std::vector<uint16_t>& mask) override {
             for (auto i = 0; i < pixels.size(); i++) {
-                pixels[i] = dmxfish::dmx::mix_color_interleaving(pixels[i], *(this->cp1.get()), mask[i] / 65535);
+                pixels[i] = dmxfish::dmx::mix_color_interleaving(pixels[i], *(this->cp1.get()), mask[i] / 65535.0);
             }
         }
 

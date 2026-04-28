@@ -14,6 +14,7 @@
 #include "layer_mask_mod.hpp"
 #include "layer_mask_shift.hpp"
 #include "layer_color_shift.hpp"
+#include "layer_trig.hpp"
 
 namespace dmxfish::filters {
 
@@ -49,6 +50,12 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::mask_shift);
             } else if (param_list.front() == "color_shift") {
                 required_mem_size += sizeof(chaserlayers::color_shift);
+            } else if (param_list.front() == "trig__sin") {
+                required_mem_size += sizeof(chaserlayers::trig<chaserlayers::trig_operations::SIN>);
+            } else if (param_list.front() == "trig__cos") {
+                required_mem_size += sizeof(chaserlayers::trig<chaserlayers::trig_operations::COS>);
+            } else if (param_list.front() == "trig__tan") {
+                required_mem_size += sizeof(chaserlayers::trig<chaserlayers::trig_operations::TAN>);
             }
             // TODO continue
         }
@@ -83,6 +90,12 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chaserlayers::mask_shift)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "color_shift") {
                 layers.push_back(make_inst(chaserlayers::color_shift)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "trig__sin") {
+                layers.push_back(make_inst(chaserlayers::trig<chaserlayers::trig_operations::SIN>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "trig__cos") {
+                layers.push_back(make_inst(chaserlayers::trig<chaserlayers::trig_operations::COS>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "trig__tan") {
+                layers.push_back(make_inst(chaserlayers::trig<chaserlayers::trig_operations::TAN>)(param_list, target.number_parameter_inputs));
             }
             // TODO continue
 #undef make_inst

@@ -41,7 +41,7 @@ namespace dmxfish::filters::chaserlayers {
                 pixel_copy[i] = pixels[i];
             }
             for(auto i = 0; i < mask_size; i++) {
-                pixels[i] = pixel_copy[(i + this->current_shift) % pixel_copy.size()];
+                pixels[i] = dmxfish::dmx::mix_color_interleaving(pixels[i], pixel_copy[(i + this->current_shift) % pixel_copy.size()], mask[i] / 65535.0);
             }
         }
 
