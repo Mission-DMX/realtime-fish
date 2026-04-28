@@ -7,8 +7,8 @@ namespace dmxfish::filters::chaserlayers {
     class sprinkles : public chaser_layer_executor {
     private:
         cle_number_parameter np_num_sprinkles, np_sprinkle_size, np_update_freq, np_mask_off, np_mask_on;
-        long location_seed = 0;
-        long remaining_time_of_locations = 0;
+        unsigned int location_seed = 0;
+        int remaining_time_of_locations = 0;
     public:
         sprinkles(std::list<std::string>& description, const std::map<std::string, uint16_t*>& number_inputs) {
             description.pop_front();
@@ -49,7 +49,9 @@ namespace dmxfish::filters::chaserlayers {
             }
         }
 
-        virtual void reset() override {}
+        virtual void reset() override {
+            this->remaining_time_of_locations = 0;
+        }
 
     };
 

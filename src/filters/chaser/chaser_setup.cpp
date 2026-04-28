@@ -12,6 +12,8 @@
 #include "layer_scale_inv.hpp"
 #include "layer_flat_mask.hpp"
 #include "layer_mask_mod.hpp"
+#include "layer_mask_shift.hpp"
+#include "layer_color_shift.hpp"
 
 namespace dmxfish::filters {
 
@@ -43,6 +45,10 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::mask_mod<chaserlayers::mod_operation_type::MUL>);
             } else if (param_list.front() == "maskmod__div") {
                 required_mem_size += sizeof(chaserlayers::mask_mod<chaserlayers::mod_operation_type::DIV>);
+            } else if (param_list.front() == "mask_shift") {
+                required_mem_size += sizeof(chaserlayers::mask_shift);
+            } else if (param_list.front() == "color_shift") {
+                required_mem_size += sizeof(chaserlayers::color_shift);
             }
             // TODO continue
         }
@@ -73,6 +79,10 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::MUL>)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "maskmod__div") {
                 layers.push_back(make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::DIV>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "mask_shift") {
+                layers.push_back(make_inst(chaserlayers::mask_shift)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_shift") {
+                layers.push_back(make_inst(chaserlayers::color_shift)(param_list, target.number_parameter_inputs));
             }
             // TODO continue
 #undef make_inst
