@@ -17,6 +17,7 @@
 #include "layer_trig.hpp"
 #include "layer_strobe.hpp"
 #include "layer_johnson.hpp"
+#include "layer_colormix.hpp"
 
 namespace dmxfish::filters {
 
@@ -64,6 +65,8 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::johnson<chaserlayers::direction::FWD>);
             } else if (param_list.front() == "johnson__rev") {
                 required_mem_size += sizeof(chaserlayers::johnson<chaserlayers::direction::REV>);
+            } else if (param_list.front() == "colormix") {
+                required_mem_size += sizeof(chaserlayers::colormix);
             }
             // TODO continue
         }
@@ -110,6 +113,8 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chaserlayers::johnson<chaserlayers::direction::FWD>)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "johnson__rev") {
                 layers.push_back(make_inst(chaserlayers::johnson<chaserlayers::direction::REV>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "colormix") {
+                layers.push_back(make_inst(chaserlayers::colormix)(param_list, target.color_parameter_inputs));
             }
             // TODO continue
 #undef make_inst

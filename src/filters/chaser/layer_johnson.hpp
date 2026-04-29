@@ -10,6 +10,8 @@
 #include "cle_parameters.hpp"
 #include "dmx/pixel.hpp"
 
+#include "lib/macros.hpp"
+
 namespace dmxfish::filters::chaserlayers {
 
     enum class direction {
@@ -33,6 +35,8 @@ namespace dmxfish::filters::chaserlayers {
         }
 
         virtual void apply(const double elapsed_time, std::vector<dmxfish::dmx::pixel>& pixels, std::vector<uint16_t>& mask) override {
+            MARK_UNUSED(pixels);
+
             const auto mask_size = mask.size();
             const auto update_time = this->np_update_speed.get();
 
