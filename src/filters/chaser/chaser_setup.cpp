@@ -16,6 +16,7 @@
 #include "layer_color_shift.hpp"
 #include "layer_trig.hpp"
 #include "layer_strobe.hpp"
+#include "layer_johnson.hpp"
 
 namespace dmxfish::filters {
 
@@ -59,6 +60,10 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::trig<chaserlayers::trig_operations::TAN>);
             } else if (param_list.front() == "strobe") {
                 required_mem_size += sizeof(chaserlayers::mask_strobe);
+            } else if (param_list.front() == "johnson__fwd") {
+                required_mem_size += sizeof(chaserlayers::johnson<chaserlayers::direction::FWD>);
+            } else if (param_list.front() == "johnson__rev") {
+                required_mem_size += sizeof(chaserlayers::johnson<chaserlayers::direction::REV>);
             }
             // TODO continue
         }
@@ -101,6 +106,10 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chaserlayers::trig<chaserlayers::trig_operations::TAN>)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "strobe") {
                 layers.push_back(make_inst(chaserlayers::mask_strobe)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "johnson__fwd") {
+                layers.push_back(make_inst(chaserlayers::johnson<chaserlayers::direction::FWD>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "johnson__rev") {
+                layers.push_back(make_inst(chaserlayers::johnson<chaserlayers::direction::REV>)(param_list, target.number_parameter_inputs));
             }
             // TODO continue
 #undef make_inst
