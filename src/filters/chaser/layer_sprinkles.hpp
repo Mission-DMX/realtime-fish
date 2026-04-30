@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cstdlib>
+#include <ctime>
+
+#include "lib/macros.hpp"
 
 namespace dmxfish::filters::chaserlayers {
 
@@ -26,6 +29,7 @@ namespace dmxfish::filters::chaserlayers {
         }
 
         virtual void apply(const double elapsed_time, std::vector<dmxfish::dmx::pixel>& pixels, std::vector<uint16_t>& mask) override {
+            MARK_UNUSED(pixels);
             this->remaining_time_of_locations -= (long) elapsed_time;
             std::srand(this->location_seed);
             if (const auto update_freq = this->np_update_freq.get(); this->remaining_time_of_locations < 0 && update_freq > 0) {
@@ -51,6 +55,10 @@ namespace dmxfish::filters::chaserlayers {
 
         virtual void reset() override {
             this->remaining_time_of_locations = 0;
+        }
+
+        virtual void step() override {
+            this->location_seed = std::rand();
         }
 
     };

@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "lib/macros.hpp"
+
 #include "cle_parameters.hpp"
 #include "dmx/pixel.hpp"
 
@@ -32,6 +34,7 @@ namespace dmxfish::filters::chaserlayers {
         }
 
         virtual void apply(const double elapsed_time, std::vector<dmxfish::dmx::pixel>& pixels, std::vector<uint16_t>& mask) override {
+            MARK_UNUSED(pixels);
             this->remaining_time_of_locations -= (long) elapsed_time;
             if (const auto update_freq = this->np_update_freq.get(); this->remaining_time_of_locations < 0 && update_freq > 0) {
                 this->remaining_time_of_locations = update_freq;
@@ -53,7 +56,13 @@ namespace dmxfish::filters::chaserlayers {
             }
         }
 
-        virtual void reset() override {}
+        virtual void reset() override {
+            this->location_offset = 0;
+        }
+
+        virtual void step() override {
+            this->location_offset++;
+        }
 
     };
 

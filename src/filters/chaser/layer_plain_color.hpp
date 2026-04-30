@@ -1,5 +1,7 @@
 #include "chaser_setup.hpp"
 
+#include "lib/macros.hpp"
+
 namespace dmxfish::filters::chaserlayers {
 
     class plain_color : public chaser_layer_executor {
@@ -14,12 +16,15 @@ namespace dmxfish::filters::chaserlayers {
         }
 
         virtual void apply(const double elapsed_time, std::vector<dmxfish::dmx::pixel>& pixels, std::vector<uint16_t>& mask) override {
+            MARK_UNUSED(elapsed_time);
             for (auto i = 0; i < pixels.size(); i++) {
                 pixels[i] = dmxfish::dmx::mix_color_interleaving(pixels[i], *(this->cp1.get()), mask[i] / 65535.0);
             }
         }
 
         virtual void reset() override {}
+
+        virtual void step() override {}
 
     };
 

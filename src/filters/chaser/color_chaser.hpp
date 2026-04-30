@@ -1,10 +1,12 @@
 #pragma once
 
+#include <array>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "events/event.hpp"
 #include "filters/filter.hpp"
 #include "lib/macros.hpp"
 
@@ -27,6 +29,10 @@ namespace dmxfish::filters {
                 std::vector<uint16_t> mask;
                 std::unique_ptr<chaser_setup> setup = nullptr;
                 std::string own_id;
+                bool uses_steps = false;
+                bool uses_args = false;
+                dmxfish::events::event_sender_t event_sender;
+                std::array<uint8_t, 8> event_arguments;
         public:
                 filter_color_chaser();
 		virtual void pre_setup(

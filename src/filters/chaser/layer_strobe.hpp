@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "lib/macros.hpp"
+
 #include "cle_parameters.hpp"
 
 namespace dmxfish::filters::chaserlayers {
@@ -23,6 +25,7 @@ namespace dmxfish::filters::chaserlayers {
         }
 
         virtual void apply(const double elapsed_time, std::vector<dmxfish::dmx::pixel>& pixels, std::vector<uint16_t>& mask) override {
+            MARK_UNUSED(pixels);
             this->remaining_time -= (int) elapsed_time;
             if (this->remaining_time <= 0) {
                 const auto bpm = this->np_bpm.get();
@@ -42,6 +45,10 @@ namespace dmxfish::filters::chaserlayers {
         virtual void reset() override {
             this->remaining_time = 0;
             this->currently_on = false;
+        }
+
+        virtual void step() override {
+            this->remaining_time = 0;
         }
 
     };

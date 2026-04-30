@@ -17,6 +17,7 @@ namespace dmxfish::filters::chaserlayers {
         }
 
         virtual void apply(const double elapsed_time, std::vector<dmxfish::dmx::pixel>& pixels, std::vector<uint16_t>& mask) override {
+            MARK_UNUSED(elapsed_time);
             for (auto i = 0; i < pixels.size(); i++) {
                 const auto res_color = dmxfish::dmx::mix_color_interleaving(*(this->cp1.get()), *(this->cp2.get()), 0.5);
                 pixels[i] = dmxfish::dmx::mix_color_interleaving(pixels[i], res_color, mask[i] / 65535.0);
@@ -24,6 +25,7 @@ namespace dmxfish::filters::chaserlayers {
         }
 
         virtual void reset() override {}
+        virtual void step() override {}
 
     };
 

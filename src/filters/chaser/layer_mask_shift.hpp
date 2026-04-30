@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "lib/macros.hpp"
+
 #include "cle_parameters.hpp"
 
 namespace dmxfish::filters::chaserlayers {
@@ -24,14 +26,13 @@ namespace dmxfish::filters::chaserlayers {
         }
 
         virtual void apply(const double elapsed_time, std::vector<dmxfish::dmx::pixel>& pixels, std::vector<uint16_t>& mask) override {
+            MARK_UNUSED(pixels);
             this->remaining_time -= (long) elapsed_time;
+            const auto mask_size = mask.size();
             if (this->remaining_time <= 0) {
                 this->remaining_time = this->np_time.get();
+                this->current_shift = (this->current_shift + 1) % mask_size;
             }
-
-            const auto mask_size = mask.size();
-
-            this->current_shift = (this->current_shift + 1) % mask_size;
 
             if(this->mask_copy.size() != mask_size) {
                 this->mask_copy.resize(mask_size);
@@ -47,6 +48,10 @@ namespace dmxfish::filters::chaserlayers {
 
         virtual void reset() override {
             this->current_shift = 0;
+        }
+
+        virtual void step() override {
+            this->remaining_time = 0;
         }
 
     };

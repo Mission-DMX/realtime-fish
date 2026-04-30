@@ -24,6 +24,7 @@ namespace dmxfish::filters::chaserlayers {
     private:
         cle_number_parameter np_update_speed, np_mask_setting;
         size_t progress = 0;
+        size_t last_mask_size = 0;
         long remaining_time = 0;
         bool is_buildup = true;
     public:
@@ -38,24 +39,13 @@ namespace dmxfish::filters::chaserlayers {
             MARK_UNUSED(pixels);
 
             const auto mask_size = mask.size();
+            this->last_mask_size = mask_size;
             const auto update_time = this->np_update_speed.get();
 
             this->remaining_time -= (long) elapsed_time;
             if (update_time != 0 && this->remaining_time < 0) {
                 this->remaining_time = update_time;
-                if constexpr (op_type == direction::FWD) {
-                    this->progress++;
-                    if (progress > mask_size) {
-                        this->progress = 0;
-                        this->is_buildup = !(this->is_buildup);
-                    }
-                } else {
-                    this->progress--;
-                    if (progress > mask_size) {
-                        this->progress = mask_size;
-                        this->is_buildup = !(this->is_buildup);
-                    }
-                }
+                this->step();
             }
 
             const auto mask_val = this->np_mask_setting.get();
@@ -81,6 +71,22 @@ namespace dmxfish::filters::chaserlayers {
             this->progress = 0;
             this->remaining_time = 0;
             this->is_buildup = true;
+        }
+
+        virtual void step() override {
+            if constexpr (op_type == direction::FWD) {
+                this->progress++;
+                if (progress > this->last_mask_size) {
+                    this->progress = 0;
+                    this->is_buildup = !(this->is_buildup);
+                }
+            } else {
+                this->progress--;
+                if (progress > this->last_mask_size) {
+                    this->progress = this->last_mask_size;
+                    this->is_buildup = !(this->is_buildup);
+                }
+            }
         }
 
     };

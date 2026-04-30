@@ -21,6 +21,7 @@ namespace dmxfish::filters {
 				std::vector<dmxfish::dmx::pixel>& pixels,
 				std::vector<uint16_t>& mask
 		) = 0;
+                virtual void step() = 0;
 	};
 
 	class chaser_setup {
@@ -32,6 +33,7 @@ namespace dmxfish::filters {
 		chaser_setup(const std::string& configuration, filter_color_chaser& target);
         ~chaser_setup();
 		void execute(filter_color_chaser& target);
+		void step();
 		void reset(filter_color_chaser& target);
 	};
 }

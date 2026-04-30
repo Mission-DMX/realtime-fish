@@ -131,7 +131,7 @@ namespace dmxfish::filters {
         if(scaled_time < 0.0) {
                 scaled_time = 0.0;
         }
-        const auto elapsed_time = this->last_update_time - scaled_time;
+        const auto elapsed_time = target.uses_steps ? 0.0 : this->last_update_time - scaled_time;
         this->last_update_time = scaled_time;
         for(auto& layer : this->layers) {
             layer->apply(elapsed_time, target.pixels, target.mask);
@@ -146,6 +146,12 @@ namespace dmxfish::filters {
         this->last_update_time = scaled_time;
         for (auto& layer : this->layers) {
             layer->reset();
+        }
+    }
+
+    void chaser_setup::step() {
+        for(auto& layer : this->layers) {
+            layer->step();
         }
     }
 

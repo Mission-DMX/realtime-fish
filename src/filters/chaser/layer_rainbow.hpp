@@ -1,5 +1,7 @@
 #include "chaser_setup.hpp"
 
+#include "lib/macros.hpp"
+
 namespace dmxfish::filters::chaserlayers {
 
     class rainbow : public chaser_layer_executor {
@@ -19,6 +21,7 @@ namespace dmxfish::filters::chaserlayers {
         }
 
         virtual void apply(const double elapsed_time, std::vector<dmxfish::dmx::pixel>& pixels, std::vector<uint16_t>& mask) override {
+            MARK_UNUSED(elapsed_time);
             const auto pix_count = pixels.size();
             int seg_count = this->np.get();
             if (seg_count < 1) {
@@ -36,6 +39,7 @@ namespace dmxfish::filters::chaserlayers {
         }
 
         virtual void reset() override {}
+        virtual void step() override {}
 
     };
 

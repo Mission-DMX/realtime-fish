@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+#include "lib/macros.hpp"
+
 #include "cle_parameters.hpp"
 
 namespace dmxfish::filters::chaserlayers {
@@ -34,6 +36,8 @@ namespace dmxfish::filters::chaserlayers {
         }
 
         virtual void apply(const double elapsed_time, std::vector<dmxfish::dmx::pixel>& pixels, std::vector<uint16_t>& mask) override {
+            MARK_UNUSED(elapsed_time);
+            MARK_UNUSED(pixels);
             const auto mask_size = mask.size();
             const auto phase = this->np_phase.get();
             const auto highest = this->np_highest_value.get();
@@ -50,6 +54,7 @@ namespace dmxfish::filters::chaserlayers {
         }
 
         virtual void reset() override {}
+        virtual void step() override {}
     private:
         [[nodiscard]] inline double get_rad(int val, uint16_t phase, size_t len) const {
             const double mod_val = ((double) val) / ((double) len) * 360.0 + phase;
