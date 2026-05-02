@@ -19,6 +19,7 @@
 #include "layer_johnson.hpp"
 #include "layer_colormix.hpp"
 #include "layer_randomcolor.hpp"
+#include "layer_chanmod.hpp"
 
 namespace dmxfish::filters {
 
@@ -70,6 +71,18 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::colormix);
             } else if (param_list.front() == "random_color") {
                 required_mem_size += sizeof(chaserlayers::randomcolor);
+            } else if (param_list.front() == "color_chanmod_r") {
+                required_mem_size += sizeof(chaserlayers::chanmod<chaserlayers::color_channel_target::R>);
+            } else if (param_list.front() == "color_chanmod_g") {
+                required_mem_size += sizeof(chaserlayers::chanmod<chaserlayers::color_channel_target::G>);
+            } else if (param_list.front() == "color_chanmod_b") {
+                required_mem_size += sizeof(chaserlayers::chanmod<chaserlayers::color_channel_target::B>);
+            } else if (param_list.front() == "color_chanmod_h") {
+                required_mem_size += sizeof(chaserlayers::chanmod<chaserlayers::color_channel_target::H>);
+            } else if (param_list.front() == "color_chanmod_s") {
+                required_mem_size += sizeof(chaserlayers::chanmod<chaserlayers::color_channel_target::S>);
+            } else if (param_list.front() == "color_chanmod_i") {
+                required_mem_size += sizeof(chaserlayers::chanmod<chaserlayers::color_channel_target::I>);
             }
             // TODO continue
         }
@@ -120,7 +133,19 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chaserlayers::colormix)(param_list, target.color_parameter_inputs));
             } else if (param_list.front() == "random_color") {
                 layers.push_back(make_inst(chaserlayers::randomcolor)(param_list, target.number_parameter_inputs));
-            }
+            } else if (param_list.front() == "color_chanmod_r") {
+		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::R>)(param_list, target.number_parameter_inputs));
+	    } else if (param_list.front() == "color_chanmod_g") {
+		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::G>)(param_list, target.number_parameter_inputs));
+	    } else if (param_list.front() == "color_chanmod_b") {
+		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::B>)(param_list, target.number_parameter_inputs));
+	    } else if (param_list.front() == "color_chanmod_h") {
+		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::H>)(param_list, target.number_parameter_inputs));
+	    } else if (param_list.front() == "color_chanmod_s") {
+		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::S>)(param_list, target.number_parameter_inputs));
+	    } else if (param_list.front() == "color_chanmod_i") {
+		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::I>)(param_list, target.number_parameter_inputs));
+	    }
             // TODO continue
 #undef make_inst
 		}
