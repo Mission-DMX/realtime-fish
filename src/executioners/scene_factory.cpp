@@ -23,6 +23,7 @@
 #include "filters/filter_time.hpp"
 #include "filters/filter_cue.hpp"
 #include "filters/filter_shift.hpp"
+#include "filters/filter_switch.hpp"
 #include "filters/lua/filter_lua_script.hpp"
 #include "filters/sequencer/filter_sequencer.hpp"
 #include "filters/filter_color_mixer.hpp"
@@ -322,6 +323,18 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_responding_constant_color:
                     sum += sizeof(responding_constant_color);
                     break;
+                case filter_type::filter_switch_8bit:
+                    sum += sizeof(filter_switch_8bit);
+                    break;
+                case filter_type::filter_switch_16bit:
+                    sum += sizeof(filter_switch_16bit);
+                    break;
+                case filter_type::filter_switch_float:
+                    sum += sizeof(filter_switch_float);
+                    break;
+                case filter_type::filter_switch_color:
+                    sum += sizeof(filter_switch_color);
+                    break;
 				default: {
 						 std::stringstream ss;
 						 ss << ERROR_FILTER_NOT_IMPLEMENTED_IN_ALLOCATION;
@@ -502,6 +515,14 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<responding_constant_color>(pac);
             case filter_type::filter_color_chaser:
                 return calloc<filter_color_chaser>(pac);
+            case filter_type::filter_switch_8bit:
+                return calloc<filter_switch_8bit>(pac);
+            case filter_type::filter_switch_16bit:
+                return calloc<filter_switch_16bit>(pac);
+            case filter_type::filter_switch_float:
+                return calloc<filter_switch_float>(pac);
+            case filter_type::filter_switch_color:
+                return calloc<filter_switch_color>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
