@@ -8,10 +8,10 @@ CXXFLAGS += ${CFLAGS} -std=c++2b -Wuseless-cast -Weffc++ -I/usr/local/include -W
 DEPFLAGS = -MT $@ -MMD -MP -MF $(patsubst ${OBJDIR}/%.o,${DEPDIR}/%.d,$@) -pthread
 
 ifeq "${OS}" "Linux"
-CFLAGS += -flto
-CXXFLAGS += -flto
-# LFLAGS += -flto -lnl
-LFLAGS += -flto
+CFLAGS += -flto=8
+CXXFLAGS += -flto=8
+# LFLAGS += -flto=8 -lnl
+LFLAGS += -flto=8
 else
 CXXFLAGS += -Wno-undef -Wno-error
 endif
