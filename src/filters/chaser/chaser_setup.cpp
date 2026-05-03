@@ -21,6 +21,7 @@
 #include "layer_randomcolor.hpp"
 #include "layer_chanmod.hpp"
 #include "layer_chancalc.hpp"
+#include "layer_gaussian_blur.hpp"
 
 namespace dmxfish::filters {
 
@@ -157,7 +158,9 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::I, chaserlayers::mod_operation_type::MUL>);
             } else if (param_list.front() == "color_chancalc_i_div") {
                 required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::I, chaserlayers::mod_operation_type::DIV>);
-            }
+            } else if (param_list.front() == "gaussian_blur") {
+	        required_mem_size += sizeof(chaserlayers::gaussian_blur);
+	    }
             // TODO continue
         }
         this->alloc = LinearAllocator(required_mem_size);
@@ -267,6 +270,8 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chancalc_type_i_mul)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "color_chancalc_i_div") {
                 layers.push_back(make_inst(chancalc_type_i_div)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "gaussian_blur") {
+                layers.push_back(make_inst(chaserlayers::gaussian_blur)(param_list, target.number_parameter_inputs));
             }
             // TODO continue
 #undef make_inst
