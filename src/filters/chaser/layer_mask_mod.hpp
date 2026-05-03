@@ -10,15 +10,9 @@
 #include "lib/macros.hpp"
 
 #include "cle_parameters.hpp"
+#include "operation_enum.hpp"
 
 namespace dmxfish::filters::chaserlayers {
-
-    enum class mod_operation_type {
-        ADD,
-        SUB,
-        MUL,
-        DIV
-    };
 
     template <mod_operation_type op_type>
     class mask_mod : public chaser_layer_executor {

@@ -20,8 +20,34 @@
 #include "layer_colormix.hpp"
 #include "layer_randomcolor.hpp"
 #include "layer_chanmod.hpp"
+#include "layer_chancalc.hpp"
 
 namespace dmxfish::filters {
+
+        using chancalc_type_r_add = chaserlayers::chancalc<chaserlayers::color_channel_target::R, chaserlayers::mod_operation_type::ADD>;
+        using chancalc_type_r_sub = chaserlayers::chancalc<chaserlayers::color_channel_target::R, chaserlayers::mod_operation_type::SUB>;
+        using chancalc_type_r_mul = chaserlayers::chancalc<chaserlayers::color_channel_target::R, chaserlayers::mod_operation_type::MUL>;
+        using chancalc_type_r_div = chaserlayers::chancalc<chaserlayers::color_channel_target::R, chaserlayers::mod_operation_type::DIV>;
+        using chancalc_type_g_add = chaserlayers::chancalc<chaserlayers::color_channel_target::G, chaserlayers::mod_operation_type::ADD>;
+        using chancalc_type_g_sub = chaserlayers::chancalc<chaserlayers::color_channel_target::G, chaserlayers::mod_operation_type::SUB>;
+        using chancalc_type_g_mul = chaserlayers::chancalc<chaserlayers::color_channel_target::G, chaserlayers::mod_operation_type::MUL>;
+        using chancalc_type_g_div = chaserlayers::chancalc<chaserlayers::color_channel_target::G, chaserlayers::mod_operation_type::DIV>;
+        using chancalc_type_b_add = chaserlayers::chancalc<chaserlayers::color_channel_target::B, chaserlayers::mod_operation_type::ADD>;
+        using chancalc_type_b_sub = chaserlayers::chancalc<chaserlayers::color_channel_target::B, chaserlayers::mod_operation_type::SUB>;
+        using chancalc_type_b_mul = chaserlayers::chancalc<chaserlayers::color_channel_target::B, chaserlayers::mod_operation_type::MUL>;
+        using chancalc_type_b_div = chaserlayers::chancalc<chaserlayers::color_channel_target::B, chaserlayers::mod_operation_type::DIV>;
+        using chancalc_type_h_add = chaserlayers::chancalc<chaserlayers::color_channel_target::H, chaserlayers::mod_operation_type::ADD>;
+        using chancalc_type_h_sub = chaserlayers::chancalc<chaserlayers::color_channel_target::H, chaserlayers::mod_operation_type::SUB>;
+        using chancalc_type_h_mul = chaserlayers::chancalc<chaserlayers::color_channel_target::H, chaserlayers::mod_operation_type::MUL>;
+        using chancalc_type_h_div = chaserlayers::chancalc<chaserlayers::color_channel_target::H, chaserlayers::mod_operation_type::DIV>;
+        using chancalc_type_s_add = chaserlayers::chancalc<chaserlayers::color_channel_target::S, chaserlayers::mod_operation_type::ADD>;
+        using chancalc_type_s_sub = chaserlayers::chancalc<chaserlayers::color_channel_target::S, chaserlayers::mod_operation_type::SUB>;
+        using chancalc_type_s_mul = chaserlayers::chancalc<chaserlayers::color_channel_target::S, chaserlayers::mod_operation_type::MUL>;
+        using chancalc_type_s_div = chaserlayers::chancalc<chaserlayers::color_channel_target::S, chaserlayers::mod_operation_type::DIV>;
+        using chancalc_type_i_add = chaserlayers::chancalc<chaserlayers::color_channel_target::I, chaserlayers::mod_operation_type::ADD>;
+        using chancalc_type_i_sub = chaserlayers::chancalc<chaserlayers::color_channel_target::I, chaserlayers::mod_operation_type::SUB>;
+        using chancalc_type_i_mul = chaserlayers::chancalc<chaserlayers::color_channel_target::I, chaserlayers::mod_operation_type::MUL>;
+        using chancalc_type_i_div = chaserlayers::chancalc<chaserlayers::color_channel_target::I, chaserlayers::mod_operation_type::DIV>;
 
 	chaser_setup::chaser_setup(const std::string& configuration, filter_color_chaser& target) : layers(), last_update_time(-1), alloc(0) {
 		const auto layer_descriptions = utils::split(configuration, ';');
@@ -83,6 +109,54 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::chanmod<chaserlayers::color_channel_target::S>);
             } else if (param_list.front() == "color_chanmod_i") {
                 required_mem_size += sizeof(chaserlayers::chanmod<chaserlayers::color_channel_target::I>);
+            } else if (param_list.front() == "color_chancalc_r_add") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::R, chaserlayers::mod_operation_type::ADD>);
+            } else if (param_list.front() == "color_chancalc_r_sub") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::R, chaserlayers::mod_operation_type::SUB>);
+            } else if (param_list.front() == "color_chancalc_r_mul") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::R, chaserlayers::mod_operation_type::MUL>);
+            } else if (param_list.front() == "color_chancalc_r_div") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::R, chaserlayers::mod_operation_type::DIV>);
+            } else if (param_list.front() == "color_chancalc_g_add") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::G, chaserlayers::mod_operation_type::ADD>);
+            } else if (param_list.front() == "color_chancalc_g_sub") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::G, chaserlayers::mod_operation_type::SUB>);
+            } else if (param_list.front() == "color_chancalc_g_mul") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::G, chaserlayers::mod_operation_type::MUL>);
+            } else if (param_list.front() == "color_chancalc_g_div") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::G, chaserlayers::mod_operation_type::DIV>);
+            } else if (param_list.front() == "color_chancalc_b_add") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::B, chaserlayers::mod_operation_type::ADD>);
+            } else if (param_list.front() == "color_chancalc_b_sub") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::B, chaserlayers::mod_operation_type::SUB>);
+            } else if (param_list.front() == "color_chancalc_b_mul") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::B, chaserlayers::mod_operation_type::MUL>);
+            } else if (param_list.front() == "color_chancalc_b_div") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::B, chaserlayers::mod_operation_type::DIV>);
+            } else if (param_list.front() == "color_chancalc_h_add") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::H, chaserlayers::mod_operation_type::ADD>);
+            } else if (param_list.front() == "color_chancalc_h_sub") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::H, chaserlayers::mod_operation_type::SUB>);
+            } else if (param_list.front() == "color_chancalc_h_mul") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::H, chaserlayers::mod_operation_type::MUL>);
+            } else if (param_list.front() == "color_chancalc_h_div") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::H, chaserlayers::mod_operation_type::DIV>);
+            } else if (param_list.front() == "color_chancalc_s_add") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::S, chaserlayers::mod_operation_type::ADD>);
+            } else if (param_list.front() == "color_chancalc_s_sub") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::S, chaserlayers::mod_operation_type::SUB>);
+            } else if (param_list.front() == "color_chancalc_s_mul") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::S, chaserlayers::mod_operation_type::MUL>);
+            } else if (param_list.front() == "color_chancalc_s_div") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::S, chaserlayers::mod_operation_type::DIV>);
+            } else if (param_list.front() == "color_chancalc_i_add") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::I, chaserlayers::mod_operation_type::ADD>);
+            } else if (param_list.front() == "color_chancalc_i_sub") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::I, chaserlayers::mod_operation_type::SUB>);
+            } else if (param_list.front() == "color_chancalc_i_mul") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::I, chaserlayers::mod_operation_type::MUL>);
+            } else if (param_list.front() == "color_chancalc_i_div") {
+                required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::I, chaserlayers::mod_operation_type::DIV>);
             }
             // TODO continue
         }
@@ -145,7 +219,55 @@ namespace dmxfish::filters {
 		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::S>)(param_list, target.number_parameter_inputs));
 	    } else if (param_list.front() == "color_chanmod_i") {
 		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::I>)(param_list, target.number_parameter_inputs));
-	    }
+            } else if (param_list.front() == "color_chancalc_r_add") {
+                layers.push_back(make_inst(chancalc_type_r_add)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_r_sub") {
+                layers.push_back(make_inst(chancalc_type_r_sub)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_r_mul") {
+                layers.push_back(make_inst(chancalc_type_r_mul)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_r_div") {
+                layers.push_back(make_inst(chancalc_type_r_div)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_g_add") {
+                layers.push_back(make_inst(chancalc_type_g_add)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_g_sub") {
+                layers.push_back(make_inst(chancalc_type_g_sub)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_g_mul") {
+                layers.push_back(make_inst(chancalc_type_g_mul)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_g_div") {
+                layers.push_back(make_inst(chancalc_type_g_div)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_b_add") {
+                layers.push_back(make_inst(chancalc_type_b_add)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_b_sub") {
+                layers.push_back(make_inst(chancalc_type_b_sub)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_b_mul") {
+                layers.push_back(make_inst(chancalc_type_b_mul)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_b_div") {
+                layers.push_back(make_inst(chancalc_type_b_div)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_h_add") {
+                layers.push_back(make_inst(chancalc_type_h_add)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_h_sub") {
+                layers.push_back(make_inst(chancalc_type_h_sub)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_h_mul") {
+                layers.push_back(make_inst(chancalc_type_h_mul)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_h_div") {
+                layers.push_back(make_inst(chancalc_type_h_div)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_s_add") {
+                layers.push_back(make_inst(chancalc_type_s_add)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_s_sub") {
+                layers.push_back(make_inst(chancalc_type_s_sub)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_s_mul") {
+                layers.push_back(make_inst(chancalc_type_s_mul)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_s_div") {
+                layers.push_back(make_inst(chancalc_type_s_div)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_i_add") {
+                layers.push_back(make_inst(chancalc_type_i_add)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_i_sub") {
+                layers.push_back(make_inst(chancalc_type_i_sub)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_i_mul") {
+                layers.push_back(make_inst(chancalc_type_i_mul)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chancalc_i_div") {
+                layers.push_back(make_inst(chancalc_type_i_div)(param_list, target.number_parameter_inputs));
+            }
             // TODO continue
 #undef make_inst
 		}
