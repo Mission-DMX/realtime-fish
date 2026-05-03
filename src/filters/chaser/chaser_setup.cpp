@@ -23,6 +23,8 @@
 #include "layer_chancalc.hpp"
 #include "layer_gaussian_blur.hpp"
 #include "layer_gaussian_curve.hpp"
+#include "layer_invert_mask.hpp"
+#include "layer_invert_color.hpp"
 
 namespace dmxfish::filters {
 
@@ -163,6 +165,10 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::gaussian_blur);
             } else if (param_list.front() == "gaussian_curve") {
                 required_mem_size += sizeof(chaserlayers::gaussian_curve);
+            } else if (param_list.front() == "invert_mask") {
+                required_mem_size += sizeof(chaserlayers::invert_mask);
+            } else if (param_list.front() == "invert_color") {
+                required_mem_size += sizeof(chaserlayers::invert_color);
             }
             // TODO continue
         }
@@ -277,6 +283,10 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chaserlayers::gaussian_blur)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "gaussian_curve") {
                 layers.push_back(make_inst(chaserlayers::gaussian_curve)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "invert_mask") {
+                layers.push_back(make_inst(chaserlayers::invert_mask)());
+            } else if (param_list.front() == "invert_color") {
+                layers.push_back(make_inst(chaserlayers::invert_color)());
             }
             // TODO continue
 #undef make_inst
