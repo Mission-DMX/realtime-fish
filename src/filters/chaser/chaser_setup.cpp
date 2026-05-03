@@ -22,6 +22,7 @@
 #include "layer_chanmod.hpp"
 #include "layer_chancalc.hpp"
 #include "layer_gaussian_blur.hpp"
+#include "layer_gaussian_curve.hpp"
 
 namespace dmxfish::filters {
 
@@ -159,8 +160,10 @@ namespace dmxfish::filters {
             } else if (param_list.front() == "color_chancalc_i_div") {
                 required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::I, chaserlayers::mod_operation_type::DIV>);
             } else if (param_list.front() == "gaussian_blur") {
-	        required_mem_size += sizeof(chaserlayers::gaussian_blur);
-	    }
+                required_mem_size += sizeof(chaserlayers::gaussian_blur);
+            } else if (param_list.front() == "gaussian_curve") {
+                required_mem_size += sizeof(chaserlayers::gaussian_curve);
+            }
             // TODO continue
         }
         this->alloc = LinearAllocator(required_mem_size);
@@ -211,17 +214,17 @@ namespace dmxfish::filters {
             } else if (param_list.front() == "random_color") {
                 layers.push_back(make_inst(chaserlayers::randomcolor)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "color_chanmod_r") {
-		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::R>)(param_list, target.number_parameter_inputs));
-	    } else if (param_list.front() == "color_chanmod_g") {
-		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::G>)(param_list, target.number_parameter_inputs));
-	    } else if (param_list.front() == "color_chanmod_b") {
-		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::B>)(param_list, target.number_parameter_inputs));
-	    } else if (param_list.front() == "color_chanmod_h") {
-		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::H>)(param_list, target.number_parameter_inputs));
-	    } else if (param_list.front() == "color_chanmod_s") {
-		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::S>)(param_list, target.number_parameter_inputs));
-	    } else if (param_list.front() == "color_chanmod_i") {
-		layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::I>)(param_list, target.number_parameter_inputs));
+                layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::R>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chanmod_g") {
+                layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::G>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chanmod_b") {
+                layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::B>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chanmod_h") {
+                layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::H>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chanmod_s") {
+                layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::S>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "color_chanmod_i") {
+        	layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::I>)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "color_chancalc_r_add") {
                 layers.push_back(make_inst(chancalc_type_r_add)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "color_chancalc_r_sub") {
@@ -272,6 +275,8 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chancalc_type_i_div)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "gaussian_blur") {
                 layers.push_back(make_inst(chaserlayers::gaussian_blur)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "gaussian_curve") {
+                layers.push_back(make_inst(chaserlayers::gaussian_curve)(param_list, target.number_parameter_inputs));
             }
             // TODO continue
 #undef make_inst
