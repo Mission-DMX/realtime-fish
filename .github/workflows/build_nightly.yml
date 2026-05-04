@@ -25,4 +25,4 @@ jobs:
       run: sudo /home/deploy/deploy.bash bin/fish "downloads/fish/nightly/${GITHUB_REF##*/}"
 
     - name: Deploy Docs
-      run: cd bin/docs/html && ls -lah sudo /home/deploy/deploy.bash . docs/fish-dev
+      run: cd bin/docs/html && ls -lah && sudo /home/deploy/deploy.bash . docs/fish-dev
