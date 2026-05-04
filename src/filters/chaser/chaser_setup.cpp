@@ -25,6 +25,7 @@
 #include "layer_gaussian_curve.hpp"
 #include "layer_invert_mask.hpp"
 #include "layer_invert_color.hpp"
+#include "layer_mask_close_to_center.hpp"
 
 namespace dmxfish::filters {
 
@@ -169,6 +170,8 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::invert_mask);
             } else if (param_list.front() == "invert_color") {
                 required_mem_size += sizeof(chaserlayers::invert_color);
+            } else if (param_list.front() == "close_to_center") {
+                required_mem_size += sizeof(chaserlayers::close_to_center);
             }
             // TODO continue
         }
@@ -287,6 +290,8 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chaserlayers::invert_mask)());
             } else if (param_list.front() == "invert_color") {
                 layers.push_back(make_inst(chaserlayers::invert_color)());
+            } else if (param_list.front() == "close_to_center") {
+                layers.push_back(make_inst(chaserlayers::close_to_center)(param_list, target.number_parameter_inputs));
             }
             // TODO continue
 #undef make_inst
