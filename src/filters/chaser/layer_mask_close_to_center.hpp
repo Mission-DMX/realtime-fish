@@ -16,6 +16,7 @@
 
 namespace dmxfish::filters::chaserlayers {
 
+    template <bool is_opening = false>
     class close_to_center : public chaser_layer_executor {
     private:
         cle_number_parameter np_update_time, np_decay, np_mask_application_intensity;
@@ -52,7 +53,12 @@ namespace dmxfish::filters::chaserlayers {
 
             for(auto i = 0; i < mask_size; i++) {
                 const auto distance_to_wall = std::abs((int) _step - i);
-                const bool is_active = i < mask_size / 2 ? i < _step : (i - mask_size / 2) > _step;
+                bool is_active;
+                if constexpr (is_opening) {
+                    is_active = i < (mask_size / 2) ? i >= ((mask_size / 2) - _step) : i < (mask_size / 2) + _step;
+                } else {
+                    is_active = i < mask_size / 2 ? i < _step : (i - mask_size / 2) > _step;
+                }
                 const auto val = is_active ? std::pow(_mult_factor, distance_to_wall) * intensity : 0;
                 mask[i] += (uint16_t) val;
             }

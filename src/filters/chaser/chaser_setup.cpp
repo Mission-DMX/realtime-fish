@@ -171,7 +171,9 @@ namespace dmxfish::filters {
             } else if (param_list.front() == "invert_color") {
                 required_mem_size += sizeof(chaserlayers::invert_color);
             } else if (param_list.front() == "close_to_center") {
-                required_mem_size += sizeof(chaserlayers::close_to_center);
+                required_mem_size += sizeof(chaserlayers::close_to_center<false>);
+            } else if (param_list.front() == "open_from_center") {
+                required_mem_size += sizeof(chaserlayers::close_to_center<true>);
             }
             // TODO continue
         }
@@ -291,7 +293,9 @@ namespace dmxfish::filters {
             } else if (param_list.front() == "invert_color") {
                 layers.push_back(make_inst(chaserlayers::invert_color)());
             } else if (param_list.front() == "close_to_center") {
-                layers.push_back(make_inst(chaserlayers::close_to_center)(param_list, target.number_parameter_inputs));
+                layers.push_back(make_inst(chaserlayers::close_to_center<false>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "open_from_center") {
+                layers.push_back(make_inst(chaserlayers::close_to_center<true>)(param_list, target.number_parameter_inputs));
             }
             // TODO continue
 #undef make_inst
