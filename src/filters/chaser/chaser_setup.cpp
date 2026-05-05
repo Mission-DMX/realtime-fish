@@ -223,22 +223,22 @@ namespace dmxfish::filters {
                     ensure_arg_count(param_list, 1, target);
                     layers.push_back(make_inst(chaserlayers::flat_mask)(param_list, target.number_parameter_inputs));
                 } else if (param_list.front() == "maskmod__add") {
-                    ensure_arg_count(param_list, 1, target);
+                    ensure_arg_count(param_list, 3, target);
                     layers.push_back(
                             make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::ADD>)(param_list,
                                                                                                      target.number_parameter_inputs));
                 } else if (param_list.front() == "maskmod__sub") {
-                    ensure_arg_count(param_list, 1, target);
+                    ensure_arg_count(param_list, 3, target);
                     layers.push_back(
                             make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::SUB>)(param_list,
                                                                                                      target.number_parameter_inputs));
                 } else if (param_list.front() == "maskmod__mul") {
-                    ensure_arg_count(param_list, 1, target);
+                    ensure_arg_count(param_list, 3, target);
                     layers.push_back(
                             make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::MUL>)(param_list,
                                                                                                      target.number_parameter_inputs));
                 } else if (param_list.front() == "maskmod__div") {
-                    ensure_arg_count(param_list, 1, target);
+                    ensure_arg_count(param_list, 3, target);
                     layers.push_back(
                             make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::DIV>)(param_list,
                                                                                                      target.number_parameter_inputs));
