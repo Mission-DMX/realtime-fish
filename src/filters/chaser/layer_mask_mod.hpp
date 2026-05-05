@@ -29,7 +29,7 @@ namespace dmxfish::filters::chaserlayers {
             MARK_UNUSED(pixels);
             const auto val = this->np_value.get();
 	    const auto mask_size = mask.size();
-            for(auto i = 0; i < mask_size; i++) {
+            for(long i = 0; i < mask_size; i++) {
                 if constexpr (op_type == mod_operation_type::ADD) {
                     mask[i] = mask[i] + val;
                 } else if constexpr (op_type == mod_operation_type::SUB) {

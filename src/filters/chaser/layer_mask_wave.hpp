@@ -108,7 +108,7 @@ namespace dmxfish::filters::chaserlayers {
 
             double intensity = 0;
 
-            for(auto i = is_forward ? mask_size + wave_div : 0 - wave_div; is_forward ? i > 0 : i < mask_size; i += direction_add) {
+            for(long i = is_forward ? mask_size + wave_div : 0 - wave_div; is_forward ? i > 0 : i < mask_size; i += direction_add) {
                 if ((i + _step) % wave_div == 0) {
                     intensity = init_intensity;
                 } else {

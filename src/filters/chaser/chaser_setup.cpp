@@ -168,7 +168,7 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::chancalc<chaserlayers::color_channel_target::I, chaserlayers::mod_operation_type::DIV>);
             } else if (param_list.front() == "gaussian_blur") {
                 required_mem_size += sizeof(chaserlayers::gaussian_blur);
-            } else if (param_list.front() == "gaussian_curve") {
+            } else if (param_list.front() == "gaussian_curve_on_mask") {
                 required_mem_size += sizeof(chaserlayers::gaussian_curve);
             } else if (param_list.front() == "invert_mask") {
                 required_mem_size += sizeof(chaserlayers::invert_mask);
@@ -194,137 +194,244 @@ namespace dmxfish::filters {
         this->alloc.Init();
 		for (const auto& entry : layer_descriptions) {
             auto param_list = utils::split(entry, '|');
-#define make_inst(cls) new (this->alloc.Allocate(sizeof(cls))) cls
-            if (param_list.front() == "plain_color") {
-                layers.push_back(make_inst(chaserlayers::plain_color)(param_list, target.color_parameter_inputs, target.number_parameter_inputs));
-            } else if (param_list.front() == "rainbow") {
-                layers.push_back(make_inst(chaserlayers::rainbow)(param_list, target.color_parameter_inputs, target.number_parameter_inputs));
-            } else if (param_list.front() == "sprinkles") {
-                layers.push_back(make_inst(chaserlayers::sprinkles)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "dots") {
-                layers.push_back(make_inst(chaserlayers::dots)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "scale") {
-                layers.push_back(make_inst(chaserlayers::scale)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "scale_inv") {
-                layers.push_back(make_inst(chaserlayers::scale_inv)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "flat_mask") {
-                layers.push_back(make_inst(chaserlayers::flat_mask)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "maskmod__add") {
-                layers.push_back(make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::ADD>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "maskmod__sub") {
-                layers.push_back(make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::SUB>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "maskmod__mul") {
-                layers.push_back(make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::MUL>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "maskmod__div") {
-                layers.push_back(make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::DIV>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "mask_shift") {
-                layers.push_back(make_inst(chaserlayers::mask_shift)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_shift") {
-                layers.push_back(make_inst(chaserlayers::color_shift)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "trig__sin") {
-                layers.push_back(make_inst(chaserlayers::trig<chaserlayers::trig_operations::SIN>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "trig__cos") {
-                layers.push_back(make_inst(chaserlayers::trig<chaserlayers::trig_operations::COS>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "trig__tan") {
-                layers.push_back(make_inst(chaserlayers::trig<chaserlayers::trig_operations::TAN>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "strobe") {
-                layers.push_back(make_inst(chaserlayers::mask_strobe)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "johnson__fwd") {
-                layers.push_back(make_inst(chaserlayers::johnson<chaserlayers::direction::FWD>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "johnson__rev") {
-                layers.push_back(make_inst(chaserlayers::johnson<chaserlayers::direction::REV>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "colormix") {
-                layers.push_back(make_inst(chaserlayers::colormix)(param_list, target.color_parameter_inputs));
-            } else if (param_list.front() == "random_color") {
-                layers.push_back(make_inst(chaserlayers::randomcolor)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chanmod_r") {
-                layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::R>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chanmod_g") {
-                layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::G>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chanmod_b") {
-                layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::B>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chanmod_h") {
-                layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::H>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chanmod_s") {
-                layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::S>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chanmod_i") {
-        	layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::I>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_r_add") {
-                layers.push_back(make_inst(chancalc_type_r_add)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_r_sub") {
-                layers.push_back(make_inst(chancalc_type_r_sub)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_r_mul") {
-                layers.push_back(make_inst(chancalc_type_r_mul)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_r_div") {
-                layers.push_back(make_inst(chancalc_type_r_div)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_g_add") {
-                layers.push_back(make_inst(chancalc_type_g_add)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_g_sub") {
-                layers.push_back(make_inst(chancalc_type_g_sub)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_g_mul") {
-                layers.push_back(make_inst(chancalc_type_g_mul)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_g_div") {
-                layers.push_back(make_inst(chancalc_type_g_div)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_b_add") {
-                layers.push_back(make_inst(chancalc_type_b_add)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_b_sub") {
-                layers.push_back(make_inst(chancalc_type_b_sub)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_b_mul") {
-                layers.push_back(make_inst(chancalc_type_b_mul)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_b_div") {
-                layers.push_back(make_inst(chancalc_type_b_div)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_h_add") {
-                layers.push_back(make_inst(chancalc_type_h_add)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_h_sub") {
-                layers.push_back(make_inst(chancalc_type_h_sub)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_h_mul") {
-                layers.push_back(make_inst(chancalc_type_h_mul)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_h_div") {
-                layers.push_back(make_inst(chancalc_type_h_div)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_s_add") {
-                layers.push_back(make_inst(chancalc_type_s_add)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_s_sub") {
-                layers.push_back(make_inst(chancalc_type_s_sub)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_s_mul") {
-                layers.push_back(make_inst(chancalc_type_s_mul)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_s_div") {
-                layers.push_back(make_inst(chancalc_type_s_div)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_i_add") {
-                layers.push_back(make_inst(chancalc_type_i_add)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_i_sub") {
-                layers.push_back(make_inst(chancalc_type_i_sub)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_i_mul") {
-                layers.push_back(make_inst(chancalc_type_i_mul)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "color_chancalc_i_div") {
-                layers.push_back(make_inst(chancalc_type_i_div)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "gaussian_blur") {
-                layers.push_back(make_inst(chaserlayers::gaussian_blur)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "gaussian_curve") {
-                layers.push_back(make_inst(chaserlayers::gaussian_curve)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "invert_mask") {
-                layers.push_back(make_inst(chaserlayers::invert_mask)());
-            } else if (param_list.front() == "invert_color") {
-                layers.push_back(make_inst(chaserlayers::invert_color)());
-            } else if (param_list.front() == "close_to_center") {
-                layers.push_back(make_inst(chaserlayers::close_to_center<false>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "open_from_center") {
-                layers.push_back(make_inst(chaserlayers::close_to_center<true>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "segwave__fwd") {
-                layers.push_back(make_inst(chaserlayers::segwave<true>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "segwave__rev") {
-                layers.push_back(make_inst(chaserlayers::segwave<false>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "wave__fwd") {
-                layers.push_back(make_inst(chaserlayers::wave<true>)(param_list, target.number_parameter_inputs));
-            } else if (param_list.front() == "wave__rev") {
-                layers.push_back(make_inst(chaserlayers::wave<false>)(param_list, target.number_parameter_inputs));
+            if (param_list.empty()) [[unlikely]] {
+                throw filter_config_exception("Unable to parse layer '" + entry + "'.", filter_type::filter_color_chaser, target.own_id);
             }
+            try {
+#define make_inst(cls) new (this->alloc.Allocate(sizeof(cls))) cls
+                if (param_list.front() == "plain_color") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chaserlayers::plain_color)(param_list, target.color_parameter_inputs,
+                                                                          target.number_parameter_inputs));
+                } else if (param_list.front() == "rainbow") {
+                    ensure_arg_count(param_list, 2, target);
+                    layers.push_back(make_inst(chaserlayers::rainbow)(param_list, target.color_parameter_inputs,
+                                                                      target.number_parameter_inputs));
+                } else if (param_list.front() == "sprinkles") {
+                    ensure_arg_count(param_list, 5, target);
+                    layers.push_back(make_inst(chaserlayers::sprinkles)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "dots") {
+                    ensure_arg_count(param_list, 5, target);
+                    layers.push_back(make_inst(chaserlayers::dots)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "scale") {
+                    ensure_arg_count(param_list, 4, target);
+                    layers.push_back(make_inst(chaserlayers::scale)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "scale_inv") {
+                    ensure_arg_count(param_list, 4, target);
+                    layers.push_back(make_inst(chaserlayers::scale_inv)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "flat_mask") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chaserlayers::flat_mask)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "maskmod__add") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(
+                            make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::ADD>)(param_list,
+                                                                                                     target.number_parameter_inputs));
+                } else if (param_list.front() == "maskmod__sub") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(
+                            make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::SUB>)(param_list,
+                                                                                                     target.number_parameter_inputs));
+                } else if (param_list.front() == "maskmod__mul") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(
+                            make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::MUL>)(param_list,
+                                                                                                     target.number_parameter_inputs));
+                } else if (param_list.front() == "maskmod__div") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(
+                            make_inst(chaserlayers::mask_mod<chaserlayers::mod_operation_type::DIV>)(param_list,
+                                                                                                     target.number_parameter_inputs));
+                } else if (param_list.front() == "mask_shift") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chaserlayers::mask_shift)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_shift") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chaserlayers::color_shift)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "trig__sin") {
+                    ensure_arg_count(param_list, 4, target);
+                    layers.push_back(make_inst(chaserlayers::trig<chaserlayers::trig_operations::SIN>)(param_list,
+                                                                                                       target.number_parameter_inputs));
+                } else if (param_list.front() == "trig__cos") {
+                    ensure_arg_count(param_list, 4, target);
+                    layers.push_back(make_inst(chaserlayers::trig<chaserlayers::trig_operations::COS>)(param_list,
+                                                                                                       target.number_parameter_inputs));
+                } else if (param_list.front() == "trig__tan") {
+                    ensure_arg_count(param_list, 4, target);
+                    layers.push_back(make_inst(chaserlayers::trig<chaserlayers::trig_operations::TAN>)(param_list,
+                                                                                                       target.number_parameter_inputs));
+                } else if (param_list.front() == "strobe") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chaserlayers::mask_strobe)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "johnson__fwd") {
+                    ensure_arg_count(param_list, 2, target);
+                    layers.push_back(make_inst(chaserlayers::johnson<chaserlayers::direction::FWD>)(param_list,
+                                                                                                    target.number_parameter_inputs));
+                } else if (param_list.front() == "johnson__rev") {
+                    ensure_arg_count(param_list, 2, target);
+                    layers.push_back(make_inst(chaserlayers::johnson<chaserlayers::direction::REV>)(param_list,
+                                                                                                    target.number_parameter_inputs));
+                } else if (param_list.front() == "colormix") {
+                    ensure_arg_count(param_list, 2, target);
+                    layers.push_back(make_inst(chaserlayers::colormix)(param_list, target.color_parameter_inputs));
+                } else if (param_list.front() == "random_color") {
+                    ensure_arg_count(param_list, 2, target);
+                    layers.push_back(make_inst(chaserlayers::randomcolor)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chanmod_r") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::R>)(param_list,
+                                                                                                             target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chanmod_g") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::G>)(param_list,
+                                                                                                             target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chanmod_b") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::B>)(param_list,
+                                                                                                             target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chanmod_h") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::H>)(param_list,
+                                                                                                             target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chanmod_s") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::S>)(param_list,
+                                                                                                             target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chanmod_i") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chaserlayers::chanmod<chaserlayers::color_channel_target::I>)(param_list,
+                                                                                                             target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_r_add") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_r_add)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_r_sub") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_r_sub)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_r_mul") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_r_mul)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_r_div") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_r_div)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_g_add") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_g_add)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_g_sub") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_g_sub)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_g_mul") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_g_mul)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_g_div") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_g_div)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_b_add") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_b_add)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_b_sub") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_b_sub)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_b_mul") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_b_mul)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_b_div") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_b_div)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_h_add") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_h_add)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_h_sub") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_h_sub)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_h_mul") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_h_mul)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_h_div") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_h_div)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_s_add") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_s_add)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_s_sub") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_s_sub)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_s_mul") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_s_mul)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_s_div") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_s_div)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_i_add") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_i_add)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_i_sub") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_i_sub)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_i_mul") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_i_mul)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "color_chancalc_i_div") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(make_inst(chancalc_type_i_div)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "gaussian_blur") {
+                    ensure_arg_count(param_list, 1, target);
+                    layers.push_back(
+                            make_inst(chaserlayers::gaussian_blur)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "gaussian_curve_on_mask") {
+                    ensure_arg_count(param_list, 3, target);
+                    layers.push_back(
+                            make_inst(chaserlayers::gaussian_curve)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "invert_mask") {
+                    ensure_arg_count(param_list, 0, target);
+                    layers.push_back(make_inst(chaserlayers::invert_mask)());
+                } else if (param_list.front() == "invert_color") {
+                    ensure_arg_count(param_list, 0, target);
+                    layers.push_back(make_inst(chaserlayers::invert_color)());
+                } else if (param_list.front() == "close_to_center") {
+                    ensure_arg_count(param_list, 3, target);
+                    layers.push_back(make_inst(chaserlayers::close_to_center<false>)(param_list,
+                                                                                     target.number_parameter_inputs));
+                } else if (param_list.front() == "open_from_center") {
+                    ensure_arg_count(param_list, 3, target);
+                    layers.push_back(
+                            make_inst(chaserlayers::close_to_center<true>)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "segwave__fwd") {
+                    ensure_arg_count(param_list, 4, target);
+                    layers.push_back(
+                            make_inst(chaserlayers::segwave<true>)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "segwave__rev") {
+                    ensure_arg_count(param_list, 4, target);
+                    layers.push_back(
+                            make_inst(chaserlayers::segwave<false>)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "wave__fwd") {
+                    ensure_arg_count(param_list, 4, target);
+                    layers.push_back(make_inst(chaserlayers::wave<true>)(param_list, target.number_parameter_inputs));
+                } else if (param_list.front() == "wave__rev") {
+                    ensure_arg_count(param_list, 4, target);
+                    layers.push_back(make_inst(chaserlayers::wave<false>)(param_list, target.number_parameter_inputs));
+                }
 #undef make_inst
+            } catch (const std::invalid_argument& e) {
+                throw filter_config_exception("Unable to parse parameter (std::invalid_argument) in layer description: "
+                                              + entry + ". Cause: " + e.what(), filter_type::filter_color_chaser, target.own_id);
+            } catch (const std::out_of_range& e) {
+                throw filter_config_exception("Unable to parse parameter (std::out_of_range) in layer description: "
+                                              + entry + ". Cause: " + e.what(), filter_type::filter_color_chaser, target.own_id);
+            }
 		}
 	}
 
     chaser_setup::~chaser_setup() {
         // We do not need to do things here as we delete both the vector as well as the allocator, thus freeing the
         // memory
+    }
+
+    void chaser_setup::ensure_arg_count(const std::list<std::string>& arg_l, size_t required,
+                                        const filter_color_chaser& target) {
+        if (arg_l.size() < required + 1) {
+            throw filter_config_exception("Not enough parameters to instantiate layer " + arg_l.front() + ".",
+                                          filter_type::filter_color_chaser, target.own_id);
+        }
     }
 
     void chaser_setup::execute(filter_color_chaser& target) {

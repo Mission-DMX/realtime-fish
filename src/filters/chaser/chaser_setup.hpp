@@ -91,5 +91,7 @@ namespace dmxfish::filters {
                  * @param target: The parent chaser filter.
                  */
                 void reset(filter_color_chaser& target);
+    private:
+        void ensure_arg_count(const std::list<std::string>& arg_l, size_t required, const filter_color_chaser& target);
 	};
 }
