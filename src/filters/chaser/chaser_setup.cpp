@@ -2,6 +2,9 @@
 
 #include "utils.hpp"
 
+#include "filters/filter.hpp"
+#include "filters/types.hpp"
+
 #include "color_chaser.hpp"
 
 #include "layer_plain_color.hpp"
@@ -26,6 +29,7 @@
 #include "layer_invert_mask.hpp"
 #include "layer_invert_color.hpp"
 #include "layer_mask_close_to_center.hpp"
+#include "layer_mask_wave.hpp"
 
 namespace dmxfish::filters {
 
@@ -174,8 +178,17 @@ namespace dmxfish::filters {
                 required_mem_size += sizeof(chaserlayers::close_to_center<false>);
             } else if (param_list.front() == "open_from_center") {
                 required_mem_size += sizeof(chaserlayers::close_to_center<true>);
-            }
-            // TODO continue
+            } else if (param_list.front() == "segwave__fwd") {
+                required_mem_size += sizeof(chaserlayers::segwave<true>);
+            } else if (param_list.front() == "segwave__rev") {
+                required_mem_size += sizeof(chaserlayers::segwave<false>);
+            } else if (param_list.front() == "wave__fwd") {
+                required_mem_size += sizeof(chaserlayers::wave<true>);
+            } else if (param_list.front() == "wave__rev") {
+                required_mem_size += sizeof(chaserlayers::wave<false>);
+            } else {
+		throw filter_config_exception("Unsupported chaser layer:" + param_list.front(), filter_type::filter_color_chaser, target.own_id);
+	    }
         }
         this->alloc = LinearAllocator(required_mem_size);
         this->alloc.Init();
@@ -296,8 +309,15 @@ namespace dmxfish::filters {
                 layers.push_back(make_inst(chaserlayers::close_to_center<false>)(param_list, target.number_parameter_inputs));
             } else if (param_list.front() == "open_from_center") {
                 layers.push_back(make_inst(chaserlayers::close_to_center<true>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "segwave__fwd") {
+                layers.push_back(make_inst(chaserlayers::segwave<true>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "segwave__rev") {
+                layers.push_back(make_inst(chaserlayers::segwave<false>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "wave__fwd") {
+                layers.push_back(make_inst(chaserlayers::wave<true>)(param_list, target.number_parameter_inputs));
+            } else if (param_list.front() == "wave__rev") {
+                layers.push_back(make_inst(chaserlayers::wave<false>)(param_list, target.number_parameter_inputs));
             }
-            // TODO continue
 #undef make_inst
 		}
 	}
