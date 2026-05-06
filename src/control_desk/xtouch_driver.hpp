@@ -151,7 +151,7 @@ namespace dmxfish::control_desk {
         BTN_CONTROL = 73,
         BTN_ALT = 74,
 
-        BTN_READOFF = 68,
+        BTN_READOFF_CMDCOPY = 68,
         BTN_WRITE = 69,
         BTN_TOUCH = 75,
         BTN_LATCH = 76,
