@@ -111,6 +111,10 @@ namespace utils {
             bool found = true;
 
             for (size_t j = 0; j < what.length(); j++) {
+		if ((i + j) >= s.size()) {
+		    found = false;
+		    break;
+		}
                 if (s.at(i + j) != what.at(j)) {
                     found = false;
                     break;
