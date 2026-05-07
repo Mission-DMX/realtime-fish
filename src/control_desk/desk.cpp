@@ -66,12 +66,16 @@ namespace dmxfish::control_desk {
                     initial_lcd_text = {' ', 'D', 'M', 'X', ' ', ' ', ' ', ' ', '1', '.', '0', '.', '1', ' '};
                     xtouch_set_lcd_display(*d, 1, lcd_color::white_up_inverted, initial_lcd_text);
                 d->schedule_transmission();
+            } else if (d->get_device_id() == midi_device_id::X_TOUCH_EXTENSION) {
+                std::array<char, 14> initial_lcd_text = {'E', 'x', 't', 'e', 'n', 'd', '.', 'C', 'o', 'n', 'n', 'e', 'c', 't'};
+                xtouch_set_lcd_display(*d, 0, lcd_color::white_up_inverted, initial_lcd_text);
+                d->schedule_transmission();
             }
         }
         if(devices.size() == 0) {
             ::spdlog::warn("No input devices where added to the control desk.");
         } else {
-            ::spdlog::debug("Added {} devices to control desk.", devices.size());
+            ::spdlog::debug("Added {} devices to control desk. Total faders: {}.", devices.size(), this->max_number_of_colums);
         }
         this->gpio_event_sender = dmxfish::events::event_source::create<xtouch_gpio_event_sender>(get_event_storage_instance(), "Xtouch GPIO");
     }
@@ -170,7 +174,7 @@ namespace dmxfish::control_desk {
         }
         for(auto d : this->devices) {
             switch (d->get_device_id()) {
-                case midi_device_id::X_TOUCH:
+                case midi_device_id::X_TOUCH: {
                     for(auto b : xtouch_buttons()) {
                         xtouch_set_button_led(*d, b, button_led_state::off);
                     }
@@ -183,15 +187,23 @@ namespace dmxfish::control_desk {
 			}
                     }
 		    for(auto i = (uint8_t) fader::FADER_CH1; i <= (uint8_t) fader::FADER_MAIN; i++) {
-			    // TODO clean up code (or implement also for xtouch ext.)
 			    xtouch_set_fader_position(*d, fader{i}, 0);
 		    }
                     break;
-                case midi_device_id::X_TOUCH_EXTENSION:
+                }
+                case midi_device_id::X_TOUCH_EXTENSION: {
                     for(auto b : xtouch_extender_buttons()) {
                         xtouch_set_button_led(*d, b, button_led_state::off);
                     }
+                    const std::array<char, 14> empty_lcd_data{' '};
+                    for(uint8_t i = 0; i < XTOUCH_COLUMN_COUNT; i++) {
+                        xtouch_set_lcd_display(*d, i, lcd_color{i}, empty_lcd_data);
+                    }
+                    for(auto i = (uint8_t) fader::FADER_CH1; i <= (uint8_t) fader::FADER_CH8; i++) {
+                        xtouch_set_fader_position(*d, fader{i}, 0);
+                    }
                     break;
+                }
                 default:
                     ::spdlog::error("control desk device ID {} not yet implemented for reset.", (int) d->get_device_id());
                     break;
