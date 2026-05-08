@@ -7,8 +7,8 @@
 
 namespace dmxfish::dmx {
 
-    ioboard_universe::ioboard_universe(dmxfish::io::ioboard_port_id_t _port, int _id) :
-			universe(_id, universe_type::PHYSICAL), port(_port), raw_data() {
+    ioboard_universe::ioboard_universe(dmxfish::io::ioboard_port_id_t _port, int _id, const bool dummy) :
+			universe(_id, universe_type::PHYSICAL, dummy), port(_port), raw_data() {
         // No Op
     }
 

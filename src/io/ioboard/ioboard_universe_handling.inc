@@ -21,7 +21,7 @@ namespace dmxfish::io {
         if (auto candidate = this->linked_universes[port]; candidate.has_value()) {
             return candidate.value();
         } else {
-            auto univ = std::make_shared<dmxfish::dmx::ioboard_universe>(port, id);
+            auto univ = std::make_shared<dmxfish::dmx::ioboard_universe>(port, id, false);
             this->linked_universes[port] = univ;
             return univ;
         }

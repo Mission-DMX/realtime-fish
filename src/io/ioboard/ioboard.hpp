@@ -56,6 +56,8 @@ namespace dmxfish::io {
          * this needs to be checked by the callee. In that case the callee should call unregister_universe and call
          * this method again.
          *
+         * @warning This method creates a non-dummy universe by default!
+         *
          * @param port The physical port the universe is located on.
          * @param id The ID a newly created universe would have.
          * @return The universe actually associated with that port.

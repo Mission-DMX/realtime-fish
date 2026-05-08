@@ -55,10 +55,10 @@ namespace dmxfish::io {
 				this->client->send_packet(record->second.node_address, u.prep_and_get_packet());
 			}
 
-			std::shared_ptr<::dmxfish::dmx::artnet_universe> get_or_create_universe(const int id, const rmrf::net::socketaddr& addr, const uint16_t device_universe_id) {
+			std::shared_ptr<::dmxfish::dmx::artnet_universe> get_or_create_universe(const int id, const rmrf::net::socketaddr& addr, const uint16_t device_universe_id, const bool dummy) {
 				auto record = this->nodes.find(id);
 				if (record == this->nodes.end()) {
-					auto u = std::make_shared<::dmxfish::dmx::artnet_universe>(id, device_universe_id);
+					auto u = std::make_shared<::dmxfish::dmx::artnet_universe>(id, device_universe_id, dummy);
 					node_registry r{id, device_universe_id, addr, u};
 					this->nodes.insert({id, r});
 					return u;
@@ -68,6 +68,7 @@ namespace dmxfish::io {
 					record->second = node_registry(id, device_universe_id, addr, record->second.ptr);
 					record->second.sequence_number = seq;
 				}
+                record->second.ptr->set_dummy_mode(dummy);
 				return record->second.ptr;
 			}
 

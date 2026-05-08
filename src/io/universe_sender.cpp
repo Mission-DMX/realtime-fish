@@ -19,6 +19,9 @@ static std::map<int, std::shared_ptr<dmxfish::dmx::ftdi_universe>> dongle_map{};
 static std::vector<std::weak_ptr<dmxfish::dmx::universe>> active_universes;
 
 bool publish_universe_update(std::shared_ptr<dmxfish::dmx::universe> universe) {
+    if (universe->is_dummy()) [[unlikely]] {
+        return false;
+    }
 	switch (universe->getUniverseType()) {
 		case dmxfish::dmx::universe_type::ARTNET:
 			_artnet_handler.push_universe(*(static_cast<dmxfish::dmx::artnet_universe*>(universe.get())));
@@ -60,7 +63,7 @@ bool push_all_registered_universes() {
 
 std::shared_ptr<dmxfish::dmx::universe> get_temporary_universe(const std::string& output_description) {
 	// TODO build parser that always assignes a free universe
-	return _artnet_handler.get_or_create_universe(-1, rmrf::net::get_first_general_socketaddr(output_description, 6454), 1);
+	return _artnet_handler.get_or_create_universe(-1, rmrf::net::get_first_general_socketaddr(output_description, 6454), 1, false);
 }
 
 void check_update_required_from_registration(std::shared_ptr<dmxfish::dmx::universe> u_ptr_candidate) {
@@ -86,7 +89,7 @@ std::shared_ptr<dmxfish::dmx::universe> register_universe_from_message(const mis
 		// ArtNet
 		const auto& artnet_definition = u_dev.remote_location();
 		const auto address = rmrf::net::get_first_general_socketaddr(artnet_definition.ip_address(), artnet_definition.port());
-		u_ptr_candidate = _artnet_handler.get_or_create_universe(u_dev.id(), address, artnet_definition.universe_on_device());
+		u_ptr_candidate = _artnet_handler.get_or_create_universe(u_dev.id(), address, artnet_definition.universe_on_device(), false);
 		if(dongle_map.contains(u_dev.id())) {
 			dongle_map.erase(u_dev.id());
 		}
@@ -95,13 +98,14 @@ std::shared_ptr<dmxfish::dmx::universe> register_universe_from_message(const mis
 		if(dongle_map.contains(u_dev.id())) {
 			return dongle_map.at(u_dev.id());
 		}
-		const auto u = std::make_shared<dmxfish::dmx::ftdi_universe>(u_dev.id(), usb_definition.vendor_id(), usb_definition.product_id(), usb_definition.device_name(), usb_definition.serial());
+		const auto u = std::make_shared<dmxfish::dmx::ftdi_universe>(u_dev.id(), usb_definition.vendor_id(), usb_definition.product_id(), usb_definition.device_name(), usb_definition.serial(), false);
 		dongle_map[u_dev.id()] = u;
 		u_ptr_candidate = u;
 		::spdlog::debug("Created FTDI universe from protobuf.");
 		_artnet_handler.unlink_universe(u_dev.id());
 	} else {
 		// TODO local universes are not yet implemented
+        ::spdlog::error("Local ioboard universe creation is not yet implemented.");
 		return nullptr;
 	}
 	check_update_required_from_registration(u_ptr_candidate);
@@ -113,7 +117,7 @@ std::shared_ptr<dmxfish::dmx::universe> register_universe_from_xml(const Mission
 	if(universe.artnet_location().present()) {
 		const auto& artnet_definition = universe.artnet_location().get();
 		const auto address = rmrf::net::get_first_general_socketaddr(artnet_definition.ip_address(), artnet_definition.udp_port());
-		u_ptr_candidate = _artnet_handler.get_or_create_universe(universe.id(), address, artnet_definition.device_universe_id());
+		u_ptr_candidate = _artnet_handler.get_or_create_universe(universe.id(), address, artnet_definition.device_universe_id(), universe.is_dummy());
 		if(dongle_map.contains(universe.id())) {
 			dongle_map.erase(universe.id());
 		}
@@ -122,13 +126,14 @@ std::shared_ptr<dmxfish::dmx::universe> register_universe_from_xml(const Mission
 		if(dongle_map.contains(universe.id())) {
 			return dongle_map.at(universe.id());
 		}
-		const auto c = std::make_shared<dmxfish::dmx::ftdi_universe>(universe.id(), fdev.vendor_id(), fdev.product_id(), fdev.device_name(), fdev.serial_identifier().present() ? fdev.serial_identifier().get() : "");
+		const auto c = std::make_shared<dmxfish::dmx::ftdi_universe>(universe.id(), fdev.vendor_id(), fdev.product_id(), fdev.device_name(), fdev.serial_identifier().present() ? fdev.serial_identifier().get() : "", universe.is_dummy());
 		dongle_map[universe.id()] = c;
 		u_ptr_candidate = c;
 		::spdlog::debug("Created FTDI universe from xml.");
 		_artnet_handler.unlink_universe(universe.id());
 	} else {
 		// TODO other universe types are not yet implemented
+        ::spdlog::error("Local ioboard universe creation is not yet implemented.");
 		return nullptr;
 	}
 	check_update_required_from_registration(u_ptr_candidate);

@@ -32,8 +32,8 @@ namespace dmxfish::dmx {
 	private:
 		::rmrf::net::udp_packet<artnet_pkg_size> data;
 	public:
-		artnet_universe(const int _id, const uint16_t id_on_device, const uint8_t physical_id = 0)
-		    : universe(_id, universe_type::ARTNET), data{} {
+		artnet_universe(const int _id, const uint16_t id_on_device, const bool dummy, const uint8_t physical_id = 0)
+		    : universe(_id, universe_type::ARTNET, dummy), data{} {
 			this->data.advance(artnet_pkg_size);
 			for(auto& field : this->data) {
 				field = 0;

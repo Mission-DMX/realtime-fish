@@ -19,7 +19,7 @@ namespace dmxfish::dmx {
     private:
         friend class dmxfish::io::ioboard;
     public:
-        ioboard_universe(dmxfish::io::ioboard_port_id_t port, int id);
+        ioboard_universe(dmxfish::io::ioboard_port_id_t port, int id, const bool dummy);
 
         virtual channel_8bit_t& operator[](size_t p);
 
