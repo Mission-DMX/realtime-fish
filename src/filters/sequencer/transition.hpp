@@ -63,6 +63,10 @@ namespace dmxfish::filters::sequencer {
             return this->id;
         }
 
+        inline void set_id(size_t new_id) {
+            this->id = new_id;
+        }
+
         [[nodiscard]] inline const std::string& get_name() const {
             return this->name;
         }

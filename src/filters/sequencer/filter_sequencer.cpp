@@ -125,7 +125,9 @@ namespace dmxfish {
                         glob_param.pop_front();
                         const auto name = glob_param.front();
                         glob_param.pop_front();
-                        this->transitions.insert({trigger_event_id, sequencer::transition(name, glob_param, nm)});
+                        sequencer::transition t(name, glob_param, nm);
+                        t.set_id(this->transitions.size());
+                        this->transitions.insert({trigger_event_id, t});
                     }
                 } catch (const std::invalid_argument& e) {
                     throw filter_config_exception(std::string("Unable to decode transitions: ") + e.what(), filter_type::filter_sequencer, own_id);
@@ -187,6 +189,7 @@ namespace dmxfish {
             for (const auto& [channel_id, frames]: t.frames_color) {
                 this->channels_color[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed());
             }
+            ::spdlog::debug("Inserting trans {}", t.get_transition_id());
 	    this->active_transitions[t.get_transition_id()] = t.get_name();
 	    return true;
         }
