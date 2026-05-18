@@ -33,8 +33,12 @@ namespace dmxfish::filters {
                 if (configuration.contains("number_of_pixels")) [[likely]] {
                         const auto num_pix = std::stol(configuration.at("number_of_pixels"));
                         this->pixels.reserve(num_pix);
+                        this->mask.reserve(num_pix);
                         for (auto i = 0; i < num_pix; i++) {
                                 this->pixels.emplace_back(0.0, 0.0, 1.0);
+                        }
+                        for (auto i = 0; i < num_pix; i++) {
+                                this->mask.emplace_back(65535);
                         }
                 } else {
                         throw filter_config_exception("Filter configuration needs to contain number_of_pixels parameter.", own_type, own_id);

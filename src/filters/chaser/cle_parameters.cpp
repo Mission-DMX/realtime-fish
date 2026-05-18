@@ -55,6 +55,9 @@ cle_color_parameter& cle_color_parameter::operator=(const cle_color_parameter& o
     } else if (other.delete_required) {
 	this->delete_required = true;
 	if (other.val != nullptr) {
+            if (this->val == nullptr) {
+                this->val = new dmxfish::dmx::pixel(0.0, 0.0, 0.0);
+            }
 	    *this->val = *(other.get());
 	} else {
 	    this->val = new dmxfish::dmx::pixel(0.0, 0.0, 0.0);
