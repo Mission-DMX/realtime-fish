@@ -49,7 +49,7 @@ namespace dmxfish::filters::chaserlayers {
             const double _mult_factor = 1.0 - (((double) this->np_decay.get()) / 65535.0);
             const auto intensity = this->np_mask_application_intensity.get();
             constexpr auto direction_add = is_forward ? 1 : -1;
-            const auto wave_div = mask_size / this->np_num_waves.get();
+            const auto wave_div = mask_size / std::max((uint16_t) 1, this->np_num_waves.get());
 
             for(auto i = is_forward ? 0 : mask_size - 1; is_forward ? i < mask_size : i >= 0; i += direction_add) {
                 const auto distance_to_wall = (int) (_step % wave_div) - (i % wave_div);

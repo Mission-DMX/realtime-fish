@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <list>
@@ -41,7 +42,7 @@ namespace dmxfish::filters::chaserlayers {
                 this->location_offset++;
             }
 
-            const auto num_dots = this->np_num_dots.get();
+            const auto num_dots = std::max((uint16_t) 1, this->np_num_dots.get());
             const auto num_pixels = mask.size();
             const auto mask_off = this->np_mask_off.get();
             const auto mask_on = this->np_mask_on.get();

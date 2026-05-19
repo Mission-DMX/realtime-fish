@@ -1,5 +1,6 @@
 #include "chaser_setup.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 
@@ -29,7 +30,7 @@ namespace dmxfish::filters::chaserlayers {
                 this->remaining_time = this->np_update_time.get();
                 this->step();
             }
-            const auto pixels_per_segment = pixels.size() / this->np_number_of_colors.get();
+            const auto pixels_per_segment = pixels.size() / std::max((uint16_t) 1, this->np_number_of_colors.get());
             std::srand(this->color_seed);
             uint16_t r = 0;
             uint16_t g = 0;
