@@ -439,7 +439,7 @@ namespace dmxfish::filters {
         if(scaled_time < 0.0) {
                 scaled_time = 0.0;
         }
-        const auto elapsed_time = target.uses_steps ? 0.0 : this->last_update_time - scaled_time;
+        const auto elapsed_time = target.uses_steps ? 0.0 : scaled_time - this->last_update_time;
         this->last_update_time = scaled_time;
         for(auto& layer : this->layers) {
             layer->apply(elapsed_time, target.pixels, target.mask);
