@@ -260,11 +260,15 @@ namespace dmxfish::dmx {
         dmxfish::dmx::pixel output;
         const double h1 = c1.getHue();
         const double h2 = c2.getHue();
+	const double s1 = c1.getSaturation();
+	const double s2 = c2.getSaturation();
+	const double i1 = c1.getIluminance();
+	const double i2 = c2.getIluminance();
 
         const auto hue_diff = std::fmod(h1-h2 + 180.0 + 360.0, (double) 360.0) - ((double) 180.0);
         output.setHue(std::fmod(360.0 + h2 + ((hue_diff*(range*2.0))/2.0), (double) 360.0));
-        output.setSaturation((c1.getSaturation() * (range)) + (c2.getSaturation() * (1.0-range)));
-        output.setIluminance((c1.getIluminance() * range) + (c2.getIluminance() * (1.0-range)));
+        output.setSaturation((s1 * (range)) + (s2 * (1.0-range)));
+        output.setIluminance((i1 * range) + (i2 * (1.0-range)));
 
         return output;
     }
