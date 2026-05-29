@@ -34,7 +34,7 @@ namespace dmxfish::filters::chaserlayers {
             const double divisor = (seg_count == 1) ? 1 : seg_count - 1;
             for (auto i = 0; i < pix_count; i++) {
                 auto dest_color = dmxfish::dmx::mix_color_interleaving(*(cp1.get()), *(cp2.get()), ((double) (i % seg_count)) / divisor);
-                pixels[i] = dmxfish::dmx::mix_color_interleaving(pixels[i], dest_color, mask[i] / 65535.0);
+                pixels[i] = dmxfish::dmx::mix_color_interleaving(pixels[i], dest_color, 1.0-(((double) mask[i]) / 65535.0));
             }
         }
 

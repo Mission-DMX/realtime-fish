@@ -81,6 +81,13 @@ namespace dmxfish::filters::lua {
 	return est;
     }
 
+    inline dmxfish::events::event_sender_t int2event_sender_t(uint64_t sender, uint64_t function) {
+	dmxfish::events::event_sender_t est;
+	est.decoded_representation.sender = sender;
+	est.decoded_representation.sender_function = function;
+	return est;
+    }
+
     void insert_event() {
         insert_event_sta(int2event_sender_t(get_event_sender_id_auto()), dmxfish::events::event_type::SINGLE_TRIGGER, "");
     }
@@ -95,6 +102,10 @@ namespace dmxfish::filters::lua {
 
     void insert_event_i(uint64_t sender_id) {
 	insert_event_s(int2event_sender_t(sender_id));
+    }
+
+    void insert_event_i_i(uint64_t sender_id, uint64_t function) {
+	insert_event_s(int2event_sender_t(sender_id, function));
     }
 
     bool has_event_i(uint64_t enc) {
@@ -164,6 +175,7 @@ namespace dmxfish::filters::lua {
                 dmxfish::filters::lua::insert_event_ita,
                 dmxfish::filters::lua::insert_event_ia,
                 dmxfish::filters::lua::insert_event_i,
+		dmxfish::filters::lua::insert_event_i_i,
 		dmxfish::filters::lua::insert_event
                 ));
         lua.set_function("get_event_sender", sol::overload(

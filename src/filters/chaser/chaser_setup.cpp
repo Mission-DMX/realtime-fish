@@ -31,6 +31,8 @@
 #include "layer_mask_close_to_center.hpp"
 #include "layer_mask_wave.hpp"
 
+#include "lib/logging.hpp"
+
 namespace dmxfish::filters {
 
         using chancalc_type_r_add = chaserlayers::chancalc<chaserlayers::color_channel_target::R, chaserlayers::mod_operation_type::ADD>;
@@ -435,7 +437,10 @@ namespace dmxfish::filters {
     }
 
     void chaser_setup::execute(filter_color_chaser& target) {
-        auto scaled_time = *(target.time_input) * *(target.timescale_input);
+        double scaled_time = 0.0;
+	if (target.time_input != nullptr && target.timescale_input != nullptr) {
+		scaled_time = *(target.time_input) * *(target.timescale_input);
+	}
         if(scaled_time < 0.0) {
                 scaled_time = 0.0;
         }
@@ -447,7 +452,12 @@ namespace dmxfish::filters {
     }
 
     void chaser_setup::reset(filter_color_chaser& target) {
-        auto scaled_time = *(target.time_input) * *(target.timescale_input);
+        double scaled_time = 0.0;
+	if (target.time_input != nullptr && target.timescale_input != nullptr) {
+		scaled_time = *(target.time_input) * *(target.timescale_input);
+	} else {
+		::spdlog::warn("No time input configured for chaser '{}'", target.own_id);
+	}
         if(scaled_time < 0.0) {
                 scaled_time = 0.0;
         }
