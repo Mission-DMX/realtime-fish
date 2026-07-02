@@ -22,7 +22,7 @@ jobs:
       run: bin/tools/cmhelpdatagen > bin/color_mixing.json
 
     - name: publish color mixing data
-      run cd bin && sudo /home/deploy/deploy.bash color_mixing.json downloads/fish
+      run: cd bin && sudo /home/deploy/deploy.bash color_mixing.json downloads/fish
     
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.6.2
