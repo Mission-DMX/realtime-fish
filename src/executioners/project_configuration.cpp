@@ -61,4 +61,13 @@ void project_configuration::run_cycle_update() {
 	this->scenes[this->get_active_scene_index()].invoke_filters();
 }
 
+size_t project_configuration::find_scene_id_from_index(size_t scene_index) const {
+   for(auto& [id, index] : this->scene_id_mapping) {
+       if (index == scene_index) {
+           return id;
+       }
+    }
+    return 0;
+}
+
 }

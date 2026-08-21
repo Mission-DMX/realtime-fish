@@ -121,8 +121,8 @@ namespace dmxfish::control_desk {
         BTN_PLUGIN_PATCH = 44, // Open the patching menu and review current transmitted values
         BTN_INST_DEBUG = 45, // Open the debug view
 
-        BTN_NAMEVALUE_COMMITSHOW = 46, // Apply the changes of the edited show
-        BTN_BEATS_OOPS = 47, // Undo last commit
+        BTN_NAMEVALUE = 46,
+        BTN_BEATS = 47,
         BTN_GLOBALVIEW_COMMITRDY = 48, // Apply staged input changes
         BTN_MIDITRACKS_FIND = 49, // When in quick console mode: let the ficture strobe in order to find the linked lamp
         // When in show mode with displayed show UI: open an advanced color picker on the touch screen
@@ -132,8 +132,8 @@ namespace dmxfish::control_desk {
         BTN_AUDIOINST = 52,
         BTN_AUX = 53,
         BTN_BUSSES = 54,
-        BTN_OUTPUTS = 55,
-        BTN_USER = 56,
+        BTN_OUTPUTS_COMMITSHOW = 55, // Apply the changes of the edited show
+        BTN_USER_OOPS = 56, // Undo last commit
 
         BTN_FLIP_MAINDARK = 57, // If enabled: makes the brightness of all attached fixtures 0; button led should be blinking if enabled
 
@@ -151,7 +151,7 @@ namespace dmxfish::control_desk {
         BTN_CONTROL = 73,
         BTN_ALT = 74,
 
-        BTN_READOFF = 68,
+        BTN_READOFF_CMDCOPY = 68,
         BTN_WRITE = 69,
         BTN_TOUCH = 75,
         BTN_LATCH = 76,

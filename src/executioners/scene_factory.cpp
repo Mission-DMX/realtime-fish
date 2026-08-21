@@ -23,9 +23,11 @@
 #include "filters/filter_time.hpp"
 #include "filters/filter_cue.hpp"
 #include "filters/filter_shift.hpp"
+#include "filters/filter_switch.hpp"
 #include "filters/lua/filter_lua_script.hpp"
 #include "filters/sequencer/filter_sequencer.hpp"
 #include "filters/filter_color_mixer.hpp"
+#include "filters/chaser/color_chaser.hpp"
 
 #include <iostream>
 
@@ -315,8 +317,23 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_responding_constant_float:
                     sum += sizeof(responding_constant_float);
                     break;
+		case filter_type::filter_color_chaser:
+		    sum += sizeof(filter_color_chaser);
+		    break;
                 case filter_type::filter_responding_constant_color:
                     sum += sizeof(responding_constant_color);
+                    break;
+                case filter_type::filter_switch_8bit:
+                    sum += sizeof(filter_switch_8bit);
+                    break;
+                case filter_type::filter_switch_16bit:
+                    sum += sizeof(filter_switch_16bit);
+                    break;
+                case filter_type::filter_switch_float:
+                    sum += sizeof(filter_switch_float);
+                    break;
+                case filter_type::filter_switch_color:
+                    sum += sizeof(filter_switch_color);
                     break;
 				default: {
 						 std::stringstream ss;
@@ -496,6 +513,16 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<responding_constant_float>(pac);
             case filter_type::filter_responding_constant_color:
                 return calloc<responding_constant_color>(pac);
+            case filter_type::filter_color_chaser:
+                return calloc<filter_color_chaser>(pac);
+            case filter_type::filter_switch_8bit:
+                return calloc<filter_switch_8bit>(pac);
+            case filter_type::filter_switch_16bit:
+                return calloc<filter_switch_16bit>(pac);
+            case filter_type::filter_switch_float:
+                return calloc<filter_switch_float>(pac);
+            case filter_type::filter_switch_color:
+                return calloc<filter_switch_color>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
@@ -658,6 +685,13 @@ COMPILER_RESTORE("-Weffc++")
 	    return std::make_tuple(filters, boundries, pac, filter_index);
     }
 
+    inline void load_default_dmx_values(default_dmx_value_container& container, const ::MissionDMX::ShowFile::Scene& s) {
+        container.reserve(s.dmxdefaultvalue().size());
+        for (const auto& default_value_template : s.dmxdefaultvalue()) {
+            container.emplace_back(default_value_template.universe(), default_value_template.channel(), default_value_template.value());
+        }
+    }
+
     [[nodiscard]] std::pair<std::string, bool> populate_scene_vector(std::vector<scene>& v, const MissionDMX::ShowFile::BordConfiguration::scene_sequence& ss, std::map<int32_t, size_t>& scene_index_map) {
 		if(ss.size() == 0) {
 			return std::make_pair("There were no scenes defined. Skipping.", false);
@@ -674,10 +708,13 @@ COMPILER_RESTORE("-Weffc++")
 				std::stringstream msg_stream;
 				try {
 					auto filter_tuple = compute_filter(stemplate, msg_stream);
+                    default_dmx_value_container default_dmx_values;
+                    load_default_dmx_values(default_dmx_values, stemplate);
 					scene s{std::move(std::get<0>(filter_tuple)),
 							std::move(std::get<1>(filter_tuple)),
 							std::get<2>(filter_tuple),
-							std::get<3>(filter_tuple)
+							std::get<3>(filter_tuple),
+                            default_dmx_values
 						};
 					{
 						std::lock_guard lock(v_mutex);

@@ -25,9 +25,9 @@ unsigned int bcd_lulz(unsigned char const* nybbles, size_t length)
     return result;
 }
 
-    // TODO implement function to query avaiable devices using libusb_get_device_list(ftdi.usb_ctx, ...)
+    // TODO implement function to query available devices using libusb_get_device_list(ftdi.usb_ctx, ...)
 
-    ftdi_universe::ftdi_universe(const int _id, const int _vendor_id, const int _product_id, const std::string& name, const std::string& serial) : universe(_id, universe_type::FTDI), device_handle{}, data{}, product_id(_product_id), vendor_id(_vendor_id) {
+    ftdi_universe::ftdi_universe(const int _id, const int _vendor_id, const int _product_id, const std::string& name, const std::string& serial, const bool dummy) : universe(_id, universe_type::FTDI, dummy), device_handle{}, data{}, product_id(_product_id), vendor_id(_vendor_id) {
 	for(auto& x : data) {
 		x = 0;
 	}

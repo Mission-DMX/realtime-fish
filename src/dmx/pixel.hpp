@@ -31,6 +31,7 @@ class pixel {
     uint16_t red;
     uint16_t green;
     uint16_t blue;  // iluminance > 0 and r,b,n = 0 -> rgb value is invalid, (when getting r,g or b it gets calculated)
+
     void convert_hsi_to_rgb();
     void convert_rgb_to_hsi();
     void convert_hsi_to_rgb_pre();
@@ -50,6 +51,7 @@ class pixel {
     [[nodiscard]] double getHue();
     [[nodiscard]] double getSaturation();
     [[nodiscard]] double getIluminance();
+
     [[nodiscard]] uint16_t getRed();
     [[nodiscard]] uint16_t getGreen();
     [[nodiscard]] uint16_t getBlue();
@@ -62,6 +64,18 @@ class pixel {
     void setBlue(uint16_t b);
 
 	[[nodiscard]] std::string str() const;
+
+    inline pixel& operator=(const pixel& other) {
+        if (this == &other)
+            return *this;
+        this->hue = other.hue;
+        this->saturation = other.saturation;
+        this->iluminance = other.iluminance;
+        this->red = other.red;
+        this->green = other.green;
+        this->blue = other.blue;
+        return *this;
+    }
 };
 
     [[nodiscard]] dmxfish::dmx::pixel mix_color_interleaving(dmxfish::dmx::pixel c1, dmxfish::dmx::pixel c2, double range);

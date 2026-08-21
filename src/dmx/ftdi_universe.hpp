@@ -43,7 +43,7 @@ namespace dmxfish::dmx {
 	int product_id;
 	int vendor_id;
     public:
-        ftdi_universe(const int _id, const int vendor_id, const int product_id, const std::string& name, const std::string& serial);
+        ftdi_universe(const int _id, const int vendor_id, const int product_id, const std::string& name, const std::string& serial, const bool dummy);
 
         ~ftdi_universe();
 

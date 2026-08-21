@@ -76,6 +76,11 @@ namespace dmxfish::filters {
         filter_responding_constant_8bit = 71,
         filter_responding_constant_16bit = 72,
         filter_responding_constant_float = 73,
-        filter_responding_constant_color = 74
+        filter_responding_constant_color = 74,
+	filter_color_chaser = 75,
+	filter_switch_8bit = 76,
+	filter_switch_16bit = 77,
+	filter_switch_float = 78,
+	filter_switch_color = 79
     };
 }

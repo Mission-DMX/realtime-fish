@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     MARK_UNUSED(argv);
     spdlog::set_level(spdlog::level::debug);
     try {
-        dmxfish::dmx::ftdi_universe u(-1, 0x0403, 0x6001, "", "");
+        dmxfish::dmx::ftdi_universe u(-1, 0x0403, 0x6001, "", "", false);
 	std::cout << "Device connected. Lamp test." << std::endl;
 	u[0] = 255;
 	u[1] = 255;

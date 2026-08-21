@@ -13,6 +13,7 @@
 #include "lib/macros.hpp"
 #include "filters/lua/lua_color_api.hpp"
 #include "filters/lua/lua_event_api.hpp"
+#include "filters/lua/lua_scene_api.hpp"
 
 
 namespace dmxfish::filters::lua {
@@ -36,6 +37,7 @@ namespace dmxfish::filters::lua {
 
         init_lua_color_api(lua);
         init_lua_event_api(lua);
+	init_lua_scene_api(lua);
 
         // TODO make events available here
         // TODO add a unit test that sends an event on one lua filter and listens to that event on another lua filter.
