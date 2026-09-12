@@ -28,6 +28,7 @@
 #include "filters/sequencer/filter_sequencer.hpp"
 #include "filters/filter_color_mixer.hpp"
 #include "filters/chaser/color_chaser.hpp"
+#include "filters/event_scheduler.hpp"
 
 #include <iostream>
 
@@ -335,6 +336,9 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_switch_color:
                     sum += sizeof(filter_switch_color);
                     break;
+                case filter_type::filter_event_scheduler:
+                    sum += sizeof(event_scheduler);
+                    break;
 				default: {
 						 std::stringstream ss;
 						 ss << ERROR_FILTER_NOT_IMPLEMENTED_IN_ALLOCATION;
@@ -523,6 +527,8 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_switch_float>(pac);
             case filter_type::filter_switch_color:
                 return calloc<filter_switch_color>(pac);
+            case filter_type::filter_event_scheduler:
+                return calloc<event_scheduler>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
