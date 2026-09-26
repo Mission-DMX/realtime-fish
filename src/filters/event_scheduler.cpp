@@ -46,7 +46,11 @@ namespace dmxfish {
                 event_template_parts.pop_front();
                 event_template templ;
                 for (auto i = 0; i < templ.arguments.size() && !event_template_parts.empty(); i++) {
-                    templ.arguments[i] = (uint8_t) std::stoi(event_template_parts.front());
+                    const auto& part = event_template_parts.front();
+                    if (part.length() < 1) {
+                        continue;
+                    }
+                    templ.arguments[i] = (uint8_t) std::stoi(part);
                     event_template_parts.pop_front();
                 }
                 templ.type = evtype;
