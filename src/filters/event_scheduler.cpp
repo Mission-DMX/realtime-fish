@@ -97,7 +97,7 @@ namespace dmxfish {
                     const auto value = parts.front();
                     if (const auto step_l = std::stol(step); step_l >= 0 && step_l < this->max_step) {
                         if (const auto event_l = std::stol(event); event_l >= 0 && event_l < this->event_templates.size()) {
-                            this->sequence_steps[step_l * event_l] = utils::toupper(value) == "TRUE";
+                            this->sequence_steps[(step_l * this->event_templates.size()) + event_l] = utils::toupper(value) == "TRUE";
                         } else {
                             return false;
                         }
