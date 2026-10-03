@@ -1,6 +1,7 @@
 #include "executioners/scene_factory.hpp"
 
 #include <deque>
+#include <fstream>
 #include <map>
 #include <mutex>
 #include <set>
@@ -730,9 +731,11 @@ COMPILER_RESTORE("-Weffc++")
 						scene_index_map[sid] = last_index;
 					}
 				} catch (const ::dmxfish::filters::filter_config_exception& e) {
+				        std::lock_guard lock(msg_stream_mutex);
 					msg_stream << ERROR_FILTER_CONFIGURATION_EXCEPTION << "SCENE_ID:" << stemplate.id() << "/Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
 					*worked = false;
 				} catch (const scheduling_exception& e) {
+					std::lock_guard lock(msg_stream_mutex);
 					msg_stream << ERROR_FILTER_SCHEDULING_EXCEPTION << "SCENE_ID:" << stemplate.id() << "Failed to schedule filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
 					*worked = false;
 				}
@@ -744,6 +747,11 @@ COMPILER_RESTORE("-Weffc++")
 		}
 		tp.join();
 		global_msg_stream << "Done." << std::endl;
+        if (*worked == false) {
+            std::ofstream logfile("/tmp/fish_scene_parsing_failure.log");
+            logfile << global_msg_stream.str();
+            logfile.flush();
+        }
 		return std::make_pair(global_msg_stream.str(), *worked);
     }
 
