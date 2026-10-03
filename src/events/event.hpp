@@ -76,6 +76,12 @@ namespace dmxfish::events {
             this->event_arguments[pos] = d;
         }
 
+        inline void set_args(const std::array<uint8_t, 8>& data) {
+            for (int i = 0; i < this->event_arguments.size(); i++) {
+                this->event_arguments[i] = data[i];
+            }
+        }
+
         [[nodiscard]] std::string get_args_as_str() const;
         void set_args_as_string(const std::string& s);
     };

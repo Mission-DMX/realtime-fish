@@ -119,6 +119,7 @@ namespace dmxfish {
                 throw filter_config_exception("Configuration map does not contain 'transitions'.", filter_type::filter_sequencer, own_id);
             } else {
                 try {
+		    if (trans_iter->second.size() > 0) {
                     for (const auto& transition_str: utils::split(trans_iter->second, ';')) {
                         auto glob_param = utils::split(transition_str, '#');
                         const auto trigger_event_id = dmxfish::events::parse_sender_representation(glob_param.front()).encoded_sender_id;
@@ -129,6 +130,9 @@ namespace dmxfish {
                         t.set_id(this->transitions.size());
                         this->transitions.insert({trigger_event_id, t});
                     }
+		    } else {
+			::spdlog::warn("Sequencer filter '{}' has empty transition list.", own_id);
+		    }
                 } catch (const std::invalid_argument& e) {
                     throw filter_config_exception(std::string("Unable to decode transitions: ") + e.what(), filter_type::filter_sequencer, own_id);
                 }
