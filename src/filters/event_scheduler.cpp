@@ -88,9 +88,9 @@ namespace dmxfish {
                 return true;
             }
             if (key == "update_triggers") {
-		if (_value.size() < 0) {
-		    return false;
-		}
+                if (_value.size() < 1) {
+                    return false;
+                }
                 for (auto& date : utils::split(_value, ';')) {
                     auto parts = utils::split(date, ',');
                     const auto step = parts.front();
