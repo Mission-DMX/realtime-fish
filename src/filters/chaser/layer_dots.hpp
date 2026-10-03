@@ -52,7 +52,7 @@ namespace dmxfish::filters::chaserlayers {
             const auto on_len = seg_len - dot_size;
 
             for(auto i = 0; i < num_pixels; i++) {
-                const auto pos_in_seg = (i + this->location_offset) % seg_len;
+                const auto pos_in_seg = (i + this->location_offset) % std::max(seg_len, (unsigned long) 1);
                 mask[i] = (pos_in_seg < on_len) ? mask_on : mask_off;
             }
         }
