@@ -215,11 +215,11 @@ BOOST_AUTO_TEST_CASE(test_color_mix_filter_single_input) {
 // TODO also write test case for 3
 
 BOOST_AUTO_TEST_CASE(pixel_rgb_to_hsi_no_nan_regression) {
-    // Direct regression for the acos domain error in convert_rgb_to_hsi():
-    // pixel(13981, 19223, 19223) corresponds to HSI(180, 0.2, 0.8) after a forward
-    // conversion. With g == b, catastrophic cancellation used to push the acos
-    // argument slightly below -1, producing NaN. See cue_filter_test testcolor at
-    // t=11000.
+    // Regression for an acos domain error in a previous HSI inverse implementation:
+    // pixel(13981, 19223, 19223) with g == b used to drive acos's argument slightly
+    // below -1 via catastrophic cancellation, yielding NaN hue. The current HSV
+    // inverse computes hue from channel differences without acos, so this input
+    // must stay finite and give hue ~180°. See cue_filter_test testcolor at t=11000.
     dmxfish::dmx::pixel p(static_cast<uint16_t>(13981), static_cast<uint16_t>(19223), static_cast<uint16_t>(19223));
     const auto h = p.getHue();
     const auto s = p.getSaturation();
@@ -231,13 +231,14 @@ BOOST_AUTO_TEST_CASE(pixel_rgb_to_hsi_no_nan_regression) {
 }
 
 BOOST_AUTO_TEST_CASE(pixel_hsi_rgb_roundtrip_sweep) {
-    // Sweep across hue, saturation and iluminance to confirm no HSI->RGB->HSI
-    // round-trip ever produces NaN/Inf. Hue and saturation round-trip to within
-    // quantization noise when the color is non-degenerate. Iluminance is not
-    // checked: with this HSI model (I = sum/3) a saturated primary occupies only
-    // one of three channels, so the recovered I is scaled by 1/3 by design.
+    // Sweep across hue, saturation and iluminance to confirm the HSV<->RGB
+    // round-trip never produces NaN/Inf and that hue, saturation and iluminance
+    // all recover to within 16-bit quantization noise. Iluminance must round-trip
+    // (unlike the previous HSI model, where a saturated primary round-tripped to
+    // I/3 because intensity was defined as the per-channel average).
     const double hue_tol = 1.5;
-    const double sat_tol = 0.02;
+    const double sat_tol = 0.005;
+    const double ilu_tol = 0.001;
 
     for (int h_deg = 0; h_deg < 360; h_deg += 5) {
         for (int s_pct = 0; s_pct <= 100; s_pct += 10) {
@@ -253,16 +254,19 @@ BOOST_AUTO_TEST_CASE(pixel_hsi_rgb_roundtrip_sweep) {
                 const auto s_out = round_tripped.getSaturation();
                 const auto i_out = round_tripped.getIluminance();
 
-                const std::string ctx = "HSI(" + std::to_string(h_in) + ", " +
+                const std::string ctx = "HSV(" + std::to_string(h_in) + ", " +
                     std::to_string(s_in) + ", " + std::to_string(i_in) + ")";
                 BOOST_TEST(std::isfinite(h_out), "Hue not finite for " + ctx);
                 BOOST_TEST(std::isfinite(s_out), "Saturation not finite for " + ctx);
                 BOOST_TEST(std::isfinite(i_out), "Iluminance not finite for " + ctx);
 
+                BOOST_TEST(std::abs(i_out - i_in) < ilu_tol, "Iluminance round-trip drifted for " + ctx + ": got " + std::to_string(i_out));
+                if (i_in > 0.0) {
+                    BOOST_TEST(std::abs(s_out - s_in) < sat_tol, "Saturation round-trip drifted for " + ctx + ": got " + std::to_string(s_out));
+                }
                 if (s_in > 0.05 && i_in > 0.05) {
                     const double hue_diff = std::abs(std::fmod(std::abs(h_out - h_in) + 180.0, 360.0) - 180.0);
                     BOOST_TEST(hue_diff < hue_tol, "Hue round-trip drifted for " + ctx + ": got " + std::to_string(h_out));
-                    BOOST_TEST(std::abs(s_out - s_in) < sat_tol, "Saturation round-trip drifted for " + ctx + ": got " + std::to_string(s_out));
                 }
             }
         }

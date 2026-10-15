@@ -49,112 +49,84 @@ namespace dmxfish::dmx {
     }
 
     void pixel::pixel_to_rgb16(uint16_t& r, uint16_t& g, uint16_t& b){
-        double H = this->hue, S = this->saturation, I = this->iluminance;
-        H = std::fmod(H, 360);
-        H = 3.14159*H / (double) 180;
-        S = S>0 ? (S<1 ? S : 1) : 0;
-        I = I>0 ? (I<1 ? I : 1) : 0;
+        double H = std::fmod(this->hue, 360.0);
+        if (H < 0.0) H += 360.0;
+        const double S = std::clamp(this->saturation, 0.0, 1.0);
+        const double V = std::clamp(this->iluminance, 0.0, 1.0);
 
-        if(H < 2.09439) {
-            r = (uint16_t) std::round(65535.0*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
-            g = (uint16_t) std::round(65535.0*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
-            b = (uint16_t) std::round(65535.0*I/3*(1-S));
-        } else if(H < 4.188787) {
-            H = H - 2.09439;
-            g = (uint16_t) std::round(65535.0*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
-            b = (uint16_t) std::round(65535.0*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
-            r = (uint16_t) std::round(65535.0*I/3*(1-S));
-        } else {
-            H = H - 4.188787;
-            b = (uint16_t) std::round(65535.0*I/3*(1+S*std::cos(H)/std::cos(1.047196667-H)));
-            r = (uint16_t) std::round(65535.0*I/3*(1+S*(1-std::cos(H)/std::cos(1.047196667-H))));
-            g = (uint16_t) std::round(65535.0*I/3*(1-S));
-        }
+        const double C = V * S;
+        const double H_prime = H / 60.0;
+        const double X = C * (1.0 - std::abs(std::fmod(H_prime, 2.0) - 1.0));
+        const double m = V - C;
+
+        double R_prime, G_prime, B_prime;
+        if (H_prime < 1.0)      { R_prime = C; G_prime = X; B_prime = 0.0; }
+        else if (H_prime < 2.0) { R_prime = X; G_prime = C; B_prime = 0.0; }
+        else if (H_prime < 3.0) { R_prime = 0.0; G_prime = C; B_prime = X; }
+        else if (H_prime < 4.0) { R_prime = 0.0; G_prime = X; B_prime = C; }
+        else if (H_prime < 5.0) { R_prime = X; G_prime = 0.0; B_prime = C; }
+        else                    { R_prime = C; G_prime = 0.0; B_prime = X; }
+
+        r = (uint16_t) std::round(65535.0 * (R_prime + m));
+        g = (uint16_t) std::round(65535.0 * (G_prime + m));
+        b = (uint16_t) std::round(65535.0 * (B_prime + m));
     }
 
     void pixel::pixel_to_rgbw(uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& w){
-        double H = this->hue, S = this->saturation, I = this->iluminance;
-        double cos_h, cos_1047_h;
+        // RGBW: the achromatic (white) portion V*(1-S) is routed to the W channel,
+        // leaving the chroma C=V*S distributed across R/G/B per standard HSV sectors.
+        double H = std::fmod(this->hue, 360.0);
+        if (H < 0.0) H += 360.0;
+        const double S = std::clamp(this->saturation, 0.0, 1.0);
+        const double V = std::clamp(this->iluminance, 0.0, 1.0);
 
-        H = std::fmod(H,360);
-        H = 3.14159*H/(double)180;
-        S = S>0 ? (S<1 ? S : 1) : 0;
-        I = I>0 ? (I<1 ? I : 1) : 0;
+        const double C = V * S;
+        const double H_prime = H / 60.0;
+        const double X = C * (1.0 - std::abs(std::fmod(H_prime, 2.0) - 1.0));
+        const double m = V - C;
 
-        if(H < 2.09439) {
-            cos_h = std::cos(H);
-            cos_1047_h = std::cos(1.047196667-H);
-            r = (uint8_t) std::round(S*255*I / 3*(1+cos_h/cos_1047_h));
-            g = (uint8_t) std::round(S*255*I / 3*(1+(1-cos_h/cos_1047_h)));
-            b = 0;
-            w = (uint8_t) std::round(255*(1-S)*I);
-        } else if(H < 4.188787) {
-            H = H - 2.09439;
-            cos_h = std::cos(H);
-            cos_1047_h = std::cos(1.047196667-H);
-            g = (uint8_t) std::round(S*255*I / 3*(1+cos_h/cos_1047_h));
-            b = (uint8_t) std::round(S*255*I / 3*(1+(1-cos_h/cos_1047_h)));
-            r = 0;
-            w = (uint8_t) std::round(255*(1-S)*I);
-        } else {
-            H = H - 4.188787;
-            cos_h = std::cos(H);
-            cos_1047_h = std::cos(1.047196667-H);
-            b = (uint8_t) std::round(S*255*I / 3*(1+cos_h/cos_1047_h));
-            r = (uint8_t) std::round(S*255*I / 3*(1+(1-cos_h/cos_1047_h)));
-            g = 0;
-            w = (uint8_t) std::round(255*(1-S)*I);
-        }
+        double R_prime, G_prime, B_prime;
+        if (H_prime < 1.0)      { R_prime = C; G_prime = X; B_prime = 0.0; }
+        else if (H_prime < 2.0) { R_prime = X; G_prime = C; B_prime = 0.0; }
+        else if (H_prime < 3.0) { R_prime = 0.0; G_prime = C; B_prime = X; }
+        else if (H_prime < 4.0) { R_prime = 0.0; G_prime = X; B_prime = C; }
+        else if (H_prime < 5.0) { R_prime = X; G_prime = 0.0; B_prime = C; }
+        else                    { R_prime = C; G_prime = 0.0; B_prime = X; }
+
+        r = (uint8_t) std::round(255.0 * R_prime);
+        g = (uint8_t) std::round(255.0 * G_prime);
+        b = (uint8_t) std::round(255.0 * B_prime);
+        w = (uint8_t) std::round(255.0 * m);
     }
 
     void pixel::convert_hsi_to_rgb(){
         pixel_to_rgb16(red, green, blue);
     }
     void pixel::convert_rgb_to_hsi(){
-        double r = this->red / 65535.0;
-        double g = this->green / 65535.0;
-        double b = this->blue / 65535.0;
-        double sum = r + g + b;
+        const double r = this->red / 65535.0;
+        const double g = this->green / 65535.0;
+        const double b = this->blue / 65535.0;
+        const double max_c = std::max({r, g, b});
+        const double min_c = std::min({r, g, b});
+        const double delta = max_c - min_c;
 
-        if (sum <= 0.0){
-            this->hue = 0.0;
-            this->saturation = 0.0;
-            this->iluminance = 0.0;
-            return;
-        }
+        this->iluminance = max_c;
+        this->saturation = max_c > 0.0 ? delta / max_c : 0.0;
 
-	double min = std::min(std::min(r, g), b);
-	const double a = std::sqrt( (r*r) + (g*g) + (b*b) - (r*g) - (r*b) - (g*b) );
-	this->hue =  a > 0.0 ? std::acos(std::clamp((r - (g*0.5) - (b*0.5)) / a, -1.0, 1.0)) : 0.0;
-	if (b > g) {
-	    this->hue = (2*M_PI) - this->hue;
-	}
-	this->hue *= (180.0/M_PI);
-
-        this->saturation = 1.0 - (min * 3.0 / sum);
-        this->iluminance = sum / 3.0;
-
-        if (this->saturation <= 0.0){
+        if (delta <= 0.0) {
             this->hue = 0.0;
             return;
         }
-        // double hue_1 = -1.0;
-        //https://www.wolframalpha.com/input?i=solve+%5B%2F%2Fmath%3Acos%28x%29%2F%28cos%28pi%2F3-x%29%29%3Da%2F%2F%5D+for+%5B%2F%2Fmath%3Ax%2F%2F%5D
-        /*if (b <= 0.0){
-            double a = (3 * r / (65535.0 * this->iluminance)- 1) * (1/this->saturation);
-            // hue_1 = 2 * (std::atan((std::sqrt(3) * a - 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159;
-            this->hue = std::fmod(2 * (std::atan((std::sqrt(3) * a + 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159 + 180.0, 360.0);
+
+        double H;
+        if (max_c == r) {
+            H = 60.0 * std::fmod(((g - b) / delta) + 6.0, 6.0);
+        } else if (max_c == g) {
+            H = 60.0 * (((b - r) / delta) + 2.0);
+        } else {
+            H = 60.0 * (((r - g) / delta) + 4.0);
         }
-        else if (r <= 0.0){
-            double a = (3 * g / (65535.0 * this->iluminance)- 1) * (1/this->saturation);
-            // hue_1 = 2 * (std::atan((std::sqrt(3) * a - 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159 + 120.0;
-            this->hue = std::fmod(2 * (std::atan((std::sqrt(3) * a + 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159 + 300.0, 360.0);
-        }
-        else if (g <= 0.0){
-            double a = (3 * b / (65535.0 * this->iluminance)- 1) * (1/this->saturation);
-            // hue_1 = 2 * (std::atan((std::sqrt(3) * a - 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159 + 240.0;
-            this->hue = std::fmod(2 * (std::atan((std::sqrt(3) * a + 2 * std::sqrt(a * a - a + 1)) / (a - 2))) *180.0/3.14159 + 420.0, 360.0);
-        }*/
+        this->hue = H;
     }
 
     void pixel::convert_hsi_to_rgb_pre(){
