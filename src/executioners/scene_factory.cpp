@@ -1,6 +1,7 @@
 #include "executioners/scene_factory.hpp"
 
 #include <deque>
+#include <fstream>
 #include <map>
 #include <mutex>
 #include <set>
@@ -28,6 +29,7 @@
 #include "filters/sequencer/filter_sequencer.hpp"
 #include "filters/filter_color_mixer.hpp"
 #include "filters/chaser/color_chaser.hpp"
+#include "filters/event_scheduler.hpp"
 
 #include <iostream>
 
@@ -335,6 +337,9 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_switch_color:
                     sum += sizeof(filter_switch_color);
                     break;
+                case filter_type::filter_event_scheduler:
+                    sum += sizeof(event_scheduler);
+                    break;
 				default: {
 						 std::stringstream ss;
 						 ss << ERROR_FILTER_NOT_IMPLEMENTED_IN_ALLOCATION;
@@ -523,6 +528,8 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_switch_float>(pac);
             case filter_type::filter_switch_color:
                 return calloc<filter_switch_color>(pac);
+            case filter_type::filter_event_scheduler:
+                return calloc<event_scheduler>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
@@ -724,9 +731,11 @@ COMPILER_RESTORE("-Weffc++")
 						scene_index_map[sid] = last_index;
 					}
 				} catch (const ::dmxfish::filters::filter_config_exception& e) {
+				        std::lock_guard lock(msg_stream_mutex);
 					msg_stream << ERROR_FILTER_CONFIGURATION_EXCEPTION << "SCENE_ID:" << stemplate.id() << "/Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
 					*worked = false;
 				} catch (const scheduling_exception& e) {
+					std::lock_guard lock(msg_stream_mutex);
 					msg_stream << ERROR_FILTER_SCHEDULING_EXCEPTION << "SCENE_ID:" << stemplate.id() << "Failed to schedule filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
 					*worked = false;
 				}
@@ -738,6 +747,11 @@ COMPILER_RESTORE("-Weffc++")
 		}
 		tp.join();
 		global_msg_stream << "Done." << std::endl;
+        if (*worked == false) {
+            std::ofstream logfile("/tmp/fish_scene_parsing_failure.log");
+            logfile << global_msg_stream.str();
+            logfile.flush();
+        }
 		return std::make_pair(global_msg_stream.str(), *worked);
     }
 

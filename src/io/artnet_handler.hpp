@@ -51,6 +51,10 @@ namespace dmxfish::io {
 				if(record == this->nodes.end()) {
 					throw std::invalid_argument("This universe was not registered with this artnet_handler.");
 				}
+				if (client->get_write_queue_backlog_size() > 4 * this->nodes.size()) {
+					::spdlog::error("Discarding ArtNet packet for universe {} as network write cannot keep up!", u.getID());
+					return;
+				}
 				u.update_sequence_number(++record->second.sequence_number == 0 ? ++record->second.sequence_number : record->second.sequence_number);
 				this->client->send_packet(record->second.node_address, u.prep_and_get_packet());
 			}

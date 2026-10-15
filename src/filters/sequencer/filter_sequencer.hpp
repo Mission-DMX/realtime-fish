@@ -30,6 +30,8 @@ namespace dmxfish {
             double* input_time = nullptr;
             double* time_scale = nullptr;
             COMPILER_RESTORE("-Weffc++")
+            sequencer::sequencer_time_t virtual_time = 0;
+            sequencer::sequencer_time_t last_wall_time = 0;
             std::vector<sequencer::channel<uint8_t>> channels_8bit;
             std::vector<sequencer::channel<uint16_t>> channels_16bit;
             std::vector<sequencer::channel<double>> channels_float;
