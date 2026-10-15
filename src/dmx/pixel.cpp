@@ -3,6 +3,7 @@
 //
 #include "dmx/pixel.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <sstream>
 
@@ -110,9 +111,9 @@ namespace dmxfish::dmx {
         pixel_to_rgb16(red, green, blue);
     }
     void pixel::convert_rgb_to_hsi(){
-        double r = this->red / 65565.0;
-        double g = this->green / 65565.0;
-        double b = this->blue / 65565.0;
+        double r = this->red / 65535.0;
+        double g = this->green / 65535.0;
+        double b = this->blue / 65535.0;
         double sum = r + g + b;
 
         if (sum <= 0.0){
@@ -124,7 +125,7 @@ namespace dmxfish::dmx {
 
 	double min = std::min(std::min(r, g), b);
 	const double a = std::sqrt( (r*r) + (g*g) + (b*b) - (r*g) - (r*b) - (g*b) );
-	this->hue =  a > 0.0 ? std::acos(( (r - (g*0.5) - (b*0.5) ) )/(a)) : 0.0;
+	this->hue =  a > 0.0 ? std::acos(std::clamp((r - (g*0.5) - (b*0.5)) / a, -1.0, 1.0)) : 0.0;
 	if (b > g) {
 	    this->hue = (2*M_PI) - this->hue;
 	}
