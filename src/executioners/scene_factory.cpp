@@ -23,6 +23,7 @@
 #include "filters/filter_math.hpp"
 #include "filters/filter_time.hpp"
 #include "filters/filter_cue.hpp"
+#include "filters/filter_series_strobe_generator.hpp"
 #include "filters/filter_shift.hpp"
 #include "filters/filter_switch.hpp"
 #include "filters/lua/filter_lua_script.hpp"
@@ -340,6 +341,15 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_event_scheduler:
                     sum += sizeof(event_scheduler);
                     break;
+                case filter_type::filter_series_strobe_generator_8bit:
+                    sum += sizeof(filter_series_strobe_generator_8bit);
+                    break;
+                case filter_type::filter_series_strobe_generator_16bit:
+                    sum += sizeof(filter_series_strobe_generator_16bit);
+                    break;
+                case filter_type::filter_series_strobe_generator_float:
+                    sum += sizeof(filter_series_strobe_generator_float);
+                    break;
 				default: {
 						 std::stringstream ss;
 						 ss << ERROR_FILTER_NOT_IMPLEMENTED_IN_ALLOCATION;
@@ -530,6 +540,12 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_switch_color>(pac);
             case filter_type::filter_event_scheduler:
                 return calloc<event_scheduler>(pac);
+            case filter_type::filter_series_strobe_generator_8bit:
+                return calloc<filter_series_strobe_generator_8bit>(pac);
+            case filter_type::filter_series_strobe_generator_16bit:
+                return calloc<filter_series_strobe_generator_16bit>(pac);
+            case filter_type::filter_series_strobe_generator_float:
+                return calloc<filter_series_strobe_generator_float>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
