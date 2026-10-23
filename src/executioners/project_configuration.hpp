@@ -5,6 +5,7 @@
 #include <sstream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "dmx/universe.hpp"
@@ -67,6 +68,13 @@ public:
 			throw std::invalid_argument("Failed to update filter parameter of non existant show " + std::to_string(show_id) + ".");
 		}
 		return this->scenes[this->scene_id_mapping.at(show_id)].update_filter_parameter(filter_id, key, value);
+	}
+
+	[[nodiscard]] inline std::optional<std::string> get_active_scene_channel_value(const std::string& channel_id) const {
+		if (this->current_active_scene >= this->scenes.size()) {
+			return std::nullopt;
+		}
+		return this->scenes[this->current_active_scene].get_channel_value(channel_id);
 	}
 
 	/**

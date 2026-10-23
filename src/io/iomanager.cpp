@@ -671,6 +671,30 @@ void IOManager::parse_message_cb(uint32_t msg_type, client_handler& client){
                 this->latest_error = e.what();
             }
             break;
+        case ::missiondmx::fish::ipcmessages::MSGT_CHANNEL_SCOPE:
+        {
+            missiondmx::fish::ipcmessages::channel_scope msg;
+            if (!msg.ParseFromZeroCopyStream(buffer)) {
+                error_message += "Could not parse the message of type: MSGT_CHANNEL_SCOPE.";
+                this->latest_error = error_message;
+                ::spdlog::warn(error_message);
+                return;
+            }
+            if (!this->active_show) {
+                ::spdlog::warn("MSGT_CHANNEL_SCOPE received but no show is active.");
+                return;
+            }
+            const auto value = this->active_show->get_active_scene_channel_value(msg.channel_id());
+            if (!value) {
+                ::spdlog::warn("MSGT_CHANNEL_SCOPE requested unknown channel '{}'.", msg.channel_id());
+                return;
+            }
+            missiondmx::fish::ipcmessages::channel_scope reply;
+            reply.set_channel_id(msg.channel_id());
+            reply.set_current_value(*value);
+            this->push_msg_to_all_gui(reply, ::missiondmx::fish::ipcmessages::MSGT_CHANNEL_SCOPE);
+            return;
+        }
 		default:
         {
             error_message += "IOManager Parse Message: Used a unknown Msg Type. ";
