@@ -1,6 +1,7 @@
 #include "executioners/scene_factory.hpp"
 
 #include <deque>
+#include <fstream>
 #include <map>
 #include <mutex>
 #include <set>
@@ -22,12 +23,15 @@
 #include "filters/filter_math.hpp"
 #include "filters/filter_time.hpp"
 #include "filters/filter_cue.hpp"
+#include "filters/filter_series_strobe_generator.hpp"
+#include "filters/filter_dimmer_director.hpp"
 #include "filters/filter_shift.hpp"
 #include "filters/filter_switch.hpp"
 #include "filters/lua/filter_lua_script.hpp"
 #include "filters/sequencer/filter_sequencer.hpp"
 #include "filters/filter_color_mixer.hpp"
 #include "filters/chaser/color_chaser.hpp"
+#include "filters/event_scheduler.hpp"
 
 #include <iostream>
 
@@ -335,6 +339,21 @@ COMPILER_RESTORE("-Weffc++")
                 case filter_type::filter_switch_color:
                     sum += sizeof(filter_switch_color);
                     break;
+                case filter_type::filter_event_scheduler:
+                    sum += sizeof(event_scheduler);
+                    break;
+                case filter_type::filter_series_strobe_generator_8bit:
+                    sum += sizeof(filter_series_strobe_generator_8bit);
+                    break;
+                case filter_type::filter_series_strobe_generator_16bit:
+                    sum += sizeof(filter_series_strobe_generator_16bit);
+                    break;
+                case filter_type::filter_series_strobe_generator_float:
+                    sum += sizeof(filter_series_strobe_generator_float);
+                    break;
+                case filter_type::filter_dimmer_director:
+                    sum += sizeof(filter_dimmer_director);
+                    break;
 				default: {
 						 std::stringstream ss;
 						 ss << ERROR_FILTER_NOT_IMPLEMENTED_IN_ALLOCATION;
@@ -523,6 +542,16 @@ COMPILER_RESTORE("-Weffc++")
                 return calloc<filter_switch_float>(pac);
             case filter_type::filter_switch_color:
                 return calloc<filter_switch_color>(pac);
+            case filter_type::filter_event_scheduler:
+                return calloc<event_scheduler>(pac);
+            case filter_type::filter_series_strobe_generator_8bit:
+                return calloc<filter_series_strobe_generator_8bit>(pac);
+            case filter_type::filter_series_strobe_generator_16bit:
+                return calloc<filter_series_strobe_generator_16bit>(pac);
+            case filter_type::filter_series_strobe_generator_float:
+                return calloc<filter_series_strobe_generator_float>(pac);
+            case filter_type::filter_dimmer_director:
+                return calloc<filter_dimmer_director>(pac);
 	default:
 		throw scheduling_exception(std::string(ERROR_FILTER_NOT_IMPLEMENTED_IN_CONSTRUCTION) + "Failed to construct filter. The requested filter type (" + std::to_string(type) + ") is not yet implemented.");
 		}
@@ -661,8 +690,7 @@ COMPILER_RESTORE("-Weffc++")
 		return configuration_cm;
 	}
 
-	inline void connect_filters(scene_filter_vector_t& fv, std::map<size_t, filter_info>& filter_info_map) {
-		dmxfish::filters::channel_mapping cm;
+	inline void connect_filters(scene_filter_vector_t& fv, std::map<size_t, filter_info>& filter_info_map, dmxfish::filters::channel_mapping& cm) {
 		for(size_t i = 0; i < fv.size(); i++) {
 			auto& finfo = filter_info_map[i];
 			fv[i]->get_output_channels(cm, finfo.name);
@@ -671,18 +699,19 @@ COMPILER_RESTORE("-Weffc++")
 		}
 	}
 
-    [[nodiscard]] inline std::tuple<scene_filter_vector_t, scene_boundry_vec_t, std::shared_ptr<ZeroDeletingLinearAllocator>, scene_filter_index_t> compute_filter(const ::MissionDMX::ShowFile::Scene& s, std::stringstream& msg_stream) {
+    [[nodiscard]] inline std::tuple<scene_filter_vector_t, scene_boundry_vec_t, std::shared_ptr<ZeroDeletingLinearAllocator>, scene_filter_index_t, dmxfish::filters::channel_mapping> compute_filter(const ::MissionDMX::ShowFile::Scene& s, std::stringstream& msg_stream) {
 	    auto pac = std::make_shared<ZeroDeletingLinearAllocator>(get_filter_memory_size(s));
 	    scene_filter_vector_t filters;
 	    scene_boundry_vec_t boundries;
 		scene_filter_index_t filter_index;
 	    filters.reserve(s.filter().size());
 	    std::map<size_t, filter_info> filter_info_map;
+	    dmxfish::filters::channel_mapping output_channels;
 
 	    schedule_filters(s, filters, boundries, pac, filter_info_map, msg_stream, filter_index);
-	    connect_filters(filters, filter_info_map);
+	    connect_filters(filters, filter_info_map, output_channels);
 
-	    return std::make_tuple(filters, boundries, pac, filter_index);
+	    return std::make_tuple(std::move(filters), std::move(boundries), pac, std::move(filter_index), std::move(output_channels));
     }
 
     inline void load_default_dmx_values(default_dmx_value_container& container, const ::MissionDMX::ShowFile::Scene& s) {
@@ -713,8 +742,9 @@ COMPILER_RESTORE("-Weffc++")
 					scene s{std::move(std::get<0>(filter_tuple)),
 							std::move(std::get<1>(filter_tuple)),
 							std::get<2>(filter_tuple),
-							std::get<3>(filter_tuple),
-                            default_dmx_values
+							std::move(std::get<3>(filter_tuple)),
+                            default_dmx_values,
+                            std::move(std::get<4>(filter_tuple))
 						};
 					{
 						std::lock_guard lock(v_mutex);
@@ -724,9 +754,11 @@ COMPILER_RESTORE("-Weffc++")
 						scene_index_map[sid] = last_index;
 					}
 				} catch (const ::dmxfish::filters::filter_config_exception& e) {
+				        std::lock_guard lock(msg_stream_mutex);
 					msg_stream << ERROR_FILTER_CONFIGURATION_EXCEPTION << "SCENE_ID:" << stemplate.id() << "/Failed to configure filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
 					*worked = false;
 				} catch (const scheduling_exception& e) {
+					std::lock_guard lock(msg_stream_mutex);
 					msg_stream << ERROR_FILTER_SCHEDULING_EXCEPTION << "SCENE_ID:" << stemplate.id() << "Failed to schedule filters in scene '" << stemplate.human_readable_name() << "'. Reason: " << e.what() << std::endl;
 					*worked = false;
 				}
@@ -738,6 +770,11 @@ COMPILER_RESTORE("-Weffc++")
 		}
 		tp.join();
 		global_msg_stream << "Done." << std::endl;
+        if (*worked == false) {
+            std::ofstream logfile("/tmp/fish_scene_parsing_failure.log");
+            logfile << global_msg_stream.str();
+            logfile.flush();
+        }
 		return std::make_pair(global_msg_stream.str(), *worked);
     }
 

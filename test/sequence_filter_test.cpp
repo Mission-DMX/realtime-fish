@@ -188,3 +188,108 @@ BOOST_AUTO_TEST_CASE(test_linear_update) {
         last_value = *channel_8b;
     }
 }
+
+BOOST_AUTO_TEST_CASE(test_time_scale_behavior) {
+    // Regression test for sequencer time_scale handling.
+    //
+    // Previously, inputs other than 1.0 made the filter appear "stuck" because
+    // the raw (wall-clock) time was multiplied by time_scale on each tick and
+    // then compared/subtracted against keyframe start-times that lived in a
+    // different unit system. The fix accumulates a per-filter virtual_time from
+    // (delta_wall_time * max(0, time_scale)); this test exercises the key
+    // invariants that follow from that design:
+    //
+    //   * time_scale > 1 actually speeds up transitions (not freezes them).
+    //   * Changing time_scale mid-flight is continuous (no jumps).
+    //   * time_scale == 0 pauses.
+    //   * time_scale < 0 is clamped to 0 (also pauses).
+    //   * scene_activated resets the clock so a large wall time doesn't blow
+    //     up virtual_time on the first tick.
+    const auto t_e_sender = dmxfish::events::event_source::create<dmxfish::events::event_source>(get_event_storage_instance());
+
+    // Start wall time at a non-trivial value so a regression that does
+    // `virtual_time = current_time * time_scale` (rather than accumulating
+    // scaled deltas) would overshoot by hundreds of ms on tick one.
+    double current_time = 1000.0;
+    double time_scale = 1.0;
+    channel_mapping input_cm, output_cm;
+    input_cm.float_channels["time"] = &current_time;
+    input_cm.float_channels["time_scale"] = &time_scale;
+
+    std::map<std::string, std::string> configuration;
+    std::map<std::string, std::string> init_params;
+    static const std::string filter_id = "test_time_scale_filter";
+
+    // default_on_empty = false so the output latches at the last transition
+    // value once the queue drains, instead of snapping back to 0.
+    configuration["channels"] = "channel_8b:8bit:0:false:true:max";
+    // Single linear transition: 0 -> 200 over 400ms.
+    configuration["transitions"] = std::to_string(t_e_sender->get_sender_id()) + ":0:1:0##channel_8b:200:lin:400";
+
+    filter_sequencer fs;
+    fs.pre_setup(configuration, init_params, filter_id);
+    fs.get_output_channels(output_cm, filter_id);
+    auto* channel_8b = output_cm.eight_bit_channels[filter_id + ":channel_8b"];
+    fs.setup_filter(configuration, init_params, input_cm, filter_id);
+    time_scale = 2.0;
+    fs.scene_activated();
+
+    // Helper: swap_buffers must be called every tick so that the trigger event
+    // is only visible on the first update after insertion. Otherwise the event
+    // would stay in the readable buffer and keep re-enqueueing (and resetting)
+    // the transition each tick, pinning elapsed at 0.
+    const auto tick = [&](double dt_ms) {
+        current_time += dt_ms;
+        get_event_storage_instance()->swap_buffers();
+        fs.update();
+    };
+
+    // ---- Phase 1: time_scale = 2.0 progresses the transition at double rate ----
+    get_event_storage_instance()->insert_event(event(event_type::SINGLE_TRIGGER, event_sender_t(t_e_sender->get_sender_id(), 0)));
+    tick(20.0);  // event becomes visible, transition enqueued; elapsed = 0 on this tick
+    BOOST_CHECK_EQUAL(*channel_8b, 0);
+
+    // 5 further 20ms real-time ticks => 100ms real => 200ms virtual
+    // => interleave ~= 200/400 = 0.5 => value ~= 100.
+    for (int i = 0; i < 5; i++) {
+        tick(20.0);
+    }
+    // Lower bound is the real teeth of this test: before the fix, the value
+    // was stuck at 0 for time_scale > 1 (interleave clamped to 0 by the broken
+    // elapsed computation).
+    BOOST_CHECK(*channel_8b > 70);
+    BOOST_CHECK(*channel_8b < 130);
+
+    // ---- Phase 2: time_scale change mid-flight is continuous, not a jump ----
+    const auto value_before_change = *channel_8b;
+    time_scale = 0.5;
+    tick(20.0);  // 20ms real at 0.5x => +10ms virtual
+    // A naive "scale raw wall time by time_scale each tick" implementation
+    // would discontinuously jump the virtual timeline here; the accumulator
+    // only scales the *new* delta.
+    BOOST_CHECK(*channel_8b >= value_before_change);
+    BOOST_CHECK(*channel_8b < value_before_change + 20);
+
+    // ---- Phase 3: time_scale == 0 pauses interpolation ----
+    time_scale = 0.0;
+    const auto frozen_value = *channel_8b;
+    for (int i = 0; i < 10; i++) {
+        tick(50.0);
+    }
+    BOOST_CHECK_EQUAL(*channel_8b, frozen_value);
+
+    // ---- Phase 4: negative time_scale is clamped to 0 (still paused) ----
+    time_scale = -3.0;
+    for (int i = 0; i < 10; i++) {
+        tick(50.0);
+    }
+    BOOST_CHECK_EQUAL(*channel_8b, frozen_value);
+
+    // ---- Phase 5: resume at 1.0; transition completes near the target ----
+    time_scale = 1.0;
+    for (int i = 0; i < 50; i++) {
+        tick(10.0);
+    }
+    BOOST_CHECK(*channel_8b > frozen_value + 50);
+    BOOST_CHECK(*channel_8b <= 200);
+}

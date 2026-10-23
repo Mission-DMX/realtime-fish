@@ -2,7 +2,10 @@
 
 #include <memory>
 #include <map>
+#include <optional>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -29,11 +32,13 @@ private:
 	const std::shared_ptr<LinearAllocator> used_allocator;
 	const scene_filter_index_t filter_index;
     const default_dmx_value_container default_dmx_values;
+    const dmxfish::filters::channel_mapping output_channels;
 public:
 	scene (scene_filter_vector_t f, scene_boundry_vec_t b, std::shared_ptr<LinearAllocator> alloc,
-           scene_filter_index_t index, default_dmx_value_container default_values)
+           scene_filter_index_t index, default_dmx_value_container default_values,
+           dmxfish::filters::channel_mapping output_channels_)
 		: filters(std::move(f)), dependency_boundries(std::move(b)), used_allocator(alloc), filter_index(index),
-        default_dmx_values(default_values) {
+        default_dmx_values(default_values), output_channels(std::move(output_channels_)) {
 		// The vectors are initialized
 	}
 
@@ -115,6 +120,29 @@ public:
 		} else {
 			return false;
 		}
+	}
+
+	[[nodiscard]] inline std::optional<std::string> get_channel_value(const std::string& channel_id) const {
+		if (const auto it = this->output_channels.eight_bit_channels.find(channel_id);
+				it != this->output_channels.eight_bit_channels.end() && it->second != nullptr) {
+			return std::to_string(static_cast<unsigned>(*it->second));
+		}
+		if (const auto it = this->output_channels.sixteen_bit_channels.find(channel_id);
+				it != this->output_channels.sixteen_bit_channels.end() && it->second != nullptr) {
+			return std::to_string(*it->second);
+		}
+		if (const auto it = this->output_channels.float_channels.find(channel_id);
+				it != this->output_channels.float_channels.end() && it->second != nullptr) {
+			return std::to_string(*it->second);
+		}
+		if (const auto it = this->output_channels.color_channels.find(channel_id);
+				it != this->output_channels.color_channels.end() && it->second != nullptr) {
+			auto* const p = it->second;
+			std::stringstream ss;
+			ss << p->getHue() << ',' << p->getSaturation() << ',' << p->getIluminance();
+			return ss.str();
+		}
+		return std::nullopt;
 	}
 };
 

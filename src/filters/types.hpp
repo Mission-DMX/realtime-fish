@@ -81,6 +81,11 @@ namespace dmxfish::filters {
 	filter_switch_8bit = 76,
 	filter_switch_16bit = 77,
 	filter_switch_float = 78,
-	filter_switch_color = 79
+	filter_switch_color = 79,
+    filter_event_scheduler = 80,
+    filter_series_strobe_generator_8bit = 81,
+    filter_series_strobe_generator_16bit = 82,
+    filter_series_strobe_generator_float = 83,
+    filter_dimmer_director = 84
     };
 }
