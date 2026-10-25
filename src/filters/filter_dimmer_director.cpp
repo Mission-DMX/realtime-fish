@@ -12,8 +12,13 @@
 #include <string>
 
 #include "filters/types.hpp"
+#include "io/iomanager.hpp"
 #include "lib/logging.hpp"
+#include "main.hpp"
 #include "utils.hpp"
+
+#include "proto_src/FilterMode.pb.h"
+#include "proto_src/MessageTypes.pb.h"
 
 namespace dmxfish::filters {
 
@@ -355,7 +360,10 @@ namespace dmxfish::filters {
         const int32_t Z = static_cast<int32_t>(g.dim_z);
 
         if (!ec.triggered) {
-            const int64_t base = static_cast<int64_t>(this->tick);
+            // virtual_tick advances in update() only on non-paused ticks and is incremented
+            // AFTER the base is sampled. While paused, replay the previous (virtual_tick - 1)
+            // index so the output holds its last value regardless of how many paused ticks pass.
+            const int64_t base = g.paused ? std::max<int64_t>(0, g.virtual_tick - 1) : g.virtual_tick;
             for (int32_t z = 0; z < Z; z++) {
                 for (int32_t y = 0; y < Y; y++) {
                     for (int32_t x = 0; x < X; x++) {
@@ -446,6 +454,9 @@ namespace dmxfish::filters {
     void filter_dimmer_director::update() {
         for (auto& g : this->groups) {
             this->update_group(g);
+            if (!g.paused) {
+                g.virtual_tick++;
+            }
         }
         this->tick++;
     }
@@ -458,10 +469,75 @@ namespace dmxfish::filters {
             std::fill(g.triggered_running.begin(), g.triggered_running.end(), static_cast<uint8_t>(0));
             std::fill(g.value_window.begin(), g.value_window.end(), 0.0f);
             std::fill(g.value_window_pos.begin(), g.value_window_pos.end(), 0u);
+            g.paused = false;
+            g.virtual_tick = 0;
         }
     }
 
+    void filter_dimmer_director::emit_effect_state(const dd_group& g) const {
+        auto iomanager = get_iomanager_instance();
+        if (iomanager == nullptr) {
+            return;
+        }
+        const auto active_show = iomanager->get_active_show();
+        if (active_show == nullptr) {
+            return;
+        }
+        auto msg = missiondmx::fish::ipcmessages::update_parameter();
+        msg.set_filter_id(this->own_filter_id);
+        msg.set_parameter_key("effect_state");
+        msg.set_scene_id(active_show->get_current_scene_id());
+        msg.set_parameter_value(g.name + ":" + std::to_string(g.active_effect_idx) + ":" + (g.paused ? "paused" : "running"));
+        iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
+    }
+
+    void filter_dimmer_director::emit_dimmer_state(const dd_group& g) const {
+        auto iomanager = get_iomanager_instance();
+        if (iomanager == nullptr) {
+            return;
+        }
+        const auto active_show = iomanager->get_active_show();
+        if (active_show == nullptr) {
+            return;
+        }
+        auto msg = missiondmx::fish::ipcmessages::update_parameter();
+        msg.set_filter_id(this->own_filter_id);
+        msg.set_parameter_key("dimmer_state");
+        msg.set_scene_id(active_show->get_current_scene_id());
+        msg.set_parameter_value(g.name + ":" + std::to_string(g.active_dimmer_idx));
+        iomanager->push_msg_to_all_gui(msg, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
+    }
+
     bool filter_dimmer_director::receive_update_from_gui(const std::string& key, const std::string& value) {
+        if (key == "pause_effect" || key == "resume_effect") {
+            const auto git = this->group_index_by_name.find(value);
+            if (git == this->group_index_by_name.end()) {
+                return false;
+            }
+            dd_group& g = this->groups[git->second];
+            if (key == "pause_effect") {
+                if (g.active_effect_idx >= this->effect_curves.size()) {
+                    return false;
+                }
+                if (this->effect_curves[g.active_effect_idx].triggered) {
+                    return false;
+                }
+                if (g.paused) {
+                    return false;
+                }
+                g.paused = true;
+                this->emit_effect_state(g);
+                return true;
+            }
+            // resume_effect: no-op (but reported as success) if not currently paused.
+            if (!g.paused) {
+                return true;
+            }
+            g.paused = false;
+            this->emit_effect_state(g);
+            return true;
+        }
+
         if (key != "active_effect" && key != "active_dimmer") {
             return false;
         }
@@ -489,11 +565,15 @@ namespace dmxfish::filters {
                 return false;
             }
             g.active_effect_idx = index;
+            // Switching curves resumes playback: pause state is tied to the previously-active curve.
+            g.paused = false;
+            this->emit_effect_state(g);
         } else {
             if (index >= this->dimmer_curves.size()) {
                 return false;
             }
             g.active_dimmer_idx = index;
+            this->emit_dimmer_state(g);
         }
         return true;
     }

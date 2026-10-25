@@ -71,6 +71,12 @@ namespace dmxfish::filters {
         uint32_t n_mix_group;
         uint32_t n_off_group;
 
+        // Per-group virtual time for REPEAT curves. Advances once per non-paused
+        // update; pause/resume just gates the increment, so the effect index
+        // continues seamlessly after a resume.
+        bool paused;
+        int64_t virtual_tick;
+
         dd_group()
             : name(), dim_x(0), dim_y(0), dim_z(0),
               phase_x(0), phase_y(0), phase_z(0),
@@ -79,7 +85,8 @@ namespace dmxfish::filters {
               active_effect_idx(0), active_dimmer_idx(0),
               max_window(1), trigger_tick(), triggered_running(),
               value_window(), value_window_pos(),
-              n_mix_group(0), n_off_group(0) {}
+              n_mix_group(0), n_off_group(0),
+              paused(false), virtual_tick(0) {}
     };
     COMPILER_RESTORE("-Weffc++")
 
@@ -121,6 +128,8 @@ namespace dmxfish::filters {
         void parse_dimmer_curves(const std::map<std::string, std::string>& configuration, const std::string& own_id);
         void link_input_channels(const channel_mapping& input_channels, const std::string& own_id);
         void update_group(dd_group& g);
+        void emit_effect_state(const dd_group& g) const;
+        void emit_dimmer_state(const dd_group& g) const;
     };
 
 }
