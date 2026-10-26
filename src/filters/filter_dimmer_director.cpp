@@ -53,6 +53,49 @@ namespace dmxfish::filters {
             return {value.substr(0, pos), value.substr(pos + 1)};
         }
 
+        // Specialised REPEAT inner loop. Hoists the dimmer-curve dispatch out of the
+        // per-cell path so the compiler can SIMD-vectorise the arithmetic for each
+        // curve type independently. The modulo correction is branchless so GCC
+        // produces straight-line code across the X extent.
+        template <dimmer_curve::type_t Curve>
+        [[gnu::flatten]] void run_repeat_body(dd_group& g, int64_t base, double f0,
+                                              const std::array<double, 4>& params,
+                                              const double* samples, int32_t length) noexcept {
+            const int32_t X = static_cast<int32_t>(g.dim_x);
+            const int32_t Y = static_cast<int32_t>(g.dim_y);
+            const int32_t Z = static_cast<int32_t>(g.dim_z);
+            const int64_t phase_x = g.phase_x;
+            const int64_t phase_y = g.phase_y;
+            const int64_t phase_z = g.phase_z;
+            const double a = params[0];
+            const double b = params[1];
+            uint16_t* __restrict__ out = g.outputs.data();
+
+            for (int32_t z = 0; z < Z; z++) {
+                for (int32_t y = 0; y < Y; y++) {
+                    const int64_t row_base = base + phase_y * y + phase_z * z;
+                    uint16_t* __restrict__ row = out + static_cast<size_t>(y) * X + static_cast<size_t>(z) * X * Y;
+                    for (int32_t x = 0; x < X; x++) {
+                        const int64_t idx = row_base + phase_x * x;
+                        int64_t m = idx % length;
+                        // Branchless `m += (m < 0 ? length : 0)` — the signed arithmetic shift
+                        // yields -1 for negatives, 0 otherwise.
+                        m += length & (m >> 63);
+                        double f = std::clamp(f0 * samples[m], 0.0, 1.0);
+                        if constexpr (Curve == dimmer_curve::type_t::LIN) {
+                            // Final clamp below enforces [0, 1]; omit a redundant mid-clamp.
+                            f = a * f + b;
+                        } else if constexpr (Curve == dimmer_curve::type_t::SIG) {
+                            f = sig_dimmer(f);
+                        } else if constexpr (Curve == dimmer_curve::type_t::BEZIER) {
+                            f = bezier_dimmer(params, f);
+                        }
+                        row[x] = static_cast<uint16_t>(std::clamp(f, 0.0, 1.0) * 65535.0);
+                    }
+                }
+            }
+        }
+
     }
 
     double dimmer_curve::apply(double x) const noexcept {
@@ -163,6 +206,11 @@ namespace dmxfish::filters {
                 if (ec.window_size == 0) {
                     ec.window_size = 1;
                 }
+                constexpr uint32_t max_allowed_window = 65535;
+                if (ec.window_size > max_allowed_window) {
+                    throw filter_config_exception(std::string("Effect curve '") + ec.name + "' has window exceeding " +
+                        std::to_string(max_allowed_window) + " ticks.", own_type, own_id);
+                }
 
                 const auto samples_str = parts.front(); parts.pop_front();
                 for (const auto& s : utils::split(samples_str, ',')) {
@@ -271,10 +319,15 @@ namespace dmxfish::filters {
         this->parse_effect_curves(configuration, filter_id);
         this->parse_dimmer_curves(configuration, filter_id);
 
-        // Size per-cell trigger window buffers using the largest window across TRIGGER curves.
+        // Size per-cell trigger window buffers to the largest window across ALL effect
+        // curves. Checking every curve (not only TRIGGER ones) keeps the inner-loop
+        // invariant `window <= max_window` intact even if a REPEAT curve ever gets
+        // reclassified or if the dispatch logic changes later — the previous version
+        // could underflow `(head + max_window - window) % max_window` the moment a
+        // TRIGGER-mode window was larger than any observed-at-pre_setup TRIGGER window.
         uint32_t global_max_window = 1;
         for (const auto& ec : this->effect_curves) {
-            if (ec.triggered && ec.window_size > global_max_window) {
+            if (ec.window_size > global_max_window) {
                 global_max_window = ec.window_size;
             }
         }
@@ -385,34 +438,18 @@ namespace dmxfish::filters {
             // AFTER the base is sampled. While paused, replay the previous (virtual_tick - 1)
             // index so the output holds its last value regardless of how many paused ticks pass.
             const int64_t base = g.paused ? std::max<int64_t>(0, g.virtual_tick - 1) : g.virtual_tick;
-            for (int32_t z = 0; z < Z; z++) {
-                for (int32_t y = 0; y < Y; y++) {
-                    for (int32_t x = 0; x < X; x++) {
-                        int64_t idx = base + static_cast<int64_t>(g.phase_x) * x + static_cast<int64_t>(g.phase_y) * y + static_cast<int64_t>(g.phase_z) * z;
-                        int64_t m = idx % length;
-                        if (m < 0) {
-                            m += length;
-                        }
-                        const double sample = samples[m];
-                        double f = clamp01(f0 * sample);
-                        switch (dc_type) {
-                        case dimmer_curve::type_t::LIN:
-                            // Final `clamp01(f) * 65535.0` below enforces the [0, 1] clip; skip the redundant clamp here.
-                            f = params[0] * f + params[1];
-                            break;
-                        case dimmer_curve::type_t::SIG:
-                            f = sig_dimmer(f);
-                            break;
-                        case dimmer_curve::type_t::BEZIER:
-                            f = bezier_dimmer(params, f);
-                            break;
-                        default:
-                            break;
-                        }
-                        const size_t out_idx = static_cast<size_t>(x) + static_cast<size_t>(y) * X + static_cast<size_t>(z) * X * Y;
-                        g.outputs[out_idx] = static_cast<uint16_t>(clamp01(f) * 65535.0);
-                    }
-                }
+            switch (dc_type) {
+            case dimmer_curve::type_t::LIN:
+                run_repeat_body<dimmer_curve::type_t::LIN>(g, base, f0, params, samples, length);
+                break;
+            case dimmer_curve::type_t::SIG:
+                run_repeat_body<dimmer_curve::type_t::SIG>(g, base, f0, params, samples, length);
+                break;
+            case dimmer_curve::type_t::BEZIER:
+                run_repeat_body<dimmer_curve::type_t::BEZIER>(g, base, f0, params, samples, length);
+                break;
+            default:
+                break;
             }
             return;
         }
