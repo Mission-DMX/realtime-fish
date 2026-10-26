@@ -67,4 +67,20 @@ driver needs to be installed and loaded. A corresponding entry to `/etc/modules`
 
 ## Unit tests
 Running the unit tests requires Pulse Audio's `pactl` to be installed.
-It is usually supplied by a package called `pulseaudio-utils`
+It is usually supplied by a package called `pulseaudio-utils`.
+
+The `audio_extract_test` additionally needs a reachable PulseAudio daemon.
+On an interactive desktop session the user daemon is autospawned, so no setup
+is needed. In a non-interactive shell (CI, SSH without an X forward, a
+systemd service unit) `pactl` and `pa_simple_new` will fail with
+`Connection refused` because `XDG_RUNTIME_DIR` is unset and no socket is
+reachable. In that case start a job-scoped user daemon first, for example:
+
+```
+export XDG_RUNTIME_DIR="/tmp/runtime-$(id -u)"
+mkdir -p "$XDG_RUNTIME_DIR" && chmod 700 "$XDG_RUNTIME_DIR"
+pulseaudio --start --exit-idle-time=-1
+```
+
+The `build_test` GitHub Actions workflow does exactly this before invoking
+`make test`.
