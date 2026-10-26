@@ -209,12 +209,20 @@ namespace dmxfish {
 
             bool transitions_inserted = false;
 	    bool transitions_removed = false;
-            for (const auto& event : get_event_storage_instance()->get_storage()) {
-                for(auto [iter, range_end] = this->transitions.equal_range(event.get_event_sender().encoded_sender_id);
-                        iter != range_end; iter++) {
-                    this->enqueue_transition(iter->second);
-                    transitions_inserted = true;
+            const auto storage = get_event_storage_instance();
+            for (auto iter = this->transitions.begin(); iter != this->transitions.end();) {
+                const auto key = iter->first;
+                dmxfish::events::event_sender_t key_sender;
+                key_sender.encoded_sender_id = key;
+                const auto matches = storage->find(key_sender);
+                const auto group_end = this->transitions.upper_bound(key);
+                if (!matches.empty()) {
+                    for (auto t_it = iter; t_it != group_end; ++t_it) {
+                        this->enqueue_transition(t_it->second);
+                        transitions_inserted = true;
+                    }
                 }
+                iter = group_end;
             }
 
             for (auto& c : this->channels_8bit) {

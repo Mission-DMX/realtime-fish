@@ -9,6 +9,7 @@
 #include "main.hpp"
 #include "lib/macros.hpp"
 #include "filters/types.hpp"
+#include "events/sender_parsing.hpp"
 #include "utils.hpp"
 #include "../main.hpp"
 
@@ -112,31 +113,48 @@ namespace dmxfish {
             }
             if (key == "synchronization_target") {
                 auto parts = utils::split(_value, ',');
+                if (parts.size() < 2) [[unlikely]] {
+                    ::spdlog::warn("Event scheduler '{}' received malformed synchronization_target '{}'",
+                                   this->own_filter_id, _value);
+                    return false;
+                }
                 const auto sender_str = parts.front();
                 parts.pop_front();
                 const auto function_str = parts.front();
-                this->synchronization_target = dmxfish::events::event_sender_t{std::stol(sender_str), std::stol(function_str)};
+                uint32_t resolved_sender = 0;
+                if (utils::is_number(sender_str)) {
+                    resolved_sender = static_cast<uint32_t>(std::stoul(sender_str));
+                } else {
+                    auto storage = get_event_storage_instance();
+                    if (storage == nullptr) [[unlikely]] {
+                        ::spdlog::warn("Event scheduler '{}' cannot resolve synchronization_target '{}': "
+                                       "event storage not initialized", this->own_filter_id, _value);
+                        return false;
+                    }
+                    const auto resolved = storage->find_sender_id_by_name(sender_str);
+                    if (!resolved.has_value()) {
+                        ::spdlog::warn("Event scheduler '{}' cannot resolve synchronization_target sender name '{}': "
+                                       "no such event source registered", this->own_filter_id, sender_str);
+                        return false;
+                    }
+                    resolved_sender = *resolved;
+                }
+                this->synchronization_target = dmxfish::events::event_sender_t{
+                        resolved_sender, static_cast<uint32_t>(std::stoul(function_str))};
                 return true;
             }
             return false;
         }
 
         void event_scheduler::update() {
-            bool found = false;
-            for(const auto& event : get_event_storage_instance()->get_storage()) {
-                if (event.get_event_sender() == this->synchronization_target) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
+            auto es = get_event_storage_instance();
+            if (!es->find_first(this->synchronization_target)) {
                 return;
             }
             this->current_step++;
             if (this->current_step >= this->max_step) {
                 this->current_step = 0;
             }
-            auto es = get_event_storage_instance();
             auto iom = get_iomanager_instance();
             auto update_message = missiondmx::fish::ipcmessages::update_parameter();
             update_message.set_filter_id(this->own_filter_id);

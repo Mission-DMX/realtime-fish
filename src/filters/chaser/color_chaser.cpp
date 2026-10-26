@@ -49,10 +49,17 @@ namespace dmxfish::filters {
                         if (ev_params.size() < 2) [[unlikely]] {
                                 throw filter_config_exception("Invalid event format. Got: " + configuration.at("trigger_event"), own_type, own_id);
                         }
-                        const auto sender = std::stoi(ev_params.front());
+                        const auto sender_part = ev_params.front();
                         ev_params.pop_front();
-                        this->event_sender = dmxfish::events::event_sender_t(sender, std::stoi(ev_params.front()));
+                        const auto function_part = ev_params.front();
                         ev_params.pop_front();
+                        try {
+                                this->event_sender = dmxfish::events::parse_sender_representation(
+                                        sender_part + ":" + function_part);
+                        } catch (const std::invalid_argument& e) {
+                                throw filter_config_exception(std::string("Invalid trigger_event: ") + e.what(),
+                                                              own_type, own_id);
+                        }
                         for (auto i = 0; i < this->event_arguments.size(); i++) {
                                 if (ev_params.size() == 0) {
                                         break;
@@ -122,9 +129,9 @@ namespace dmxfish::filters {
                         return;
                 }
                 if (this->uses_steps) {
-                        for (const auto& event : get_event_storage_instance()->get_storage()) {
-                                if (event.get_event_sender() == this->event_sender && (!this->uses_args || (this->uses_args && this->event_arguments == event.get_args()))) {
-                                this->setup->step();
+                        for (const auto& event : get_event_storage_instance()->find(this->event_sender)) {
+                                if (!this->uses_args || this->event_arguments == event.get_args()) {
+                                        this->setup->step();
                                 }
                         }
                 }

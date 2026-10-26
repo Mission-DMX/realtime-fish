@@ -5,6 +5,7 @@
 
 #include "event_storage.hpp"
 
+#include <algorithm>
 #include <limits>
 #include <stdexcept>
 #include "event_source.hpp"
@@ -91,6 +92,16 @@ namespace dmxfish::events {
             new_read_storage.push_back(lasting_ev.second);
             notify_guis_about_event(lasting_ev.second);
         }
+
+        std::sort(new_read_storage.begin(), new_read_storage.end(),
+                  [](const event& lhs, const event& rhs) noexcept {
+            const auto& l = lhs.get_event_sender().decoded_representation;
+            const auto& r = rhs.get_event_sender().decoded_representation;
+            if (l.sender != r.sender) {
+                return l.sender < r.sender;
+            }
+            return l.sender_function < r.sender_function;
+        });
     }
 
     event_sender_t event_storage::register_event_source(const std::shared_ptr<event_source>& self) {
@@ -119,5 +130,63 @@ namespace dmxfish::events {
             return nullptr;
         }
         return wptr.lock();
+    }
+
+    std::optional<uint32_t> event_storage::find_sender_id_by_name(const std::string& name) {
+        auto src = this->find_source_by_name(name);
+        if (src == nullptr) {
+            return std::nullopt;
+        }
+        return src->get_sender_id();
+    }
+
+    std::span<const event> event_storage::find(event_sender_t full) const noexcept {
+        const auto& storage = this->get_storage();
+        const auto cmp = [](const event& ev, event_sender_t key) noexcept {
+            const auto& e = ev.get_event_sender().decoded_representation;
+            const auto& k = key.decoded_representation;
+            if (e.sender != k.sender) {
+                return e.sender < k.sender;
+            }
+            return e.sender_function < k.sender_function;
+        };
+        const auto rcmp = [](event_sender_t key, const event& ev) noexcept {
+            const auto& e = ev.get_event_sender().decoded_representation;
+            const auto& k = key.decoded_representation;
+            if (k.sender != e.sender) {
+                return k.sender < e.sender;
+            }
+            return k.sender_function < e.sender_function;
+        };
+        const auto first = std::lower_bound(storage.begin(), storage.end(), full, cmp);
+        const auto last = std::upper_bound(first, storage.end(), full, rcmp);
+        if (first == storage.end()) {
+            return {};
+        }
+        return std::span<const event>{&(*first), static_cast<std::size_t>(last - first)};
+    }
+
+    std::span<const event> event_storage::find_by_sender(uint32_t sender) const noexcept {
+        const auto& storage = this->get_storage();
+        const auto cmp = [](const event& ev, uint32_t key) noexcept {
+            return ev.get_event_sender().decoded_representation.sender < key;
+        };
+        const auto rcmp = [](uint32_t key, const event& ev) noexcept {
+            return key < ev.get_event_sender().decoded_representation.sender;
+        };
+        const auto first = std::lower_bound(storage.begin(), storage.end(), sender, cmp);
+        const auto last = std::upper_bound(first, storage.end(), sender, rcmp);
+        if (first == storage.end()) {
+            return {};
+        }
+        return std::span<const event>{&(*first), static_cast<std::size_t>(last - first)};
+    }
+
+    event_ref event_storage::find_first(event_sender_t full) const noexcept {
+        const auto range = this->find(full);
+        if (range.empty()) {
+            return event_ref{nullptr};
+        }
+        return event_ref{&range.front()};
     }
 }

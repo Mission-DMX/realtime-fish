@@ -24,8 +24,8 @@ namespace dmxfish::filters::lua {
 
     bool has_event_t(dmxfish::events::event_sender_t source) {
         using namespace dmxfish::events;
-        for(const auto& ev : get_event_storage_instance()->get_storage()) {
-            if (ev.get_event_sender() == source && (ev.get_type() == event_type::START || ev.get_type() == event_type::ONGOING_EVENT || ev.get_type() == event_type::SINGLE_TRIGGER)) {
+        for(const auto& ev : get_event_storage_instance()->find(source)) {
+            if (ev.get_type() == event_type::START || ev.get_type() == event_type::ONGOING_EVENT || ev.get_type() == event_type::SINGLE_TRIGGER) {
                 return true;
             }
         }
