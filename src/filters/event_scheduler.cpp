@@ -85,7 +85,16 @@ namespace dmxfish {
                 return true;
             }
             if (key == "step") {
-                const auto new_step = std::stol(_value) % this->max_step;
+                if (this->max_step == 0) [[unlikely]] {
+                    ::spdlog::warn("Event scheduler '{}' cannot apply step '{}' before length is configured",
+                                   this->own_filter_id, _value);
+                    return false;
+                }
+                const auto parsed = std::stol(_value);
+                if (parsed < 0) [[unlikely]] {
+                    return false;
+                }
+                this->current_step = static_cast<size_t>(parsed) % this->max_step;
                 return true;
             }
             if (key == "update_triggers") {
@@ -147,7 +156,13 @@ namespace dmxfish {
         }
 
         void event_scheduler::update() {
+            if (this->max_step == 0) [[unlikely]] {
+                return;
+            }
             auto es = get_event_storage_instance();
+            if (es == nullptr) [[unlikely]] {
+                return;
+            }
             if (!es->find_first(this->synchronization_target)) {
                 return;
             }
@@ -155,13 +170,17 @@ namespace dmxfish {
             if (this->current_step >= this->max_step) {
                 this->current_step = 0;
             }
-            auto iom = get_iomanager_instance();
-            auto update_message = missiondmx::fish::ipcmessages::update_parameter();
-            update_message.set_filter_id(this->own_filter_id);
-            update_message.set_parameter_key("step");
-            update_message.set_scene_id(iom->get_active_show()->get_current_scene_id());
-            update_message.set_parameter_value(std::to_string(this->current_step));
-            iom->push_msg_to_all_gui(update_message, ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
+            if (auto iom = get_iomanager_instance(); iom != nullptr) [[likely]] {
+                if (auto show = iom->get_active_show(); show != nullptr) [[likely]] {
+                    auto update_message = missiondmx::fish::ipcmessages::update_parameter();
+                    update_message.set_filter_id(this->own_filter_id);
+                    update_message.set_parameter_key("step");
+                    update_message.set_scene_id(show->get_current_scene_id());
+                    update_message.set_parameter_value(std::to_string(this->current_step));
+                    iom->push_msg_to_all_gui(update_message,
+                                             ::missiondmx::fish::ipcmessages::MSGT_UPDATE_PARAMETER);
+                }
+            }
 
             const auto size = this->event_templates.size();
             for(auto i = 0; i < size; i++) {
