@@ -58,11 +58,11 @@ namespace dmxfish::filters {
     double dimmer_curve::apply(double x) const noexcept {
         switch (this->type) {
         case type_t::LIN:
-            return x;
+            return clamp01(this->params[0] * x + this->params[1]);
         case type_t::SIG:
             return sig_dimmer(x);
         case type_t::BEZIER:
-            return bezier_dimmer(this->bezier_cp, x);
+            return bezier_dimmer(this->params, x);
         default:
             return x;
         }
@@ -206,6 +206,27 @@ namespace dmxfish::filters {
             const auto type_str = utils::toupper(parts.front()); parts.pop_front();
             if (type_str == "LIN") {
                 dc.type = dimmer_curve::type_t::LIN;
+                // Optional "a,b" parameters: default to the identity f(x) = x when omitted.
+                if (!parts.empty()) {
+                    const auto param_str = parts.front(); parts.pop_front();
+                    if (!param_str.empty()) {
+                        const auto cp_list = utils::split(param_str, ',');
+                        if (cp_list.size() != 2) {
+                            throw filter_config_exception("LIN dimmer curve expects exactly two parameters 'a,b' or none at all.", own_type, own_id);
+                        }
+                        try {
+                            auto it = cp_list.begin();
+                            dc.params[0] = std::stod(*it++);
+                            dc.params[1] = std::stod(*it);
+                        } catch (const std::invalid_argument& e) {
+                            MARK_UNUSED(e);
+                            throw filter_config_exception("LIN parameter is not a double.", own_type, own_id);
+                        } catch (const std::out_of_range& e) {
+                            MARK_UNUSED(e);
+                            throw filter_config_exception("LIN parameter is out of range.", own_type, own_id);
+                        }
+                    }
+                }
             } else if (type_str == "SIG") {
                 dc.type = dimmer_curve::type_t::SIG;
             } else if (type_str == "BEZIER") {
@@ -221,7 +242,7 @@ namespace dmxfish::filters {
                 try {
                     size_t i = 0;
                     for (const auto& cp : cp_list) {
-                        dc.bezier_cp[i++] = std::stof(cp);
+                        dc.params[i++] = std::stod(cp);
                     }
                 } catch (const std::invalid_argument& e) {
                     MARK_UNUSED(e);
@@ -352,7 +373,7 @@ namespace dmxfish::filters {
 
         const int32_t length = static_cast<int32_t>(ec.samples.size());
         const dimmer_curve::type_t dc_type = dc.type;
-        const std::array<double, 4> bezier_cp = dc.bezier_cp;
+        const std::array<double, 4> params = dc.params;
         const double* samples = ec.samples.data();
 
         const int32_t X = static_cast<int32_t>(g.dim_x);
@@ -376,12 +397,14 @@ namespace dmxfish::filters {
                         double f = clamp01(f0 * sample);
                         switch (dc_type) {
                         case dimmer_curve::type_t::LIN:
+                            // Final `clamp01(f) * 65535.0` below enforces the [0, 1] clip; skip the redundant clamp here.
+                            f = params[0] * f + params[1];
                             break;
                         case dimmer_curve::type_t::SIG:
                             f = sig_dimmer(f);
                             break;
                         case dimmer_curve::type_t::BEZIER:
-                            f = bezier_dimmer(bezier_cp, f);
+                            f = bezier_dimmer(params, f);
                             break;
                         default:
                             break;
@@ -435,12 +458,14 @@ namespace dmxfish::filters {
                     double f = clamp01(f0 * sample);
                     switch (dc_type) {
                     case dimmer_curve::type_t::LIN:
+                        // Final `clamp01(f) * 65535.0` below enforces the [0, 1] clip; skip the redundant clamp here.
+                        f = params[0] * f + params[1];
                         break;
                     case dimmer_curve::type_t::SIG:
                         f = sig_dimmer(f);
                         break;
                     case dimmer_curve::type_t::BEZIER:
-                        f = bezier_dimmer(bezier_cp, f);
+                        f = bezier_dimmer(params, f);
                         break;
                     default:
                         break;

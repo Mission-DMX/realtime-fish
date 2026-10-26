@@ -29,9 +29,11 @@ namespace dmxfish::filters {
     struct dimmer_curve {
         enum class type_t : uint8_t { LIN, SIG, BEZIER };
         type_t type;
-        std::array<double, 4> bezier_cp;
+        // Shared parameter storage. For LIN params[0]=a, params[1]=b (others unused).
+        // For BEZIER params[0..3] are the four control-point y-values. SIG does not use it.
+        std::array<double, 4> params;
 
-        dimmer_curve() : type(type_t::LIN), bezier_cp{} {}
+        dimmer_curve() : type(type_t::LIN), params{1.0, 0.0, 0.0, 0.0} {}
 
         [[nodiscard]] double apply(double x) const noexcept;
     };
