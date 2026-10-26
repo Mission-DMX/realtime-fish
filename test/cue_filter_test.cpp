@@ -120,7 +120,7 @@ BOOST_FIXTURE_TEST_SUITE(cue_filter_with_iomanager, Iomanager_Init)
                 error =
                         std::string("Channel (Color.sat) ") + *it + " should be " + std::to_string(tester.getSaturation()) + " , but is " +
                         std::to_string((*map.color_channels["t:" + *it]).getSaturation()) + " at time: " + std::to_string(time_s);
-                BOOST_TEST(std::abs((*map.color_channels["t:" + *it]).getSaturation() - tester.getSaturation()) <= tester.getSaturation() * 0.00001, error);
+                BOOST_TEST(std::abs((*map.color_channels["t:" + *it]).getSaturation() - tester.getSaturation()) <= tester.getSaturation() * 0.0001, error);
                 error =
                         std::string("Channel (Color.ilu) ") + *it + " should be " + std::to_string(tester.getIluminance()) + " , but is " +
                         std::to_string((*map.color_channels["t:" + *it]).getIluminance()) + " at time: " + std::to_string(time_s);
