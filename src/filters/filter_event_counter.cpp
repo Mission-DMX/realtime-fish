@@ -68,10 +68,8 @@ namespace dmxfish::filters {
             this->time_til_next_count = 1000.0;
             this->counted_events = 0;
         }
-        for(const auto& event : get_event_storage_instance()->get_storage()) {
-            if (event.get_event_sender().is_same_sender(this->trigger_event_sender)) {
-                this->counted_events++;
-            }
-        }
+        const auto matches = get_event_storage_instance()->find_by_sender(
+                this->trigger_event_sender.decoded_representation.sender);
+        this->counted_events += matches.size();
     }
 }

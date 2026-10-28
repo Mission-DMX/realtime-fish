@@ -12,6 +12,22 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    
+
+    - name: Start PulseAudio daemon
+      run: |
+        export XDG_RUNTIME_DIR="/tmp/runtime-$(id -u)"
+        mkdir -p "$XDG_RUNTIME_DIR"
+        chmod 700 "$XDG_RUNTIME_DIR"
+        pulseaudio --start --exit-idle-time=-1 --log-target=stderr
+        pactl info
+
     - name: make
-      run: make test
+      run: |
+        export XDG_RUNTIME_DIR="/tmp/runtime-$(id -u)"
+        make test
+
+    - name: Stop PulseAudio daemon
+      if: always()
+      run: |
+        export XDG_RUNTIME_DIR="/tmp/runtime-$(id -u)"
+        pulseaudio --kill || true

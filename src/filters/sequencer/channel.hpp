@@ -65,7 +65,7 @@ namespace dmxfish::filters::sequencer {
         apply_default_value_on_clear_command(default_on_clear),
         i_method(interleavingMethod), channel_name(name) {}
 
-        bool apply_update(sequencer_time_t current_time, double time_scale) {
+        bool apply_update(sequencer_time_t virtual_time) {
             if(this->upcomming_keyframes.empty()) {
                 if (this->apply_default_value_on_empty_transition_queue) {
                     current_value = default_value;
@@ -83,17 +83,13 @@ namespace dmxfish::filters::sequencer {
                     }
                     const auto keyframe_start_time = queue.get_start_time();
                     const auto keyframe_start_value = queue.get_start_value();
-                    if (keyframe_start_time < 0) { // It's unlikely that were prior to the year 1970
-                        queue.set_start_time(current_time * time_scale);
-                        continue;
-                    }
                     const auto& current_frame = queue.front();
-                    if (const auto duration = std::max(current_frame.get_duration(), 40.0); current_time * time_scale >= keyframe_start_time + duration) {
+                    if (const auto duration = std::max(current_frame.get_duration(), 40.0); virtual_time >= keyframe_start_time + duration) {
                         ::spdlog::debug("Advancing transition in channel {} to next keyframe. Elapsed duration: {}.", this->channel_name, duration);
-                        queue.advance(current_time, this->current_value);
+                        queue.advance(virtual_time, this->current_value);
                         continue;
                     }
-                    requested_values.push_back(current_frame.calculate_update(current_time - keyframe_start_time, keyframe_start_value, time_scale));
+                    requested_values.push_back(current_frame.calculate_update(virtual_time - keyframe_start_time, keyframe_start_value));
                     break;
                 } while (true);
             }
@@ -112,7 +108,7 @@ namespace dmxfish::filters::sequencer {
             return this->upcomming_keyframes.contains(transition_id);
         }
 
-        bool insert_keyframes(const std::vector<keyframe<T>>* frames, const size_t transition_id, bool reset_allowed) {
+        bool insert_keyframes(const std::vector<keyframe<T>>* frames, const size_t transition_id, bool reset_allowed, sequencer_time_t virtual_time) {
             if (this->transition_active(transition_id)) {
                 if(!reset_allowed) {
                     return false;
@@ -122,7 +118,7 @@ namespace dmxfish::filters::sequencer {
                 }
             }
             ::spdlog::debug("Starting execution of transition {} in channel {}.", transition_id, this->channel_name);
-            return this->upcomming_keyframes.try_emplace(transition_id, frames, -1.0, this->current_value).second;
+            return this->upcomming_keyframes.try_emplace(transition_id, frames, virtual_time, this->current_value).second;
         }
 
         COMPILER_SUPRESS("-Weffc++")

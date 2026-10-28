@@ -51,7 +51,11 @@ BOOST_AUTO_TEST_CASE(event_count_test) {
     std::cout << "Writing conf" << std::endl;
     s_ptr->update_conf_from_message(msg);
     std::cout << "Playing test file" << std::endl;
-    std::thread t([]() {system("timeout 30 sh -c 'cat submodules/resources/testdata/test_extract_music_features.wav > /tmp/virtmic_test'");});
+    // Rate-limit the writer to the pipe source's declared byte rate (44100 Hz x 2 ch x 2 bytes
+    // = 176400 B/s). Without this, the writer dumps the whole 31 MB WAV as fast as the kernel
+    // pipe and PulseAudio can accept it; the recorder then processes thousands of frames per
+    // second, pushing BTrack far past its beat period and producing phantom beats.
+    std::thread t([]() {system("timeout 30 sh -c 'pv -q -L 176400 submodules/resources/testdata/test_extract_music_features.wav > /tmp/virtmic_test'");});
     using namespace std::chrono_literals;
     std::this_thread::sleep_for(20000ms);
     conf->operator[]("dev") = "";

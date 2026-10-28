@@ -14,10 +14,7 @@ The part of the software that translates the users wishes to DMX in real time.
 	* libftdi-dev
 	* pkg-config
 	* liblua5.4-dev
-    * libasound2-dev
-    * libeigen3-dev
     * libfftw3-dev
-    * libsox-dev
     * libpulse-dev
     * libsamplerate0-dev
     * libcpptrace-dev (will be removed with C++26)
@@ -66,5 +63,24 @@ nowhere near enough. In order for this to work, the [FT60X](https://github.com/l
 driver needs to be installed and loaded. A corresponding entry to `/etc/modules` should do the trick.
 
 ## Unit tests
-Running the unit tests requires Pulse Audio's `pactl` to be installed.
-It is usually supplied by a package called `pulseaudio-utils`
+Running the unit tests requires Pulse Audio's `pactl` and the `pv` pipe
+rate-limiter to be installed. They are usually supplied by the packages
+`pulseaudio-utils` and `pv`. The `audio_extract_test` uses `pv` to feed the
+virtual microphone at real time; without it the recorder sees audio ~300x
+faster than real time and reports phantom beats.
+
+The `audio_extract_test` additionally needs a reachable PulseAudio daemon.
+On an interactive desktop session the user daemon is autospawned, so no setup
+is needed. In a non-interactive shell (CI, SSH without an X forward, a
+systemd service unit) `pactl` and `pa_simple_new` will fail with
+`Connection refused` because `XDG_RUNTIME_DIR` is unset and no socket is
+reachable. In that case start a job-scoped user daemon first, for example:
+
+```
+export XDG_RUNTIME_DIR="/tmp/runtime-$(id -u)"
+mkdir -p "$XDG_RUNTIME_DIR" && chmod 700 "$XDG_RUNTIME_DIR"
+pulseaudio --start --exit-idle-time=-1
+```
+
+The `build_test` GitHub Actions workflow does exactly this before invoking
+`make test`.

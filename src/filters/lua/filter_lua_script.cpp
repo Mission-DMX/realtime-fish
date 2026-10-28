@@ -89,19 +89,19 @@ namespace dmxfish::filters {
             // Todo: improve check all! existing universes and (only?) patched channels
             for (size_t universe_id = 0; universe_id <= 2 * ((sol::table) outputs).size(); universe_id++) {
                 sol::object universe = ((sol::table) outputs)[universe_id + 1]; // in lua, everything is 1-indexed. Let's make this consistent.
-                if (auto uptr = dmxfish::io::get_universe((int) universe_id); uptr != nullptr) {
+                if (auto uptr = dmxfish::io::get_universe((int) (universe_id + 1)); uptr != nullptr) {
                     if (const auto element_type = universe.get_type(); element_type == sol::type::table) {
                         for (uint16_t chan = 0; chan < 512; chan++) {
                             sol::object channel = ((sol::table) universe)[chan + 1];
                             if (const auto chan_type = channel.get_type(); chan_type == sol::type::number) {
                                 uint8_t value = ((sol::table) universe)[chan + 1];
-                                (*uptr)[chan] = value;
+                                (*uptr)[chan + 1] = value;
                             } else if (chan_type != sol::type::nil) {
-                                ::spdlog::error("Lua universe output: Expected output[{}][{}] to be a number. Got {} instead.", universe_id, chan + 1, std::to_string(chan_type));
+                                ::spdlog::error("Lua universe output: Expected output[{}][{}] to be a number. Got {} instead.", universe_id + 1, chan + 1, std::to_string(chan_type));
                             }
                         }
                     } else if (element_type != sol::type::nil) {
-                       ::spdlog::error("Lua universe output: Expected output[{}] to be a table. Got {} instead.", universe_id, std::to_string(element_type));
+                       ::spdlog::error("Lua universe output: Expected output[{}] to be a table. Got {} instead.", universe_id + 1, std::to_string(element_type));
                     }
                 }
             }

@@ -361,9 +361,9 @@ BOOST_AUTO_TEST_CASE(test_lua_color_conversion) {
 
 
     color = dmxfish::dmx::pixel(240.,0.5001,1.);
-    test_red1 = 42;
-    test_green1 = 42;
-    test_blue1 = 170;
+    test_red1 = 127;
+    test_green1 = 127;
+    test_blue1 = 255;
     test_red2 = 0;
     test_green2 = 0;
     test_blue2 = 128;

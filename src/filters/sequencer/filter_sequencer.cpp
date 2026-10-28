@@ -5,6 +5,7 @@
 
 #include "filters/sequencer/filter_sequencer.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <ranges>
 #include <sstream>
@@ -119,6 +120,7 @@ namespace dmxfish {
                 throw filter_config_exception("Configuration map does not contain 'transitions'.", filter_type::filter_sequencer, own_id);
             } else {
                 try {
+		    if (trans_iter->second.size() > 0) {
                     for (const auto& transition_str: utils::split(trans_iter->second, ';')) {
                         auto glob_param = utils::split(transition_str, '#');
                         const auto trigger_event_id = dmxfish::events::parse_sender_representation(glob_param.front()).encoded_sender_id;
@@ -129,6 +131,9 @@ namespace dmxfish {
                         t.set_id(this->transitions.size());
                         this->transitions.insert({trigger_event_id, t});
                     }
+		    } else {
+			::spdlog::warn("Sequencer filter '{}' has empty transition list.", own_id);
+		    }
                 } catch (const std::invalid_argument& e) {
                     throw filter_config_exception(std::string("Unable to decode transitions: ") + e.what(), filter_type::filter_sequencer, own_id);
                 }
@@ -149,6 +154,7 @@ namespace dmxfish {
             this->decode_input_channels(input_channels, own_id);
             this->construct_transitions(configuration, own_id, nm);
             this->tmp_name_maps = nullptr;
+            this->last_wall_time = *(this->input_time);
         }
 
         bool filter_sequencer::receive_update_from_gui(const std::string& key, const std::string& _value) {
@@ -178,16 +184,16 @@ namespace dmxfish {
                 return false;
             }
             for (const auto& [channel_id, frames]: t.frames_8bit) {
-                this->channels_8bit[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed());
+                this->channels_8bit[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed(), this->virtual_time);
             }
             for (const auto& [channel_id, frames]: t.frames_16bit) {
-                this->channels_16bit[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed());
+                this->channels_16bit[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed(), this->virtual_time);
             }
             for (const auto& [channel_id, frames]: t.frames_float) {
-                this->channels_float[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed());
+                this->channels_float[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed(), this->virtual_time);
             }
             for (const auto& [channel_id, frames]: t.frames_color) {
-                this->channels_color[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed());
+                this->channels_color[channel_id].insert_keyframes(&frames, t.get_transition_id(), t.is_reset_allowed(), this->virtual_time);
             }
             ::spdlog::debug("Inserting trans {}", t.get_transition_id());
 	    this->active_transitions[t.get_transition_id()] = t.get_name();
@@ -195,29 +201,41 @@ namespace dmxfish {
         }
 
         void filter_sequencer::update() {
+            const auto wall_time = *(this->input_time);
+            const auto ts = std::max(0.0, *(this->time_scale));
+            const auto dt = wall_time - this->last_wall_time;
+            this->last_wall_time = wall_time;
+            this->virtual_time += static_cast<sequencer::sequencer_time_t>(static_cast<double>(dt) * ts);
+
             bool transitions_inserted = false;
 	    bool transitions_removed = false;
-            for (const auto& event : get_event_storage_instance()->get_storage()) {
-                for(auto [iter, range_end] = this->transitions.equal_range(event.get_event_sender().encoded_sender_id);
-                        iter != range_end; iter++) {
-                    this->enqueue_transition(iter->second);
-                    transitions_inserted = true;
+            const auto storage = get_event_storage_instance();
+            for (auto iter = this->transitions.begin(); iter != this->transitions.end();) {
+                const auto key = iter->first;
+                dmxfish::events::event_sender_t key_sender;
+                key_sender.encoded_sender_id = key;
+                const auto matches = storage->find(key_sender);
+                const auto group_end = this->transitions.upper_bound(key);
+                if (!matches.empty()) {
+                    for (auto t_it = iter; t_it != group_end; ++t_it) {
+                        this->enqueue_transition(t_it->second);
+                        transitions_inserted = true;
+                    }
                 }
+                iter = group_end;
             }
 
-            const auto current_time = *(this->input_time);
-            const auto ts = *(this->time_scale);
             for (auto& c : this->channels_8bit) {
-                transitions_removed |= c.apply_update(current_time, ts);
+                transitions_removed |= c.apply_update(this->virtual_time);
             }
             for (auto& c : this->channels_16bit) {
-                transitions_removed |= c.apply_update(current_time, ts);
+                transitions_removed |= c.apply_update(this->virtual_time);
             }
             for (auto& c : this->channels_float) {
-                transitions_removed |= c.apply_update(current_time, ts);
+                transitions_removed |= c.apply_update(this->virtual_time);
             }
             for (auto& c : this->channels_color) {
-                transitions_removed |= c.apply_update(current_time, ts);
+                transitions_removed |= c.apply_update(this->virtual_time);
             }
 	    if (transitions_removed) {
 		this->perform_transition_gc();
@@ -241,6 +259,8 @@ namespace dmxfish {
                 c.clear();
             }
 	    this->active_transitions.clear();
+            this->virtual_time = 0;
+            this->last_wall_time = (this->input_time != nullptr) ? *(this->input_time) : 0;
             this->send_transition_update_to_gui();
         }
 
